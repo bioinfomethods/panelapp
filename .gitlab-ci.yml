@@ -4,13 +4,14 @@ variables:
 stages:
    - code_test
    - image_build
-   - deploy_to_stage         # 
+   - deploy_to_stage         # Manual
    - deploy_to_production    # Manual
    - deploy_to_test          # Manual
-   - destroy_stage           # Manual
 
 code_test:
   image: python:3.6.8-alpine3.9
+  except:
+    - schedules
   stage: code_test
   only:
     - tags
@@ -35,25 +36,26 @@ code_test:
 
 
 image_build:
+  except:
+    - schedules
   image: docker:stable
   dependencies:
     - code_test
   only:
     refs:
       - tags
-      - branches
-    #variables:
-    # - $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+\w*$/
+    variables:
+      - $CI_COMMIT_TAG =~ /\d+\.\d+\.\d+\w*$/
   services:
     - docker:dind
   stage: image_build
   script:
     # installing py-setuptools to extract the name and version
-    - apk -U add py-setuptools
+    - apk -U add py-setuptools make
     - export PACKAGE_NAME=$(python setup.py --name)
     - export PACKAGE_VERSION=$(python setup.py --version)
     # Check whether the Package Version matches with the TAG version
-    #- (if [ $PACKAGE_NAME = $CI_COMMIT_TAG ]; then /bin/true; echo "TAG and file Version matches"; else echo "Error!! TAG NAME AND Version file did not Match";/bin/false; fi)  # FIXME - To avid stage failure while testing
+    #- (if [ PACKAGE_VERSION = $CI_COMMIT_TAG ]; then /bin/true; echo "TAG and file Version matches"; else echo "Error!! TAG NAME AND Version file did not Match";/bin/false; fi)
     # Build the docker image
     - docker build -t ${PACKAGE_NAME}-base --file ./docker/cloud/Dockerfile-base .
     - docker build -t ${PACKAGE_NAME}-web --file ./docker/cloud/Dockerfile-web .
@@ -78,24 +80,24 @@ image_build:
 deploy_to_stage:
    stage: deploy_to_stage
    except:
-    - schedules
+     - schedules
    when: manual
    environment:
      name: stage
      on_stop: destroy_stage
-   # Deploy the new image to Development will start only if the image built is success
-   #dependencies:
-    # - image_build
+   dependencies:
+     - image_build
    tags:
      - TF_panelapp_stage
-#   only:
-#     refs:
-#       - tags
-#     variables:
-#       - $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+\w*$/
+   only:
+     refs:
+       - tags
+     variables:
+       - $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+[a-z]*\d$/
    variables:
      env_name : stage
    before_script:
+     # This will initialize the required environment variable and files to run Terraform
      - wget -q 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -O aws_creds
      - export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' aws_creds)
      - export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
@@ -105,8 +107,7 @@ deploy_to_stage:
      - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
    script:
      - export WORKING_DIR=$(pwd)
-     #- cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'image_tag=$CI_COMMIT_TAG' && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'image_tag=$CI_COMMIT_TAG'
-     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'image_tag=latest' && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'image_tag=latest'
+     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$CI_COMMIT_TAG && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$CI_COMMIT_TAG
      - sleep 30
      - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-stage -panelapp
      - sleep 30
@@ -116,6 +117,13 @@ deploy_to_stage:
 destroy_stage:
   stage: deploy_to_stage
   when: manual
+  only:
+    refs:
+      - tags
+    variables:
+      - $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+[a-z]*\d$/
+  except:
+    - schedules
   variables:
      env_name : stage
   environment:
@@ -133,7 +141,7 @@ destroy_stage:
     - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
   script:
     - export WORKING_DIR=$(pwd)
-    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var 'image_tag=latest' && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var 'image_tag=latest'
+    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var image_tag=$CI_COMMIT_TAG -var 'EC2_mgmt_count=0' && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var image_tag=$CI_COMMIT_TAG -var 'EC2_mgmt_count=0'
 
 
 deploy_to_production:
@@ -143,16 +151,13 @@ deploy_to_production:
    when: manual
    environment:
      name: prod
-   # Deploy the new image to Development will start only if the image built is success
-   #dependencies:
-    # - deploy_to_stage
    tags:
      - TF_panelapp_prod
-#   only:
-#     refs:
-#       - tags
-#     variables:
-#       - $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+\w*$/
+   only:
+     refs:
+       - tags
+     variables:
+       - $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+$/
    variables:
      env_name : prod
    before_script:
@@ -166,10 +171,9 @@ deploy_to_production:
    script:
      - export WORKING_DIR=$(pwd)
      # Take DB snapshot and delete the old one
-     - aws docdb create-db-cluster-snapshot --db-cluster-identifier aurora-prod --db-cluster-snapshot-identifier predeployment-$CI_JOB_ID
+     - python3 $WORKING_DIR/panelapp-infra/rds_snapshot.py -create -recycle
      - sleep 60
-     #- cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'image_tag=$CI_COMMIT_TAG' && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'image_tag=$CI_COMMIT_TAG'
-     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'image_tag=latest' && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'image_tag=latest'
+     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$CI_COMMIT_TAG && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$CI_COMMIT_TAG
      - sleep 30
      - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-prod -panelapp
      - sleep 30
