@@ -192,7 +192,7 @@ deploy_to_test:
   variables:
     env_name: test
   script:
-    - echo "deploying code to $env_name and version $version"
+    - echo "Scripts will be added once the test Environment is released from UAT"
 
 destroy_test:
   when: manual
@@ -205,4 +205,4 @@ destroy_test:
     name: test
     action: stop
   script:
-    - echo "this will bring down the env $env_name and version $version"
+    - echo "Scripts will be added once the test Environment is released from UAT"
