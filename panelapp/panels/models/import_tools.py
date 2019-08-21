@@ -347,7 +347,7 @@ class UploadedPanelList(TimeStampedModel):
         {"name": "moi", "type": str},
         {"name": "phenotypes", "type": "unique-list"},
         {"name": "omim", "type": "unique-list"},
-        {"name": "oprahanet", "type": "unique-list"},
+        {"name": "orphanet", "type": "unique-list"},
         {"name": "hpo", "type": "unique-list"},
         {"name": "publications", "type": "unique-list"},
         {"name": "description", "type": "str"},
@@ -601,7 +601,7 @@ class UploadedPanelList(TimeStampedModel):
                             description=line_data["description"],
                             omim=line_data["omim"],
                             hpo=line_data["hpo"],
-                            orphanet=line_data["oprahanet"],
+                            orphanet=line_data["orphanet"],
                         )
                         panel = GenePanel.objects.create(name=line_data["level4"])
                         active_panel = GenePanelSnapshot.objects.create(

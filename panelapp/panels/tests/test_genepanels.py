@@ -547,6 +547,17 @@ class GenePanelTest(LoginGELUser):
 
         self.assertEqual(evaluations2, current_ev2)
 
+    def test_publications_appended(self):
+        gps = GenePanelSnapshotFactory()
+        gpes = GenePanelEntrySnapshotFactory(panel=gps)
+        publications = gpes.publications
+        publications.append('4354353')
+
+        gps.update_gene(
+            self.gel_user, gpes.gene_core.gene_symbol, {"publications": publications}, True
+        )
+        self.assertEqual(gpes.publications, publications)
+
     def test_evaluation_single_panel(self):
         gps = GenePanelSnapshotFactory()
         gpes = GenePanelEntrySnapshotFactory(panel=gps)
