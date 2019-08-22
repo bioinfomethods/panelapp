@@ -1509,10 +1509,10 @@ class GenePanelSnapshot(TimeStampedModel):
 
                 if append_only:
                     new_publications = list(set(publications + gene.publications))
-                    gene.publications = new_publications
                     description = "Publications for gene {} were updated from {} to {}".format(
                         gene_symbol, "; ".join(gene.publications), "; ".join(new_publications)
                     )
+                    gene.publications = new_publications
                 else:
                     gene.publications = publications
                     description = "Publications for gene {} were changed from {} to {}".format(
