@@ -78,6 +78,10 @@ setup(
         "django-array-field-select==0.2.0",
         "django-qurl-templatetag==0.0.13",
         "django-click==2.1.0",
-        "django-filter==2.0.0"
+        "django-filter==2.0.0",
+        "django-storages==1.7.1",
+        "boto3==1.9.147",
+        "pycurl==7.43.0.2",
+        "simple-json-log-formatter==0.5.5",
     ],
 )
