@@ -1506,10 +1506,18 @@ class GenePanelSnapshot(TimeStampedModel):
                         gene_symbol, self
                     )
                 )
-                description = "Publications for gene {} were changed from {} to {}".format(
-                    gene_symbol, "; ".join(gene.publications), "; ".join(publications)
-                )
-                gene.publications = publications
+
+                if append_only:
+                    new_publications = list(set(publications + gene.publications))
+                    description = "Publications for gene {} were updated from {} to {}".format(
+                        gene_symbol, "; ".join(gene.publications), "; ".join(new_publications)
+                    )
+                    gene.publications = new_publications
+                else:
+                    gene.publications = publications
+                    description = "Publications for gene {} were changed from {} to {}".format(
+                        gene_symbol, "; ".join(gene.publications), "; ".join(publications)
+                    )
                 tracks.append((TrackRecord.ISSUE_TYPES.SetPublications, description))
 
             current_tags = [tag.pk for tag in gene.tags.all()]
