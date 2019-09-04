@@ -1,5 +1,8 @@
 version: '3'
 
+volumes:
+  local_postgres_data: {}
+
 services:
 
   localstack:
@@ -26,6 +29,8 @@ services:
     image: postgres:9.6.9
     ports:
       - "5432:5432"
+    volumes:
+      - local_postgres_data:/var/lib/postgresql/data
     environment:
       - POSTGRES_PASSWORD=secret
       - POSTGRES_USER=panelapp
