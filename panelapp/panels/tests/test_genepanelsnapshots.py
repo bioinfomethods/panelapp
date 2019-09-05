@@ -23,6 +23,7 @@
 ##
 from random import randint
 from django.urls import reverse_lazy
+from django.utils import timezone
 from faker import Factory
 from random import choice
 from accounts.tests.setup import LoginGELUser
@@ -666,3 +667,18 @@ class GenePanelSnapshotTest(LoginGELUser):
             panel.get_region(region.name).type_of_variants
             == region_data["type_of_variants"]
         )
+
+    def test_sign_off_panel(self):
+        gps = GenePanelSnapshotFactory()
+        url = reverse_lazy("panels:update", kwargs={"pk": gps.panel.pk})
+        date = timezone.now().date()
+        data = {"signed_off_version": gps.panel.pk, "signed_off_date": date, "level4": gps.level4title,
+                "description": "test", "status": "public"}
+
+        res = self.client.post(url, data)
+
+        assert res.status_code == 302
+
+        signed_off_panel = HistoricalSnapshot.objects.filter(panel=gps.panel).first()
+        assert signed_off_panel.signed_off_date
+        assert signed_off_panel.signed_off_date == date

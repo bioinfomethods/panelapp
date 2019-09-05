@@ -22,12 +22,15 @@
 ## under the License.
 ##
 from collections import OrderedDict
+from itertools import chain
 from django import forms
+from django.utils import timezone
 from dal_select2.widgets import ModelSelect2Multiple
 from panels.models import Level4Title
 from panels.models import GenePanel
 from panels.models import GenePanelSnapshot
 from panels.models import PanelType
+from panels.models import HistoricalSnapshot
 
 
 class PanelForm(forms.ModelForm):
@@ -41,7 +44,12 @@ class PanelForm(forms.ModelForm):
     status = forms.ChoiceField(
         required=True, choices=GenePanel.STATUS, initial=GenePanel.STATUS.internal
     )
-
+    signed_off_version = forms.ChoiceField(
+        label="Signed Off Version",
+        required=False,
+        choices=((1,1))
+    )
+    signed_off_date = forms.DateField(label='Signed Off Date', required=False)
     child_panels = forms.ModelMultipleChoiceField(
         label="Child Panels",
         required=False,
@@ -85,12 +93,17 @@ class PanelForm(forms.ModelForm):
         self.fields["hpo"] = original_fields.get("hpo")
         self.fields["old_panels"] = original_fields.get("old_panels")
         self.fields["types"] = original_fields.get("types")
+        self.fields["signed_off_version"] = original_fields.get("signed_off_version")
+        self.fields["signed_off_date"] = original_fields.get("signed_off_date")
         if gel_curator:  # TODO (Oleg) also check if we have entities in this panel
             self.fields["child_panels"] = original_fields.get("child_panels")
         self.fields["status"] = original_fields.get("status")
 
         if self.instance.pk:
             self.fields["status"].initial = self.instance.panel.status
+            choices = [(p.pk, p) for p in HistoricalSnapshot.objects.filter(panel=self.instance.panel)]
+            choices.insert(0, (self.instance.panel.pk, self.instance.panel))
+            self.fields["signed_off_version"].choices = choices
             if gel_curator:
                 self.fields[
                     "child_panels"
@@ -206,6 +219,26 @@ class PanelForm(forms.ModelForm):
                 self.instance.increment_version()
                 panel.save()
                 self.instance._update_saved_stats(use_db=update_stats_superpanel)
+
+                if "signed_off_version" in self.changed_data:
+                    panel_pk = self.cleaned_data["signed_off_version"]
+                    activities.append("Panel version has been signed off")
+
+                    for snap in HistoricalSnapshot.objects.filter(panel=self.instance.panel):
+                        if snap.signed_off_date:
+                            snap.signed_off_date = None
+                            snap.save()
+
+                    if panel_pk == self.instance.pk:
+                        snapshot = HistoricalSnapshot.objects.filter(panel=self.instance.panel).last()
+                    else:
+                        snapshot = HistoricalSnapshot.objects.get(pk=panel_pk)
+
+                    if self.cleaned_data['signed_off_date']:
+                        snapshot.signed_off_date = self.cleaned_data["signed_off_date"]
+                    else:
+                        snapshot.signed_off_date = timezone.now().date()
+                    snapshot.save()
             else:
                 panel.save()
 

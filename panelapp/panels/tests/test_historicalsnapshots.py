@@ -95,3 +95,4 @@ class HistoricalSnapshotTest(LoginGELUser):
         )
 
         assert res.status_code == 200
+

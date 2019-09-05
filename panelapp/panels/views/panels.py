@@ -23,7 +23,7 @@
 ##
 import csv
 from datetime import datetime
-from django.db.models import Q
+from django.db.models import Q, Count
 from django.contrib import messages
 from django.http import HttpResponse
 from django.core.exceptions import ValidationError
@@ -155,6 +155,10 @@ class GenePanelView(DetailView):
             and self.request.user.reviewer.is_GEL(),
             request=self.request,
         )
+        ctx['signed_off'] = None
+        signed_off = self.object.active_panel.panel.historicalsnapshot_set.filter(signed_off_date__isnull=False).last()
+        if signed_off:
+            ctx['signed_off'] = signed_off
         ctx["contributors"] = ctx["panel"].contributors
         ctx["promote_panel_form"] = PromotePanelForm(
             instance=ctx["panel"],
@@ -393,6 +397,7 @@ class DownloadAllPanels(GELReviewerRequiredMixin, View):
             "Status",
             "Relevant disorders",
             "Types",
+            "Signed Off",
         )
 
         panels = (
@@ -442,6 +447,7 @@ class DownloadAllPanels(GELReviewerRequiredMixin, View):
                 panel.panel.status.upper(),
                 ";".join(panel.old_panels),
                 ";".join(panel.panel.types.values_list("name", flat=True)),
+                "v{}.{} on {}".format(*panel.is_signed_off) if panel.signedoff > 0 else ""
             )
 
     def get(self, request, *args, **kwargs):

@@ -120,6 +120,10 @@
                       <br /><span class="text-muted">Panel not approved</span>
                       {% endif %}
                     {% endif %}
+                    {%  if entry.panel.is_signed_off %}
+                        <br/>Signed off v.{{entry.panel.is_signed_off.0}}.{{ entry.panel.is_signed_off.1 }}
+                        on {{entry.panel.is_signed_off.2}}
+                    {% endif %}
                   </p>
                 </td>
                 <td>

@@ -21,6 +21,10 @@
   <div class="alert alert-danger" role="alert">This Panel is marked as {{ panel.panel.status|title }}</div>
   {% endif %}
 
+    {% if signed_off %}
+        <div class="alert alert-info" role="alert"><strong>This Panel has been signed off!</strong></div>
+    {% endif %}
+
   <div id="banner">
       <h1>
           {% block title %}{{ panel.level4title.name }} (Version {{ panel.major_version}}.{{ panel.minor_version}}){% endblock %}
@@ -41,6 +45,9 @@
           {% endif %}
           {% if panel.panel.types.all %}
               <br />Panel types: {% for type in panel.panel.types.all %}{{ type.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
+          {% endif %}
+          {% if signed_off %}
+             <br />Panel version {{ signed_off.major_version }}.{{ signed_off.minor_version }} has been signed off on {{ signed_off.signed_off_date }}!
           {% endif %}
 
           {% if panel.panel.old_pk %}<br />Previous code: {{ panel.panel.old_pk }}{% endif %}
@@ -133,17 +140,30 @@
       <li><a href="{% url 'panels:download_panel_tsv' panel.panel.id '01' %}">Red list (low evidence)</a></li>
     </ul>
     <h3>Download Version</h3>
-    <form class="form-inline" action="{% url 'panels:download_old_panel_tsv' panel.panel.id %}" method="post">
-      {% csrf_token %}
-      <div class="form-group">
+      <div class="form-row">
+          <div class="col">
+            <div class="form-group">
+            <div class="inline-group">
+            <form class="form-inline" action="{% url 'panels:download_old_panel_tsv' panel.panel.id %}" method="post">
+            {% csrf_token %}
+            <input type="text" value="" placeholder="Panel version, for example 0.1", name="panel_version" class="input form-control">
+              <button type="submit" class="btn btn-primary">Download</button></form>
+            </div>
+            </div>
+        </div>
+    {% if signed_off %}
+    <div class="col">
         <div class="form-group">
           <div class="inline-group">
-            <input type="text" value="" placeholder="Panel version, for example 0.1", name="panel_version" class="input form-control">
-            <button type="submit" class="btn btn-primary">Download</button>
+              <form class="form" action="{% url 'panels:download_old_panel_tsv' panel.panel.id %}" method="post">{% csrf_token %}
+              <input type="hidden" value="{{ signed_off.major_version }}.{{ signed_off.minor_version }}" name="panel_version" class="input form-control">
+              <button type="submit" class="btn btn-primary">Download Signed-Off Version</button>
+              </form>
           </div>
         </div>
+    </div>
+    {% endif %}
       </div>
-    </form>
   </div>
 </div>
 {% endblock %}

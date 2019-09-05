@@ -81,6 +81,12 @@
                       Panel Types:{% for type in entry.panel.types.all %} {{ type }}, {% endfor %}
                   </p>
                 {%  endif %}
+                {% if entry.signedoff %}
+                    <strong>
+                    Signed Off v. {% for snap in entry.panel.historicalsnapshot_set.all %}
+                    {% if snap.signed_off_date %}{{ snap.major_version }}.{{ snap.minor_version }} on {{ snap.signed_off_date }}
+                    {% endif %} {% endfor %}</strong>
+                {% endif %}
               </td>
               <td>
                   {% if 'number_of_genes' in entry.stats %}
