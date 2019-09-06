@@ -221,7 +221,7 @@ class PanelForm(forms.ModelForm):
                 self.instance._update_saved_stats(use_db=update_stats_superpanel)
 
                 if "signed_off_version" in self.changed_data:
-                    panel_pk = self.cleaned_data["signed_off_version"]
+                    panel_pk = int(self.cleaned_data["signed_off_version"])
                     activities.append("Panel version has been signed off")
 
                     for snap in HistoricalSnapshot.objects.filter(panel=self.instance.panel):
