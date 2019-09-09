@@ -136,7 +136,7 @@ class GenePanelSnapshotManager(models.Manager):
         )
 
     def get_active_annotated(
-        self, all=False, deleted=False, internal=False, name=None, panel_types=None, superpanels=True
+        self, all=False, deleted=False, internal=False, name=None, panel_types=None, superpanels=True,
     ):
         """This method adds additional values to the queryset, such as number_of_genes, etc and returns active panels"""
 
@@ -148,6 +148,7 @@ class GenePanelSnapshotManager(models.Manager):
         return qs.annotate(
             child_panels_count=Count("child_panels"),
             superpanels_count=Count("genepanelsnapshot"),
+            signedoff=Count('panel__historicalsnapshot__signed_off_date'),
             panel_type_slugs=ArrayAgg("panel__types__slug", distinct=True),
         ).annotate(
             is_super_panel=Case(
@@ -349,6 +350,13 @@ class GenePanelSnapshot(TimeStampedModel):
 
     def get_absolute_url(self):
         return reverse("panels:detail", args=(self.panel.pk,))
+
+    @property
+    def is_signed_off(self):
+        signed_off = None
+        for snap in self.panel.historicalsnapshot_set.filter(signed_off_date__isnull=False):
+            signed_off = (snap.major_version, snap.minor_version, snap.signed_off_date)
+        return signed_off
 
     @cached_property
     def is_child_panel(self):

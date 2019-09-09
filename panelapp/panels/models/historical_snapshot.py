@@ -41,6 +41,10 @@ class HistoricalSnapshot(models.Model):
     reason = models.TextField(null=True)
     schema_version = models.CharField(max_length=100)  # JSON schema version
     data = JSONField()
+    signed_off_date = models.DateField(blank=True, null=True)
+
+    def __str__(self):
+        return "{} v{}.{}".format(self.panel.name, self.major_version, self.minor_version)
 
     def to_tsv(self):
         data = self.data
@@ -283,6 +287,7 @@ class HistoricalSnapshot(models.Model):
                 "DiseaseGroup": data["disease_group"],
                 "DiseaseSubGroup": data["disease_sub_group"],
                 "Status": data["status"],
+                "Signed Off": self.signed_off_date,
             }
         }
         for gene in data["genes"]:
@@ -364,4 +369,5 @@ class HistoricalSnapshot(models.Model):
         return result
 
     def to_api_1(self):
+        self.data['signed_off'] = self.signed_off_date
         return self.data

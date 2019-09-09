@@ -610,3 +610,24 @@ class EntitySearchViewSet(EntitySearch):
 
     def retrieve(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
+
+
+class SignedOffPanelViewSet(ReadOnlyListViewset):
+
+    def get_queryset(self):
+        return HistoricalSnapshot.objects.filter(signed_off_date__isnull=False)
+
+    def list(self, request, *args, **kwargs):
+        results = []
+        for snap in self.get_queryset():
+            results.append(snap.to_api_1())
+        return Response(results)
+
+    def retrieve(self, request, *args, **kwargs):
+        pk = self.kwargs["pk"]
+        snap = self.get_queryset().filter(panel__pk=pk).first()
+        if snap:
+            json = snap.to_api_1()
+            return Response(json)
+        else:
+            raise Http404

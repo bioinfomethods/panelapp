@@ -23,8 +23,9 @@
 ##
 from django.test import TestCase
 from django.urls import reverse_lazy
+from django.utils import timezone
 from accounts.tests.setup import LoginExternalUser
-from panels.models import GenePanel
+from panels.models import GenePanel, HistoricalSnapshot
 from panels.tests.factories import GenePanelSnapshotFactory
 from panels.tests.factories import GenePanelEntrySnapshotFactory
 from panels.tests.factories import STRFactory
@@ -609,6 +610,20 @@ class TestAPIV1(LoginExternalUser):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(len(r.json()["results"]), 6)
 
+    def test_signed_off_panels(self):
+        self.gps.panel.active_panel.increment_version()
+        snap = HistoricalSnapshot.objects.get(panel=self.gps.panel)
+        date = timezone.now().date()
+        snap.signed_off_date = date
+        snap.save()
+
+        res = self.client.get(reverse_lazy("api:v1:signedoff_panels-list"))
+        assert res.status_code == 200
+        assert date.strftime("%Y-%m-%d") in res.json()[0]["signed_off"]
+
+        res = self.client.get(reverse_lazy("api:v1:signedoff_panels-detail", kwargs={"pk": self.gps.panel.pk}))
+        assert res.status_code == 200
+        assert date.strftime("%Y-%m-%d") in res.json()["signed_off"]
 
 class NonAuthAPIv1Request(TestCase):
     def setUp(self):
