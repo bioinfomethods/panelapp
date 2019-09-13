@@ -671,15 +671,7 @@ class UploadedReviewsList(TimeStampedModel):
             "I don't know": "AMBER",
         }
 
-        if (
-            rate not in panelapp_ratings.values()
-            and rate not in panelapp_ratings.keys()
-        ):
-            raise IncorrectGeneRating(
-                "Line: {} has incorrect Gene rating: {}".format(key + 2, rate)
-            )
-
-        if rate not in panelapp_ratings.values():
+        if rate and rate not in panelapp_ratings.values():
             rate = panelapp_ratings[rate]
 
         current_diagnostic = aline[19]
