@@ -253,7 +253,7 @@ PACKAGE_VERSION = panelapp.__version__
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.dummy.DummyCache",
+        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
         "LOCATION": "pa-cache-1",
         "TIMEOUT": None,
     }

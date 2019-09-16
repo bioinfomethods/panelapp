@@ -691,50 +691,40 @@ class EntitiesListView(ListView):
         )
         tag_filter = self.request.GET.get("tag", "")
 
-        cache_key = "entities_admin" if is_admin_user else "entities"
+        panel_ids = GenePanelSnapshot.objects.get_active(
+            all=is_admin_user, internal=is_admin_user
+        ).values_list("pk", flat=True)
+
+        qs = GenePanelEntrySnapshot.objects.filter(
+            gene_core__active=True, panel__in=panel_ids
+        )
+
+        strs_qs = STR.objects.filter(panel__in=panel_ids)
+        regions_qs = Region.objects.filter(panel__in=panel_ids)
 
         if tag_filter:
-            cache_key = "{}_{}".format(cache_key, tag_filter)
+            qs = qs.filter(tags__name=tag_filter)
+            strs_qs = strs_qs.filter(tags__name=tag_filter)
+            regions_qs = regions_qs.filter(tags__name=tag_filter)
 
-        cached_entities = cache.get(cache_key)
-        if cached_entities:
-            return cached_entities
-        else:
-            panel_ids = GenePanelSnapshot.objects.get_active(
-                all=is_admin_user, internal=is_admin_user
-            ).values_list("pk", flat=True)
+        entities = []
+        for gene in (
+            qs.order_by()
+            .distinct("gene_core__gene_symbol")
+            .values_list("gene_core__gene_symbol", flat=True)
+            .iterator()
+        ):
+            entities.append(("gene", gene, gene))
 
-            qs = GenePanelEntrySnapshot.objects.filter(
-                gene_core__active=True, panel__in=panel_ids
-            )
+        for str_item in strs_qs.values_list("name", "name").iterator():
+            entities.append(("str", str_item[0], str_item[1]))
 
-            strs_qs = STR.objects.filter(panel__in=panel_ids)
-            regions_qs = Region.objects.filter(panel__in=panel_ids)
+        for region in regions_qs.values_list("name", "name").iterator():
+            entities.append(("region", region[0], region[1]))
 
-            if tag_filter:
-                qs = qs.filter(tags__name=tag_filter)
-                strs_qs = strs_qs.filter(tags__name=tag_filter)
-                regions_qs = regions_qs.filter(tags__name=tag_filter)
+        entities = list(set(entities))
 
-            entities = []
-            for gene in (
-                qs.order_by()
-                .distinct("gene_core__gene_symbol")
-                .values_list("gene_core__gene_symbol", flat=True)
-                .iterator()
-            ):
-                entities.append(("gene", gene, gene))
-
-            for str_item in strs_qs.values_list("name", "name").iterator():
-                entities.append(("str", str_item[0], str_item[1]))
-
-            for region in regions_qs.values_list("name", "name").iterator():
-                entities.append(("region", region[0], region[1]))
-
-            entities = list(set(entities))
-
-            sorted_entities = sorted(entities, key=lambda i: i[1].lower())
-            cache.set(cache_key, sorted_entities)
+        sorted_entities = sorted(entities, key=lambda i: i[1].lower())
         return sorted_entities
 
     def get_context_data(self, *args, **kwargs):
