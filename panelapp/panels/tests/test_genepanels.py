@@ -432,7 +432,7 @@ class GenePanelTest(LoginGELUser):
             res = self.client.post(url, {"panel_list": f})
             messages = [str(m) for m in res.wsgi_request._messages]
             expected_messages = [
-                "Line: 3, 4, 5 is not properly formatted, please check it and try again."
+                "Line: 3, 4, 5, 6 is not properly formatted, please check it and try again."
             ]
             self.assertEqual(expected_messages, messages)
 
