@@ -728,12 +728,16 @@ class GeneReviewTest(LoginGELUser):
 
     def test_import_reviews(self):
         gene = GeneFactory(gene_symbol="ABCC5-AS1")
+        gene2 = GeneFactory(gene_symbol="ABCC5-AS21")
         gps = GenePanelSnapshotFactory()
         current_version = gps.version
         gps.panel.name = "Panel One"
         gps.panel.save()
         GenePanelEntrySnapshotFactory.create(
             gene_core=gene, panel=gps, evaluation=(None,)
+        )
+        GenePanelEntrySnapshotFactory.create(
+            gene_core=gene2, panel=gps, evaluation=(None,)
         )
 
         file_path = os.path.join(os.path.dirname(__file__), "import_reviews_data.tsv")
@@ -745,4 +749,5 @@ class GeneReviewTest(LoginGELUser):
 
         ap = GenePanel.objects.get(name="Panel One").active_panel
         assert ap.get_gene(gene.gene_symbol).evaluation.count() == 1
+        assert ap.get_gene(gene2.gene_symbol).evaluation.count() == 1
         assert current_version != ap.version
