@@ -671,7 +671,7 @@ class UploadedReviewsList(TimeStampedModel):
             "I don't know": "AMBER",
         }
 
-        if rate and rate not in panelapp_ratings.values():
+        if rate and rate not in panelapp_ratings.values() and rate in panelapp_ratings.keys():
             rate = panelapp_ratings[rate]
 
         current_diagnostic = aline[19]
