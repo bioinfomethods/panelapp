@@ -47,6 +47,7 @@ from .genepanelsnapshot import GenePanelSnapshot
 from .Level4Title import Level4Title
 from .codes import ProcessingRunCode
 from django.utils.encoding import force_text
+from .evaluation import Evaluation
 
 
 logger = logging.getLogger(__name__)
@@ -464,6 +465,15 @@ class UploadedPanelList(TimeStampedModel):
             )
             if not suppress_errors:
                 raise TSVIncorrectFormat(str(key + 2))
+
+        if entity_data["moi"]:
+            if entity_data["moi"] not in Evaluation.MODES_OF_INHERITANCE:
+                logger.error("TSV Import. Line: {} Incorrect MOI: {}".format(
+                        str(key + 2), len(entity_data.keys())
+                    )
+                )
+                if not suppress_errors:
+                    raise TSVIncorrectFormat(str(key + 2))
 
         if entity_data["entity_type"] in ["str", "region"]:
             if entity_data["position_37_start"] and entity_data["position_37_end"]:
