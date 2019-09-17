@@ -728,12 +728,16 @@ class GeneReviewTest(LoginGELUser):
 
     def test_import_reviews(self):
         gene = GeneFactory(gene_symbol="ABCC5-AS1")
+        gene2 = GeneFactory(gene_symbol="ABCC5-AS21")
         gps = GenePanelSnapshotFactory()
         current_version = gps.version
         gps.panel.name = "Panel One"
         gps.panel.save()
         GenePanelEntrySnapshotFactory.create(
             gene_core=gene, panel=gps, evaluation=(None,)
+        )
+        GenePanelEntrySnapshotFactory.create(
+            gene_core=gene2, panel=gps, evaluation=(None,)
         )
 
         file_path = os.path.join(os.path.dirname(__file__), "import_reviews_data.tsv")
@@ -745,4 +749,27 @@ class GeneReviewTest(LoginGELUser):
 
         ap = GenePanel.objects.get(name="Panel One").active_panel
         assert ap.get_gene(gene.gene_symbol).evaluation.count() == 1
+        assert ap.get_gene(gene2.gene_symbol).evaluation.count() == 1
         assert current_version != ap.version
+
+    def test_incorrect_rank_import_review(self):
+        gene = GeneFactory(gene_symbol="ABCC5-AS31")
+        gps = GenePanelSnapshotFactory()
+        gps.panel.name = "Panel One"
+        gps.panel.save()
+        GenePanelEntrySnapshotFactory.create(
+            gene_core=gene, panel=gps, evaluation=(None,)
+        )
+
+        file_path = os.path.join(os.path.dirname(__file__), "import_review_data_error.tsv")
+        test_reviews_file = os.path.abspath(file_path)
+
+        with open(test_reviews_file) as f:
+            url = reverse_lazy("panels:upload_reviews")
+            res = self.client.post(url, {"review_list": f})
+            messages = [str(m) for m in res.wsgi_request._messages]
+            expected_messages = ['Line: 2 has incorrect Gene rating: INVALID-RANK']
+            assert messages == expected_messages
+
+        ap = GenePanel.objects.get(name="Panel One").active_panel
+        assert ap.get_gene(gene.gene_symbol).evaluation.count() == 0
