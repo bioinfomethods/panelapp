@@ -222,14 +222,13 @@ class PanelForm(forms.ModelForm):
 
                 if "signed_off_version" in self.changed_data:
                     panel_pk = int(self.cleaned_data["signed_off_version"])
-                    activities.append("Panel version has been signed off")
 
                     for snap in HistoricalSnapshot.objects.filter(panel=self.instance.panel):
                         if snap.signed_off_date:
                             snap.signed_off_date = None
                             snap.save()
 
-                    if panel_pk == self.instance.pk:
+                    if panel_pk == self.instance.panel.pk:
                         snapshot = HistoricalSnapshot.objects.filter(panel=self.instance.panel).last()
                     else:
                         snapshot = HistoricalSnapshot.objects.get(pk=panel_pk)
@@ -239,6 +238,7 @@ class PanelForm(forms.ModelForm):
                     else:
                         snapshot.signed_off_date = timezone.now().date()
                     snapshot.save()
+                    activities.append("Panel version has been signed off")
             else:
                 panel.save()
 
