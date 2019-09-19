@@ -225,8 +225,7 @@ class PanelForm(forms.ModelForm):
                                                                  major_version=int(major_version),
                                                                  minor_version=int(minor_version)).first()
                     if snapshot:
-                        for snap in HistoricalSnapshot.objects.filter(panel=self.instance.panel,
-                                                                      signed_off_date__isnull=False):
+                        HistoricalSnapshot.objects.filter(panel=self.instance.panel,signed_off_date__isnull=False).update(signed_off_date=None)
                             snap.signed_off_date = None
                             snap.save()
 

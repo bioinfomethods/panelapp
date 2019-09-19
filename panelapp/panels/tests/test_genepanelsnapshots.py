@@ -672,8 +672,7 @@ class GenePanelSnapshotTest(LoginGELUser):
         gps = GenePanelSnapshotFactory()
         url = reverse_lazy("panels:update", kwargs={"pk": gps.panel.pk})
         date = timezone.now().date()
-        version = "{}.{}".format(gps.major_version, gps.minor_version)
-        data = {"signed_off_version": version, "signed_off_date": date, "level4": gps.level4title,
+        data = {"signed_off_version": gps.version, "signed_off_date": date, "level4": gps.level4title,
                 "description": "test", "status": "public"}
 
         res = self.client.post(url, data)
