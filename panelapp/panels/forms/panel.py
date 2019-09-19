@@ -221,21 +221,21 @@ class PanelForm(forms.ModelForm):
                     except ValueError:
                         raise forms.ValidationError("Signed off version incorrect format")
 
-                    for snap in HistoricalSnapshot.objects.filter(panel=self.instance.panel,
-                                                                  signed_off_date__isnull=False):
-                        snap.signed_off_date = None
-                        snap.save()
-
                     snapshot = HistoricalSnapshot.objects.filter(panel=self.instance.panel,
                                                                  major_version=int(major_version),
                                                                  minor_version=int(minor_version)).first()
+                    if snapshot:
+                        for snap in HistoricalSnapshot.objects.filter(panel=self.instance.panel,
+                                                                      signed_off_date__isnull=False):
+                            snap.signed_off_date = None
+                            snap.save()
 
-                    if self.cleaned_data['signed_off_date']:
-                        snapshot.signed_off_date = self.cleaned_data["signed_off_date"]
-                    else:
-                        snapshot.signed_off_date = timezone.now().date()
-                    snapshot.save()
-                    activities.append("Panel version has been signed off")
+                        if self.cleaned_data['signed_off_date']:
+                            snapshot.signed_off_date = self.cleaned_data["signed_off_date"]
+                        else:
+                            snapshot.signed_off_date = timezone.now().date()
+                        snapshot.save()
+                        activities.append("Panel version has been signed off")
             else:
                 panel.save()
 
