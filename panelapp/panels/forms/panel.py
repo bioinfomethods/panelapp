@@ -44,11 +44,7 @@ class PanelForm(forms.ModelForm):
     status = forms.ChoiceField(
         required=True, choices=GenePanel.STATUS, initial=GenePanel.STATUS.internal
     )
-    signed_off_version = forms.ChoiceField(
-        label="Signed Off Version",
-        required=False,
-        choices=((1,1))
-    )
+    signed_off_version = forms.CharField(label="Signed Off Version", required=False)
     signed_off_date = forms.DateField(label='Signed Off Date', required=False)
     child_panels = forms.ModelMultipleChoiceField(
         label="Child Panels",
@@ -101,9 +97,6 @@ class PanelForm(forms.ModelForm):
 
         if self.instance.pk:
             self.fields["status"].initial = self.instance.panel.status
-            choices = [(p.pk, p) for p in HistoricalSnapshot.objects.filter(panel=self.instance.panel)]
-            choices.insert(0, (self.instance.panel.pk, self.instance.panel))
-            self.fields["signed_off_version"].choices = choices
             if gel_curator:
                 self.fields[
                     "child_panels"
@@ -221,17 +214,21 @@ class PanelForm(forms.ModelForm):
                 self.instance._update_saved_stats(use_db=update_stats_superpanel)
 
                 if "signed_off_version" in self.changed_data:
-                    panel_pk = int(self.cleaned_data["signed_off_version"])
+                    version = self.cleaned_data["signed_off_version"]
 
-                    for snap in HistoricalSnapshot.objects.filter(panel=self.instance.panel):
-                        if snap.signed_off_date:
-                            snap.signed_off_date = None
-                            snap.save()
+                    try:
+                        major_version, minor_version = version.split(".")
+                    except ValueError:
+                        raise forms.ValidationError("Signed off version incorrect format")
 
-                    if panel_pk == self.instance.panel.pk:
-                        snapshot = HistoricalSnapshot.objects.filter(panel=self.instance.panel).last()
-                    else:
-                        snapshot = HistoricalSnapshot.objects.get(pk=panel_pk)
+                    for snap in HistoricalSnapshot.objects.filter(panel=self.instance.panel,
+                                                                  signed_off_date__isnull=False):
+                        snap.signed_off_date = None
+                        snap.save()
+
+                    snapshot = HistoricalSnapshot.objects.filter(panel=self.instance.panel,
+                                                                 major_version=int(major_version),
+                                                                 minor_version=int(minor_version)).first()
 
                     if self.cleaned_data['signed_off_date']:
                         snapshot.signed_off_date = self.cleaned_data["signed_off_date"]
