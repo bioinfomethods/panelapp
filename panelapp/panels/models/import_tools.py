@@ -52,6 +52,8 @@ from .evaluation import Evaluation
 
 logger = logging.getLogger(__name__)
 
+def clean_value(value):
+    return value.replace("\t", " ").replace('"', '').strip()
 
 def update_gene_collection(results):
     with transaction.atomic():
@@ -466,7 +468,7 @@ class UploadedPanelList(TimeStampedModel):
             if not suppress_errors:
                 raise TSVIncorrectFormat(str(key + 2))
 
-        if entity_data["moi"]:
+        if entity_data.get("moi"):
             if entity_data["moi"] not in Evaluation.MODES_OF_INHERITANCE:
                 logger.error("TSV Import. Line: {} Incorrect MOI: {}".format(
                         str(key + 2), len(entity_data.keys())
@@ -474,6 +476,27 @@ class UploadedPanelList(TimeStampedModel):
                 )
                 if not suppress_errors:
                     raise TSVIncorrectFormat(str(key + 2))
+
+        if "Expert Review Green" in entity_data.get("Sources(; separated)"):
+            if not entity_data.get("moi") or entity_data.get("moi") == "Unknown":
+                logger.error("TSV Import. Line: {} Incorrect MOI for Expert Review Green: {}".format(
+                    str(key + 2), len(entity_data.keys())
+                )
+                )
+                if not suppress_errors:
+                    raise TSVIncorrectFormat(str(key + 2))
+
+        if entity_data.get("mode_of_pathogenicity"):
+            if entity_data.get("mode_of_pathogenicity") not in Evaluation.MODES_OF_PATHOGENICITY:
+                logger.error("TSV Import. Line: {} Incorrect Modes of Pathogenicity: {}".format(
+                        str(key + 2), len(entity_data.keys())
+                    )
+                )
+                if not suppress_errors:
+                    raise TSVIncorrectFormat(str(key + 2))
+        '''
+        if entity_data.get("entity_type") == "gene":
+        '''
 
         if entity_data["entity_type"] in ["str", "region"]:
             if entity_data["position_37_start"] and entity_data["position_37_end"]:
@@ -523,6 +546,7 @@ class UploadedPanelList(TimeStampedModel):
         return entity_data
 
     def process_line(self, key, line, user):
+        line = [clean_value(value) for value in line]
         entity_data = self.get_entity_data(key, line)
 
         panel = self.get_panel(entity_data)
@@ -656,6 +680,8 @@ class UploadedReviewsList(TimeStampedModel):
         aline = line
         if len(aline) < 21:
             raise TSVIncorrectFormat(str(key + 2))
+
+        aline = [clean_value(value) for value in aline]
 
         gene_symbol = re.sub(
             "[^0-9a-zA-Z~#_@-]", "", aline[0]
