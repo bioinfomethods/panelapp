@@ -371,3 +371,23 @@ class HistoricalSnapshot(models.Model):
     def to_api_1(self):
         self.data['signed_off'] = self.signed_off_date
         return self.data
+
+    def to_api_summary(self):
+        result = {
+            "result": {
+                "id": self.data["id"],
+                "name": self.data["name"],
+                "version": self.data["version"],
+                "disease_group": self.data["disease_group"],
+                "disease_sub_group": self.data["disease_sub_group"],
+                "status": self.data["status"],
+                "created": self.data["version_created"],
+                "signed_off": self.signed_off_date,
+                "stats": [{
+                    "number_of_genes": len(self.data["genes"]),
+                    "number_of_strs": len(self.data["strs"]),
+                    "number_of_regions": len(self.data["regions"]),
+                }],
+            }
+        }
+        return result

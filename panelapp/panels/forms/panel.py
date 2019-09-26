@@ -45,7 +45,8 @@ class PanelForm(forms.ModelForm):
         required=True, choices=GenePanel.STATUS, initial=GenePanel.STATUS.internal
     )
     signed_off_version = forms.CharField(label="Signed Off Version", required=False)
-    signed_off_date = forms.DateField(label='Signed Off Date', required=False)
+    signed_off_date = forms.DateField(label='Signed Off Date', required=False,
+                                      widget=forms.DateInput(attrs={"placeholder":"Signed Off Date in format dd/mm/yyyy"}))
     child_panels = forms.ModelMultipleChoiceField(
         label="Child Panels",
         required=False,
@@ -97,6 +98,9 @@ class PanelForm(forms.ModelForm):
 
         if self.instance.pk:
             self.fields["status"].initial = self.instance.panel.status
+            self.fields["signed_off_version"].initial = '{}.{}'.format(self.instance.is_signed_off[0],
+                                                               self.instance.is_signed_off[1]) if self.instance.is_signed_off else None
+            self.fields["signed_off_date"].initial = self.instance.is_signed_off[2]
             if gel_curator:
                 self.fields[
                     "child_panels"

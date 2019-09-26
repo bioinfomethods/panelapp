@@ -354,7 +354,8 @@ class GenePanelSnapshot(TimeStampedModel):
     @property
     def is_signed_off(self):
         signed_off = None
-        for snap in self.panel.historicalsnapshot_set.filter(signed_off_date__isnull=False):
+        snap = self.panel.historicalsnapshot_set.filter(signed_off_date__isnull=False).first()
+        if snap:
             signed_off = (snap.major_version, snap.minor_version, snap.signed_off_date)
         return signed_off
 
