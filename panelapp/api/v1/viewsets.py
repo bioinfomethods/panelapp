@@ -620,7 +620,7 @@ class SignedOffPanelViewSet(ReadOnlyListViewset):
     def list(self, request, *args, **kwargs):
         results = []
         for snap in self.get_queryset():
-            results.append(snap.to_api_summary())
+            results.append(snap.to_api_1(exclude_entities=True))
         return Response(results)
 
     def retrieve(self, request, *args, **kwargs):

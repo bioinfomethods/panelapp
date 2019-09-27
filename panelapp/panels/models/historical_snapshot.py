@@ -368,26 +368,10 @@ class HistoricalSnapshot(models.Model):
 
         return result
 
-    def to_api_1(self):
+    def to_api_1(self, exclude_entities=False):
+        if exclude_entities:
+            self.data['genes'] = None
+            self.data['regions'] = None
+            self.data['strs'] = None
         self.data['signed_off'] = self.signed_off_date
         return self.data
-
-    def to_api_summary(self):
-        result = {
-            "result": {
-                "id": self.data["id"],
-                "name": self.data["name"],
-                "version": self.data["version"],
-                "disease_group": self.data["disease_group"],
-                "disease_sub_group": self.data["disease_sub_group"],
-                "status": self.data["status"],
-                "created": self.data["version_created"],
-                "signed_off": self.signed_off_date,
-                "stats": [{
-                    "number_of_genes": len(self.data["genes"]),
-                    "number_of_strs": len(self.data["strs"]),
-                    "number_of_regions": len(self.data["regions"]),
-                }],
-            }
-        }
-        return result

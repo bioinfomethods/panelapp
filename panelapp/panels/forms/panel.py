@@ -100,7 +100,7 @@ class PanelForm(forms.ModelForm):
             self.fields["status"].initial = self.instance.panel.status
             self.fields["signed_off_version"].initial = '{}.{}'.format(self.instance.is_signed_off[0],
                                                                self.instance.is_signed_off[1]) if self.instance.is_signed_off else None
-            self.fields["signed_off_date"].initial = self.instance.is_signed_off[2]
+            self.fields["signed_off_date"].initial = self.instance.is_signed_off[2] if self.instance.is_signed_off else None
             if gel_curator:
                 self.fields[
                     "child_panels"

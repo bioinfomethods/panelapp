@@ -22,7 +22,7 @@
   {% endif %}
 
     {% if signed_off %}
-        <div class="alert alert-info" role="alert"><strong>This Panel has been signed off for the GMS</strong></div>
+        <div class="alert alert-info" role="alert"><strong>This Panel has been signed off {% if signed_off_setting %}for the GMS {% endif %}</strong></div>
     {% endif %}
 
   <div id="banner">
