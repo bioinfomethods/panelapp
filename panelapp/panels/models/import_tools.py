@@ -494,6 +494,21 @@ class UploadedPanelList(TimeStampedModel):
                 )
                 if not suppress_errors:
                     raise TSVIncorrectFormat(str(key + 2))
+
+        if entity_data.get("Level4"):
+            if not Level4Title.objects.filter(name=entity_data["Level4"]).exists():
+                logger.error("TSV Import. Line: {} Incorrect Level4 Title: {}".format(
+                        str(key + 2), len(entity_data.keys())
+                    )
+                )
+                if not suppress_errors:
+                    raise TSVIncorrectFormat(str(key + 2))
+
+        if entity_data.get("Sources(; separated)") in ["Expert Review Green", "Expert Review Amber",
+                                                       "Expert Review Red", "Expert Review Removed"]:
+
+
+
         '''
         if entity_data.get("entity_type") == "gene":
         '''
