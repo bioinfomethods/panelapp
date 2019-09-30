@@ -283,3 +283,5 @@ SWAGGER_SETTINGS = {
 }
 
 DEFAULT_PANEL_TYPES = os.getenv("DEFAULT_PANEL_TYPES", "rare-disease-100k").split(",")
+
+SIGNED_OFF_MESSAGE = "This Panel has been signed off for the GMS"

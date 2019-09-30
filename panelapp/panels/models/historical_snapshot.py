@@ -368,6 +368,10 @@ class HistoricalSnapshot(models.Model):
 
         return result
 
-    def to_api_1(self):
+    def to_api_1(self, exclude_entities=False):
+        if exclude_entities:
+            self.data.pop('genes', None)
+            self.data.pop('regions', None)
+            self.data.pop('strs', None)
         self.data['signed_off'] = self.signed_off_date
         return self.data

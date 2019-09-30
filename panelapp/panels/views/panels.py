@@ -42,6 +42,7 @@ from django.urls import reverse_lazy
 from django.urls import reverse
 from django.utils import timezone
 from django.http import StreamingHttpResponse
+from django.conf import settings
 from panelapp.mixins import GELReviewerRequiredMixin
 from accounts.models import User
 from panels.forms import PromotePanelForm
@@ -155,10 +156,11 @@ class GenePanelView(DetailView):
             and self.request.user.reviewer.is_GEL(),
             request=self.request,
         )
-        ctx['signed_off'] = None
+        ctx["signed_off"] = None
+        ctx["signed_off_message"] = getattr(settings, "SIGNED_OFF_MESSAGE")
         signed_off = self.object.active_panel.panel.historicalsnapshot_set.filter(signed_off_date__isnull=False).last()
         if signed_off:
-            ctx['signed_off'] = signed_off
+            ctx["signed_off"] = signed_off
         ctx["contributors"] = ctx["panel"].contributors
         ctx["promote_panel_form"] = PromotePanelForm(
             instance=ctx["panel"],

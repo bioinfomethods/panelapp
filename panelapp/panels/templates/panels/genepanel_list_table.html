@@ -83,9 +83,8 @@
                 {%  endif %}
                 {% if entry.signedoff %}
                     <strong>
-                    Signed Off v. {% for snap in entry.panel.historicalsnapshot_set.all %}
-                    {% if snap.signed_off_date %}{{ snap.major_version }}.{{ snap.minor_version }} on {{ snap.signed_off_date }}
-                    {% endif %} {% endfor %}</strong>
+                    Signed Off v.{{ entry.is_signed_off.0 }}.{{ entry.is_signed_off.1 }} on {{ entry.is_signed_off.2 }}
+                    </strong>
                 {% endif %}
               </td>
               <td>
