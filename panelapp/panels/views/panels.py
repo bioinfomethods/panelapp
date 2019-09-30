@@ -157,7 +157,7 @@ class GenePanelView(DetailView):
             request=self.request,
         )
         ctx["signed_off"] = None
-        ctx["signed_off_setting"] = getattr(settings, "SIGNED_OFF")
+        ctx["signed_off_message"] = getattr(settings, "SIGNED_OFF_MESSAGE")
         signed_off = self.object.active_panel.panel.historicalsnapshot_set.filter(signed_off_date__isnull=False).last()
         if signed_off:
             ctx["signed_off"] = signed_off
