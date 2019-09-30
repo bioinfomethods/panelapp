@@ -52,7 +52,13 @@ from .evaluation import Evaluation
 
 logger = logging.getLogger(__name__)
 
-def clean_value(value):
+def clean_value(value, key):
+    try:
+        value.decode('ascii')
+    except UnicodeDecodeError:
+        logger.error(
+            "TSV Import. Line: {} Invalid Character".format(str(key + 2)))
+        raise TSVIncorrectFormat("Line: {} Invalid Character".format(str(key + 2)))
     return value.replace("\t", " ").replace('"', '').strip()
 
 def update_gene_collection(results):
@@ -504,14 +510,20 @@ class UploadedPanelList(TimeStampedModel):
                 if not suppress_errors:
                     raise TSVIncorrectFormat(str(key + 2))
 
-        if entity_data.get("Sources(; separated)") in ["Expert Review Green", "Expert Review Amber",
-                                                       "Expert Review Red", "Expert Review Removed"]:
+        nhs, sources = entity_data.get("Sources(; separated)").split(';')
 
+        if sources.lower() in {"expert review green", "expert review amber",
+                               "expert review red", "expert review removed"}:
+            expert_review = sources.title()
+            entity_data["Sources(; separated)"] = nhs + ";" + expert_review
 
-
-        '''
-        if entity_data.get("entity_type") == "gene":
-        '''
+        if entity_data.get("entity_type") not in {"gene", "region", "str"}:
+            logger.error("TSV Import. Line: {} Incorrect Entity Type: {}".format(
+                str(key + 2), len(entity_data.keys())
+            )
+            )
+            if not suppress_errors:
+                raise TSVIncorrectFormat(str(key + 2))
 
         if entity_data["entity_type"] in ["str", "region"]:
             if entity_data["position_37_start"] and entity_data["position_37_end"]:
@@ -561,7 +573,7 @@ class UploadedPanelList(TimeStampedModel):
         return entity_data
 
     def process_line(self, key, line, user):
-        line = [clean_value(value) for value in line]
+        line = [clean_value(value, key) for value in line]
         entity_data = self.get_entity_data(key, line)
 
         panel = self.get_panel(entity_data)
