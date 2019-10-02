@@ -28,7 +28,7 @@ code_test:
     DJANGO_SETTINGS_MODULE: panelapp.settings.test
     DJANGO_LOG_LEVEL: INFO
   script:
-    - apk add --no-cache postgresql-libs git curl jpeg-dev zlib-dev gcc musl-dev curl-dev postgresql-dev build-base linux-headers
+    - apk add --no-cache postgresql-libs git curl jpeg-dev zlib-dev gcc musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev
     - pip install .[tests]
     - pip install pytest-runner
     - pytest

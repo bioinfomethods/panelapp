@@ -23,6 +23,7 @@
 ##
 from django.conf.urls import url
 from django.conf.urls import include
+from django.contrib.auth.views import LoginView
 from django.contrib.auth.views import PasswordResetView
 from django.contrib.auth.views import PasswordResetDoneView
 from django.contrib.auth.views import PasswordResetConfirmView
@@ -36,6 +37,7 @@ from .views import VerifyEmailAddressView
 
 app_name = "accounts"
 urlpatterns = [
+    url(r"^login/$", LoginView.as_view(redirect_authenticated_user=True), name="login"),
     url(r"^profile/$", UserView.as_view(), name="profile"),
     url(r"^registration/$", UserRegistrationView.as_view(), name="register"),
     url(r"^change_password/$", UpdatePasswordView.as_view(), name="change_password"),
