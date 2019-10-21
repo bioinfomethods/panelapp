@@ -31,6 +31,8 @@ from panels.models import GenePanel
 from panels.models import Comment
 from panels.models import Evaluation
 from panels.models import Activity
+from panels.models import GenePanelSnapshot
+
 from panels.tests.factories import TagFactory
 from panels.tests.factories import GeneFactory
 from panels.tests.factories import GenePanelSnapshotFactory
@@ -745,7 +747,8 @@ class GeneReviewTest(LoginGELUser):
 
         with open(test_reviews_file) as f:
             url = reverse_lazy("panels:upload_reviews")
-            self.client.post(url, {"review_list": f})
+            res = self.client.post(url, {"review_list": f})
+            messages = [str(m) for m in res.wsgi_request._messages]
 
         ap = GenePanel.objects.get(name="Panel One").active_panel
         assert ap.get_gene(gene.gene_symbol).evaluation.count() == 1

@@ -37,6 +37,9 @@ from panels.tests.factories import EvidenceFactory
 from panels.tests.factories import GenePanelSnapshotFactory
 from panels.tests.factories import GenePanelEntrySnapshotFactory
 from panels.tests.factories import PanelTypeFactory
+from panels.tests.factories import RegionFactory
+from psycopg2.extras import NumericRange
+
 
 
 fake = Factory.create()
@@ -332,8 +335,22 @@ class GenePanelTest(LoginGELUser):
     def test_import_panel(self):
         GeneFactory(gene_symbol="ABCC5-AS1")
         GeneFactory(gene_symbol="A1CF")
-        GeneFactory(gene_symbol="STR_1")
-        GeneFactory(gene_symbol="STR_2")
+        str_1 = GeneFactory(gene_symbol="STR_1")
+        str_2 = GeneFactory(gene_symbol="STR_2")
+        str_3 = GeneFactory(gene_symbol="STR_3")
+
+        STRFactory(name='STR_1', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
+                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
+                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_1)
+        STRFactory(name='STR_2', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
+                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
+                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_2)
+        STRFactory(name='STR_3', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
+                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
+                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_3)
+        RegionFactory(name='ISCA-37478', moi='BOTH monoallelic and biallelic, autosomal or pseudoautosomal',
+                      chromosome='15', position_38=NumericRange(341468368, 341468388), type_of_variants='cnv_gain',
+                      verbose_name='Verbose name', required_overlap_percentage=10)
 
         file_path = os.path.join(os.path.dirname(__file__), "import_panel_data.tsv")
         test_panel_file = os.path.abspath(file_path)
@@ -341,6 +358,7 @@ class GenePanelTest(LoginGELUser):
         with open(test_panel_file) as f:
             url = reverse_lazy("panels:upload_panels")
             res = self.client.post(url, {"panel_list": f})
+            messages = [str(m) for m in res.wsgi_request._messages]
 
         gp = GenePanel.objects.get(name="Panel One")
         active_panel = gp.active_panel
@@ -350,8 +368,22 @@ class GenePanelTest(LoginGELUser):
     def test_import_regions(self):
         GeneFactory(gene_symbol="ABCC5-AS1")
         GeneFactory(gene_symbol="A1CF")
-        GeneFactory(gene_symbol="STR_1")
-        GeneFactory(gene_symbol="STR_2")
+        str_1 = GeneFactory(gene_symbol="STR_1")
+        str_2 = GeneFactory(gene_symbol="STR_2")
+        str_3 = GeneFactory(gene_symbol="STR_3")
+
+        STRFactory(name='STR_1', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
+                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
+                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_1)
+        STRFactory(name='STR_2', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
+                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
+                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_2)
+        STRFactory(name='STR_3', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
+                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
+                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_3)
+        RegionFactory(name='ISCA-37478', moi='BOTH monoallelic and biallelic, autosomal or pseudoautosomal',
+                      chromosome='15', position_38=NumericRange(341468368, 341468388), type_of_variants='cnv_gain',
+                      verbose_name='Verbose name', required_overlap_percentage=10)
 
         file_path = os.path.join(os.path.dirname(__file__), "import_panel_data.tsv")
         test_panel_file = os.path.abspath(file_path)
@@ -368,29 +400,55 @@ class GenePanelTest(LoginGELUser):
         GeneFactory(gene_symbol="ABCC5-AS1")
         GeneFactory(gene_symbol="A1CF")
         gene = GeneFactory(gene_symbol="STR_1")
-        GeneFactory(gene_symbol="STR_2")
-        GeneFactory(gene_symbol="STR_3")
+        str_2 = GeneFactory(gene_symbol="STR_2")
+        str_3 = GeneFactory(gene_symbol="STR_3")
+
+        STRFactory(name='STR_1', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
+                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
+                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=gene)
+        STRFactory(name='STR_2', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
+                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
+                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_2)
+        STRFactory(name='STR_3', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
+                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
+                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_3)
+        RegionFactory(name='ISCA-37478', moi='BOTH monoallelic and biallelic, autosomal or pseudoautosomal',
+                      chromosome='15', position_38=NumericRange(341468368, 341468388), type_of_variants='cnv_gain',
+                      verbose_name='Verbose name', required_overlap_percentage=10)
 
         file_path = os.path.join(os.path.dirname(__file__), "import_panel_data.tsv")
         test_panel_file = os.path.abspath(file_path)
-
         with open(test_panel_file) as f:
             url = reverse_lazy("panels:upload_panels")
             res = self.client.post(url, {"panel_list": f})
 
-        self.assertEqual(GenePanel.objects.count(), 2)
+        self.assertEqual(GenePanel.objects.count(), 6)
         gp = GenePanel.objects.get(name="TestPanel")
         active_panel = gp.active_panel
         self.assertEqual(active_panel.get_all_strs.count(), 3)
         self.assertEqual(active_panel.get_str("STR_1").gene_core, gene)
-        self.assertEqual(active_panel.get_str("STR_2").gene_core, None)
-        self.assertEqual(active_panel.get_str("STR_3").gene_core, None)
+        self.assertEqual(active_panel.get_str("STR_2").gene_core, str_2)
+        self.assertEqual(active_panel.get_str("STR_3").gene_core, str_3)
 
     def test_import_panel_sources(self):
         gene = GeneFactory(gene_symbol="ABCC5-AS1")
         A1CF = GeneFactory(gene_symbol="A1CF")
-        GeneFactory(gene_symbol="STR_1")
-        GeneFactory(gene_symbol="STR_2")
+        str_1 = GeneFactory(gene_symbol="STR_1")
+        str_2 = GeneFactory(gene_symbol="STR_2")
+        str_3 = GeneFactory(gene_symbol="STR_3")
+
+        STRFactory(name='STR_1', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
+                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
+                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_1)
+        STRFactory(name='STR_2', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
+                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
+                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_2)
+        STRFactory(name='STR_3', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
+                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
+                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_3)
+        RegionFactory(name='ISCA-37478', moi='BOTH monoallelic and biallelic, autosomal or pseudoautosomal',
+                      chromosome='15', position_38=NumericRange(341468368, 341468388), type_of_variants='cnv_gain',
+                      verbose_name='Verbose name', required_overlap_percentage=10)
 
         gps = GenePanelSnapshotFactory()
         gps.panel.name = "Panel One"
@@ -410,7 +468,7 @@ class GenePanelTest(LoginGELUser):
 
         with open(test_panel_file) as f:
             url = reverse_lazy("panels:upload_panels")
-            self.client.post(url, {"panel_list": f})
+            res = self.client.post(url, {"panel_list": f})
 
         ap = GenePanel.objects.get(name="Panel One").active_panel
         self.assertEqual(
@@ -432,7 +490,7 @@ class GenePanelTest(LoginGELUser):
             res = self.client.post(url, {"panel_list": f})
             messages = [str(m) for m in res.wsgi_request._messages]
             expected_messages = [
-                "Line: 3, 4, 5, 6 is not properly formatted, please check it and try again."
+            "Line: 3 Incorrect STR Name, 4 Incorrect Region Name, 5 Incorrect Region Name, 6 Incorrect MOI is not properly formatted, please check it and try again."
             ]
             self.assertEqual(expected_messages, messages)
 
