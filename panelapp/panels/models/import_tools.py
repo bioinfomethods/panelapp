@@ -814,7 +814,7 @@ class UploadedPanelList(TimeStampedModel):
         return entity_data
 
     def process_line(self, key, line, user):
-        line = [clean_value(value, key) for value in line]
+        line = [clean_tsv_value(value, key) for value in line]
         entity_data = self.get_entity_data(key, line)
 
         panel = self.get_panel(entity_data)
@@ -953,7 +953,7 @@ class UploadedReviewsList(TimeStampedModel):
         if len(aline) < 21:
             raise TSVIncorrectFormat(str(key + 2))
 
-        aline = [clean_value(value, key) for value in aline]
+        aline = [clean_tsv_value(value, key) for value in aline]
 
         gene_symbol = re.sub(
             "[^0-9a-zA-Z~#_@-]", "", aline[0]
