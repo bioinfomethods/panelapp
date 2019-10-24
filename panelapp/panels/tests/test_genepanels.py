@@ -420,7 +420,7 @@ class GenePanelTest(LoginGELUser):
         test_panel_file = os.path.abspath(file_path)
         with open(test_panel_file) as f:
             url = reverse_lazy("panels:upload_panels")
-            res = self.client.post(url, {"panel_list": f})
+            self.client.post(url, {"panel_list": f})
 
         self.assertEqual(GenePanel.objects.count(), 6)
         gp = GenePanel.objects.get(name="TestPanel")
@@ -468,7 +468,7 @@ class GenePanelTest(LoginGELUser):
 
         with open(test_panel_file) as f:
             url = reverse_lazy("panels:upload_panels")
-            res = self.client.post(url, {"panel_list": f})
+            self.client.post(url, {"panel_list": f})
 
         ap = GenePanel.objects.get(name="Panel One").active_panel
         self.assertEqual(

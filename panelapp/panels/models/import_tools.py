@@ -54,14 +54,20 @@ from psycopg2.extras import NumericRange
 logger = logging.getLogger(__name__)
 
 
-def clean_value(value, key):
+def clean_tsv_value(value, key):
+    """
+    Check tsv value for non-ascii characters and clean tabs, quotes and extra spaces
+    :param value:
+    :param key:
+    :return:
+    """
     try:
-        value.encode('ascii')
+        value.encode("ascii")
     except UnicodeDecodeError:
-        logger.error(
-            "TSV Import. Line: {} Invalid Character".format(str(key + 2)))
+        logger.error("TSV Import. Line: {} Invalid Character".format(str(key + 2)))
         raise TSVIncorrectFormat("Line: {} Invalid Character".format(str(key + 2)))
-    return value.replace("\t", " ").replace('"', '').strip()
+    return value.replace("\t", " ").replace('"', "").strip()
+
 
 def update_gene_collection(results):
     with transaction.atomic():
@@ -462,7 +468,9 @@ class UploadedPanelList(TimeStampedModel):
                 )
             )
             if not suppress_errors:
-                raise TSVIncorrectFormat("{} Incorrect entity type".format(str(key + 2)))
+                raise TSVIncorrectFormat(
+                    "{} Incorrect entity type".format(str(key + 2))
+                )
 
         if (
             len(entity_data.keys())
@@ -474,11 +482,14 @@ class UploadedPanelList(TimeStampedModel):
                 )
             )
             if not suppress_errors:
-                raise TSVIncorrectFormat("{} Incorrect line length".format(str(key + 2)))
+                raise TSVIncorrectFormat(
+                    "{} Incorrect line length".format(str(key + 2))
+                )
 
         if entity_data.get("moi"):
             if entity_data["moi"] not in Evaluation.MODES_OF_INHERITANCE:
-                logger.error("TSV Import. Line: {} Incorrect MOI: {}".format(
+                logger.error(
+                    "TSV Import. Line: {} Incorrect MOI: {}".format(
                         str(key + 2), len(entity_data.keys())
                     )
                 )
@@ -488,164 +499,268 @@ class UploadedPanelList(TimeStampedModel):
         if entity_data.get("sources"):
             if "Expert Review Green" in entity_data.get("sources"):
                 if not entity_data.get("moi") or entity_data.get("moi") == "Unknown":
-                    logger.error("TSV Import. Line: {} Incorrect MOI for Expert Review Green: {}".format(
-                        str(key + 2), len(entity_data.keys())
-                    )
+                    logger.error(
+                        "TSV Import. Line: {} Incorrect MOI for Expert Review Green: {}".format(
+                            str(key + 2), len(entity_data.keys())
+                        )
                     )
                     if not suppress_errors:
-                        raise TSVIncorrectFormat("{} Incorrect MOI For Expert Review Green".format(str(key + 2)))
+                        raise TSVIncorrectFormat(
+                            "{} Incorrect MOI For Expert Review Green".format(
+                                str(key + 2)
+                            )
+                        )
 
         if entity_data.get("mode_of_pathogenicity"):
-            if entity_data.get("mode_of_pathogenicity") not in Evaluation.MODES_OF_PATHOGENICITY:
-                logger.error("TSV Import. Line: {} Incorrect Modes of Pathogenicity: {}".format(
+            if (
+                entity_data.get("mode_of_pathogenicity")
+                not in Evaluation.MODES_OF_PATHOGENICITY
+            ):
+                logger.error(
+                    "TSV Import. Line: {} Incorrect Modes of Pathogenicity: {}".format(
                         str(key + 2), len(entity_data.keys())
                     )
                 )
                 if not suppress_errors:
-                    raise TSVIncorrectFormat("{} Incorrect Modes of Pathogenicity".format(str(key + 2)))
+                    raise TSVIncorrectFormat(
+                        "{} Incorrect Modes of Pathogenicity".format(str(key + 2))
+                    )
         panel = None
         if entity_data.get("Level4"):
-            panel = GenePanelSnapshot.objects.filter(level4title__name=entity_data["Level4"]).first()
+            panel = GenePanelSnapshot.objects.filter(
+                level4title__name=entity_data["Level4"]
+            ).first()
             if not panel:
-                logger.error("TSV Import. Line: {} Incorrect Level4 Title: {}".format(
+                logger.error(
+                    "TSV Import. Line: {} Incorrect Level4 Title: {}".format(
                         str(key + 2), len(entity_data.keys())
                     )
                 )
                 if not suppress_errors:
-                    raise TSVIncorrectFormat("{} Incorrect Level4 Title".format(str(key + 2)))
-
+                    raise TSVIncorrectFormat(
+                        "{} Incorrect Level4 Title".format(str(key + 2))
+                    )
 
         if entity_data.get("sources"):
-            entity_data["sources"] = [source.title() if source.lower() in {"expert review green", "expert review amber"
-                ,"expert review red", "expert review removed"} else source for source in entity_data.get("sources")]
+            entity_data["sources"] = [
+                source.title()
+                if source.lower()
+                in {
+                    "expert review green",
+                    "expert review amber",
+                    "expert review red",
+                    "expert review removed",
+                }
+                else source
+                for source in entity_data.get("sources")
+            ]
         else:
-            logger.error("TSV Import. Line: {} Missing Sources : {}".format(
-                str(key + 2), len(entity_data.keys())))
+            logger.error(
+                "TSV Import. Line: {} Missing Sources : {}".format(
+                    str(key + 2), len(entity_data.keys())
+                )
+            )
             if not suppress_errors:
                 raise TSVIncorrectFormat("{} Missing Sources".format(str(key + 2)))
 
         if entity_data.get("entity_type") not in {"gene", "region", "str"}:
-            logger.error("TSV Import. Line: {} Incorrect Entity Type: {}".format(
-                str(key + 2), len(entity_data.keys())))
+            logger.error(
+                "TSV Import. Line: {} Incorrect Entity Type: {}".format(
+                    str(key + 2), len(entity_data.keys())
+                )
+            )
 
             if not suppress_errors:
-                raise TSVIncorrectFormat("{} Incorrect Entity Type".format(str(key + 2)))
+                raise TSVIncorrectFormat(
+                    "{} Incorrect Entity Type".format(str(key + 2))
+                )
 
         if entity_data.get("entity_type") == "region":
-            if not Region.objects.filter(name=entity_data['entity_name']).exists():
-                logger.error("TSV Import. Line: {} Incorrect Region Name: {}".format(
+            if not Region.objects.filter(name=entity_data["entity_name"]).exists():
+                logger.error(
+                    "TSV Import. Line: {} Incorrect Region Name: {}".format(
                         str(key + 2), len(entity_data.keys())
                     )
                 )
                 if not suppress_errors:
-                    raise TSVIncorrectFormat("{} Incorrect Region Name".format(
-                        str(key + 2)))
+                    raise TSVIncorrectFormat(
+                        "{} Incorrect Region Name".format(str(key + 2))
+                    )
 
-            if entity_data['position_37_start'] or entity_data['position_37_end']:
-                logger.error("TSV Import. Line: {} Position 37 Must Be Blank: {}".format(
-                    str(key + 2), len(entity_data.keys())
-                )
+            if entity_data["position_37_start"] or entity_data["position_37_end"]:
+                logger.error(
+                    "TSV Import. Line: {} Position 37 Must Be Blank: {}".format(
+                        str(key + 2), len(entity_data.keys())
+                    )
                 )
                 if not suppress_errors:
-                    raise TSVIncorrectFormat("{} Position 37 Must Be Blank".format(
-                        str(key + 2)))
+                    raise TSVIncorrectFormat(
+                        "{} Position 37 Must Be Blank".format(str(key + 2))
+                    )
 
-            if all([entity_data.get(value) if entity_data.get(value) != '' else None for value in
-                        ['chromosome', 'position_38_start', 'position_38_end',
-                        'type_of_variants', 'verbose_name', 'required_overlap_percentage']]):
+            if all(
+                [
+                    entity_data.get(value) if entity_data.get(value) != "" else None
+                    for value in [
+                        "chromosome",
+                        "position_38_start",
+                        "position_38_end",
+                        "type_of_variants",
+                        "verbose_name",
+                        "required_overlap_percentage",
+                    ]
+                ]
+            ):
 
-                query = Region.objects.filter(name=entity_data['entity_name'],
-                                              chromosome=entity_data['chromosome'],
-                                              position_38=NumericRange(entity_data['position_38_start'],
-                                                                       entity_data['position_38_end']),
-                                              type_of_variants=entity_data['type_of_variants'],
-                                              verbose_name=entity_data['verbose_name'],
-                                              required_overlap_percentage=entity_data['required_overlap_percentage']
-                                              )
+                query = Region.objects.filter(
+                    name=entity_data["entity_name"],
+                    chromosome=entity_data["chromosome"],
+                    position_38=NumericRange(
+                        entity_data["position_38_start"], entity_data["position_38_end"]
+                    ),
+                    type_of_variants=entity_data["type_of_variants"],
+                    verbose_name=entity_data["verbose_name"],
+                    required_overlap_percentage=entity_data[
+                        "required_overlap_percentage"
+                    ],
+                )
                 if not query.exists():
-                    logger.error("TSV Import. Line: {} Region Data Not Matching Panelapp Region: {}".format(
-                        str(key + 2), len(entity_data.keys())
-                    )
+                    logger.error(
+                        "TSV Import. Line: {} Region Data Not Matching Panelapp Region: {}".format(
+                            str(key + 2), len(entity_data.keys())
+                        )
                     )
                     if not suppress_errors:
-                        raise TSVIncorrectFormat("{} Wrong Region Data".format(str(key + 2)))
+                        raise TSVIncorrectFormat(
+                            "{} Wrong Region Data".format(str(key + 2))
+                        )
 
             else:
-                logger.error("TSV Import. Line: {} Required Region Data Missing: {}".format(
-                    str(key + 2), len(entity_data.keys())))
+                logger.error(
+                    "TSV Import. Line: {} Required Region Data Missing: {}".format(
+                        str(key + 2), len(entity_data.keys())
+                    )
+                )
                 if not suppress_errors:
-                    raise TSVIncorrectFormat("{} Region Data Missing".format(str(key + 2)))
+                    raise TSVIncorrectFormat(
+                        "{} Region Data Missing".format(str(key + 2))
+                    )
 
-            if entity_data.get('type_of_variant') == 'cnv_loss':
-                if not entity_data.get('haploinsufficiency_score'):
-                    logger.error("TSV Import. Line: {} Haploinsufficieny Score is required for cnv_loss variant: {}".format(
-                        str(key + 2), len(entity_data.keys())
-                    )
-                    )
-                    if not suppress_errors:
-                        raise TSVIncorrectFormat("{} Missing Haploinsufficieny Score".format(str(key + 2)))
-                if not query.filter(haploinsufficiency_score=entity_data['haploinsufficiency_score']).exists():
+            if entity_data.get("type_of_variant") == "cnv_loss":
+                if not entity_data.get("haploinsufficiency_score"):
                     logger.error(
-                        "TSV Import. Line: {} Wrong Haploinsufficieny Score"
-                            .format(str(key + 2), len(entity_data.keys()))
+                        "TSV Import. Line: {} Haploinsufficieny Score is required for cnv_loss variant: {}".format(
+                            str(key + 2), len(entity_data.keys())
+                        )
                     )
                     if not suppress_errors:
-                        raise TSVIncorrectFormat("{} Haploinsufficieny Score for Region".format(str(key + 2)))
-
-            if entity_data.get('type_of_variant') == 'cnv_gain':
-                if not entity_data.get('triplosensitivity_score'):
-                    logger.error("TSV Import. Line: {} Triplosensitivity Score is required for cnv_gain variant: {}".format(
-                        str(key + 2), len(entity_data.keys())
-                    )
-                    )
-                    if not suppress_errors:
-                        raise TSVIncorrectFormat("{} Missing Triplosensitivity Score".format(str(key + 2)))
-
-                if not query.filter(triplosensitivity_score=entity_data['triplosensitivity_score']).exists():
+                        raise TSVIncorrectFormat(
+                            "{} Missing Haploinsufficieny Score".format(str(key + 2))
+                        )
+                if not query.filter(
+                    haploinsufficiency_score=entity_data["haploinsufficiency_score"]
+                ).exists():
                     logger.error(
-                        "TSV Import. Line: {} Triplosensitivity Score for Region does not match the one in Panelapp: {}"
-                            .format(str(key + 2), len(entity_data.keys()))
+                        "TSV Import. Line: {} Wrong Haploinsufficieny Score".format(
+                            str(key + 2), len(entity_data.keys())
+                        )
                     )
                     if not suppress_errors:
-                        raise TSVIncorrectFormat("{} Wrong Triplosensitivity Score".format(str(key + 2)))
+                        raise TSVIncorrectFormat(
+                            "{} Haploinsufficieny Score for Region".format(str(key + 2))
+                        )
+
+            if entity_data.get("type_of_variant") == "cnv_gain":
+                if not entity_data.get("triplosensitivity_score"):
+                    logger.error(
+                        "TSV Import. Line: {} Triplosensitivity Score is required for cnv_gain variant: {}".format(
+                            str(key + 2), len(entity_data.keys())
+                        )
+                    )
+                    if not suppress_errors:
+                        raise TSVIncorrectFormat(
+                            "{} Missing Triplosensitivity Score".format(str(key + 2))
+                        )
+
+                if not query.filter(
+                    triplosensitivity_score=entity_data["triplosensitivity_score"]
+                ).exists():
+                    logger.error(
+                        "TSV Import. Line: {} Triplosensitivity Score for Region does not match the one in Panelapp: {}".format(
+                            str(key + 2), len(entity_data.keys())
+                        )
+                    )
+                    if not suppress_errors:
+                        raise TSVIncorrectFormat(
+                            "{} Wrong Triplosensitivity Score".format(str(key + 2))
+                        )
 
         if entity_data.get("entity_type") == "str":
-            str_query = STR.objects.filter(name=entity_data['entity_name'])
+            str_query = STR.objects.filter(name=entity_data["entity_name"])
             if not str_query.exists():
-                logger.error("TSV Import. Line: {} Incorrect STR Name: {}".format(
+                logger.error(
+                    "TSV Import. Line: {} Incorrect STR Name: {}".format(
                         str(key + 2), len(entity_data.keys())
                     )
                 )
                 if not suppress_errors:
-                    raise TSVIncorrectFormat("{} Incorrect STR Name".format(str(key + 2)))
+                    raise TSVIncorrectFormat(
+                        "{} Incorrect STR Name".format(str(key + 2))
+                    )
 
-            if not all([entity_data.get(value) for value in ['gene_symbol', 'moi', 'chromosome', 'position_38_start',
-                                                             'position_38_end', 'position_37_start', 'position_38_end',
-                                                             'repeated_sequence', 'normal_repeats', 'pathogenic_repeats'
-                                                             ]]):
-                logger.error("TSV Import. Line: {} Required STR Data Missing: {}".format(
+            if not all(
+                [
+                    entity_data.get(value)
+                    for value in [
+                        "gene_symbol",
+                        "moi",
+                        "chromosome",
+                        "position_38_start",
+                        "position_38_end",
+                        "position_37_start",
+                        "position_38_end",
+                        "repeated_sequence",
+                        "normal_repeats",
+                        "pathogenic_repeats",
+                    ]
+                ]
+            ):
+                logger.error(
+                    "TSV Import. Line: {} Required STR Data Missing: {}".format(
                         str(key + 2), len(entity_data.keys())
                     )
                 )
                 if not suppress_errors:
-                    raise TSVIncorrectFormat("{} Required STR Data Missing".format(str(key + 2)))
+                    raise TSVIncorrectFormat(
+                        "{} Required STR Data Missing".format(str(key + 2))
+                    )
 
-            query = str_query.filter(gene_core__gene_symbol=entity_data.get("gene_symbol"), moi=entity_data.get("moi"),
-                                     chromosome=entity_data['chromosome'],
-                                     position_38=NumericRange(entity_data['position_38_start'],
-                                                              entity_data['position_38_end']),
-                                     position_37=(entity_data['position_37_start'], entity_data['position_37_end']),
-                                     repeated_sequence=entity_data.get('repeated_sequence'),
-                                     normal_repeats=entity_data.get('normal_repeats'),
-                                     pathogenic_repeats=entity_data.get("pathogenic_repeats"))
+            query = str_query.filter(
+                gene_core__gene_symbol=entity_data.get("gene_symbol"),
+                moi=entity_data.get("moi"),
+                chromosome=entity_data["chromosome"],
+                position_38=NumericRange(
+                    entity_data["position_38_start"], entity_data["position_38_end"]
+                ),
+                position_37=(
+                    entity_data["position_37_start"],
+                    entity_data["position_37_end"],
+                ),
+                repeated_sequence=entity_data.get("repeated_sequence"),
+                normal_repeats=entity_data.get("normal_repeats"),
+                pathogenic_repeats=entity_data.get("pathogenic_repeats"),
+            )
 
             if not query.exists():
-                logger.error("TSV Import. Line: {} STR Data Not Matching Panelapp STR: {}".format(
-                    str(key + 2), len(entity_data.keys())
-                )
+                logger.error(
+                    "TSV Import. Line: {} STR Data Not Matching Panelapp STR: {}".format(
+                        str(key + 2), len(entity_data.keys())
+                    )
                 )
                 if not suppress_errors:
-                    raise TSVIncorrectFormat("{} STR Data Not Matching Panelapp STR".format(str(key + 2)))
+                    raise TSVIncorrectFormat(
+                        "{} STR Data Not Matching Panelapp STR".format(str(key + 2))
+                    )
 
         if entity_data["entity_type"] in ["str", "region"]:
             if entity_data["position_37_start"] and entity_data["position_37_end"]:
@@ -656,7 +771,9 @@ class UploadedPanelList(TimeStampedModel):
                         )
                     )
                     if not suppress_errors:
-                        raise TSVIncorrectFormat("{} Incorrect Post 37".format(str(key + 2)))
+                        raise TSVIncorrectFormat(
+                            "{} Incorrect Post 37".format(str(key + 2))
+                        )
 
                 entity_data["position_37"] = [
                     entity_data["position_37_start"],
@@ -684,7 +801,9 @@ class UploadedPanelList(TimeStampedModel):
                     )
                 )
                 if not suppress_errors:
-                    raise TSVIncorrectFormat("{} Incorrect Post 38 ".format(str(key + 2)))
+                    raise TSVIncorrectFormat(
+                        "{} Incorrect Post 38 ".format(str(key + 2))
+                    )
 
             entity_data["position_38"] = [
                 entity_data["position_38_start"],
@@ -739,9 +858,13 @@ class UploadedPanelList(TimeStampedModel):
             # When file is stored in S3 we need to read the file returned by FieldFile.open(), then force it into text
             # and split the content into lines
             # TODO is this working when using FileSystemStorage?
-            textfile_content = force_text(file.read(), encoding="utf-8",errors="ignore")
-            reader = csv.reader(textfile_content.splitlines(), delimiter="\t")
-            _ = next(reader)  # noqa
+            try:
+                textfile_content = force_text(file.read(), encoding="utf-8",errors="ignore")
+                reader = csv.reader(textfile_content.splitlines(), delimiter="\t")
+                _ = next(reader)  # noqa
+            except csv.Error:
+                logger.error("File Import. Wrong file format")
+                raise TSVIncorrectFormat('Wrong File Format. Please use TSV.')
 
             lines = [line for line in reader]
 
@@ -847,11 +970,13 @@ class UploadedReviewsList(TimeStampedModel):
         publication = [pub for pub in aline[10].split(";") if pub]
         # description = aline[11] # ? What description
 
-        if not GenePanelSnapshot.objects.filter(panel__name=level4).first().has_gene(gene_symbol):
-            logger.error("Line: {} Gene not in Panel".format(
-                str(key + 2)))
-            raise TSVIncorrectFormat("{} Gene not in Panel".format(
-                str(key + 2)))
+        if (
+            not GenePanelSnapshot.objects.filter(panel__name=level4)
+            .first()
+            .has_gene(gene_symbol)
+        ):
+            logger.error("Line: {} Gene not in Panel".format(str(key + 2)))
+            raise TSVIncorrectFormat("{} Gene not in Panel".format(str(key + 2)))
 
         mop = aline[17]
         rate = aline[18]
@@ -863,16 +988,13 @@ class UploadedReviewsList(TimeStampedModel):
         }
 
         if model_of_inheritance not in Evaluation.MODES_OF_INHERITANCE:
-            logger.error("Line: {} Incorrect MOI".format(
-                str(key + 2))
-            )
-            raise TSVIncorrectFormat("Line: {} Incorrect MOI".format(
-                str(key + 2)))
+            logger.error("Line: {} Incorrect MOI".format(str(key + 2)))
+            raise TSVIncorrectFormat("Line: {} Incorrect MOI".format(str(key + 2)))
 
         if not GenePanelSnapshot.objects.filter(panel__name=level4).exists():
-            logger.error("TSV Import. Line: {} Incorrect Level4 Title".format(
-                    str(key + 2))
-                    )
+            logger.error(
+                "TSV Import. Line: {} Incorrect Level4 Title".format(str(key + 2))
+            )
             raise TSVIncorrectFormat("{} Incorrect Level4 Title".format(str(key + 2)))
 
         if rate:
@@ -889,10 +1011,14 @@ class UploadedReviewsList(TimeStampedModel):
 
         if mop:
             if mop not in Evaluation.MODES_OF_PATHOGENICITY:
-                logger.error("TSV Import. Line: {} Incorrect Modes of Pathogenicity: {}".format(
-                        str(key + 2), mop))
-                raise TSVIncorrectFormat("{} Incorrect Modes of Pathogenicity: {}".format(
-                        str(key + 2), mop))
+                logger.error(
+                    "TSV Import. Line: {} Incorrect Modes of Pathogenicity: {}".format(
+                        str(key + 2), mop
+                    )
+                )
+                raise TSVIncorrectFormat(
+                    "{} Incorrect Modes of Pathogenicity: {}".format(str(key + 2), mop)
+                )
 
         current_diagnostic = aline[19]
         if current_diagnostic == "Yes":
@@ -930,9 +1056,13 @@ class UploadedReviewsList(TimeStampedModel):
         """
         with self.reviews.open(mode="rt") as file:
             # TODO is this working when using FileSystemStorage?
-            textfile_content = force_text(file.read(), encoding="utf-8",errors="ignore")
-            reader = csv.reader(textfile_content.splitlines(), delimiter="\t")
-            next(reader)  # skip header
+            try:
+                textfile_content = force_text(file.read(), encoding="utf-8",errors="ignore")
+                reader = csv.reader(textfile_content.splitlines(), delimiter="\t")
+                next(reader)  # skip header
+            except csv.Error:
+                logger.error("File Import. Wrong file format")
+                raise TSVIncorrectFormat('Wrong File Format. Please use TSV.')
 
             with transaction.atomic():
                 lines = [line for line in reader]

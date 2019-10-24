@@ -747,8 +747,7 @@ class GeneReviewTest(LoginGELUser):
 
         with open(test_reviews_file) as f:
             url = reverse_lazy("panels:upload_reviews")
-            res = self.client.post(url, {"review_list": f})
-            messages = [str(m) for m in res.wsgi_request._messages]
+            self.client.post(url, {"review_list": f})
 
         ap = GenePanel.objects.get(name="Panel One").active_panel
         assert ap.get_gene(gene.gene_symbol).evaluation.count() == 1
