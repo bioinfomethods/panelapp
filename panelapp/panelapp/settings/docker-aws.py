@@ -142,7 +142,7 @@ LOGGING = {
         },
     },
     "formatters": {
-        "json" : {
+        "json": {
             "class": "simple_json_log_formatter.SimpleJsonFormatter",
         },
     },
@@ -155,5 +155,74 @@ LOGGING = {
             "handlers": ["console"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
         },
+        "panelapp.cognito.middleware": {
+            "handlers": ["console"],
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+        },
     },
 }
+
+# (Optional) Use Cognito settings
+AWS_USE_COGNITO = os.getenv("AWS_USE_COGNITO", "false").lower() == "true"
+
+if AWS_USE_COGNITO:
+
+    # (Required) Cognito hosted domain prefix in form of 'panelapp-prod', typically set in deployment
+    AWS_COGNITO_DOMAIN_PREFIX = os.getenv("AWS_COGNITO_DOMAIN_PREFIX", "")
+
+    # (Required) Cognito user pool client ID
+    AWS_COGNITO_USER_POOL_CLIENT_ID = os.getenv("AWS_COGNITO_USER_POOL_CLIENT_ID", "")
+
+    # (Optional) Well known Cognito hosted domain auth base URL
+    AWS_COGNITO_HOSTED_AUTH_BASE = os.getenv(
+        "AWS_COGNITO_HOSTED_AUTH_BASE",
+        "https://{}.auth.{}.amazoncognito.com/".format(
+            AWS_COGNITO_DOMAIN_PREFIX,
+            AWS_REGION
+        )
+    )
+
+    # (Optional) Well known Cognito logout endpoint URL
+    AWS_COGNITO_IDP_LOGOUT_ENDPOINT = os.getenv(
+        "AWS_COGNITO_IDP_LOGOUT_ENDPOINT",
+        AWS_COGNITO_HOSTED_AUTH_BASE + "logout?&client_id={}&logout_uri={}&redirect_uri={}&response_type=code".format(
+            AWS_COGNITO_USER_POOL_CLIENT_ID,
+            PANEL_APP_BASE_URL + "/accounts/logout/",
+            PANEL_APP_BASE_URL
+        )
+    )
+
+    # (Optional) Well known AWS ELB auth session cookie
+    AWS_ELB_SESSION_COOKIE_PREFIX = os.getenv("AWS_ELB_SESSION_COOKIE_PREFIX", "AWSELBAuthSessionCookie")
+
+    # (Optional) Well known region specific ELB public key endpoint URL
+    AWS_ELB_PUBLIC_KEY_ENDPOINT = os.getenv(
+        "AWS_ELB_PUBLIC_KEY_ENDPOINT", "https://public-keys.auth.elb.{}.amazonaws.com/".format(AWS_REGION))
+
+    # (Optional) Well known number of AWS JWT sections
+    AWS_JWT_SECTIONS = os.getenv("AWS_JWT_SECTIONS", 3)
+
+    # (Optional) Well known AWS JWT algorithm
+    AWS_JWT_SIGNATURE_ALGORITHM = os.getenv("AWS_JWT_SIGNATURE_ALGORITHM", "ES256")
+
+    # (Optional) Well known AWS OIDC access token header
+    AWS_AMZN_OIDC_ACCESS_TOKEN = os.getenv("AWS_AMZN_OIDC_ACCESS_TOKEN", "HTTP_X_AMZN_OIDC_ACCESSTOKEN")
+
+    # (Optional) Well known AWS OIDC identity header
+    AWS_AMZN_OIDC_IDENTITY = os.getenv("AWS_AMZN_OIDC_IDENTITY", "HTTP_X_AMZN_OIDC_IDENTITY")
+
+    # (Optional) Well known AWS OIDC data header
+    AWS_AMZN_OIDC_DATA = os.getenv("AWS_AMZN_OIDC_DATA", "HTTP_X_AMZN_OIDC_DATA")
+
+    # (Override) Logout redirect to home to break SSO login loop
+    LOGOUT_REDIRECT_URL = os.getenv("LOGOUT_REDIRECT_URL", "home")
+
+    # (Overload) Add cognito middleware
+    MIDDLEWARE += ("panelapp.cognito.middleware.ALBAuthMiddleware",)  # noqa
+
+    # (Override) Change Django authentication backend to use both remote user and builtin model-based user
+    # Users in Cognito user pool will propagate to Django user database
+    AUTHENTICATION_BACKENDS = [
+        "django.contrib.auth.backends.RemoteUserBackend",
+        "django.contrib.auth.backends.ModelBackend",
+    ]

@@ -12,7 +12,7 @@ The cloud docker images are designed to run on AWS, using S3 and SQS, and run wi
 * [Web Dockerfile](./Dockerfile-web), starts the Django application with Gunicorn
 * [Worker Dockerfile](./Dockerfile-worker), starts Celery
 
-> Docker Compose](./docker-compose.yml) and [Makefile](./Makefile) in this directory are **for troubleshooting docker 
+> [Docker Compose](./docker-compose.yml) and [Makefile](./Makefile) in this directory are **for troubleshooting docker 
 > images** only. They are not supposed to be used in any environments.
 
 ## Application configuration
@@ -73,6 +73,21 @@ All of the following environment variables must be set:
 * `CELERY_BROKER_URL` - Only required if not using IAM Roles for SQS authentication. 
     It must be in the format `sqs://{aws_access_key}:{aws_secret_key}@`.
 
+#### Cognito
+
+* `AWS_USE_COGNITO` - (Optional) Boolean setting whether to use Cognito as backend user authentication. Default to `False`.
+* `AWS_COGNITO_DOMAIN_PREFIX` -  **Required** iff `AWS_USE_COGNITO` is true. Cognito hosted domain prefix in a form of `panelapp-prod` or what has set in Cognito User Pool domain name setting. Note that currently only Hosted UI mode is tested and supported.
+* `AWS_COGNITO_USER_POOL_CLIENT_ID` - **Required** iff `AWS_USE_COGNITO` is true. Cognito User Pool client ID.
+* `AWS_COGNITO_HOSTED_AUTH_BASE` - (Optional) Well known Cognito Hosted UI domain auth base URL.
+* `AWS_COGNITO_IDP_LOGOUT_ENDPOINT` - (Optional) Well known Cognito logout endpoint URL.
+* `AWS_ELB_SESSION_COOKIE_PREFIX` - (Optional) Well known AWS ELB auth session cookie. Default to `AWSELBAuthSessionCookie`.
+* `AWS_ELB_PUBLIC_KEY_ENDPOINT` - (Optional) Well known region specific ELB public key endpoint URL.
+* `AWS_JWT_SECTIONS` - (Optional) Well known number of AWS JWT sections. Default to `3`.
+* `AWS_JWT_SIGNATURE_ALGORITHM` - (Optional) Well known AWS JWT algorithm. Default to `ES256`.
+* `AWS_AMZN_OIDC_ACCESS_TOKEN` - (Optional) Well known AWS OIDC access token header. Default to `HTTP_X_AMZN_OIDC_ACCESSTOKEN`.
+* `AWS_AMZN_OIDC_IDENTITY` - (Optional) Well known AWS OIDC identity header. Default to `HTTP_X_AMZN_OIDC_IDENTITY`.
+* `AWS_AMZN_OIDC_DATA` - (Optional) Well known AWS OIDC data header. Default to `HTTP_X_AMZN_OIDC_DATA`.
+
 ### Gunicorn settings (_Web_ image only)
 
 All [Gunicorn settings](http://docs.gunicorn.org/en/latest/settings.html) may be overridden by an environment variable 
@@ -119,6 +134,16 @@ The queue **_Visibility Timeout_ must be `360` (seconds)**.
 If you use a different value, do not forget to override `SQS_QUEUE_VISIBILITY_TIMEOUT` to match the queue timeout.
 
 > If the _Visibility Timeout_ does not match what the application is expecting, Celery will try to create a new queue.
+
+## Cognito
+
+Using AWS Cognito for user and authentication purpose is totally **optional**. This is set by `AWS_USE_COGNITO` setting. The implementation is based on the following articles, therefore, required to provision Cognito User Pool and Application Load Balancer as described in articles.
+
+- https://aws.amazon.com/blogs/aws/built-in-authentication-in-alb/
+- https://docs.aws.amazon.com/cognito/latest/developerguide/cognito-user-identity-pools.html
+- https://docs.aws.amazon.com/elasticloadbalancing/latest/application/listener-authenticate-users.html
+
+Example Terraform coded Cognito User Pool and Application Load Balancer deployment can be found in the [Panelapp Cloud Infrastructure](https://gitlab.com/genomicsengland/panelapp) repo.
 
 ## Database
 

@@ -49,9 +49,9 @@
             <p class="list-group-item-text">{{ request.user.reviewer.workplace }}</p>
           </div>
         </div>
-
+        {% if not use_cognito %}
         <a href="{% url 'accounts:change_password' %}" class="btn btn-primary">Change password</a>
-
+        {% endif %}
           <div>
               <h3>API Token</h3>
               <div>

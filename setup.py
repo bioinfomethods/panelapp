@@ -83,5 +83,6 @@ setup(
         "boto3==1.9.147",
         "pycurl==7.43.0.2",
         "simple-json-log-formatter==0.5.5",
+        "python-jose[cryptography]==3.0.1",
     ],
 )

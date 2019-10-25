@@ -14,7 +14,7 @@ COPY --chown=app:app ./setup.py ./setup.cfg ./MANIFEST.in ./VERSION     /app/
 # After installing we are removing all system dependencies not required at runtime, within the same Docker layer
 WORKDIR /app
 RUN apk add --no-cache postgresql-libs curl jpeg-dev zlib-dev && \
-    apk add --no-cache --virtual .build-deps gcc musl-dev curl-dev postgresql-dev build-base linux-headers && \
+    apk add --no-cache --virtual .build-deps gcc musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev && \
     pip install . && \
     apk --purge del .build-deps && \
     chown -R app:app /usr/local/lib/python3.*
