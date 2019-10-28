@@ -615,6 +615,7 @@ class GenePanelSnapshotTest(LoginGELUser):
                 randint(1, 2)
             ][0],
             "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+
         }
         res = self.client.post(url, gene_data)
         assert res.status_code == 302
@@ -682,3 +683,16 @@ class GenePanelSnapshotTest(LoginGELUser):
         signed_off_panel = HistoricalSnapshot.objects.filter(panel=gps.panel).first()
         assert signed_off_panel.signed_off_date
         assert signed_off_panel.signed_off_date == date
+
+    def test_add_transcript_to_gene(self):
+        gpes = GenePanelEntrySnapshotFactory()
+        gene_symbol = gpes.gene.get("gene_symbol")
+
+        ap = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel
+
+        assert ap.has_gene(gene_symbol) is True
+        new_data = {"transcript": ["2383bnb"]}
+        ap.update_gene(self.verified_user, gene_symbol, new_data)
+
+        new_ap = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel
+        assert new_ap.get_gene(gene_symbol).transcript == ["2383bnb"]

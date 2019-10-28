@@ -181,6 +181,17 @@ class ClearPhoenotypesAjaxView(
         return self.return_data()
 
 
+class ClearTranscriptAjaxView(
+    GELReviewerRequiredMixin, GeneClearDataAjaxMixin, AJAXMixin, View
+):
+    def process(self):
+        self.panel.increment_version()
+        del self.panel
+        self.object.transcript = []
+        self.object.save()
+        return self.return_data()
+
+
 class ClearModeOfPathogenicityAjaxView(
     GELReviewerRequiredMixin, GeneClearDataAjaxMixin, AJAXMixin, View
 ):

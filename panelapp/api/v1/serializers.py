@@ -169,6 +169,7 @@ class GeneSerializer(serializers.ModelSerializer):
             "mode_of_inheritance",
             "tags",
             "panel",
+            "transcript"
         )
 
     entity_type = serializers.CharField()
@@ -183,6 +184,7 @@ class GeneSerializer(serializers.ModelSerializer):
     evidence = EvidenceListField()
     tags = serializers.SlugRelatedField(many=True, read_only=True, slug_field="name")
     panel = PanelSerializer(many=False, read_only=True, required=False, allow_null=True)
+    transcript = NonEmptyItemsListField()
 
     def __init__(self, *args, **kwargs):
         self.no_panel = False
