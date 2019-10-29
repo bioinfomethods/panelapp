@@ -496,21 +496,6 @@ class UploadedPanelList(TimeStampedModel):
                 if not suppress_errors:
                     raise TSVIncorrectFormat("{} Incorrect MOI".format(str(key + 2)))
 
-        if entity_data.get("sources"):
-            if "Expert Review Green" in entity_data.get("sources"):
-                if not entity_data.get("moi") or entity_data.get("moi") == "Unknown":
-                    logger.error(
-                        "TSV Import. Line: {} Incorrect MOI for Expert Review Green: {}".format(
-                            str(key + 2), len(entity_data.keys())
-                        )
-                    )
-                    if not suppress_errors:
-                        raise TSVIncorrectFormat(
-                            "{} Incorrect MOI For Expert Review Green".format(
-                                str(key + 2)
-                            )
-                        )
-
         if entity_data.get("mode_of_pathogenicity"):
             if (
                 entity_data.get("mode_of_pathogenicity")
@@ -542,6 +527,20 @@ class UploadedPanelList(TimeStampedModel):
                     )
 
         if entity_data.get("sources"):
+            if "Expert Review Green" in entity_data.get("sources"):
+                if not entity_data.get("moi") or entity_data.get("moi") == "Unknown":
+                    logger.error(
+                        "TSV Import. Line: {} Incorrect MOI for Expert Review Green: {}".format(
+                            str(key + 2), len(entity_data.keys())
+                        )
+                    )
+                    if not suppress_errors:
+                        raise TSVIncorrectFormat(
+                            "{} Incorrect MOI For Expert Review Green".format(
+                                str(key + 2)
+                            )
+                        )
+
             entity_data["sources"] = [
                 source.title()
                 if source.lower()
