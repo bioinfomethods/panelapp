@@ -124,8 +124,9 @@
                         <br/>Signed off v.{{entry.panel.is_signed_off.0}}.{{ entry.panel.is_signed_off.1 }}
                         on {{entry.panel.is_signed_off.2}}
                     {% endif %}
+                      <br>
                     {% if entry.panel.is_child_panel %}
-                        <br/> Superpanels
+                        <br/>Component of the following Super Panels:
                         {% for superpanel in entry.panel.genepanelsnapshot_set.all %}
                             <li>{{ superpanel }}</li>
                         {% endfor %}
