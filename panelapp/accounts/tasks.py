@@ -58,7 +58,7 @@ def reviewer_confirmation_requset_email(user_id):
 
     ctx = {
         "user": user,
-        "link": "{}/{}/accounts/user/{}/actions/confirm_reviewer/".format(
+        "link": "{}/{}accounts/user/{}/actions/confirm_reviewer/".format(
             settings.PANEL_APP_BASE_URL, settings.ADMIN_URL, user.pk
         ),
         "settings": settings,
