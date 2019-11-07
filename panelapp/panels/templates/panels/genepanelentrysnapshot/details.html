@@ -45,6 +45,23 @@
                     {% endif %}
                 </dd>
             {% endif %}
+            {% if entity.transcript %}
+                <dt>Transcripts</dt>
+                <dd>
+                    <ul>
+                        {% for transcript in entity.transcript %}
+                            {% if transcript %}
+                                <li>{{ transcript }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                    {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
+                        <a href="{% url 'panels:clear_entity_transcript' panel.panel_id entity_type entity_name %}" class="link-muted" data-ajax="true" data-success="djangoAjaxHandler">
+                            Clear transcripts
+                        </a>
+                    {% endif %}
+                </dd>
+            {% endif %}
             {% if entity.tags.all %}
                 <dt>Tags</dt>
                 <dd class="tag-list">

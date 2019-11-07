@@ -1304,6 +1304,7 @@ class GenePanelSnapshot(TimeStampedModel):
             penetrance=gene_data.get("penetrance"),
             publications=gene_data.get("publications"),
             phenotypes=gene_data.get("phenotypes"),
+            transcript=gene_data.get("transcript"),
             mode_of_pathogenicity=gene_data.get("mode_of_pathogenicity"),
             saved_gel_status=0,
             flagged=False if user.reviewer.is_GEL() else True,
@@ -1528,6 +1529,27 @@ class GenePanelSnapshot(TimeStampedModel):
                         gene_symbol, "; ".join(gene.publications), "; ".join(publications)
                     )
                 tracks.append((TrackRecord.ISSUE_TYPES.SetPublications, description))
+
+            transcript = gene_data.get("transcript")
+            if transcript and gene.transcript != transcript:
+                logging.debug(
+                    "Updating transcripts for gene:{} in panel:{}".format(
+                        gene_symbol, self
+                    )
+                )
+
+                if append_only:
+                    new_transcript = list(set(transcript + gene.transcript))
+                    description = "Transcript for gene {} was updated from {} to {}".format(
+                        gene_symbol, "; ".join(gene.transcript), "; ".join(new_transcript)
+                    )
+                    gene.transcript = new_transcript
+                else:
+                    gene.transcript = transcript
+                    description = "Transcript for gene {} was changed from {} to {}".format(
+                        gene_symbol, "; ".join(gene.transcript), "; ".join(transcript)
+                    )
+                tracks.append((TrackRecord.ISSUE_TYPES.SetTranscript, description))
 
             current_tags = [tag.pk for tag in gene.tags.all()]
             tags = gene_data.get("tags")

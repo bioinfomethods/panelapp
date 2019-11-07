@@ -51,6 +51,7 @@ class TrackRecord(TimeStampedModel):
         ("SetModeofInheritance", "Set mode of inheritance"),
         ("SetPenetrance", "Set penetrance"),
         ("SetPublications", "Set publications"),
+        ("SetTranscript", "Set transcript"),
         ("ApprovedGene", "Approved Gene"),
         ("ApprovedEntity", "Approved Entity"),
         ("GelStatusUpdate", "Status Update"),

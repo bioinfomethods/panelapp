@@ -159,6 +159,7 @@ class GenePanelEntrySnapshot(AbstractEntity, TimeStampedModel):
     saved_gel_status = models.IntegerField(
         null=True, db_index=True
     )  # this should be enum red, green, etc
+    transcript = ArrayField(models.CharField(max_length=255, blank=True, null=True), blank=True, null=True)
 
     objects = GenePanelEntrySnapshotManager()
 

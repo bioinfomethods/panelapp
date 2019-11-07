@@ -60,6 +60,7 @@ from .ajax_views import ClearPhoenotypesAjaxView
 from .ajax_views import ClearModeOfPathogenicityAjaxView
 from .ajax_views import ClearSourcesAjaxView
 from .ajax_views import ClearSingleSourceAjaxView
+from .ajax_views import ClearTranscriptAjaxView
 from .ajax_views import DeletePanelAjaxView
 from .ajax_views import DeleteEntityAjaxView
 from .ajax_views import RejectPanelAjaxView
@@ -200,6 +201,13 @@ urlpatterns = [
         ),
         ClearPhoenotypesAjaxView.as_view(),
         name="clear_entity_phenotypes",
+    ),
+    url(
+        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/clear_entity_transcript$".format(
+            types=entity_types, regex=entity_regex
+        ),
+        ClearTranscriptAjaxView.as_view(),
+        name="clear_entity_transcript",
     ),
     url(
         r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/clear_entity_publications$".format(

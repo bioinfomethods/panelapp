@@ -99,6 +99,12 @@ class PanelGeneForm(forms.ModelForm):
     )
     current_diagnostic = forms.BooleanField(required=False)
     comments = forms.CharField(widget=forms.Textarea, required=False)
+    transcript = GELSimpleArrayField(
+        forms.CharField(),
+        label="Transcripts (separate using a semi-colon - ;)",
+        delimiter=";",
+        required=False,
+    )
 
     class Meta:
         model = GenePanelEntrySnapshot
@@ -108,6 +114,7 @@ class PanelGeneForm(forms.ModelForm):
             "penetrance",
             "publications",
             "phenotypes",
+            "transcript"
         )
 
     def __init__(self, *args, **kwargs):
@@ -130,6 +137,7 @@ class PanelGeneForm(forms.ModelForm):
         self.fields["penetrance"] = original_fields.get("penetrance")
         self.fields["publications"] = original_fields.get("publications")
         self.fields["phenotypes"] = original_fields.get("phenotypes")
+        self.fields['transcript'] = original_fields.get("transcript")
         if self.request.user.is_authenticated and self.request.user.reviewer.is_GEL():
             self.fields["tags"] = original_fields.get("tags")
         if not self.instance.pk:
