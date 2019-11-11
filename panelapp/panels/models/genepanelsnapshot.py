@@ -1545,10 +1545,11 @@ class GenePanelSnapshot(TimeStampedModel):
                     )
                     gene.transcript = new_transcript
                 else:
-                    gene.transcript = transcript
+                    current_transcript = "; ".join(gene.transcript) if gene.transcript else None
                     description = "Transcript for gene {} was changed from {} to {}".format(
-                        gene_symbol, "; ".join(gene.transcript), "; ".join(transcript)
+                        gene_symbol, current_transcript, "; ".join(transcript)
                     )
+                    gene.transcript = transcript
                 tracks.append((TrackRecord.ISSUE_TYPES.SetTranscript, description))
 
             current_tags = [tag.pk for tag in gene.tags.all()]
