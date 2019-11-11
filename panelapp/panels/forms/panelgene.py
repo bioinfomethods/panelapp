@@ -137,9 +137,9 @@ class PanelGeneForm(forms.ModelForm):
         self.fields["penetrance"] = original_fields.get("penetrance")
         self.fields["publications"] = original_fields.get("publications")
         self.fields["phenotypes"] = original_fields.get("phenotypes")
-        self.fields['transcript'] = original_fields.get("transcript")
         if self.request.user.is_authenticated and self.request.user.reviewer.is_GEL():
             self.fields["tags"] = original_fields.get("tags")
+            self.fields['transcript'] = original_fields.get("transcript")
         if not self.instance.pk:
             self.fields["rating"] = original_fields.get("rating")
             self.fields["current_diagnostic"] = original_fields.get(
