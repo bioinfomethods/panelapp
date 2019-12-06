@@ -31,8 +31,6 @@ from django.utils.functional import cached_property
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
 from .panel_types import PanelType
-#from .historical_snapshot import HistoricalSnapshot
-
 
 class GenePanelManager(models.Manager):
     def get_panel(self, pk):

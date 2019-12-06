@@ -158,7 +158,7 @@ class GenePanelView(DetailView):
         )
         ctx["signed_off"] = None
         ctx["signed_off_message"] = getattr(settings, "SIGNED_OFF_MESSAGE")
-        signed_off = self.object.active_panel.panel.historicalsnapshot_set.filter(signed_off_date__isnull=False).last()
+        signed_off = self.object.active_panel.panel.signed_off
         if signed_off:
             ctx["signed_off"] = signed_off
         ctx["contributors"] = ctx["panel"].contributors
@@ -449,7 +449,7 @@ class DownloadAllPanels(GELReviewerRequiredMixin, View):
                 panel.panel.status.upper(),
                 ";".join(panel.old_panels),
                 ";".join(panel.panel.types.values_list("name", flat=True)),
-                "v{}.{} on {}".format(*panel.is_signed_off) if panel.panel.signed_off else ""
+                "v{}.{} on {}".format(*panel.signed_off) if panel.panel.signed_off else ""
             )
 
     def get(self, request, *args, **kwargs):

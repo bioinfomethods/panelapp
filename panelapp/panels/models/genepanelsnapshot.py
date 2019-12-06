@@ -130,7 +130,7 @@ class GenePanelSnapshotManager(models.Manager):
             qs = qs.filter(filters)
 
         return qs.prefetch_related(
-            "panel", "panel__types", "child_panels", "level4title"
+            "panel", "panel__types", "child_panels", "level4title", "panel__signed_off"
         ).order_by(
             "level4title__name", "-major_version", "-minor_version", "-modified", "-pk"
         )
@@ -351,7 +351,7 @@ class GenePanelSnapshot(TimeStampedModel):
         return reverse("panels:detail", args=(self.panel.pk,))
 
     @cached_property
-    def is_signed_off(self):
+    def signed_off(self):
         signed_off = None
         if self.panel.signed_off:
             signed_off = (self.panel.signed_off.major_version, self.panel.signed_off.minor_version, self.panel.signed_off.signed_off_date)
