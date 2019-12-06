@@ -36,7 +36,7 @@ MIDDLEWARE += ("debug_toolbar.middleware.DebugToolbarMiddleware",)  # noqa
 
 INTERNAL_IPS = ["127.0.0.1"]
 
-import socket
+import socket # Needed to display django debug toolbar from docker container
 ip = socket.gethostbyname(socket.gethostname())
 INTERNAL_IPS += [ip[:-1] + '1']
 
