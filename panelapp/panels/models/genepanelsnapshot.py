@@ -148,7 +148,6 @@ class GenePanelSnapshotManager(models.Manager):
         return qs.annotate(
             child_panels_count=Count("child_panels"),
             superpanels_count=Count("genepanelsnapshot"),
-            signedoff=Count('panel__historicalsnapshot__signed_off_date'),
             panel_type_slugs=ArrayAgg("panel__types__slug", distinct=True),
         ).annotate(
             is_super_panel=Case(
@@ -351,12 +350,11 @@ class GenePanelSnapshot(TimeStampedModel):
     def get_absolute_url(self):
         return reverse("panels:detail", args=(self.panel.pk,))
 
-    @property
+    @cached_property
     def is_signed_off(self):
         signed_off = None
-        snap = self.panel.historicalsnapshot_set.filter(signed_off_date__isnull=False).first()
-        if snap:
-            signed_off = (snap.major_version, snap.minor_version, snap.signed_off_date)
+        if self.panel.signed_off:
+            signed_off = (self.panel.signed_off.major_version, self.panel.signed_off.minor_version, self.panel.signed_off.signed_off_date)
         return signed_off
 
     @cached_property

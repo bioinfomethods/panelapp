@@ -34,7 +34,11 @@ INSTALLED_APPS += ("debug_toolbar", "django_extensions",)  # noqa
 
 MIDDLEWARE += ("debug_toolbar.middleware.DebugToolbarMiddleware",)  # noqa
 
-INTERNAL_IPS = ["127.0.0.1"]
+INTERNAL_IPS = ["127.0.0.1", ]
+
+import socket
+ip = socket.gethostbyname(socket.gethostname())
+INTERNAL_IPS += [ip[:-1] + '1']
 
 EMAIL_HOST = "localhost"
 EMAIL_PORT = 25

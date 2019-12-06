@@ -81,7 +81,7 @@
                       Panel Types:{% for type in entry.panel.types.all %} {{ type }}, {% endfor %}
                   </p>
                 {%  endif %}
-                {% if entry.signedoff %}
+                {% if entry.panel.signed_off %}
                     <strong>
                     Signed Off v.{{ entry.is_signed_off.0 }}.{{ entry.is_signed_off.1 }} on {{ entry.is_signed_off.2 }}
                     </strong>

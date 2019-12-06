@@ -449,7 +449,7 @@ class DownloadAllPanels(GELReviewerRequiredMixin, View):
                 panel.panel.status.upper(),
                 ";".join(panel.old_panels),
                 ";".join(panel.panel.types.values_list("name", flat=True)),
-                "v{}.{} on {}".format(*panel.is_signed_off) if panel.signedoff > 0 else ""
+                "v{}.{} on {}".format(*panel.is_signed_off) if panel.panel.signed_off else ""
             )
 
     def get(self, request, *args, **kwargs):
