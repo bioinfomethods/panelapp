@@ -39,7 +39,7 @@ from .models import UploadedGeneList
 from .models import UploadedPanelList
 from .models import UploadedReviewsList
 from .models import PanelType
-
+from .models import HistoricalSnapshot
 
 class TagAdmin(admin.ModelAdmin):
     list_display = ("name",)
@@ -128,11 +128,11 @@ class GenePanelAdmin(admin.ModelAdmin):
     search_fields = (
         "created",
         "name",
-        "genepanelsnapshot_set__level4title__level3title",
-        "genepanelsnapshot_set__level4title__level2title",
-        "old_panels",
     )
 
+    raw_id_fields = (
+        'signed_off',
+    )
 
 class PanelTypeAdmin(admin.ModelAdmin):
     list_display = ("name", "slug")

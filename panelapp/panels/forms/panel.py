@@ -98,9 +98,9 @@ class PanelForm(forms.ModelForm):
 
         if self.instance.pk:
             self.fields["status"].initial = self.instance.panel.status
-            self.fields["signed_off_version"].initial = '{}.{}'.format(self.instance.is_signed_off[0],
-                                                               self.instance.is_signed_off[1]) if self.instance.is_signed_off else None
-            self.fields["signed_off_date"].initial = self.instance.is_signed_off[2] if self.instance.is_signed_off else None
+            self.fields["signed_off_version"].initial = '{}.{}'.format(self.instance.signed_off[0],
+                                                               self.instance.signed_off[1]) if self.instance.signed_off else None
+            self.fields["signed_off_date"].initial = self.instance.signed_off[2] if self.instance.signed_off else None
             if gel_curator:
                 self.fields[
                     "child_panels"
@@ -225,7 +225,8 @@ class PanelForm(forms.ModelForm):
                     except ValueError:
                         raise forms.ValidationError("Signed off version incorrect format")
 
-                    snapshot = HistoricalSnapshot.objects.filter(panel=self.instance.panel,
+                    gene_panel = self.instance.panel
+                    snapshot = HistoricalSnapshot.objects.filter(panel=gene_panel,
                                                                  major_version=int(major_version),
                                                                  minor_version=int(minor_version)).first()
                     if snapshot:
@@ -238,6 +239,8 @@ class PanelForm(forms.ModelForm):
                         else:
                             snapshot.signed_off_date = timezone.now().date()
                         snapshot.save()
+                        gene_panel.signed_off = snapshot
+                        gene_panel.save()
                         activities.append("Panel version has been signed off")
             else:
                 panel.save()

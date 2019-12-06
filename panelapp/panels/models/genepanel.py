@@ -32,7 +32,6 @@ from model_utils import Choices
 from model_utils.models import TimeStampedModel
 from .panel_types import PanelType
 
-
 class GenePanelManager(models.Manager):
     def get_panel(self, pk):
         if pk.isdigit():
@@ -55,6 +54,7 @@ class GenePanel(TimeStampedModel):
         choices=STATUS, default=STATUS.internal, max_length=36, db_index=True
     )
     types = models.ManyToManyField(PanelType)
+    signed_off = models.ForeignKey('panels.HistoricalSnapshot', on_delete=models.PROTECT, blank=True, null=True)
 
     objects = GenePanelManager()
 
