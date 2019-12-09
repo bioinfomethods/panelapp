@@ -683,8 +683,8 @@ class GenePanelSnapshotTest(LoginGELUser):
         signed_off_panel = HistoricalSnapshot.objects.filter(panel=gps.panel).first()
         assert signed_off_panel.signed_off_date
         assert signed_off_panel.signed_off_date == date
-        panel = gps.panel.active_panel
-        assert panel.signed_off
+        panel = GenePanel.objects.get(pk=gps.panel.pk)
+        assert panel.signed_off == signed_off_panel
 
     def test_add_transcript_to_gene(self):
         gpes = GenePanelEntrySnapshotFactory()
