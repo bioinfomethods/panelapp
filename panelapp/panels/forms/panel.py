@@ -217,7 +217,7 @@ class PanelForm(forms.ModelForm):
                 panel.save()
                 self.instance._update_saved_stats(use_db=update_stats_superpanel)
 
-                if "signed_off_version" or "signed_off_date" in self.changed_data:
+                if "signed_off_version" in self.changed_data or "signed_off_date" in self.changed_data:
                     gene_panel = self.instance.panel
 
                     if not self.cleaned_data['signed_off_version'] and not self.cleaned_data['signed_off_date']:
@@ -248,6 +248,8 @@ class PanelForm(forms.ModelForm):
                             gene_panel.signed_off = snapshot
                             gene_panel.save()
                             activities.append("Panel version has been signed off")
+                        else:
+                            raise forms.ValidationError("Signed off version does not exist")
             else:
                 panel.save()
 
