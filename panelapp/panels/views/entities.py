@@ -34,6 +34,12 @@ from django.urls import reverse_lazy
 from django.shortcuts import redirect
 from django.shortcuts import get_list_or_404
 from django.db.models import Q
+from django.db.models import Case
+from django.db.models import When
+from django.db.models import Value
+from django.db.models import Count
+from django.db import models
+from django.contrib.postgres.aggregates import ArrayAgg
 from panelapp.mixins import GELReviewerRequiredMixin
 from panelapp.mixins import VerifiedReviewerRequiredMixin
 from panels.forms import GeneReviewForm
@@ -627,7 +633,11 @@ class EntityDetailView(DetailView):
 
         entries_genes = GenePanelEntrySnapshot.objects.get_gene_panels(
             self.kwargs["slug"], pks=gps
-        )
+        ).annotate(
+                superpanels_names=ArrayAgg("panel__genepanelsnapshot__level4title__name",
+                                           filter=Q(panel__genepanelsnapshot__panel__status__in=
+                                                    [GenePanel.STATUS.public, GenePanel.STATUS.promoted]),
+                                           distinct=True))
 
         if isinstance(self.object, STR):
             # we couldn't find a gene linked to this STR, lookup by name
@@ -636,6 +646,12 @@ class EntityDetailView(DetailView):
             entries_strs = STR.objects.get_gene_panels(
                 gene_symbol=self.kwargs["slug"], pks=gps
             )
+
+        entries_strs = entries_strs.annotate(
+                superpanels_names=ArrayAgg("panel__genepanelsnapshot__panel__name",
+                                           filter=Q(panel__genepanelsnapshot__panel__status__in=
+                                                    [GenePanel.STATUS.public, GenePanel.STATUS.promoted]),
+                                           distinct=True))
 
         if isinstance(self.object, Region):
             # we couldn't find a gene linked to this STR, lookup by name
@@ -646,6 +662,12 @@ class EntityDetailView(DetailView):
             entries_regions = Region.objects.get_gene_panels(
                 gene_symbol=self.kwargs["slug"], pks=gps
             )
+
+        entries_regions = entries_regions.annotate(
+                superpanels_names=ArrayAgg("panel__genepanelsnapshot__level4title__name",
+                                           filter=Q(panel__genepanelsnapshot__panel__status__in=
+                                                    [GenePanel.STATUS.public, GenePanel.STATUS.promoted]),
+                                           distinct=True))
 
         if (
             not self.request.user.is_authenticated
