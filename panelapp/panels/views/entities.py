@@ -34,11 +34,6 @@ from django.urls import reverse_lazy
 from django.shortcuts import redirect
 from django.shortcuts import get_list_or_404
 from django.db.models import Q
-from django.db.models import Case
-from django.db.models import When
-from django.db.models import Value
-from django.db.models import Count
-from django.db import models
 from django.contrib.postgres.aggregates import ArrayAgg
 from panelapp.mixins import GELReviewerRequiredMixin
 from panelapp.mixins import VerifiedReviewerRequiredMixin
