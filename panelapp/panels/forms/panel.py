@@ -217,31 +217,39 @@ class PanelForm(forms.ModelForm):
                 panel.save()
                 self.instance._update_saved_stats(use_db=update_stats_superpanel)
 
-                if "signed_off_version" in self.changed_data:
-                    version = self.cleaned_data["signed_off_version"]
-
-                    try:
-                        major_version, minor_version = version.split(".")
-                    except ValueError:
-                        raise forms.ValidationError("Signed off version incorrect format")
-
+                if "signed_off_version" in self.changed_data or "signed_off_date" in self.changed_data:
                     gene_panel = self.instance.panel
-                    snapshot = HistoricalSnapshot.objects.filter(panel=gene_panel,
-                                                                 major_version=int(major_version),
-                                                                 minor_version=int(minor_version)).first()
-                    if snapshot:
-                        HistoricalSnapshot.objects.filter(
-                            panel=self.instance.panel,
-                            signed_off_date__isnull=False).update(signed_off_date=None)
 
-                        if self.cleaned_data['signed_off_date']:
-                            snapshot.signed_off_date = self.cleaned_data["signed_off_date"]
-                        else:
-                            snapshot.signed_off_date = timezone.now().date()
-                        snapshot.save()
-                        gene_panel.signed_off = snapshot
+                    if not self.cleaned_data['signed_off_version'] and not self.cleaned_data['signed_off_date']:
+                        gene_panel.signed_off = None
                         gene_panel.save()
-                        activities.append("Panel version has been signed off")
+                        activities.append("Panel signed off version has been removed")
+                    else:
+                        version = self.cleaned_data["signed_off_version"]
+
+                        try:
+                            major_version, minor_version = version.split(".")
+                        except ValueError:
+                            raise forms.ValidationError("Signed off version incorrect format")
+
+                        snapshot = HistoricalSnapshot.objects.filter(panel=gene_panel,
+                                                                     major_version=int(major_version),
+                                                                     minor_version=int(minor_version)).first()
+                        if snapshot:
+                            HistoricalSnapshot.objects.filter(
+                                panel=self.instance.panel,
+                                signed_off_date__isnull=False).update(signed_off_date=None)
+
+                            if self.cleaned_data["signed_off_date"]:
+                                snapshot.signed_off_date = self.cleaned_data["signed_off_date"]
+                            else:
+                                snapshot.signed_off_date = timezone.now().date()
+                            snapshot.save()
+                            gene_panel.signed_off = snapshot
+                            gene_panel.save()
+                            activities.append("Panel version has been signed off")
+                        else:
+                            raise forms.ValidationError("Signed off version does not exist")
             else:
                 panel.save()
 
