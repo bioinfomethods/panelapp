@@ -221,6 +221,8 @@ class PanelForm(forms.ModelForm):
                     gene_panel = self.instance.panel
 
                     if not self.cleaned_data['signed_off_version'] and not self.cleaned_data['signed_off_date']:
+                        gene_panel.signed_off.signed_off_date = None
+                        gene_panel.signed_off.save()
                         gene_panel.signed_off = None
                         gene_panel.save()
                         activities.append("Panel signed off version has been removed")

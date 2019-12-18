@@ -626,13 +626,18 @@ class EntityDetailView(DetailView):
             ).values_list("pk", flat=True)
         )
 
-        entries_genes = GenePanelEntrySnapshot.objects.get_gene_panels(
-            self.kwargs["slug"], pks=gps
-        ).annotate(
-                superpanels_names=ArrayAgg("panel__genepanelsnapshot__level4title__name",
-                                           filter=Q(panel__genepanelsnapshot__panel__status__in=
-                                                    [GenePanel.STATUS.public, GenePanel.STATUS.promoted]),
+        if not is_admin_user:
+            entries_genes = GenePanelEntrySnapshot.objects.get_gene_panels(
+                self.kwargs["slug"], pks=gps
+            ).annotate(superpanels_names=ArrayAgg("panel__genepanelsnapshot__level4title__name",
+                                               filter=Q(panel__genepanelsnapshot__panel__status__in=
+                                                        [GenePanel.STATUS.public, GenePanel.STATUS.promoted]),
                                            distinct=True))
+        else:
+            entries_genes = GenePanelEntrySnapshot.objects.get_gene_panels(
+                self.kwargs["slug"], pks=gps
+            ).annotate(
+                superpanels_names=ArrayAgg("panel__genepanelsnapshot__level4title__name", distinct=True))
 
         if isinstance(self.object, STR):
             # we couldn't find a gene linked to this STR, lookup by name
@@ -641,12 +646,15 @@ class EntityDetailView(DetailView):
             entries_strs = STR.objects.get_gene_panels(
                 gene_symbol=self.kwargs["slug"], pks=gps
             )
+        if not is_admin_user:
+            entries_strs = entries_strs.annotate(superpanels_names=ArrayAgg("panel__genepanelsnapshot__level4title__name",
+                                               filter=Q(panel__genepanelsnapshot__panel__status__in=
+                                                        [GenePanel.STATUS.public, GenePanel.STATUS.promoted]),
+                                               distinct=True))
+        else:
+            entries_strs = entries_strs.annotate(
+                superpanels_names=ArrayAgg("panel__genepanelsnapshot__level4title__name", distinct=True))
 
-        entries_strs = entries_strs.annotate(
-                superpanels_names=ArrayAgg("panel__genepanelsnapshot__panel__name",
-                                           filter=Q(panel__genepanelsnapshot__panel__status__in=
-                                                    [GenePanel.STATUS.public, GenePanel.STATUS.promoted]),
-                                           distinct=True))
 
         if isinstance(self.object, Region):
             # we couldn't find a gene linked to this STR, lookup by name
@@ -658,10 +666,15 @@ class EntityDetailView(DetailView):
                 gene_symbol=self.kwargs["slug"], pks=gps
             )
 
-        entries_regions = entries_regions.annotate(
+        if not is_admin_user:
+            entries_regions = entries_regions.annotate(
+                    superpanels_names=ArrayAgg("panel__genepanelsnapshot__level4title__name",
+                                               filter=Q(panel__genepanelsnapshot__panel__status__in=
+                                                        [GenePanel.STATUS.public, GenePanel.STATUS.promoted]),
+                                               distinct=True))
+        else:
+            entries_regions = entries_regions.annotate(
                 superpanels_names=ArrayAgg("panel__genepanelsnapshot__level4title__name",
-                                           filter=Q(panel__genepanelsnapshot__panel__status__in=
-                                                    [GenePanel.STATUS.public, GenePanel.STATUS.promoted]),
                                            distinct=True))
 
         if (
