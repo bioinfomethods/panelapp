@@ -29,6 +29,7 @@ from panels.models import Region
 from panels.models import Activity
 from panels.models import Evaluation
 from panels.models import PanelType
+from panels.models import HistoricalSnapshot
 
 
 class NonEmptyItemsListField(serializers.ListField):
@@ -342,3 +343,19 @@ class EntitiesListSerializer(serializers.ListSerializer):
 class EntitySerializer(serializers.BaseSerializer):
     class Meta:
         list_serializer_class = EntitiesListSerializer
+
+
+class HistoricalSnapshotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = HistoricalSnapshot
+        fields = (
+            "data",
+            "signed_off_date",
+        )
+
+    def to_representation(self, instance):
+        instance.data.pop('genes', None)
+        instance.data.pop('regions', None)
+        instance.data.pop('strs', None)
+        instance.data['signed_off'] = instance.signed_off_date
+        return instance.data

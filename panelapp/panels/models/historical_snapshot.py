@@ -28,7 +28,6 @@ from django.http import HttpResponse
 
 
 from .genepanel import GenePanel
-from api.v1.serializers import PanelSerializer
 from panels.utils import remove_non_ascii
 from webservices.utils import make_null, convert_moi, convert_gel_status
 import panelapp
@@ -249,6 +248,8 @@ class HistoricalSnapshot(models.Model):
 
     @classmethod
     def import_panel(cls, panel, comment=None):
+        from api.v1.serializers import PanelSerializer
+
         json = PanelSerializer(panel, include_entities=True)
 
         instance = cls()
