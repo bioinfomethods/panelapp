@@ -45,6 +45,7 @@ from .serializers import STRSerializer
 from .serializers import EvaluationSerializer
 from .serializers import RegionSerializer
 from .serializers import EntitySerializer
+from .serializers import HistoricalSnapshotSerializer
 from django.http import Http404
 from rest_framework.exceptions import APIException
 from panelapp.settings.base import REST_FRAMEWORK
@@ -613,15 +614,10 @@ class EntitySearchViewSet(EntitySearch):
 
 
 class SignedOffPanelViewSet(ReadOnlyListViewset):
+    serializer_class = HistoricalSnapshotSerializer
 
     def get_queryset(self):
         return HistoricalSnapshot.objects.filter(signed_off_date__isnull=False)
-
-    def list(self, request, *args, **kwargs):
-        results = []
-        for snap in self.get_queryset():
-            results.append(snap.to_api_1(exclude_entities=True))
-        return Response(results)
 
     def retrieve(self, request, *args, **kwargs):
         pk = self.kwargs["pk"]

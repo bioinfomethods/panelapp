@@ -619,7 +619,7 @@ class TestAPIV1(LoginExternalUser):
 
         res = self.client.get(reverse_lazy("api:v1:signedoff_panels-list"))
         assert res.status_code == 200
-        assert date.strftime("%Y-%m-%d") in res.json()[0]["signed_off"]
+        assert date.strftime("%Y-%m-%d") in res.json()['results'][0]["signed_off"]
 
         res = self.client.get(reverse_lazy("api:v1:signedoff_panels-detail", kwargs={"pk": self.gps.panel.pk}))
         assert res.status_code == 200
