@@ -358,7 +358,6 @@ class GenePanelTest(LoginGELUser):
         with open(test_panel_file) as f:
             url = reverse_lazy("panels:upload_panels")
             res = self.client.post(url, {"panel_list": f})
-            messages = [str(m) for m in res.wsgi_request._messages]
 
         gp = GenePanel.objects.get(name="Panel One")
         active_panel = gp.active_panel
