@@ -434,14 +434,12 @@ class UploadedPanelList(TimeStampedModel):
                 )
             )
             if not suppress_errors:
-                raise TSVIncorrectFormat(
-                    "{} Incorrect STR Name".format(str(key + 2))
-                )
+                raise TSVIncorrectFormat("{} Incorrect STR Name".format(str(key + 2)))
 
         if not all(
-                [
-                    entity_data.get(value)
-                    for value in [
+            [
+                entity_data.get(value)
+                for value in [
                     "gene_symbol",
                     "moi",
                     "chromosome",
@@ -453,7 +451,7 @@ class UploadedPanelList(TimeStampedModel):
                     "normal_repeats",
                     "pathogenic_repeats",
                 ]
-                ]
+            ]
         ):
             logger.error(
                 "TSV Import. Line: {} Required STR Data Missing: {}".format(
@@ -518,9 +516,9 @@ class UploadedPanelList(TimeStampedModel):
                 )
 
         if all(
-                [
-                    entity_data.get(value) if entity_data.get(value) != "" else None
-                    for value in [
+            [
+                entity_data.get(value) if entity_data.get(value) != "" else None
+                for value in [
                     "chromosome",
                     "position_38_start",
                     "position_38_end",
@@ -528,7 +526,7 @@ class UploadedPanelList(TimeStampedModel):
                     "verbose_name",
                     "required_overlap_percentage",
                 ]
-                ]
+            ]
         ):
 
             query = Region.objects.filter(
@@ -539,9 +537,7 @@ class UploadedPanelList(TimeStampedModel):
                 ),
                 type_of_variants=entity_data["type_of_variants"],
                 verbose_name=entity_data["verbose_name"],
-                required_overlap_percentage=entity_data[
-                    "required_overlap_percentage"
-                ],
+                required_overlap_percentage=entity_data["required_overlap_percentage"],
             )
             if not query.exists():
                 logger.error(
@@ -561,9 +557,7 @@ class UploadedPanelList(TimeStampedModel):
                 )
             )
             if not suppress_errors:
-                raise TSVIncorrectFormat(
-                    "{} Region Data Missing".format(str(key + 2))
-                )
+                raise TSVIncorrectFormat("{} Region Data Missing".format(str(key + 2)))
 
         if entity_data.get("type_of_variant") == "cnv_loss":
             if not entity_data.get("haploinsufficiency_score"):
@@ -577,7 +571,7 @@ class UploadedPanelList(TimeStampedModel):
                         "{} Missing Haploinsufficieny Score".format(str(key + 2))
                     )
             if not query.filter(
-                    haploinsufficiency_score=entity_data["haploinsufficiency_score"]
+                haploinsufficiency_score=entity_data["haploinsufficiency_score"]
             ).exists():
                 logger.error(
                     "TSV Import. Line: {} Wrong Haploinsufficieny Score".format(
@@ -602,7 +596,7 @@ class UploadedPanelList(TimeStampedModel):
                     )
 
             if not query.filter(
-                    triplosensitivity_score=entity_data["triplosensitivity_score"]
+                triplosensitivity_score=entity_data["triplosensitivity_score"]
             ).exists():
                 logger.error(
                     "TSV Import. Line: {} Triplosensitivity Score for Region does not match the one in Panelapp: {}".format(
@@ -636,10 +630,7 @@ class UploadedPanelList(TimeStampedModel):
         else:
             entity_data["position_37"] = None
 
-        if (
-                not entity_data["position_38_start"]
-                or not entity_data["position_38_end"]
-        ):
+        if not entity_data["position_38_start"] or not entity_data["position_38_end"]:
             logger.error(
                 "TSV Import. Line: {} Missing Post 38: {}".format(
                     str(key + 2), len(entity_data.keys())
@@ -655,9 +646,7 @@ class UploadedPanelList(TimeStampedModel):
                 )
             )
             if not suppress_errors:
-                raise TSVIncorrectFormat(
-                    "{} Incorrect Post 38 ".format(str(key + 2))
-                )
+                raise TSVIncorrectFormat("{} Incorrect Post 38 ".format(str(key + 2)))
 
         entity_data["position_38"] = [
             entity_data["position_38_start"],
@@ -665,7 +654,6 @@ class UploadedPanelList(TimeStampedModel):
         ]
 
         return entity_data
-
 
     def get_entity_data(self, key, line, suppress_errors=False):
         """Translate TSV line to the dictionary values
@@ -864,12 +852,14 @@ class UploadedPanelList(TimeStampedModel):
             # and split the content into lines
             # TODO is this working when using FileSystemStorage?
             try:
-                textfile_content = force_text(file.read(), encoding="utf-8",errors="ignore")
+                textfile_content = force_text(
+                    file.read(), encoding="utf-8", errors="ignore"
+                )
                 reader = csv.reader(textfile_content.splitlines(), delimiter="\t")
                 _ = next(reader)  # noqa
             except csv.Error:
                 logger.error("File Import. Wrong file format")
-                raise TSVIncorrectFormat('Wrong File Format. Please use TSV.')
+                raise TSVIncorrectFormat("Wrong File Format. Please use TSV.")
 
             lines = [line for line in reader]
 
@@ -1062,12 +1052,14 @@ class UploadedReviewsList(TimeStampedModel):
         with self.reviews.open(mode="rt") as file:
             # TODO is this working when using FileSystemStorage?
             try:
-                textfile_content = force_text(file.read(), encoding="utf-8",errors="ignore")
+                textfile_content = force_text(
+                    file.read(), encoding="utf-8", errors="ignore"
+                )
                 reader = csv.reader(textfile_content.splitlines(), delimiter="\t")
                 next(reader)  # skip header
             except csv.Error:
                 logger.error("File Import. Wrong file format")
-                raise TSVIncorrectFormat('Wrong File Format. Please use TSV.')
+                raise TSVIncorrectFormat("Wrong File Format. Please use TSV.")
 
             with transaction.atomic():
                 lines = [line for line in reader]
