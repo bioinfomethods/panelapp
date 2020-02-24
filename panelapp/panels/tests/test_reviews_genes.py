@@ -31,6 +31,8 @@ from panels.models import GenePanel
 from panels.models import Comment
 from panels.models import Evaluation
 from panels.models import Activity
+from panels.models import GenePanelSnapshot
+
 from panels.tests.factories import TagFactory
 from panels.tests.factories import GeneFactory
 from panels.tests.factories import GenePanelSnapshotFactory
