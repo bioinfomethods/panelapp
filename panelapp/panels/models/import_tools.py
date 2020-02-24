@@ -470,7 +470,7 @@ class UploadedPanelList(TimeStampedModel):
             position_38=NumericRange(
                 entity_data["position_38_start"], entity_data["position_38_end"]
             ),
-            position_37=(
+            position_37=NumericRange(
                 entity_data["position_37_start"],
                 entity_data["position_37_end"],
             ),
