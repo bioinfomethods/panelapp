@@ -61,6 +61,17 @@ BROKER_TRANSPORT_OPTIONS = {
     'visibility_timeout': SQS_QUEUE_VISIBILITY_TIMEOUT,  # seconds
 }
 
+# Celery Beat Scheduler settings
+CELERY_BEAT_SCHEDULE = {
+    'daily-moi-check': {
+        'task': 'panels.tasks.moi_check',
+        'schedule': crontab(
+            hour=os.getenv('MOI_CHECK_HOUR', 6),
+            minute=os.getenv('MOI_CHECK_MINUTE', 30)
+        )
+    }
+}
+
 
 # File storage
 

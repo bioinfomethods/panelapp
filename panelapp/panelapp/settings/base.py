@@ -38,6 +38,8 @@ import panelapp
 import dj_database_url
 import urllib.parse
 from django.contrib.messages import constants as message_constants
+from celery.schedules import crontab
+
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(
@@ -287,3 +289,5 @@ SWAGGER_SETTINGS = {
 DEFAULT_PANEL_TYPES = os.getenv("DEFAULT_PANEL_TYPES", "rare-disease-100k").split(",")
 
 SIGNED_OFF_MESSAGE = "This Panel has been signed off for the GMS"
+
+OMIM_API_KEY= os.getenv("OMIM_API_KEY", None)

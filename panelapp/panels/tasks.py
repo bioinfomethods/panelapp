@@ -22,6 +22,11 @@
 ## under the License.
 ##
 import logging
+import requests
+import csv
+import tempfile
+import os
+from requests.exceptions import HTTPError
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.template.defaultfilters import pluralize
@@ -29,6 +34,7 @@ from celery import shared_task
 from django.db import transaction
 from panelapp.tasks import send_email
 from panelapp.tasks import send_mass_email
+from django.core.mail import EmailMessage
 from panels.exceptions import GeneDoesNotExist
 from panels.exceptions import GenesDoNotExist
 from panels.exceptions import UserDoesNotExist
@@ -225,3 +231,126 @@ def background_copy_reviews(user_pk, gene_symbols, panel_from_pk, panel_to_pk):
         message = "There was an error copying the reviews"
 
     send_email.delay(user.email, subject, "{}\n\n----\nPanelApp".format(message))
+
+
+def retrieve_omim_moi(omim):
+    """
+    OMIM API CALL
+    Retrieve MOIs for a specific gene from OMIM and return them as a set to check against.
+    param: str
+        OMIM number
+    """
+    url = 'https://api.omim.org/api/entry?mimNumber={}&include=geneMap&include=externalLinks&format=json&apiKey={}'.format(omim, settings.OMIM_API_KEY)
+    moi = set()
+    try:
+        res = requests.get(url)
+        res.raise_for_status()
+        omim_data = res.json()
+        for omim_entry in omim_data['omim']['entryList']:
+            for phenotype in omim_entry['entry'].get('geneMap', {}).get('phenotypeMapList', []):
+                if phenotype['phenotypeMap']['phenotypeInheritance']:
+                    for pheno in phenotype['phenotypeMap']['phenotypeInheritance'].split(';'):
+                        moi.add(pheno)
+    except HTTPError:
+        logging.error('HTTP error on request to OMIM.')
+    except ValueError:
+        logging.error('OMIM response not in JSON format.')
+    except Exception as e:
+        logging.error(e)
+
+    return moi
+
+
+moi_mapping = {
+    'MONOALLELIC,': ['Autosomal dominant', 'dominant', 'AD', 'DOMINANT'],
+    'BIALLELIC,': ['Autosomal recessive', 'recessive', 'AR', 'RECESSIVE'],
+    'BOTH': ['Autosomal recessive', 'Autosomal dominant', 'recessive', 'dominant', 'AR/AD', 'AD/AR',
+             'DOMINANT/RECESSIVE', 'RECESSIVE/DOMINANT'],
+    'X-LINKED:': ['X-linked recessive', 'XLR', 'X-linked dominant', 'x-linked over-dominance',
+                  'X-LINKED', 'X-linked', 'XLD', 'XL'],
+    'MITOCHONDRIAL': ['Mitochondrial']
+}
+
+
+@shared_task
+def moi_check():
+    """
+    AUTOMATED MOI CHECK
+    Does a daily systematic check of all MOIs for current Green genes on Panels V1+.
+    Checking for consistency with chromosome, between panels and with OMIM database.
+    """
+    from panels.models.genepanelentrysnapshot import GenePanelEntrySnapshot
+    from panels.models.genepanel import GenePanel
+
+    green_genes = GenePanelEntrySnapshot.objects.get_active().filter(saved_gel_status__gte=3,
+                                                                     panel__major_version__gte=1,
+                                                                     panel__panel__status__in=[GenePanel.STATUS.public,
+                                                                                               GenePanel.STATUS.promoted]).iterator()
+    incorrect_moi = []
+    gene_check = {}
+    for gene in green_genes:
+        moi = gene.moi
+        if not moi or moi == "Unknown":
+            msg = 'Green gene {} with {} moi on panel {}'.format(gene.name, gene.moi, gene.panel)
+            incorrect_moi.append([msg, gene.name, gene.moi, gene.panel, gene.panel.pk])
+            continue
+        chromosome = None
+        gene_dict = gene.gene.get('ensembl_genes')
+        if gene_dict:
+            for entry in gene_dict:
+                for number in gene_dict[entry]:
+                    if gene_dict[entry][number]['location']:
+                        chromosome = gene_dict[entry][number]['location'].split(':')[0]
+
+        if moi == 'Other - please specifiy in evaluation comments' and chromosome != 'Y':
+            msg = 'Green gene {} with {} moi on panel {}'.format(gene.name, gene.moi, gene.panel)
+            incorrect_moi.append([msg, gene.name, gene.moi, gene.panel, gene.panel.pk])
+
+        if chromosome == 'X' and moi not in ["X-LINKED: hemizygous mutation in males, biallelic mutations in females",
+                                             "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
+                                             ]:
+            msg = 'Green gene {} on X chromosome with {} moi on panel {}'.format(gene.name, gene.moi, gene.panel)
+            incorrect_moi.append([msg, gene.name, gene.moi, gene.panel, gene.panel.pk])
+
+        if gene_check.get(gene.name):
+            if moi != gene_check[gene.name]:
+                exception = ["MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted", "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown"]
+                if moi not in exception and gene_check[gene.name] not in exception:
+                    msg = 'Green gene {} has different moi {} on panel {} than {}'.format(gene.name, gene.moi, gene.panel, gene_check[gene.name])
+                    incorrect_moi.append([msg, gene.name, gene.moi, gene.panel, gene.panel.pk])
+        else:
+            try:
+                moi = set(moi_mapping.get(moi.split()[0]))
+            except TypeError as e:
+                moi = set()
+            if gene.gene.get('omim_gene') and settings.OMIM_API_KEY:
+                omim_moi = retrieve_omim_moi(gene.gene.get('omim_gene')[0])
+                if not any(omim_moi):
+                    continue
+                if moi & omim_moi:
+                    gene_check[gene.name] = gene.moi
+                else:
+                    msg = 'Green gene {} with discrepant OMIM moi {} and {} on panel {}'.format(gene.name, omim_moi, gene.moi, gene.panel)
+                    incorrect_moi.append([msg, gene.name, gene.moi, gene.panel, gene.panel.pk])
+            else:
+                if moi:
+                    gene_check[gene.name] = gene.moi
+                else:
+                    msg = 'Green gene {} with empty moi on panel {}'.format(gene.name, gene.panel)
+                    incorrect_moi.append([msg, gene.name, gene.moi, gene.panel, gene.panel.pk])
+
+    if incorrect_moi:
+        with tempfile.TemporaryFile(mode="r+") as file:
+            writer = csv.writer(file)
+            writer.writerow(['Message', 'Gene Name', 'Moi', 'Panel', 'ID'])
+            for error in incorrect_moi:
+                writer.writerow(error)
+
+            email = EmailMessage(
+                "MOI Errors",
+                'Errors are attached in csv file.',
+                settings.DEFAULT_FROM_EMAIL,
+                [settings.PANEL_APP_EMAIL],
+            )
+            email.attach('incorrect_moi.csv', file.read(), 'text/csv')
+            email.send()
