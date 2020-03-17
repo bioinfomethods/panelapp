@@ -687,10 +687,14 @@ class UploadedPanelList(TimeStampedModel):
                     item = list(set([i.strip() for i in item.split(";") if i.strip()]))
 
                 entity_data[item_mapping["name"]] = item
-        except (IndexError, ValueError) as e:
+        except IndexError as e:
             logger.exception(e, exc_info=True)
             if not suppress_errors:
-                raise TSVIncorrectFormat(str(key + 2))
+                raise TSVIncorrectFormat("Extra columns on line {}".format(str(key + 2)))
+        except ValueError as e:
+            logger.exception(e, exc_info=True)
+            if not suppress_errors:
+                raise TSVIncorrectFormat("{} Incorrect field value".format(str(key + 2)))
 
         if entity_data.get("entity_type", "") not in ["gene", "region", "str"]:
             logger.error(
