@@ -62,5 +62,11 @@ logconfig_dict = {
             "propagate": 1,
             "qualname": "gunicorn.error"
         },
+        "gunicorn.access": {
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "handlers": ["console"],
+            "propagate": 1,
+            "qualname": "gunicorn.access"
+        },
     }
 }
