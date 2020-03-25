@@ -26,6 +26,7 @@ from random import choice
 from django.urls import reverse_lazy
 from faker import Factory
 from accounts.tests.setup import LoginGELUser
+from django.test.client import RequestFactory
 from panels.models import GenePanel
 from panels.models import GenePanelEntrySnapshot
 from panels.models import Evaluation
@@ -33,7 +34,8 @@ from panels.models import Evidence
 from panels.models import GenePanelSnapshot
 from panels.models import Region
 from panels.models import HistoricalSnapshot
-
+from accounts.models import User, Reviewer
+from panels.forms import PanelRegionForm
 from panels.tests.factories import GeneFactory
 from panels.tests.factories import GenePanelSnapshotFactory
 from panels.tests.factories import GenePanelEntrySnapshotFactory
@@ -700,3 +702,52 @@ class RegionTest(LoginGELUser):
         self.assertTrue(
             b"".join(res.streaming_content).find(region.verbose_name.encode()) != 1
         )
+
+    def test_copy_region_to_panel(self):
+        region = RegionFactory()
+        gps = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        gps2 = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        req = RequestFactory()
+        user = User.objects.create(username="GEL", first_name="Genomics England")
+        Reviewer.objects.create(
+            user=user,
+            user_type="GEL",
+            affiliation="Genomics England",
+            workplace="Other",
+            role="Other",
+            group="Other",
+        )
+        req.user = user
+
+        form_data = {'additional_panels': [gps2.pk], 'name': region.name, 'chromosome':region.chromosome,
+                     'panel':gps, 'position_38_0': region.position_38.lower, 'position_38_1': region.position_38.upper,
+                     'source': ['Expert Review', 'Expert Review'], 'required_overlap_percentage': region.required_overlap_percentage,
+                     'moi': region.moi, 'type_of_variants': region.type_of_variants}
+        form = PanelRegionForm(form_data, panel=gps, request=req)
+        assert form.is_valid()
+        form.save_region()
+        assert gps2.has_region(region.name)
+
+    def test_copy_existing_region_to_panel(self):
+        gps = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        gps2 = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        region = RegionFactory(panel=gps2)
+        req = RequestFactory()
+        user = User.objects.create(username="GEL", first_name="Genomics England")
+        Reviewer.objects.create(
+            user=user,
+            user_type="GEL",
+            affiliation="Genomics England",
+            workplace="Other",
+            role="Other",
+            group="Other",
+        )
+        req.user = user
+
+        form_data = {'additional_panels': [gps2.pk], 'name': region.name, 'chromosome':region.chromosome,
+                     'panel':gps, 'position_38_0': region.position_38.lower, 'position_38_1': region.position_38.upper,
+                     'source': ['Expert Review', 'Expert Review'], 'required_overlap_percentage': region.required_overlap_percentage,
+                     'moi': region.moi, 'type_of_variants': region.type_of_variants}
+        form = PanelRegionForm(form_data, panel=gps, request=req)
+        assert not form.is_valid()
+        assert gps2.has_region(region.name)

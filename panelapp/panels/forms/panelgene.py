@@ -25,6 +25,7 @@
 
 from collections import OrderedDict
 from django import forms
+from django.db.models import Q
 from .helpers import GELSimpleArrayField
 from dal_select2.widgets import ModelSelect2
 from dal_select2.widgets import Select2Multiple
@@ -36,6 +37,7 @@ from panels.models import Evidence
 from panels.models import Evaluation
 from panels.models import GenePanelEntrySnapshot
 from panels.models import GenePanel
+from panels.models import GenePanelSnapshot
 
 
 class PanelGeneForm(forms.ModelForm):
@@ -106,6 +108,13 @@ class PanelGeneForm(forms.ModelForm):
         required=False,
     )
 
+    additional_panels = forms.ModelMultipleChoiceField(
+        queryset=GenePanelSnapshot.objects.filter(Q(panel__status=GenePanel.STATUS.public)
+                | Q(panel__status=GenePanel.STATUS.promoted)|Q(panel__status=GenePanel.STATUS.internal)).only('panel__name', 'pk'),
+        required=False,
+        widget=ModelSelect2Multiple(url="autocomplete-simple-panels")
+    )
+
     class Meta:
         model = GenePanelEntrySnapshot
         fields = (
@@ -114,7 +123,8 @@ class PanelGeneForm(forms.ModelForm):
             "penetrance",
             "publications",
             "phenotypes",
-            "transcript"
+            "transcript",
+            "additional_panels"
         )
 
     def __init__(self, *args, **kwargs):
@@ -140,6 +150,7 @@ class PanelGeneForm(forms.ModelForm):
         if self.request.user.is_authenticated and self.request.user.reviewer.is_GEL():
             self.fields["tags"] = original_fields.get("tags")
             self.fields['transcript'] = original_fields.get("transcript")
+            self.fields["additional_panels"] = original_fields.get("additional_panels")
         if not self.instance.pk:
             self.fields["rating"] = original_fields.get("rating")
             self.fields["current_diagnostic"] = original_fields.get(
@@ -179,6 +190,16 @@ class PanelGeneForm(forms.ModelForm):
 
         return self.cleaned_data["gene"]
 
+    def clean_additional_panels(self):
+        gene_symbol = self.cleaned_data["gene"].gene_symbol
+
+        for panel in GenePanelSnapshot.objects.filter(pk__in=self.cleaned_data["additional_panels"]):
+            if panel.has_gene(gene_symbol):
+                raise forms.ValidationError(
+                    "Gene is already on additional panel", code="gene_exists_in_additional_panel"
+                )
+        return self.cleaned_data["additional_panels"]
+
     def save(self, *args, **kwargs):
         """Don't save the original panel as we need to increment version first"""
         return False
@@ -188,6 +209,8 @@ class PanelGeneForm(forms.ModelForm):
 
         gene_data = self.cleaned_data
         gene_data["sources"] = gene_data.pop("source")
+
+        additional_panels = gene_data.pop("additional_panels", None)
 
         if gene_data.get("comments"):
             gene_data["comment"] = gene_data.pop("comments")
@@ -204,13 +227,21 @@ class PanelGeneForm(forms.ModelForm):
             self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
             self.panel.update_gene(self.request.user, initial_gene_symbol, gene_data)
             self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
-            return self.panel.get_gene(new_gene_symbol)
+            entity = self.panel.get_gene(new_gene_symbol)
         else:
             increment_version = (
                 self.request.user.is_authenticated
                 and self.request.user.reviewer.is_GEL()
             )
-            gene = self.panel.add_gene(
+            entity = self.panel.add_gene(
                 self.request.user, new_gene_symbol, gene_data, increment_version
             )
-            return gene
+
+        if additional_panels:
+            entity.copy_to_panels(
+                additional_panels,
+                self.request.user,
+                gene_data
+            )
+
+        return entity

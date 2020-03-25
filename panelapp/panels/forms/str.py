@@ -37,6 +37,8 @@ from panels.models import Evidence
 from panels.models import Evaluation
 from panels.models import STR
 from panels.models import GenePanel
+from panels.models import GenePanelSnapshot
+
 
 
 class PanelSTRForm(forms.ModelForm):
@@ -111,6 +113,12 @@ class PanelSTRForm(forms.ModelForm):
     )
     comments = forms.CharField(widget=forms.Textarea, required=False)
 
+    additional_panels = forms.ModelMultipleChoiceField(
+        queryset=GenePanelSnapshot.objects.all().only('panel__name', 'pk'),
+        required=False,
+        widget=ModelSelect2Multiple(url="autocomplete-simple-panels")
+    )
+
     class Meta:
         model = STR
         fields = (
@@ -125,6 +133,7 @@ class PanelSTRForm(forms.ModelForm):
             "penetrance",
             "publications",
             "phenotypes",
+            "additional_panels",
         )
 
     def __init__(self, *args, **kwargs):
@@ -165,6 +174,7 @@ class PanelSTRForm(forms.ModelForm):
         self.fields["phenotypes"] = original_fields.get("phenotypes")
         if self.request.user.is_authenticated and self.request.user.reviewer.is_GEL():
             self.fields["tags"] = original_fields.get("tags")
+            self.fields["additional_panels"] = original_fields.get("additional_panels")
         if not self.instance.pk:
             self.fields["rating"] = original_fields.get("rating")
             self.fields["current_diagnostic"] = original_fields.get(
@@ -222,6 +232,16 @@ class PanelSTRForm(forms.ModelForm):
 
         return self.cleaned_data["name"]
 
+    def clean_additional_panels(self):
+        name = self.cleaned_data["name"]
+
+        for panel in GenePanelSnapshot.objects.filter(pk__in=self.cleaned_data["additional_panels"]):
+            if panel.has_str(name):
+                raise forms.ValidationError(
+                    "STR is already on additional panel", code="str_exists_in_additional_panel"
+                )
+        return self.cleaned_data["additional_panels"]
+
     def save(self, *args, **kwargs):
         """Don't save the original panel as we need to increment version first"""
         return False
@@ -231,6 +251,8 @@ class PanelSTRForm(forms.ModelForm):
 
         str_data = self.cleaned_data
         str_data["sources"] = str_data.pop("source")
+
+        additional_panels = str_data.pop("additional_panels", None)
 
         if str_data.get("comments"):
             str_data["comment"] = str_data.pop("comments")
@@ -252,13 +274,21 @@ class PanelSTRForm(forms.ModelForm):
                 remove_gene=True if not str_data.get("gene") else False,
             )
             self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
-            return self.panel.get_str(new_str_name)
+            entity = self.panel.get_str(new_str_name)
         else:
             increment_version = (
                 self.request.user.is_authenticated
                 and self.request.user.reviewer.is_GEL()
             )
-            str_item = self.panel.add_str(
+            entity = self.panel.add_str(
                 self.request.user, new_str_name, str_data, increment_version
             )
-            return str_item
+
+        if additional_panels:
+            entity.copy_to_panels(
+                additional_panels,
+                self.request.user,
+                str_data
+            )
+
+        return entity

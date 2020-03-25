@@ -739,6 +739,31 @@ class AbstractEntity:
             self.panel.add_activity(user, activity_text, self)
             return evaluation
 
+    def copy_to_panels(self, panels, user, entity_data):
+        """Copy entity to additional panels
+
+        Evidences are included in entity_data on form save, thus not copied manually"""
+
+        for panel in panels:
+            if self.is_gene():
+                copied_gene = panel.add_gene(user, self.name, entity_data, True)
+            if self.is_str():
+                copied_gene = panel.add_str(user, self.name, entity_data, True)
+            if self.is_region():
+                copied_gene = panel.add_region(user, self.name, entity_data, True)
+
+            if copied_gene:
+                for evaluation in self.evaluation.all():
+                    evaluation.pk = None
+                    evaluation.save()
+                    copied_gene.evaluation.add(evaluation)
+                for tag in self.tags.all():
+                    copied_gene.tags.add(tag)
+                for comment in self.comments.all():
+                    comment.pk = None
+                    comment.save()
+                    copied_gene.comments.add(comment)
+
     @property
     def gene_list_class(self):
         return get_gene_list_data(

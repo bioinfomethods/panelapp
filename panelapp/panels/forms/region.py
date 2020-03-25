@@ -37,6 +37,8 @@ from panels.models import Evidence
 from panels.models import Evaluation
 from panels.models import Region
 from panels.models import GenePanel
+from panels.models import GenePanelSnapshot
+
 
 
 class PanelRegionForm(forms.ModelForm):
@@ -107,6 +109,12 @@ class PanelRegionForm(forms.ModelForm):
 
     comments = forms.CharField(widget=forms.Textarea, required=False)
 
+    additional_panels = forms.ModelMultipleChoiceField(
+        queryset=GenePanelSnapshot.objects.all().only('panel__name', 'pk'),
+        required=False,
+        widget=ModelSelect2Multiple(url="autocomplete-simple-panels")
+    )
+
     class Meta:
         model = Region
         fields = (
@@ -123,6 +131,7 @@ class PanelRegionForm(forms.ModelForm):
             "type_of_variants",
             "publications",
             "phenotypes",
+            "additional_panels"
         )
 
     def __init__(self, *args, **kwargs):
@@ -171,6 +180,7 @@ class PanelRegionForm(forms.ModelForm):
         self.fields["phenotypes"] = original_fields.get("phenotypes")
         if self.request.user.is_authenticated and self.request.user.reviewer.is_GEL():
             self.fields["tags"] = original_fields.get("tags")
+            self.fields["additional_panels"] = original_fields.get("additional_panels")
         if not self.instance.pk:
             self.fields["rating"] = original_fields.get("rating")
             self.fields["current_diagnostic"] = original_fields.get(
@@ -212,6 +222,16 @@ class PanelRegionForm(forms.ModelForm):
 
         return self.cleaned_data["name"]
 
+    def clean_additional_panels(self):
+        name = self.cleaned_data["name"]
+
+        for panel in GenePanelSnapshot.objects.filter(pk__in=self.cleaned_data["additional_panels"]):
+            if panel.has_region(name):
+                raise forms.ValidationError(
+                    "Region is already on additional panel", code="region_exists_in_additional_panel"
+                )
+        return self.cleaned_data['additional_panels']
+
     def save(self, *args, **kwargs):
         """Don't save the original panel as we need to increment version first"""
         return False
@@ -221,6 +241,8 @@ class PanelRegionForm(forms.ModelForm):
 
         region_data = self.cleaned_data
         region_data["sources"] = region_data.pop("source")
+
+        additional_panels = region_data.pop("additional_panels", None)
 
         if region_data.get("comments"):
             region_data["comment"] = region_data.pop("comments")
@@ -232,6 +254,9 @@ class PanelRegionForm(forms.ModelForm):
 
         new_region_name = region_data["name"]
 
+        if region_data.get("additional_panels"):
+            self.instance.copy_to_panels(self.cleaned_data["additional_panels"], self.request.user, new_region_name, initial_name, region_data)
+
         if self.initial and self.panel.has_region(initial_name):
             self.panel = self.panel.increment_version()
             self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
@@ -242,13 +267,21 @@ class PanelRegionForm(forms.ModelForm):
                 remove_gene=True if not region_data.get("gene") else False,
             )
             self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
-            return self.panel.get_region(new_region_name)
+            entity = self.panel.get_region(new_region_name)
         else:
             increment_version = (
                 self.request.user.is_authenticated
                 and self.request.user.reviewer.is_GEL()
             )
-            region = self.panel.add_region(
+            entity = self.panel.add_region(
                 self.request.user, new_region_name, region_data, increment_version
             )
-            return region
+
+        if additional_panels:
+            entity.copy_to_panels(
+                additional_panels,
+                self.request.user,
+                region_data
+            )
+
+        return entity

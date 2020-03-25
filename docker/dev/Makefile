@@ -36,7 +36,7 @@ build: clean ## Build Docker Images
 	docker-compose build
 
 up: ## Run cluster
-	docker-compose up -d
+	docker-compose up
 
 migrate: ## Create db schema, apply db migration (migrate command)
 	docker-compose exec web python manage.py migrate
@@ -64,7 +64,7 @@ down: ## Destroy cluster
 	docker-compose down
 
 tests: ## Run tests
-	docker-compose exec web bash -c 'cd /app ; pytest'
+	docker-compose run --rm web bash -c 'cd /app ; pytest'
 
 logs: ## Tail all logs
 	docker-compose logs -f

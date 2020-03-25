@@ -26,17 +26,23 @@ import os
 from datetime import datetime
 from datetime import date
 from django.urls import reverse_lazy
+from django.test.client import RequestFactory
 from faker import Factory
 from accounts.tests.setup import LoginGELUser
 from panels.models.import_tools import update_gene_collection
 from panels.models import Gene
-
+from accounts.models import User, Reviewer
 from panels.models import GenePanel
 from panels.models import GenePanelSnapshot
 from panels.models import STR
+from panels.models import Tag
+from panels.models import Comment
+from panels.models import Evaluation
+from panels.models import Evidence
 from panels.models import Region
 from panels.models import GenePanelEntrySnapshot
 from panels.models import HistoricalSnapshot
+from panels.forms import PanelGeneForm
 from panels.tests.factories import GeneFactory
 from panels.tests.factories import GenePanelSnapshotFactory
 from panels.tests.factories import GenePanelEntrySnapshotFactory
@@ -291,3 +297,115 @@ class GeneTest(LoginGELUser):
         url = reverse_lazy("panels:entity_detail", kwargs={"slug": gene.gene_symbol})
         res = self.client.get(url)
         self.assertEqual(len(res.context_data["entries"]), 2)
+
+
+class CopyToPanelsTest(LoginGELUser):
+    def setUp(self):
+        self.gene = GeneFactory()
+        self.gps = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        self.gps2 = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+
+        self.user = User.objects.create(username="GEL", first_name="Genomics England")
+        Reviewer.objects.create(
+            user=self.user,
+            user_type="GEL",
+            affiliation="Genomics England",
+            workplace="Other",
+            role="Other",
+            group="Other",
+        )
+        self.request = RequestFactory()
+        self.request.user = self.user
+
+    def test_copy_gene_to_panel(self):
+        form_data = {
+            'additional_panels': [self.gps2.pk],
+            'gene': self.gene.gene_symbol,
+            'source': ['Expert Review'],
+            'moi': 'Unknown',
+            'panel': self.gps,
+            'gene_name': self.gene.gene_symbol
+        }
+        form = PanelGeneForm(form_data, panel=self.gps, request=self.request)
+        assert form.is_valid()
+        form.save_gene()
+        assert self.gps2.has_gene(self.gene.gene_symbol)
+
+    def test_copy_existing_gene_to_panel(self):
+        gene = GenePanelEntrySnapshotFactory.create(gene_core=self.gene, panel=self.gps)
+        form_data = {
+            'additional_panels': [self.gps2.pk],
+            'gene': self.gene.gene_symbol,
+            'source': ['Expert Review', 'Expert Review'],
+            'moi': 'Unknown',
+            'panel': self.gps,
+            'gene_name': self.gene.gene_symbol
+        }
+        form = PanelGeneForm(form_data, panel=self.gps, request=self.request,
+                             instance=gene, initial=gene.get_form_initial())
+        assert form.is_valid()
+        form.save_gene()
+        assert self.gps2.has_gene(self.gene.gene_symbol)
+
+    def test_copy_additional_info(self):
+        """Copy addition data as well as the gene
+        - comments
+        - evaluations
+        - evidences
+
+        Make sure IDs are different.
+        """
+
+        gpes = GenePanelEntrySnapshotFactory.create(gene_core=self.gene, panel=self.gps)
+
+        comment = Comment.objects.create(user=self.user, comment="Comment")
+        gpes.comments.add(comment)
+
+        form_data = {
+            'additional_panels': [self.gps2.pk],
+            'gene': self.gene.gene_symbol,
+            'source': list(gpes.evidence.values_list('name', flat=True)),
+            'moi': 'Unknown',
+            'panel': self.gps,
+            'gene_name': self.gene.gene_symbol,
+            'tags': list(gpes.tags.values_list('pk', flat=True))
+        }
+
+        form = PanelGeneForm(form_data, panel=self.gps, request=self.request,
+                             instance=gpes, initial=gpes.get_form_initial())
+        assert form.is_valid()
+        form.save_gene()
+        assert self.gps2.has_gene(self.gene.gene_symbol)
+
+        gpes2 = self.gps2.get_gene(self.gene.gene_symbol)
+
+        self.assertEqual(gpes2.evidence.count(), gpes.evidence.count())
+        self.assertNotEqual(set(gpes2.evidence.values_list('pk', flat=True)),
+                            set(gpes.evidence.values_list('pk', flat=True)))
+
+        self.assertEqual(gpes2.evaluation.count(), gpes.evidence.count())
+        self.assertNotEqual(set(gpes2.evaluation.values_list('pk', flat=True)),
+                            set(gpes.evaluation.values_list('pk', flat=True)))
+
+        self.assertEqual(gpes2.comments.count(), gpes.comments.count())
+        self.assertNotEqual(gpes2.comments.first().pk, comment.pk)
+
+        self.assertEqual(gpes2.tags.count(), gpes.tags.count())
+        # Same tag used in multiple panels
+        self.assertEqual(gpes2.tags.first().pk, gpes.tags.first().pk)
+
+    def test_copy_gene_to_panel_with_same_gene(self):
+        GenePanelEntrySnapshotFactory.create(gene_core=self.gene, panel=self.gps2)
+
+        form_data = {
+            'additional_panels': [self.gps2.pk],
+            'gene': self.gene.gene_symbol,
+            'source': ['Expert Review', 'Expert Review'],
+            'moi': 'Unknown',
+            'panel': self.gps,
+            'gene_name': self.gene.gene_symbol
+        }
+
+        form = PanelGeneForm(form_data, panel=self.gps, request=self.request)
+        assert not form.is_valid()
+        assert self.gps2.has_gene(self.gene.gene_symbol)

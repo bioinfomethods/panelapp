@@ -25,6 +25,7 @@ import os
 from random import randint
 from django.core import mail
 from django.test import Client
+from django.test.client import RequestFactory
 from django.urls import reverse_lazy
 from faker import Factory
 from accounts.tests.setup import LoginGELUser
@@ -34,6 +35,8 @@ from panels.models import Evaluation
 from panels.models import Evidence
 from panels.models import GenePanelSnapshot
 from panels.models import HistoricalSnapshot
+from accounts.models import User, Reviewer
+from panels.forms import PanelSTRForm
 from panels.tasks import email_panel_promoted
 from panels.tests.factories import GeneFactory
 from panels.tests.factories import GenePanelSnapshotFactory
@@ -775,3 +778,52 @@ class STRTest(LoginGELUser):
         )
         self.assertEqual(res.status_code, 200)
         self.assertTrue(res.content.find(strs.repeated_sequence.encode()) != 1)
+
+    def test_copy_str_to_panel(self):
+        str = STRFactory()
+        gps = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        gps2 = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        req = RequestFactory()
+        user = User.objects.create(username="GEL", first_name="Genomics England")
+        Reviewer.objects.create(
+            user=user,
+            user_type="GEL",
+            affiliation="Genomics England",
+            workplace="Other",
+            role="Other",
+            group="Other",
+        )
+        req.user = user
+
+        form_data = {'additional_panels': [gps2.pk], 'name': str.name, 'chromosome': str.chromosome,
+                     'panel': gps, 'position_38_0': str.position_38.lower, 'position_38_1': str.position_38.upper,
+                     'source': ['Expert Review', 'Expert Review'], 'repeated_sequence':  'T',
+                    'normal_repeats': str.normal_repeats,'moi': str.moi, 'pathogenic_repeats': str.pathogenic_repeats}
+        form = PanelSTRForm(form_data, panel=gps, request=req)
+        assert form.is_valid()
+        form.save_str()
+        assert gps2.has_str(str.name)
+
+    def test_copy_existing_str_to_panel(self):
+        gps = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        gps2 = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        str = STRFactory.create(panel=gps2)
+        req = RequestFactory()
+        user = User.objects.create(username="GEL", first_name="Genomics England")
+        Reviewer.objects.create(
+            user=user,
+            user_type="GEL",
+            affiliation="Genomics England",
+            workplace="Other",
+            role="Other",
+            group="Other",
+        )
+        req.user = user
+
+        form_data = {'additional_panels': [gps2.pk], 'name': str.name, 'chromosome': str.chromosome,
+                     'panel': gps, 'position_38_0': str.position_38.lower, 'position_38_1': str.position_38.upper,
+                     'source': ['Expert Review', 'Expert Review'], 'repeated_sequence':  'T',
+                    'normal_repeats': str.normal_repeats,'moi': str.moi, 'pathogenic_repeats': str.pathogenic_repeats}
+        form = PanelSTRForm(form_data, panel=gps, request=req)
+        assert not form.is_valid()
+        assert gps2.has_str(str.name)
