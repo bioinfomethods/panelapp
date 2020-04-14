@@ -21,6 +21,131 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+
+"""
+HOW TO UPDATE GENE COLLECTION
+-----------------------------
+
+Gene collections in PanelApp can be updated uploading a json file containing the
+information to be updated (see method `update_gene_collection` below).
+
+This file should contains 3 lists of genes (see Gene Model below), the list are:
+
+* insert: It will insert the gene as a new entry, the gene will be inactivated
+  if there is no ensembl information. To be use when the gene_symbol is new.
+* delete: It will inactivated genes (they are not really deleted as they can be
+  used in old panels)
+* update: It will update the gene using the gene_symbol as the search key for
+  matching the record to update. the gene will be inactivated
+  if there is no ensembl information. To be used when the gene_symbol is OK, but
+  not the gene information.
+
+The file should also contain an additional list for genes where a gene symbol
+change is required:
+
+* update_symbol: This field is a list of list, each item should be a list of
+  with 2 items, first one a Gene Model, and second one th old symbol. This one
+  is specially useful as it will perform the update of the gene information in
+  each one of the panel entities. The gene will be inactivated
+  if there is no ensembl information.
+
+
+Gene Model:
+
+    {
+      "hgnc_id": "HGNC:16518",
+      "biotype": "protein_coding",
+      "ensembl_genes": {
+        "GRch38": {
+          "ensemble_version": "89",
+          "ensemble_id": "ENSG00000187223"
+        },
+        "GRch37": {
+          "ensemble_version": "82",
+          "ensemble_id": "ENSG00000187223"
+        }
+      },
+      "alias_name": null,
+      "omim_gene": [
+        "612612"
+      ],
+      "alias": [
+        "LEP12"
+      ],
+      "gene_symbol": "LCE2D",
+      "hgnc_date_symbol_changed": "2004-10-15",
+      "hgnc_symbol": "LCE2D",
+      "hgnc_release": "21/07/17",
+      "gene_name": "late cornified envelope 2D",
+      "location": "1:152663396-152664659"
+    }
+
+
+FULL example:
+
+    {
+      "update": [],
+      "delete": [],
+      "insert": [
+          {
+          "hgnc_id": "HGNC:16518",
+          "biotype": "protein_coding",
+          "ensembl_genes": {
+            "GRch38": {
+              "ensemble_version": "89",
+              "ensemble_id": "ENSG00000187223"
+            },
+            "GRch37": {
+              "ensemble_version": "82",
+              "ensemble_id": "ENSG00000187223"
+            }
+          },
+          "alias_name": null,
+          "omim_gene": [
+            "612612"
+          ],
+          "alias": [
+            "LEP12"
+          ],
+          "gene_symbol": "LCE2D",
+          "hgnc_date_symbol_changed": "2004-10-15",
+          "hgnc_symbol": "LCE2D",
+          "hgnc_release": "21/07/17",
+          "gene_name": "late cornified envelope 2D",
+          "location": "1:152663396-152664659"
+        }],
+       "update_symbol": [
+       [{
+          "hgnc_id": "HGNC:123232",
+          "biotype": "protein_coding",
+          "ensembl_genes": {
+            "GRch38": {
+              "ensemble_version": "89",
+              "ensemble_id": "ENSG0000099999"
+            },
+            "GRch37": {
+              "ensemble_version": "82",
+              "ensemble_id": "ENSG0000099999"
+            }
+          },
+          "alias_name": null,
+          "omim_gene": [
+            "999999"
+          ],
+          "alias": [
+            "GENEX"
+          ],
+          "gene_symbol": "GENEX",
+          "hgnc_date_symbol_changed": "2004-10-15",
+          "hgnc_symbol": "GENEX",
+          "hgnc_release": "21/07/17",
+          "gene_name": "gene x",
+          "location": "1:152663396-152664659"
+        }, "GENEA"]
+       ]
+    }
+"""
+
 import json
 import re
 import csv
