@@ -135,6 +135,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "panelapp.context_processors.use_cognito",
+                "panelapp.context_processors.signed_off_message",
             ]
         },
     }
