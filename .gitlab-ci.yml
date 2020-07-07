@@ -52,6 +52,7 @@ image_build:
   script:
     # installing py-setuptools to extract the name and version
     - apk -U add py-setuptools make
+    - echo $CI_COMMIT_TAG > ./VERSION
     - export PACKAGE_NAME=$(python3 setup.py --name)
     - export PACKAGE_VERSION=$(python3 setup.py --version)
     # Check whether the Package Version matches with the TAG version
