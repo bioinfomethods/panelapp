@@ -33,7 +33,12 @@ setup(
     include_package_data=True,
     setup_requires=["pytest-runner"],
     extras_require={
-        "dev": ["django-debug-toolbar==1.11", "ipython==6.4.0", "Werkzeug==0.14.1"],
+        "dev": [
+            "django-debug-toolbar==1.11",
+            "ipython==6.4.0",
+            "Werkzeug==0.14.1",
+            "pdbpp==0.10.2"
+        ],
         "tests": [
             "pytest==3.7.1",
             "pytest-django==3.3.3",

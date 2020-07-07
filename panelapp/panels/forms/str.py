@@ -39,9 +39,10 @@ from panels.models import STR
 from panels.models import GenePanel
 from panels.models import GenePanelSnapshot
 
+from panels.forms.mixins import EntityFormMixin
 
 
-class PanelSTRForm(forms.ModelForm):
+class PanelSTRForm(EntityFormMixin, forms.ModelForm):
     """
     The goal for this form is to add a STR to a Panel.
 
@@ -186,16 +187,6 @@ class PanelSTRForm(forms.ModelForm):
                 )
             self.fields["comments"] = original_fields.get("comments")
 
-    def clean_source(self):
-        if len(self.cleaned_data["source"]) < 1:
-            raise forms.ValidationError("Please select a source")
-        return self.cleaned_data["source"]
-
-    def clean_moi(self):
-        if not self.cleaned_data["moi"]:
-            raise forms.ValidationError("Please select a mode of inheritance")
-        return self.cleaned_data["moi"]
-
     def clean_repeated_sequence(self):
         if (
             len(
@@ -233,18 +224,15 @@ class PanelSTRForm(forms.ModelForm):
         return self.cleaned_data["name"]
 
     def clean_additional_panels(self):
-        name = self.cleaned_data["name"]
+        entity_name = self.cleaned_data["name"]
 
         for panel in GenePanelSnapshot.objects.filter(pk__in=self.cleaned_data["additional_panels"]):
-            if panel.has_str(name):
+            if panel.has_str(entity_name):
                 raise forms.ValidationError(
-                    "STR is already on additional panel", code="str_exists_in_additional_panel"
+                    "Entity is already on additional panel",
+                    code="entitiy_exists_in_additional_panel"
                 )
         return self.cleaned_data["additional_panels"]
-
-    def save(self, *args, **kwargs):
-        """Don't save the original panel as we need to increment version first"""
-        return False
 
     def save_str(self, *args, **kwargs):
         """Saves the gene, increments version and returns the gene back"""
@@ -265,15 +253,30 @@ class PanelSTRForm(forms.ModelForm):
         new_str_name = str_data["name"]
 
         if self.initial and self.panel.has_str(initial_name):
-            self.panel = self.panel.increment_version()
-            self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
-            self.panel.update_str(
-                self.request.user,
-                initial_name,
-                str_data,
-                remove_gene=True if not str_data.get("gene") else False,
-            )
-            self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
+            # check if the entity changed
+            # if we only adding it to other panels, we don't need to increment version
+            # Because "Expert Review " sources are not in cleaned_data,
+            # check if initial data has it and compare if other sources changed.
+            changed = True
+            if self.changed_data == ['source']:
+                non_expert_reviews = [
+                    s for s
+                    in self.initial["source"]
+                    if not s.startswith('Expert Review ')
+                ]
+
+                if set(self.cleaned_data["source"]) == set(non_expert_reviews):
+                    changed = False
+
+            if changed:
+                self.panel = self.panel.increment_version()
+                self.panel.update_str(
+                    self.request.user,
+                    initial_name,
+                    str_data,
+                    remove_gene=True if not str_data.get("gene") else False,
+                )
+                self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
             entity = self.panel.get_str(new_str_name)
         else:
             increment_version = (
@@ -286,9 +289,10 @@ class PanelSTRForm(forms.ModelForm):
 
         if additional_panels:
             entity.copy_to_panels(
-                additional_panels,
-                self.request.user,
-                str_data
+                panels=additional_panels,
+                user=self.request.user,
+                entity_data=str_data,
+                copy_data=bool(self.initial)
             )
 
         return entity

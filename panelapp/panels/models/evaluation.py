@@ -119,6 +119,7 @@ class Evaluation(TimeStampedModel):
         help_text="Interruptions in the repeated sequence are reported as part of standard diagnostic practise",
     )
     version = models.CharField(null=True, blank=True, max_length=255)
+    original_panel = models.CharField(default="", blank=True, max_length=255)
     comments = models.ManyToManyField(Comment)
     last_updated = models.DateTimeField(null=True, blank=True)
 

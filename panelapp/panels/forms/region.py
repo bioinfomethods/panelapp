@@ -39,9 +39,10 @@ from panels.models import Region
 from panels.models import GenePanel
 from panels.models import GenePanelSnapshot
 
+from panels.forms.mixins import EntityFormMixin
 
 
-class PanelRegionForm(forms.ModelForm):
+class PanelRegionForm(EntityFormMixin, forms.ModelForm):
     """
     The goal for this form is to add a Region to a Panel.
 
@@ -110,7 +111,7 @@ class PanelRegionForm(forms.ModelForm):
     comments = forms.CharField(widget=forms.Textarea, required=False)
 
     additional_panels = forms.ModelMultipleChoiceField(
-        queryset=GenePanelSnapshot.objects.all().only('panel__name', 'pk'),
+        queryset=GenePanelSnapshot.objects.only('panel__name', 'pk'),
         required=False,
         widget=ModelSelect2Multiple(url="autocomplete-simple-panels")
     )
@@ -188,16 +189,6 @@ class PanelRegionForm(forms.ModelForm):
             )
             self.fields["comments"] = original_fields.get("comments")
 
-    def clean_source(self):
-        if len(self.cleaned_data["source"]) < 1:
-            raise forms.ValidationError("Please select a source")
-        return self.cleaned_data["source"]
-
-    def clean_moi(self):
-        if not self.cleaned_data["moi"]:
-            raise forms.ValidationError("Please select a mode of inheritance")
-        return self.cleaned_data["moi"]
-
     def clean_name(self):
         """Check if gene exists in a panel if we add a new gene or change the gene"""
 
@@ -223,18 +214,15 @@ class PanelRegionForm(forms.ModelForm):
         return self.cleaned_data["name"]
 
     def clean_additional_panels(self):
-        name = self.cleaned_data["name"]
+        entity_name = self.cleaned_data["name"]
 
         for panel in GenePanelSnapshot.objects.filter(pk__in=self.cleaned_data["additional_panels"]):
-            if panel.has_region(name):
+            if panel.has_region(entity_name):
                 raise forms.ValidationError(
-                    "Region is already on additional panel", code="region_exists_in_additional_panel"
+                    "Entity is already on additional panel",
+                    code="entitiy_exists_in_additional_panel"
                 )
-        return self.cleaned_data['additional_panels']
-
-    def save(self, *args, **kwargs):
-        """Don't save the original panel as we need to increment version first"""
-        return False
+        return self.cleaned_data["additional_panels"]
 
     def save_region(self, *args, **kwargs):
         """Saves the gene, increments version and returns the gene back"""
@@ -258,15 +246,30 @@ class PanelRegionForm(forms.ModelForm):
             self.instance.copy_to_panels(self.cleaned_data["additional_panels"], self.request.user, new_region_name, initial_name, region_data)
 
         if self.initial and self.panel.has_region(initial_name):
-            self.panel = self.panel.increment_version()
-            self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
-            self.panel.update_region(
-                self.request.user,
-                initial_name,
-                region_data,
-                remove_gene=True if not region_data.get("gene") else False,
-            )
-            self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
+            # check if the entity changed
+            # if we only adding it to other panels, we don't need to increment version
+            # Because "Expert Review " sources are not in cleaned_data,
+            # check if initial data has it and compare if other sources changed.
+            changed = True
+            if self.changed_data == ['source']:
+                non_expert_reviews = [
+                    s for s
+                    in self.initial["source"]
+                    if not s.startswith('Expert Review ')
+                ]
+
+                if set(self.cleaned_data["source"]) == set(non_expert_reviews):
+                    changed = False
+
+            if changed:
+                self.panel = self.panel.increment_version()
+                self.panel.update_region(
+                    self.request.user,
+                    initial_name,
+                    region_data,
+                    remove_gene=True if not region_data.get("gene") else False,
+                )
+                self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
             entity = self.panel.get_region(new_region_name)
         else:
             increment_version = (
@@ -279,9 +282,10 @@ class PanelRegionForm(forms.ModelForm):
 
         if additional_panels:
             entity.copy_to_panels(
-                additional_panels,
-                self.request.user,
-                region_data
+                panels=additional_panels,
+                user=self.request.user,
+                entity_data=region_data,
+                copy_data=bool(self.initial)
             )
 
         return entity

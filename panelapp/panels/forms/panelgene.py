@@ -25,7 +25,6 @@
 
 from collections import OrderedDict
 from django import forms
-from django.db.models import Q
 from .helpers import GELSimpleArrayField
 from dal_select2.widgets import ModelSelect2
 from dal_select2.widgets import Select2Multiple
@@ -39,8 +38,10 @@ from panels.models import GenePanelEntrySnapshot
 from panels.models import GenePanel
 from panels.models import GenePanelSnapshot
 
+from .mixins import EntityFormMixin
 
-class PanelGeneForm(forms.ModelForm):
+
+class PanelGeneForm(EntityFormMixin, forms.ModelForm):
     """The goal for this form is to add a Gene to a Panel.
 
     How this works:
@@ -109,8 +110,7 @@ class PanelGeneForm(forms.ModelForm):
     )
 
     additional_panels = forms.ModelMultipleChoiceField(
-        queryset=GenePanelSnapshot.objects.filter(Q(panel__status=GenePanel.STATUS.public)
-                | Q(panel__status=GenePanel.STATUS.promoted)|Q(panel__status=GenePanel.STATUS.internal)).only('panel__name', 'pk'),
+        queryset=GenePanelSnapshot.objects.only('panel__name', 'pk'),
         required=False,
         widget=ModelSelect2Multiple(url="autocomplete-simple-panels")
     )
@@ -158,16 +158,6 @@ class PanelGeneForm(forms.ModelForm):
             )
             self.fields["comments"] = original_fields.get("comments")
 
-    def clean_source(self):
-        if len(self.cleaned_data["source"]) < 1:
-            raise forms.ValidationError("Please select a source")
-        return self.cleaned_data["source"]
-
-    def clean_moi(self):
-        if not self.cleaned_data["moi"]:
-            raise forms.ValidationError("Please select a mode of inheritance")
-        return self.cleaned_data["moi"]
-
     def clean_gene(self):
         """Check if gene exists in a panel if we add a new gene or change the gene"""
 
@@ -196,13 +186,9 @@ class PanelGeneForm(forms.ModelForm):
         for panel in GenePanelSnapshot.objects.filter(pk__in=self.cleaned_data["additional_panels"]):
             if panel.has_gene(gene_symbol):
                 raise forms.ValidationError(
-                    "Gene is already on additional panel", code="gene_exists_in_additional_panel"
+                    "Entity is already on additional panel", code="gene_exists_in_additional_panel"
                 )
         return self.cleaned_data["additional_panels"]
-
-    def save(self, *args, **kwargs):
-        """Don't save the original panel as we need to increment version first"""
-        return False
 
     def save_gene(self, *args, **kwargs):
         """Saves the gene, increments version and returns the gene back"""
@@ -223,10 +209,27 @@ class PanelGeneForm(forms.ModelForm):
         new_gene_symbol = gene_data.get("gene").gene_symbol
 
         if self.initial and self.panel.has_gene(initial_gene_symbol):
-            self.panel = self.panel.increment_version()
-            self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
-            self.panel.update_gene(self.request.user, initial_gene_symbol, gene_data)
-            self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
+            # check if the entity changed
+            # if we only adding it to other panels, we don't need to increment version
+            # Because "Expert Review " sources are not in cleaned_data,
+            # check if initial data has it and compare if other sources changed.
+            changed = True
+            if self.changed_data == ['source']:
+                non_expert_reviews = [
+                    s for s
+                    in self.initial["source"]
+                    if not s.startswith('Expert Review ')
+                ]
+
+                if set(self.cleaned_data["source"]) == set(non_expert_reviews):
+                    changed = False
+
+            if changed:
+                self.panel = self.panel.increment_version()
+                self.panel.update_gene(self.request.user, initial_gene_symbol, gene_data)
+                self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
+            else:
+                print('nothing changed, yo')
             entity = self.panel.get_gene(new_gene_symbol)
         else:
             increment_version = (
@@ -239,9 +242,10 @@ class PanelGeneForm(forms.ModelForm):
 
         if additional_panels:
             entity.copy_to_panels(
-                additional_panels,
-                self.request.user,
-                gene_data
+                panels=additional_panels,
+                user=self.request.user,
+                entity_data=gene_data,
+                copy_data=bool(self.initial)
             )
 
         return entity

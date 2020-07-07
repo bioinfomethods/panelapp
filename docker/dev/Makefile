@@ -7,7 +7,7 @@
 # environment from scratch, like `createsuperuser` or `loaddata`.
 ##################################################################
 
-
+PYTEST ?=  # pytest params
 BUILDDIR := .build
 APPDIR :=  panelapp
 SOURCEDIR := ../..
@@ -64,7 +64,7 @@ down: ## Destroy cluster
 	docker-compose down
 
 tests: ## Run tests
-	docker-compose run --rm web bash -c 'cd /app ; pytest'
+	docker-compose run --rm web bash -c "cd /app ; pytest ${PYTEST}"
 
 logs: ## Tail all logs
 	docker-compose logs -f

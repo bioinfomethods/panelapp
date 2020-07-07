@@ -28,17 +28,21 @@ Author: Oleg Gerasimenko
 (c) 2018 Genomics England
 """
 
+from typing import List
+
 from django.db.models import Manager
 from django.db.models import Count
 from django.db.models import Subquery
 from django.utils import timezone
 from model_utils import Choices
 
+from accounts.models import User
 from .evaluation import Evaluation
 from .comment import Comment
 from .trackrecord import TrackRecord
 from .evidence import Evidence
 from .genepanel import GenePanel
+from panels.models.genepanelsnapshot import GenePanelSnapshot
 from panels.templatetags.panel_helpers import get_gene_list_data
 from panels.templatetags.panel_helpers import GeneDataType
 
@@ -739,30 +743,81 @@ class AbstractEntity:
             self.panel.add_activity(user, activity_text, self)
             return evaluation
 
-    def copy_to_panels(self, panels, user, entity_data):
+    def copy_to_panels(
+        self,
+        panels: List[GenePanelSnapshot],
+        user: User,
+        entity_data: dict,
+        copy_data=False
+    ):
         """Copy entity to additional panels
 
-        Evidences are included in entity_data on form save, thus not copied manually"""
+        Evidences are included in entity_data on form save, thus not copied manually
+
+        :param panels: List of panels
+        :param user: User
+        :param entity_data: Entitiy data
+        :param copy_data: boolean - Whether to copy evaluations, etc or not, used when
+            adding the gene first time to the panel.
+        """
+
+        tags = []
+        evaluations = []
+        comments = []
+        evidences = []
+
+        if copy_data:
+            tags = list(self.tags.all())
+            evaluations = list(self.evaluation.prefetch_related('comments'))
+            comments = list(self.comments.all())
+            evidences = [
+                ev for ev
+                in self.evidence.all()
+                if ev.name not in entity_data['sources']
+            ]
 
         for panel in panels:
             if self.is_gene():
-                copied_gene = panel.add_gene(user, self.name, entity_data, True)
-            if self.is_str():
-                copied_gene = panel.add_str(user, self.name, entity_data, True)
-            if self.is_region():
-                copied_gene = panel.add_region(user, self.name, entity_data, True)
+                copied_entity = panel.add_gene(user, self.name, entity_data, True)
+            elif self.is_str():
+                copied_entity = panel.add_str(user, self.name, entity_data, True)
+            elif self.is_region():
+                copied_entity = panel.add_region(user, self.name, entity_data, True)
 
-            if copied_gene:
-                for evaluation in self.evaluation.all():
+            if copied_entity and copy_data:
+                panel.add_activity(
+                    user,
+                    f"Entity copied from {self.panel}",
+                    copied_entity
+                )
+
+                for evidence in evidences:
+                    evidence.pk = None
+                    evidence.save()
+                    copied_entity.evidence.add(evidence)
+
+                # Note - potentially slow if performed on large number of entities
+                for evaluation in evaluations:
+                    evaluation_comments = list(evaluation.comments.all())
+
                     evaluation.pk = None
+                    evaluation.original_panel = str(self.panel)
                     evaluation.save()
-                    copied_gene.evaluation.add(evaluation)
-                for tag in self.tags.all():
-                    copied_gene.tags.add(tag)
-                for comment in self.comments.all():
+                    for comment in evaluation_comments:
+                        comment.pk = None
+                        comment.save()
+                    evaluation.comments.add(*evaluation_comments)
+
+                    copied_entity.evaluation.add(evaluation)
+
+                copied_entity.tags.add(*tags)
+
+                for comment in comments:
                     comment.pk = None
                     comment.save()
-                    copied_gene.comments.add(comment)
+                    copied_entity.comments.add(comment)
+
+                copied_entity.evidence_status(update=True)
 
     @property
     def gene_list_class(self):

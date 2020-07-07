@@ -46,6 +46,7 @@ from panels.forms import PanelGeneForm
 from panels.tests.factories import GeneFactory
 from panels.tests.factories import GenePanelSnapshotFactory
 from panels.tests.factories import GenePanelEntrySnapshotFactory
+from panels.tests.factories import CommentFactory
 from panels.tests.factories import STRFactory
 from panels.tests.factories import RegionFactory
 
@@ -324,12 +325,16 @@ class CopyToPanelsTest(LoginGELUser):
             'source': ['Expert Review'],
             'moi': 'Unknown',
             'panel': self.gps,
-            'gene_name': self.gene.gene_symbol
+            'gene_name': self.gene.gene_symbol,
+            'comments': "new comment"
         }
         form = PanelGeneForm(form_data, panel=self.gps, request=self.request)
         assert form.is_valid()
         form.save_gene()
-        assert self.gps2.has_gene(self.gene.gene_symbol)
+        copied_gene = self.gps2.get_gene(self.gene.gene_symbol)
+        assert copied_gene
+        assert copied_gene.comments.count() == 1
+        assert copied_gene.evaluation.count() == 1
 
     def test_copy_existing_gene_to_panel(self):
         gene = GenePanelEntrySnapshotFactory.create(gene_core=self.gene, panel=self.gps)
@@ -339,18 +344,19 @@ class CopyToPanelsTest(LoginGELUser):
             'source': ['Expert Review', 'Expert Review'],
             'moi': 'Unknown',
             'panel': self.gps,
-            'gene_name': self.gene.gene_symbol
+            'gene_name': self.gene.gene_symbol,
         }
         form = PanelGeneForm(form_data, panel=self.gps, request=self.request,
                              instance=gene, initial=gene.get_form_initial())
         assert form.is_valid()
         form.save_gene()
-        assert self.gps2.has_gene(self.gene.gene_symbol)
+        copied_gene = self.gps2.get_gene(self.gene.gene_symbol)
+        assert copied_gene
 
     def test_copy_additional_info(self):
         """Copy addition data as well as the gene
         - comments
-        - evaluations
+        - evaluations and their comments
         - evidences
 
         Make sure IDs are different.
@@ -360,6 +366,7 @@ class CopyToPanelsTest(LoginGELUser):
 
         comment = Comment.objects.create(user=self.user, comment="Comment")
         gpes.comments.add(comment)
+        gpes.evaluation.first().comments.add(comment)
 
         form_data = {
             'additional_panels': [self.gps2.pk],
@@ -383,9 +390,16 @@ class CopyToPanelsTest(LoginGELUser):
         self.assertNotEqual(set(gpes2.evidence.values_list('pk', flat=True)),
                             set(gpes.evidence.values_list('pk', flat=True)))
 
+        gpes_pks = set(gpes.evaluation.values_list('pk', flat=True))
+        gpes2_pks = set(gpes2.evaluation.values_list('pk', flat=True))
         self.assertEqual(gpes2.evaluation.count(), gpes.evidence.count())
-        self.assertNotEqual(set(gpes2.evaluation.values_list('pk', flat=True)),
-                            set(gpes.evaluation.values_list('pk', flat=True)))
+        self.assertNotEqual(gpes2_pks, gpes_pks)
+
+        gpes_comments = Comment.objects.filter(evaluation__pk__in=gpes_pks)
+        gpes2_comments = Comment.objects.filter(evaluation__pk__in=gpes2_pks)
+        self.assertEqual(gpes_comments.count(), gpes2_comments.count())
+        self.assertEqual(gpes2_comments.count(), 1)
+        self.assertEqual(gpes_comments.first().comment, gpes2_comments.first().comment)
 
         self.assertEqual(gpes2.comments.count(), gpes.comments.count())
         self.assertNotEqual(gpes2.comments.first().pk, comment.pk)
@@ -393,6 +407,47 @@ class CopyToPanelsTest(LoginGELUser):
         self.assertEqual(gpes2.tags.count(), gpes.tags.count())
         # Same tag used in multiple panels
         self.assertEqual(gpes2.tags.first().pk, gpes.tags.first().pk)
+
+    def test_copy_original_panel(self):
+        """Copy original panel in the evaluations"""
+
+        gpes = GenePanelEntrySnapshotFactory.create(gene_core=self.gene, panel=self.gps)
+
+        comment_text = "Comment123"
+        comment = Comment.objects.create(user=self.user, comment=comment_text)
+        ev = Evaluation.objects.create(
+            user=self.user,
+            rating=Evaluation.RATINGS.AMBER,
+        )
+        ev.comments.add(comment)
+        gpes.evaluation.add(ev)
+
+        entity_data = {
+            'additional_panels': [self.gps2.pk],
+            'gene': self.gene,
+            'sources': gpes.evidence.values_list('name', flat=True),
+            'moi': 'Unknown',
+            'panel': self.gps,
+            'gene_name': self.gene.gene_symbol,
+            'tags': gpes.tags.all()
+        }
+        gpes.copy_to_panels([self.gps2], self.user, entity_data, copy_data=True)
+        copied_gene = self.gps2.get_gene(self.gene.gene_symbol)
+        copied_evaluation = copied_gene.evaluation.filter(comments__comment=comment_text).first()
+        assert copied_gene
+        assert copied_evaluation.original_panel
+
+        url = reverse_lazy(
+            "panels:evaluation",
+            kwargs={
+                "pk": self.gps2.pk,
+                "entity_type": "gene",
+                "entity_name": gpes.gene.get("gene_symbol"),
+            },
+        )
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, f"<strong>Copied from panel: </strong>")
 
     def test_copy_gene_to_panel_with_same_gene(self):
         GenePanelEntrySnapshotFactory.create(gene_core=self.gene, panel=self.gps2)
