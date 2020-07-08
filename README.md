@@ -16,10 +16,10 @@ Python dependencies are installed via `setup.py`.
 
 > The previous version of the application used a hosted RabbitMQ instance and the local file system for file storage.
 > This new version has been refactored to work on AWS, leveraging managed AWS services.
-> Using RabbitMQ and the local file system is still possible with the Django settings `./panelapp/panelapp/settings/on-prem.py`, 
+> Using RabbitMQ and the local file system is still possible with the Django settings `./panelapp/panelapp/settings/on-prem.py`,
 > but backward compatibility is not fully guaranteed.
 
-All environment are dockerised. 
+All environment are dockerised.
 
 We make a distinction between local development environments and cloud environments, as they use different Dockerfiles and Django settings.
 
@@ -57,3 +57,5 @@ They are NOT supposed to be used to deploy the application in any environment.
 ## Contributing to PanelApp
 
 All contributions are under [Apache2 license](http://www.apache.org/licenses/LICENSE-2.0.html#contributions).
+
+Check [CONTRIBUTING.md](./CONTRIBUTING.md) on how to contribute.
