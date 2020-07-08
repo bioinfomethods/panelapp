@@ -14,7 +14,6 @@ code_test:
     - schedules
   stage: code_test
   only:
-    - tags
     - merge_requests
     - branches
   services:
@@ -39,8 +38,6 @@ image_build:
   except:
     - schedules
   image: docker:stable
-  dependencies:
-    - code_test
   only:
     refs:
       - tags
@@ -245,4 +242,3 @@ destroy_test:
   script:
     - export WORKING_DIR=$(pwd)
     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var image_tag=$CI_COMMIT_TAG -var 'EC2_mgmt_count=0' && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var image_tag=$CI_COMMIT_TAG -var 'EC2_mgmt_count=0'
-
