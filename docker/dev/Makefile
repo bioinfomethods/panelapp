@@ -54,6 +54,9 @@ createsuperuser: ## Create superuser (username: 'admin', pwd: 'changeme', email:
 command: ## Run a generic command, passed as additional argument(s)
 	docker-compose exec web python manage.py $(COMMAND_ARGS)
 
+sh: ## Run a generic command, passed as additional argument(s)
+	docker-compose run --rm web bash
+
 stop: ## Stop cluster, without destroying it
 	docker-compose stop
 
