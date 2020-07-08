@@ -23,21 +23,28 @@
 ##
 from datetime import timedelta
 from random import randint
+
 from django.shortcuts import reverse
 from django.urls import reverse_lazy
 from django.utils import timezone
 from faker import Factory
-from accounts.tests.setup import LoginReviewerUser
-from accounts.tests.setup import LoginGELUser
-from panels.tests.factories import GenePanelEntrySnapshotFactory
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GeneFactory
-from panels.models import GenePanel
-from panels.models import Evidence
-from panels.models import Evaluation
-from panels.models import GenePanelEntrySnapshot
-from panels.models import Activity
 
+from accounts.tests.setup import (
+    LoginGELUser,
+    LoginReviewerUser,
+)
+from panels.models import (
+    Activity,
+    Evaluation,
+    Evidence,
+    GenePanel,
+    GenePanelEntrySnapshot,
+)
+from panels.tests.factories import (
+    GeneFactory,
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+)
 
 fake = Factory.create()
 

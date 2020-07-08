@@ -24,21 +24,26 @@
 
 # Profile used for local, dockerised development
 
+import socket  # Needed to display django debug toolbar from docker container
+
 from .base import *  # noqa
 
 DEBUG = True
 
 RUNSERVERPLUS_SERVER_ADDRESS_PORT = "0.0.0.0:8000"
 
-INSTALLED_APPS += ("debug_toolbar", "django_extensions",)  # noqa
+INSTALLED_APPS += (
+    "debug_toolbar",
+    "django_extensions",
+)  # noqa
 
 MIDDLEWARE += ("debug_toolbar.middleware.DebugToolbarMiddleware",)  # noqa
 
 INTERNAL_IPS = ["127.0.0.1"]
 
-import socket # Needed to display django debug toolbar from docker container
+
 ip = socket.gethostbyname(socket.gethostname())
-INTERNAL_IPS += [ip[:-1] + '1']
+INTERNAL_IPS += [ip[:-1] + "1"]
 
 EMAIL_HOST = "localhost"
 EMAIL_PORT = 25
@@ -50,19 +55,21 @@ ALLOWED_HOSTS = ALLOWED_HOSTS + ["localhost", "*"]
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 
-USE_S3 = os.getenv('USE_S3') == 'TRUE'
-AWS_REGION = os.getenv('AWS_REGION', "eu-west-2")
-AWS_DEFAULT_ACL = 'public-read'  # To shut up a warning from s3boto3.py
+USE_S3 = os.getenv("USE_S3") == "TRUE"
+AWS_REGION = os.getenv("AWS_REGION", "eu-west-2")
+AWS_DEFAULT_ACL = "public-read"  # To shut up a warning from s3boto3.py
 
 if USE_S3:  # Static and Media files on S3
 
     # AWS settings (regardless using LocalStack or the real thing)
-    AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID', None)
-    AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY', None)
+    AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", None)
+    AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", None)
 
     # What follows is specific to using LocalStack
     AWS_S3_USE_SSL = False
-    AWS_S3_ENDPOINT_URL = 'http://localstack:4572/'  # URL used by Boto3 to connect to S3 API
+    AWS_S3_ENDPOINT_URL = (
+        "http://localstack:4572/"  # URL used by Boto3 to connect to S3 API
+    )
 
     ###############
     # Static files
@@ -70,38 +77,43 @@ if USE_S3:  # Static and Media files on S3
 
     # Tell the staticfiles app to use S3Boto3 storage when writing the collected static files
     # (when you run `collectstatic`).
-    STATICFILES_STORAGE = 's3_storages.StaticStorage'
-    AWS_S3_STATICFILES_BUCKET_NAME = os.getenv('AWS_S3_STATICFILES_BUCKET_NAME')  # Bucket containing staticfiles
+    STATICFILES_STORAGE = "s3_storages.StaticStorage"
+    AWS_S3_STATICFILES_BUCKET_NAME = os.getenv(
+        "AWS_S3_STATICFILES_BUCKET_NAME"
+    )  # Bucket containing staticfiles
 
     # Location (path) to put media files, in the bucket
-    AWS_STATICFILES_LOCATION = os.getenv('AWS_STATICFILES_LOCATION', '')
+    AWS_STATICFILES_LOCATION = os.getenv("AWS_STATICFILES_LOCATION", "")
 
-#   AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
+    #   AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
     AWS_S3_STATICFILES_CUSTOM_DOMAIN = None
 
     # URL static files are served from
-#   STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
-    STATIC_URL = f'http://localstack:4572/{AWS_S3_STATICFILES_BUCKET_NAME}/{AWS_STATICFILES_LOCATION + ("/" if AWS_STATICFILES_LOCATION else "")}'  #noqa
+    #   STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
+    STATIC_URL = f'http://localstack:4572/{AWS_S3_STATICFILES_BUCKET_NAME}/{AWS_STATICFILES_LOCATION + ("/" if AWS_STATICFILES_LOCATION else "")}'  # noqa
 
-    AWS_S3_STATICFILES_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+    AWS_S3_STATICFILES_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
 
-    AWS_STATICFILES_DEFAULT_ACL = 'public-read'  # LocalStack only
-
+    AWS_STATICFILES_DEFAULT_ACL = "public-read"  # LocalStack only
 
     ##############
     # Media files
     ##############
 
-    DEFAULT_FILE_STORAGE = 's3_storages.MediaStorage'
-    AWS_S3_MEDIAFILES_BUCKET_NAME = os.getenv('AWS_S3_MEDIAFILES_BUCKET_NAME')  # Bucket containing mediafiles
-    AWS_MEDIAFILES_LOCATION = os.getenv('AWS_MEDIAFILES_LOCATION', '')  # Location (path) to put media files, in the bucket
+    DEFAULT_FILE_STORAGE = "s3_storages.MediaStorage"
+    AWS_S3_MEDIAFILES_BUCKET_NAME = os.getenv(
+        "AWS_S3_MEDIAFILES_BUCKET_NAME"
+    )  # Bucket containing mediafiles
+    AWS_MEDIAFILES_LOCATION = os.getenv(
+        "AWS_MEDIAFILES_LOCATION", ""
+    )  # Location (path) to put media files, in the bucket
 
     AWS_S3_MEDIAFILES_CUSTOM_DOMAIN = None
     # URL media files are served from
-    MEDIA_URL = f'http://localstack:4572/{AWS_S3_MEDIAFILES_BUCKET_NAME}/{AWS_MEDIAFILES_LOCATION + ("/" if AWS_MEDIAFILES_LOCATION else "")}'  #noqa
+    MEDIA_URL = f'http://localstack:4572/{AWS_S3_MEDIAFILES_BUCKET_NAME}/{AWS_MEDIAFILES_LOCATION + ("/" if AWS_MEDIAFILES_LOCATION else "")}'  # noqa
     AWS_S3_MEDIAFILES_OBJECT_PARAMETERS = {}
 
-    AWS_MEDIAFILES_DEFAULT_ACL = 'public-read'  # LocalStack only
+    AWS_MEDIAFILES_DEFAULT_ACL = "public-read"  # LocalStack only
 
 else:  # Static and Media files on local file system
 
@@ -124,15 +136,15 @@ CELERY_TASK_PUBLISH_RETRY_POLICY = {
     "interval_max": 0.2,
 }
 
-USE_SQS = os.getenv('USE_SQS') == 'TRUE'
+USE_SQS = os.getenv("USE_SQS") == "TRUE"
 
 if USE_SQS:  # Use SQS as message broker
 
     CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "sqs://@localstack:4576")
     BROKER_TRANSPORT_OPTIONS = {
-        'region': AWS_REGION,  # FIXME Is Kombo/Boto3 ignoring the region and always using us-east-1?
-        'polling_interval': 1,      # seconds
-        'visibility_timeout': 360,  # seconds
+        "region": AWS_REGION,  # FIXME Is Kombo/Boto3 ignoring the region and always using us-east-1?
+        "polling_interval": 1,  # seconds
+        "visibility_timeout": 360,  # seconds
     }
 
 else:  # Use RabbitMQ as message broker

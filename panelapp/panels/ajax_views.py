@@ -22,45 +22,57 @@
 ## under the License.
 ##
 import datetime
-from django.core.exceptions import PermissionDenied
-from django.views.generic.base import View
-from django.shortcuts import render
-from django.utils.functional import cached_property
-from django.urls import reverse_lazy
-from django.shortcuts import redirect
-from django_ajax.mixin import AJAXMixin
-from panelapp.mixins import GELReviewerRequiredMixin
-from panelapp.mixins import VerifiedReviewerRequiredMixin
-from .forms import PanelGeneForm
-from .forms import PanelSTRForm
-from .forms import PanelRegionForm
-from .forms import GeneReadyForm
-from .forms import GeneReviewForm
-from .forms import STRReviewForm
-from .forms import STRReadyForm
-from .forms import RegionReviewForm
-from .forms import RegionReadyForm
-from .forms.ajax import UpdateGeneTagsForm
-from .forms.ajax import UpdateGeneMOPForm
-from .forms.ajax import UpdateGeneMOIForm
-from .forms.ajax import UpdateGenePhenotypesForm
-from .forms.ajax import UpdateGenePublicationsForm
-from .forms.ajax import UpdateGeneRatingForm
-from .forms.ajax import UpdateSTRTagsForm
-from .forms.ajax import UpdateSTRMOIForm
-from .forms.ajax import UpdateSTRPhenotypesForm
-from .forms.ajax import UpdateSTRPublicationsForm
-from .forms.ajax import UpdateSTRRatingForm
-from .forms.ajax import UpdateRegionTagsForm
-from .forms.ajax import UpdateRegionMOIForm
-from .forms.ajax import UpdateRegionPhenotypesForm
-from .forms.ajax import UpdateRegionPublicationsForm
-from .forms.ajax import UpdateRegionRatingForm
 
-from .forms.ajax import EditCommentForm
-from .models import GenePanel
-from .models import GenePanelSnapshot
-from .models import Comment
+from django.core.exceptions import PermissionDenied
+from django.shortcuts import (
+    redirect,
+    render,
+)
+from django.urls import reverse_lazy
+from django.utils.functional import cached_property
+from django.views.generic.base import View
+from django_ajax.mixin import AJAXMixin
+
+from panelapp.mixins import (
+    GELReviewerRequiredMixin,
+    VerifiedReviewerRequiredMixin,
+)
+
+from .forms import (
+    GeneReadyForm,
+    GeneReviewForm,
+    PanelGeneForm,
+    PanelRegionForm,
+    PanelSTRForm,
+    RegionReadyForm,
+    RegionReviewForm,
+    STRReadyForm,
+    STRReviewForm,
+)
+from .forms.ajax import (
+    EditCommentForm,
+    UpdateGeneMOIForm,
+    UpdateGeneMOPForm,
+    UpdateGenePhenotypesForm,
+    UpdateGenePublicationsForm,
+    UpdateGeneRatingForm,
+    UpdateGeneTagsForm,
+    UpdateRegionMOIForm,
+    UpdateRegionPhenotypesForm,
+    UpdateRegionPublicationsForm,
+    UpdateRegionRatingForm,
+    UpdateRegionTagsForm,
+    UpdateSTRMOIForm,
+    UpdateSTRPhenotypesForm,
+    UpdateSTRPublicationsForm,
+    UpdateSTRRatingForm,
+    UpdateSTRTagsForm,
+)
+from .models import (
+    Comment,
+    GenePanel,
+    GenePanelSnapshot,
+)
 from .views.entities import EntityMixin
 
 

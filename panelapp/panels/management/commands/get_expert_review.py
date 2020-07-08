@@ -23,9 +23,13 @@
 ##
 import csv
 import sys
+
 import djclick as click
-from panels.models import GenePanelSnapshot
-from panels.models import Evidence
+
+from panels.models import (
+    Evidence,
+    GenePanelSnapshot,
+)
 
 
 @click.command()

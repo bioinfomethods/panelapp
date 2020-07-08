@@ -21,27 +21,36 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from random import randint
+from random import (
+    choice,
+    randint,
+)
+
 from django.urls import reverse_lazy
 from django.utils import timezone
 from faker import Factory
-from random import choice
-from accounts.tests.setup import LoginGELUser
-from accounts.tests.setup import LoginReviewerUser
-from panels.models import GenePanelEntrySnapshot
-from panels.models import Region
-from panels.models import GenePanelSnapshot
-from panels.models import Evidence
-from panels.models import GenePanel
-from panels.models import Evaluation
-from panels.models import HistoricalSnapshot
-from panels.tests.factories import GeneFactory
-from panels.tests.factories import RegionFactory
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
-from panels.tests.factories import TagFactory
-from panels.tests.factories import CommentFactory
 
+from accounts.tests.setup import (
+    LoginGELUser,
+    LoginReviewerUser,
+)
+from panels.models import (
+    Evaluation,
+    Evidence,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    HistoricalSnapshot,
+    Region,
+)
+from panels.tests.factories import (
+    CommentFactory,
+    GeneFactory,
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+    RegionFactory,
+    TagFactory,
+)
 
 fake = Factory.create()
 
@@ -278,7 +287,7 @@ class GenePanelSnapshotTest(LoginGELUser):
             gpes.gene_core.gene_symbol
         )
         assert gene.saved_gel_status == status + 1
-        assert 'ClinGen' in [ev.name for ev in gene.evidence.all()]
+        assert "ClinGen" in [ev.name for ev in gene.evidence.all()]
 
     def test_remove_sources(self):
         """Remove sources via edit gene detail section"""
@@ -615,7 +624,6 @@ class GenePanelSnapshotTest(LoginGELUser):
                 randint(1, 2)
             ][0],
             "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
-
         }
         res = self.client.post(url, gene_data)
         assert res.status_code == 302
@@ -673,8 +681,13 @@ class GenePanelSnapshotTest(LoginGELUser):
         gps = GenePanelSnapshotFactory()
         url = reverse_lazy("panels:update", kwargs={"pk": gps.panel.pk})
         date = timezone.now().date()
-        data = {"signed_off_version": gps.version, "signed_off_date": date, "level4": gps.level4title,
-                "description": "test", "status": "public"}
+        data = {
+            "signed_off_version": gps.version,
+            "signed_off_date": date,
+            "level4": gps.level4title,
+            "description": "test",
+            "status": "public",
+        }
 
         res = self.client.post(url, data)
 

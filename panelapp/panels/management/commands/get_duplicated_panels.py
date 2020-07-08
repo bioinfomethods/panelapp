@@ -23,14 +23,20 @@
 ##
 import csv
 import sys
+
 import djclick as click
 from django.db import models
-from django.db.models import Case
-from django.db.models import Count
-from django.db.models import When
-from django.db.models import Value
-from panels.models import GenePanelSnapshot
-from panels.models import Evidence
+from django.db.models import (
+    Case,
+    Count,
+    Value,
+    When,
+)
+
+from panels.models import (
+    Evidence,
+    GenePanelSnapshot,
+)
 
 
 @click.command()

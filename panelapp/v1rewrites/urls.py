@@ -22,13 +22,15 @@
 ## under the License.
 ##
 from django.conf.urls import url
-from django.views.generic.base import RedirectView
 from django.urls import reverse_lazy
+from django.views.generic.base import RedirectView
 
-from .views import RedirectGeneView
-from .views import RedirectPanelView
-from .views import RedirectWebServices
-from .views import RedirectGenePanelView
+from .views import (
+    RedirectGenePanelView,
+    RedirectGeneView,
+    RedirectPanelView,
+    RedirectWebServices,
+)
 
 app_name = "v1rewrites"
 urlpatterns = [

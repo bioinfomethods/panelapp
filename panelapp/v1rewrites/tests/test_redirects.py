@@ -22,6 +22,7 @@
 ## under the License.
 ##
 from django.test import TestCase
+
 from panels.tests.factories import GenePanelEntrySnapshotFactory
 
 

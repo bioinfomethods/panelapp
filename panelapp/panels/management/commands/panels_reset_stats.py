@@ -37,7 +37,7 @@ def command():
             new_panel = panel.increment_version(include_superpanels=False)
             new_panel._update_saved_stats(update_superpanels=False)
 
-    click.echo('Updated all simple panels')
+    click.echo("Updated all simple panels")
 
     for super_panel in GenePanelSnapshot.objects.get_active_annotated(
         all=True, internal=True, superpanels=True
@@ -46,4 +46,4 @@ def command():
             new_super_panel = super_panel.increment_version()
             new_super_panel._update_saved_stats(update_superpanels=False)
 
-    click.echo('Updated all super panels')
+    click.echo("Updated all super panels")

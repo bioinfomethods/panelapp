@@ -24,22 +24,29 @@
 """Contains a form which is used to add/edit a gene in a panel."""
 
 from collections import OrderedDict
-from django import forms
-from django.contrib.postgres.forms import SimpleArrayField
-from django.contrib.postgres.forms import IntegerRangeField
-from dal_select2.widgets import ModelSelect2
-from dal_select2.widgets import Select2Multiple
-from dal_select2.widgets import ModelSelect2Multiple
-from panelapp.forms import Select2ListMultipleChoiceField
-from panels.models import Tag
-from panels.models import Gene
-from panels.models import Evidence
-from panels.models import Evaluation
-from panels.models import STR
-from panels.models import GenePanel
-from panels.models import GenePanelSnapshot
 
+from dal_select2.widgets import (
+    ModelSelect2,
+    ModelSelect2Multiple,
+    Select2Multiple,
+)
+from django import forms
+from django.contrib.postgres.forms import (
+    IntegerRangeField,
+    SimpleArrayField,
+)
+
+from panelapp.forms import Select2ListMultipleChoiceField
 from panels.forms.mixins import EntityFormMixin
+from panels.models import (
+    STR,
+    Evaluation,
+    Evidence,
+    Gene,
+    GenePanel,
+    GenePanelSnapshot,
+    Tag,
+)
 
 
 class PanelSTRForm(EntityFormMixin, forms.ModelForm):
@@ -115,9 +122,9 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
     comments = forms.CharField(widget=forms.Textarea, required=False)
 
     additional_panels = forms.ModelMultipleChoiceField(
-        queryset=GenePanelSnapshot.objects.all().only('panel__name', 'pk'),
+        queryset=GenePanelSnapshot.objects.all().only("panel__name", "pk"),
         required=False,
-        widget=ModelSelect2Multiple(url="autocomplete-simple-panels")
+        widget=ModelSelect2Multiple(url="autocomplete-simple-panels"),
     )
 
     class Meta:
@@ -226,11 +233,13 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
     def clean_additional_panels(self):
         entity_name = self.cleaned_data["name"]
 
-        for panel in GenePanelSnapshot.objects.filter(pk__in=self.cleaned_data["additional_panels"]):
+        for panel in GenePanelSnapshot.objects.filter(
+            pk__in=self.cleaned_data["additional_panels"]
+        ):
             if panel.has_str(entity_name):
                 raise forms.ValidationError(
                     "Entity is already on additional panel",
-                    code="entitiy_exists_in_additional_panel"
+                    code="entitiy_exists_in_additional_panel",
                 )
         return self.cleaned_data["additional_panels"]
 
@@ -258,11 +267,11 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
             # Because "Expert Review " sources are not in cleaned_data,
             # check if initial data has it and compare if other sources changed.
             changed = True
-            if self.changed_data == ['source']:
+            if self.changed_data == ["source"]:
                 non_expert_reviews = [
-                    s for s
-                    in self.initial["source"]
-                    if not s.startswith('Expert Review ')
+                    s
+                    for s in self.initial["source"]
+                    if not s.startswith("Expert Review ")
                 ]
 
                 if set(self.cleaned_data["source"]) == set(non_expert_reviews):
@@ -292,7 +301,7 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
                 panels=additional_panels,
                 user=self.request.user,
                 entity_data=str_data,
-                copy_data=bool(self.initial)
+                copy_data=bool(self.initial),
             )
 
         return entity

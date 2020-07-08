@@ -21,14 +21,19 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+from dal_select2.views import (
+    Select2ListView,
+    Select2QuerySetView,
+)
 from django.db.models import Q
-from dal_select2.views import Select2QuerySetView
-from dal_select2.views import Select2ListView
-from panels.models import Gene
-from panels.models import Evidence
-from panels.models import Tag
-from panels.models import GenePanelSnapshot
-from panels.models import PanelType
+
+from panels.models import (
+    Evidence,
+    Gene,
+    GenePanelSnapshot,
+    PanelType,
+    Tag,
+)
 
 
 class GeneAutocomplete(Select2QuerySetView):

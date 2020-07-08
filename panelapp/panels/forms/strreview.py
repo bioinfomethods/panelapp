@@ -22,9 +22,12 @@
 ## under the License.
 ##
 from collections import OrderedDict
+
 from django import forms
-from .helpers import GELSimpleArrayField
+
 from panels.models import Evaluation
+
+from .helpers import GELSimpleArrayField
 
 
 class STRReviewForm(forms.ModelForm):

@@ -21,30 +21,34 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+from django.contrib.postgres.fields import (
+    ArrayField,
+    IntegerRangeField,
+    JSONField,
+)
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
-from model_utils import Choices
-from django.db.models import Count
-from django.db.models import Subquery
+from django.db.models import (
+    Count,
+    Subquery,
+)
 from django.db.models import Value as V
 from django.urls import reverse
-
-from django.core.serializers.json import DjangoJSONEncoder
-from django.contrib.postgres.fields import JSONField
-from django.contrib.postgres.fields import ArrayField
-from django.contrib.postgres.fields import IntegerRangeField
-
+from model_utils import Choices
 from model_utils.models import TimeStampedModel
 
+from .comment import Comment
+from .entity import (
+    AbstractEntity,
+    EntityManager,
+)
+from .evaluation import Evaluation
+from .evidence import Evidence
 from .gene import Gene
 from .genepanel import GenePanel
-from .evidence import Evidence
-from .evaluation import Evaluation
-from .trackrecord import TrackRecord
-from .comment import Comment
-from .tag import Tag
 from .genepanelsnapshot import GenePanelSnapshot
-from .entity import AbstractEntity
-from .entity import EntityManager
+from .tag import Tag
+from .trackrecord import TrackRecord
 
 
 class GenePanelEntrySnapshotManager(EntityManager):
@@ -159,7 +163,9 @@ class GenePanelEntrySnapshot(AbstractEntity, TimeStampedModel):
     saved_gel_status = models.IntegerField(
         null=True, db_index=True
     )  # this should be enum red, green, etc
-    transcript = ArrayField(models.CharField(max_length=255, blank=True, null=True), blank=True, null=True)
+    transcript = ArrayField(
+        models.CharField(max_length=255, blank=True, null=True), blank=True, null=True
+    )
 
     objects = GenePanelEntrySnapshotManager()
 

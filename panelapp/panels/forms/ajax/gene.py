@@ -22,12 +22,16 @@
 ## under the License.
 ##
 from collections import OrderedDict
+
+from dal_select2.widgets import ModelSelect2Multiple
 from django import forms
 from django.contrib.postgres.forms import SimpleArrayField
-from dal_select2.widgets import ModelSelect2Multiple
-from panels.models import Tag
-from panels.models import GenePanel
-from panels.models import GenePanelEntrySnapshot
+
+from panels.models import (
+    GenePanel,
+    GenePanelEntrySnapshot,
+    Tag,
+)
 
 
 class UpdateGeneTagsForm(forms.ModelForm):

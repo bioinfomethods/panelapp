@@ -23,11 +23,14 @@
 ##
 import csv
 from datetime import datetime
+
 from django.http import StreamingHttpResponse
 from django.views import View
-from panels.models import GenePanelSnapshot
-from .entities import EchoWriter
+
 from panelapp.mixins import GELReviewerRequiredMixin
+from panels.models import GenePanelSnapshot
+
+from .entities import EchoWriter
 
 
 class DownloadAllRegions(GELReviewerRequiredMixin, View):

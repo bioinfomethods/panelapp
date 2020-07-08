@@ -21,9 +21,10 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.core.files.storage import FileSystemStorage
-from django.conf import settings
 import os
+
+from django.conf import settings
+from django.core.files.storage import FileSystemStorage
 
 
 class OverwriteStorage(FileSystemStorage):

@@ -22,25 +22,29 @@
 ## under the License.
 ##
 import os
+
 from django.core import mail
 from django.test import Client
 from django.urls import reverse_lazy
 from faker import Factory
-from accounts.tests.setup import LoginGELUser
-from panels.models import GenePanel
-from panels.models import GenePanelEntrySnapshot
-from panels.models import HistoricalSnapshot
-from panels.tasks import email_panel_promoted
-from panels.tests.factories import GeneFactory
-from panels.tests.factories import STRFactory
-from panels.tests.factories import EvidenceFactory
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
-from panels.tests.factories import PanelTypeFactory
-from panels.tests.factories import RegionFactory
 from psycopg2.extras import NumericRange
 
-
+from accounts.tests.setup import LoginGELUser
+from panels.models import (
+    GenePanel,
+    GenePanelEntrySnapshot,
+    HistoricalSnapshot,
+)
+from panels.tasks import email_panel_promoted
+from panels.tests.factories import (
+    EvidenceFactory,
+    GeneFactory,
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+    PanelTypeFactory,
+    RegionFactory,
+    STRFactory,
+)
 
 fake = Factory.create()
 
@@ -339,18 +343,48 @@ class GenePanelTest(LoginGELUser):
         str_2 = GeneFactory(gene_symbol="STR_2")
         str_3 = GeneFactory(gene_symbol="STR_3")
 
-        STRFactory(name='STR_1', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
-                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
-                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_1)
-        STRFactory(name='STR_2', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
-                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
-                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_2)
-        STRFactory(name='STR_3', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
-                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
-                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_3)
-        RegionFactory(name='ISCA-37478', moi='BOTH monoallelic and biallelic, autosomal or pseudoautosomal',
-                      chromosome='15', position_38=NumericRange(341468368, 341468388), type_of_variants='cnv_gain',
-                      verbose_name='Verbose name', required_overlap_percentage=10)
+        STRFactory(
+            name="STR_1",
+            moi="MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            chromosome="1",
+            position_37=NumericRange(12, 20),
+            position_38=NumericRange(12, 20),
+            repeated_sequence="AT",
+            normal_repeats=10,
+            pathogenic_repeats=889,
+            gene_core=str_1,
+        )
+        STRFactory(
+            name="STR_2",
+            moi="MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            chromosome="1",
+            position_37=NumericRange(12, 20),
+            position_38=NumericRange(12, 20),
+            repeated_sequence="AT",
+            normal_repeats=10,
+            pathogenic_repeats=889,
+            gene_core=str_2,
+        )
+        STRFactory(
+            name="STR_3",
+            moi="MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            chromosome="1",
+            position_37=NumericRange(12, 20),
+            position_38=NumericRange(12, 20),
+            repeated_sequence="AT",
+            normal_repeats=10,
+            pathogenic_repeats=889,
+            gene_core=str_3,
+        )
+        RegionFactory(
+            name="ISCA-37478",
+            moi="BOTH monoallelic and biallelic, autosomal or pseudoautosomal",
+            chromosome="15",
+            position_38=NumericRange(341468368, 341468388),
+            type_of_variants="cnv_gain",
+            verbose_name="Verbose name",
+            required_overlap_percentage=10,
+        )
 
         file_path = os.path.join(os.path.dirname(__file__), "import_panel_data.tsv")
         test_panel_file = os.path.abspath(file_path)
@@ -371,18 +405,48 @@ class GenePanelTest(LoginGELUser):
         str_2 = GeneFactory(gene_symbol="STR_2")
         str_3 = GeneFactory(gene_symbol="STR_3")
 
-        STRFactory(name='STR_1', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
-                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
-                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_1)
-        STRFactory(name='STR_2', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
-                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
-                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_2)
-        STRFactory(name='STR_3', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
-                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
-                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_3)
-        RegionFactory(name='ISCA-37478', moi='BOTH monoallelic and biallelic, autosomal or pseudoautosomal',
-                      chromosome='15', position_38=NumericRange(341468368, 341468388), type_of_variants='cnv_gain',
-                      verbose_name='Verbose name', required_overlap_percentage=10)
+        STRFactory(
+            name="STR_1",
+            moi="MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            chromosome="1",
+            position_37=NumericRange(12, 20),
+            position_38=NumericRange(12, 20),
+            repeated_sequence="AT",
+            normal_repeats=10,
+            pathogenic_repeats=889,
+            gene_core=str_1,
+        )
+        STRFactory(
+            name="STR_2",
+            moi="MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            chromosome="1",
+            position_37=NumericRange(12, 20),
+            position_38=NumericRange(12, 20),
+            repeated_sequence="AT",
+            normal_repeats=10,
+            pathogenic_repeats=889,
+            gene_core=str_2,
+        )
+        STRFactory(
+            name="STR_3",
+            moi="MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            chromosome="1",
+            position_37=NumericRange(12, 20),
+            position_38=NumericRange(12, 20),
+            repeated_sequence="AT",
+            normal_repeats=10,
+            pathogenic_repeats=889,
+            gene_core=str_3,
+        )
+        RegionFactory(
+            name="ISCA-37478",
+            moi="BOTH monoallelic and biallelic, autosomal or pseudoautosomal",
+            chromosome="15",
+            position_38=NumericRange(341468368, 341468388),
+            type_of_variants="cnv_gain",
+            verbose_name="Verbose name",
+            required_overlap_percentage=10,
+        )
 
         file_path = os.path.join(os.path.dirname(__file__), "import_panel_data.tsv")
         test_panel_file = os.path.abspath(file_path)
@@ -402,18 +466,48 @@ class GenePanelTest(LoginGELUser):
         str_2 = GeneFactory(gene_symbol="STR_2")
         str_3 = GeneFactory(gene_symbol="STR_3")
 
-        STRFactory(name='STR_1', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
-                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
-                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=gene)
-        STRFactory(name='STR_2', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
-                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
-                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_2)
-        STRFactory(name='STR_3', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
-                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
-                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_3)
-        RegionFactory(name='ISCA-37478', moi='BOTH monoallelic and biallelic, autosomal or pseudoautosomal',
-                      chromosome='15', position_38=NumericRange(341468368, 341468388), type_of_variants='cnv_gain',
-                      verbose_name='Verbose name', required_overlap_percentage=10)
+        STRFactory(
+            name="STR_1",
+            moi="MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            chromosome="1",
+            position_37=NumericRange(12, 20),
+            position_38=NumericRange(12, 20),
+            repeated_sequence="AT",
+            normal_repeats=10,
+            pathogenic_repeats=889,
+            gene_core=gene,
+        )
+        STRFactory(
+            name="STR_2",
+            moi="MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            chromosome="1",
+            position_37=NumericRange(12, 20),
+            position_38=NumericRange(12, 20),
+            repeated_sequence="AT",
+            normal_repeats=10,
+            pathogenic_repeats=889,
+            gene_core=str_2,
+        )
+        STRFactory(
+            name="STR_3",
+            moi="MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            chromosome="1",
+            position_37=NumericRange(12, 20),
+            position_38=NumericRange(12, 20),
+            repeated_sequence="AT",
+            normal_repeats=10,
+            pathogenic_repeats=889,
+            gene_core=str_3,
+        )
+        RegionFactory(
+            name="ISCA-37478",
+            moi="BOTH monoallelic and biallelic, autosomal or pseudoautosomal",
+            chromosome="15",
+            position_38=NumericRange(341468368, 341468388),
+            type_of_variants="cnv_gain",
+            verbose_name="Verbose name",
+            required_overlap_percentage=10,
+        )
 
         file_path = os.path.join(os.path.dirname(__file__), "import_panel_data.tsv")
         test_panel_file = os.path.abspath(file_path)
@@ -436,18 +530,48 @@ class GenePanelTest(LoginGELUser):
         str_2 = GeneFactory(gene_symbol="STR_2")
         str_3 = GeneFactory(gene_symbol="STR_3")
 
-        STRFactory(name='STR_1', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
-                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
-                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_1)
-        STRFactory(name='STR_2', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
-                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
-                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_2)
-        STRFactory(name='STR_3', moi='MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)',
-                   chromosome='1', position_37=NumericRange(12, 20), position_38=NumericRange(12, 20),
-                   repeated_sequence='AT', normal_repeats=10, pathogenic_repeats=889, gene_core=str_3)
-        RegionFactory(name='ISCA-37478', moi='BOTH monoallelic and biallelic, autosomal or pseudoautosomal',
-                      chromosome='15', position_38=NumericRange(341468368, 341468388), type_of_variants='cnv_gain',
-                      verbose_name='Verbose name', required_overlap_percentage=10)
+        STRFactory(
+            name="STR_1",
+            moi="MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            chromosome="1",
+            position_37=NumericRange(12, 20),
+            position_38=NumericRange(12, 20),
+            repeated_sequence="AT",
+            normal_repeats=10,
+            pathogenic_repeats=889,
+            gene_core=str_1,
+        )
+        STRFactory(
+            name="STR_2",
+            moi="MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            chromosome="1",
+            position_37=NumericRange(12, 20),
+            position_38=NumericRange(12, 20),
+            repeated_sequence="AT",
+            normal_repeats=10,
+            pathogenic_repeats=889,
+            gene_core=str_2,
+        )
+        STRFactory(
+            name="STR_3",
+            moi="MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            chromosome="1",
+            position_37=NumericRange(12, 20),
+            position_38=NumericRange(12, 20),
+            repeated_sequence="AT",
+            normal_repeats=10,
+            pathogenic_repeats=889,
+            gene_core=str_3,
+        )
+        RegionFactory(
+            name="ISCA-37478",
+            moi="BOTH monoallelic and biallelic, autosomal or pseudoautosomal",
+            chromosome="15",
+            position_38=NumericRange(341468368, 341468388),
+            type_of_variants="cnv_gain",
+            verbose_name="Verbose name",
+            required_overlap_percentage=10,
+        )
 
         gps = GenePanelSnapshotFactory()
         gps.panel.name = "Panel One"
@@ -489,7 +613,7 @@ class GenePanelTest(LoginGELUser):
             res = self.client.post(url, {"panel_list": f})
             messages = [str(m) for m in res.wsgi_request._messages]
             expected_messages = [
-            "Line: 3 Incorrect STR Name, 4 Incorrect Region Name, 5 Incorrect Region Name, 6 Incorrect MOI is not properly formatted, please check it and try again."
+                "Line: 3 Incorrect STR Name, 4 Incorrect Region Name, 5 Incorrect Region Name, 6 Incorrect MOI is not properly formatted, please check it and try again."
             ]
             self.assertEqual(expected_messages, messages)
 
@@ -608,10 +732,13 @@ class GenePanelTest(LoginGELUser):
         gps = GenePanelSnapshotFactory()
         gpes = GenePanelEntrySnapshotFactory(panel=gps)
         publications = gpes.publications
-        publications.append('4354353')
+        publications.append("4354353")
 
         gps.update_gene(
-            self.gel_user, gpes.gene_core.gene_symbol, {"publications": publications}, True
+            self.gel_user,
+            gpes.gene_core.gene_symbol,
+            {"publications": publications},
+            True,
         )
         self.assertEqual(gpes.publications, publications)
 

@@ -21,13 +21,17 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.db.migrations.executor import MigrationExecutor
 from django.db import connection
-from django.test import TransactionTestCase, TestCase
+from django.db.migrations.executor import MigrationExecutor
+from django.test import (
+    TestCase,
+    TransactionTestCase,
+)
 from faker import Factory
-from accounts.models import Reviewer
-from .factories import UserFactory
 
+from accounts.models import Reviewer
+
+from .factories import UserFactory
 
 fake = Factory.create()
 

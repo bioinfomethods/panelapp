@@ -21,8 +21,9 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from .base import *  # noqa
 import logging
+
+from .base import *  # noqa
 
 logging.disable(logging.CRITICAL)
 

@@ -34,12 +34,13 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
-import panelapp
-import dj_database_url
 import urllib.parse
-from django.contrib.messages import constants as message_constants
-from celery.schedules import crontab
 
+import dj_database_url
+from celery.schedules import crontab
+from django.contrib.messages import constants as message_constants
+
+import panelapp
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(
@@ -157,8 +158,14 @@ DATABASE_NAME = os.getenv("DATABASE_NAME", "panelapp")
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     f"postgres://{DATABASE_USER}:{urllib.parse.quote(DATABASE_PASSWORD,safe='')}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
-    if DATABASE_USER and DATABASE_PASSWORD and DATABASE_HOST else None )
-DATABASES = {"default": dj_database_url.parse(DATABASE_URL,engine="django.db.backends.postgresql")}
+    if DATABASE_USER and DATABASE_PASSWORD and DATABASE_HOST
+    else None,
+)
+DATABASES = {
+    "default": dj_database_url.parse(
+        DATABASE_URL, engine="django.db.backends.postgresql"
+    )
+}
 
 
 # Admin
@@ -291,4 +298,4 @@ DEFAULT_PANEL_TYPES = os.getenv("DEFAULT_PANEL_TYPES", "rare-disease-100k").spli
 
 SIGNED_OFF_MESSAGE = "This Panel has been signed off for the GMS"
 
-OMIM_API_KEY= os.getenv("OMIM_API_KEY", None)
+OMIM_API_KEY = os.getenv("OMIM_API_KEY", None)

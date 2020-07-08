@@ -1,13 +1,20 @@
 from random import randint
+
+from django.core.management import call_command
 from django.urls import reverse_lazy
 from faker import Factory
-from django.core.management import call_command
+
 from accounts.tests.setup import LoginGELUser
-from panels.models import GenePanelSnapshot, GenePanelEntrySnapshot
-from panels.models import Evidence
-from panels.models import Evaluation
-from panels.tests.factories import GeneFactory
-from panels.tests.factories import GenePanelSnapshotFactory
+from panels.models import (
+    Evaluation,
+    Evidence,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+)
+from panels.tests.factories import (
+    GeneFactory,
+    GenePanelSnapshotFactory,
+)
 
 fake = Factory.create()
 

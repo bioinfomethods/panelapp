@@ -21,26 +21,31 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-import factory
+from random import (
+    choice,
+    randint,
+)
 from uuid import uuid1
-from random import randint
-from random import choice
-from panels.models import Gene
-from panels.models import GenePanelEntrySnapshot
-from panels.models import Evidence
-from panels.models import Evaluation
-from panels.models import TrackRecord
-from panels.models import Tag
-from panels.models import Comment
-from panels.models import Level4Title
-from panels.models import GenePanel
-from panels.models import GenePanelSnapshot
-from panels.models import STR
-from panels.models import Region
-from panels.models import PanelType
+
+import factory
+from faker import Faker
 from psycopg2.extras import NumericRange
 
-from faker import Faker
+from panels.models import (
+    STR,
+    Comment,
+    Evaluation,
+    Evidence,
+    Gene,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    Level4Title,
+    PanelType,
+    Region,
+    Tag,
+    TrackRecord,
+)
 
 fake = Faker()
 
@@ -88,7 +93,7 @@ class GenePanelFactory(factory.django.DjangoModelFactory):
         lambda x: fake.sentence(nb_words=6, variable_nb_words=True).strip(".")
     )
     genepanelsnapshot = factory.RelatedFactory(GenePanelSnapshotFactory)
-    old_pk = '553f9696bb5a1616e5ed41e3'
+    old_pk = "553f9696bb5a1616e5ed41e3"
 
 
 class PanelTypeFactory(factory.django.DjangoModelFactory):

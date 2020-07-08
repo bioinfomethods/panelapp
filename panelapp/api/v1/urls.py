@@ -21,25 +21,33 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.urls import path, include
+from django.urls import (
+    include,
+    path,
+)
 from rest_framework_nested import routers
-from .viewsets import PanelsViewSet
-from .viewsets import ActivityViewSet
-from .viewsets import GeneViewSet
-from .viewsets import GeneEvaluationsViewSet
-from .viewsets import STREvaluationsViewSet
-from .viewsets import STRViewSet
-from .viewsets import GeneSearchViewSet
-from .viewsets import STRSearchViewSet
-from .viewsets import RegionViewSet
-from .viewsets import RegionEvaluationsViewSet
-from .viewsets import RegionSearchViewSet
-from .viewsets import EntitySearchViewSet
-from .viewsets import SignedOffPanelViewSet
+
+from .viewsets import (
+    ActivityViewSet,
+    EntitySearchViewSet,
+    GeneEvaluationsViewSet,
+    GeneSearchViewSet,
+    GeneViewSet,
+    PanelsViewSet,
+    RegionEvaluationsViewSet,
+    RegionSearchViewSet,
+    RegionViewSet,
+    SignedOffPanelViewSet,
+    STREvaluationsViewSet,
+    STRSearchViewSet,
+    STRViewSet,
+)
 
 router = routers.DefaultRouter()
 
-router.register(r"panels/signedoff", SignedOffPanelViewSet, base_name="signedoff_panels")
+router.register(
+    r"panels/signedoff", SignedOffPanelViewSet, base_name="signedoff_panels"
+)
 router.register(r"panels", PanelsViewSet, base_name="panels")
 
 genes_router = routers.NestedSimpleRouter(router, r"panels", lookup="panel")

@@ -22,21 +22,28 @@
 ## under the License.
 ##
 from random import randint
+
 from django.urls import reverse_lazy
 from faker import Factory
-from accounts.tests.setup import LoginGELUser
-from accounts.tests.setup import LoginReviewerUser
-from panels.models import GenePanelEntrySnapshot
-from panels.models import GenePanelSnapshot
-from panels.models import Evidence
-from panels.models import GenePanel
-from panels.models import Evaluation
-from panels.tests.factories import GeneFactory
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
-from panels.tests.factories import TagFactory
-from panels.tests.factories import CommentFactory
 
+from accounts.tests.setup import (
+    LoginGELUser,
+    LoginReviewerUser,
+)
+from panels.models import (
+    Evaluation,
+    Evidence,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+)
+from panels.tests.factories import (
+    CommentFactory,
+    GeneFactory,
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+    TagFactory,
+)
 
 fake = Factory.create()
 

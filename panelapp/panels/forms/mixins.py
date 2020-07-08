@@ -9,9 +9,7 @@ class EntityFormMixin:
         # it's set manually and not via edit gene page
 
         expert_review = [
-            s for s
-            in self.initial.get("source", [])
-            if s.startswith('Expert Review ')
+            s for s in self.initial.get("source", []) if s.startswith("Expert Review ")
         ]
 
         if len(self.cleaned_data["source"]) < 1 and not expert_review:

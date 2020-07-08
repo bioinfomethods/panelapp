@@ -28,29 +28,35 @@ Author: Oleg Gerasimenko
 (c) 2018 Genomics England
 """
 
-from django.db import models
-from django.db.models import Subquery
-from django.db.models import Count
-from django.db.models import Value as V
-from django.core.serializers.json import DjangoJSONEncoder
-from django.contrib.postgres.fields import JSONField
-from django.contrib.postgres.fields import ArrayField
-from django.contrib.postgres.fields import IntegerRangeField
+from django.contrib.postgres.fields import (
+    ArrayField,
+    IntegerRangeField,
+    JSONField,
+)
 from django.core import validators
+from django.core.serializers.json import DjangoJSONEncoder
+from django.db import models
+from django.db.models import (
+    Count,
+    Subquery,
+)
+from django.db.models import Value as V
 from django.urls import reverse
-
-from model_utils.models import TimeStampedModel
 from model_utils import Choices
-from .entity import AbstractEntity
-from .entity import EntityManager
+from model_utils.models import TimeStampedModel
+
+from .comment import Comment
+from .entity import (
+    AbstractEntity,
+    EntityManager,
+)
+from .evaluation import Evaluation
+from .evidence import Evidence
 from .gene import Gene
 from .genepanel import GenePanel
-from .evidence import Evidence
-from .evaluation import Evaluation
-from .trackrecord import TrackRecord
-from .comment import Comment
-from .tag import Tag
 from .genepanelsnapshot import GenePanelSnapshot
+from .tag import Tag
+from .trackrecord import TrackRecord
 
 
 class RegionManager(EntityManager):

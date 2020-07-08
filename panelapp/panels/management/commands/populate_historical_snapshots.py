@@ -23,15 +23,21 @@
 ##
 
 import djclick as click
+from django.db import (
+    models,
+    transaction,
+)
+from django.db.models import (
+    Case,
+    Count,
+    Value,
+    When,
+)
 
-from django.db import models, transaction
-from django.db.models import Case
-from django.db.models import Count
-from django.db.models import When
-from django.db.models import Value
-
-from panels.models import GenePanelSnapshot
-from panels.models import HistoricalSnapshot
+from panels.models import (
+    GenePanelSnapshot,
+    HistoricalSnapshot,
+)
 
 
 @click.command()
@@ -44,7 +50,7 @@ def command():
         .values_list("pk", flat=True)
     )
 
-    completed = {'genepanel': 0, 'historical': 0}
+    completed = {"genepanel": 0, "historical": 0}
 
     for gps in (
         GenePanelSnapshot.objects.all()
@@ -63,9 +69,13 @@ def command():
         with transaction.atomic():
             HistoricalSnapshot.import_panel(panel=gps)
             gps.delete()
-            completed['genepanel'] +=1
-            completed['historical'] +=1
-            if completed['genepanel'] % 1000 == 0:
-                click.echo('Migrated {} Genepanels!'.format(completed['genepanel']))
+            completed["genepanel"] += 1
+            completed["historical"] += 1
+            if completed["genepanel"] % 1000 == 0:
+                click.echo("Migrated {} Genepanels!".format(completed["genepanel"]))
 
-    click.echo('Populated {} Historical panels from {} Genepanels!'.format(completed['historical'], completed['genepanel']))
+    click.echo(
+        "Populated {} Historical panels from {} Genepanels!".format(
+            completed["historical"], completed["genepanel"]
+        )
+    )

@@ -22,16 +22,19 @@
 ## under the License.
 ##
 
-from faker import Factory
 from django.db import transaction
+from faker import Factory
+
 from accounts.tests.setup import LoginGELUser
-from panels.models import GenePanelSnapshot
-from panels.tests.factories import GeneFactory
-from panels.tests.factories import STRFactory
-from panels.tests.factories import RegionFactory
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
 from panels.management.commands.panels_reset_stats import command
+from panels.models import GenePanelSnapshot
+from panels.tests.factories import (
+    GeneFactory,
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+    RegionFactory,
+    STRFactory,
+)
 
 fake = Factory.create()
 

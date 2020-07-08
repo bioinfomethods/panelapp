@@ -22,35 +22,23 @@
 ## under the License.
 ##
 import re
-from enum import Enum
+
 from django import template
 from django.utils.safestring import SafeString
-from panels.models import Evaluation
-from panels.models import TrackRecord
+
+from panels.enums import (
+    GeneDataType,
+    GeneStatus,
+)
 
 register = template.Library()
 
-
-gene_list_data = (
+GENE_LIST_RATING = (
     ("gel-added", "No list", "No list", "grey"),
     ("gel-red", "Red List (low evidence)", "Red", "red"),
     ("gel-amber", "Amber List (moderate evidence)", "Amber", "amber"),
     ("gel-green", "Green List (high evidence)", "Green", "green"),
 )
-
-
-class GeneStatus(Enum):
-    NOLIST = 0
-    RED = 1
-    AMBER = 2
-    GREEN = 3
-
-
-class GeneDataType(Enum):
-    CLASS = 0
-    LONG = 1
-    SHORT = 2
-    COLOR = 3
 
 
 def get_gene_list_data(gene, list_type, saved_gel_status=None, flagged=None):
@@ -61,28 +49,32 @@ def get_gene_list_data(gene, list_type, saved_gel_status=None, flagged=None):
         if flagged is None:
             flagged = gene.get("flagged") if isinstance(gene, dict) else gene.flagged
     if flagged:
-        return gene_list_data[GeneStatus.NOLIST.value][list_type]
+        return GENE_LIST_RATING[GeneStatus.NOLIST.value][list_type]
     elif value > 2:
-        return gene_list_data[GeneStatus.GREEN.value][list_type]
+        return GENE_LIST_RATING[GeneStatus.GREEN.value][list_type]
     elif value == 2:
-        return gene_list_data[GeneStatus.AMBER.value][list_type]
+        return GENE_LIST_RATING[GeneStatus.AMBER.value][list_type]
     elif value == 1:
-        return gene_list_data[GeneStatus.RED.value][list_type]
+        return GENE_LIST_RATING[GeneStatus.RED.value][list_type]
     else:
-        return gene_list_data[GeneStatus.NOLIST.value][list_type]
+        return GENE_LIST_RATING[GeneStatus.NOLIST.value][list_type]
 
 
 def get_review_rating_data(review, list_type):
+    from panels.models import Evaluation
+
     if review.rating == Evaluation.RATINGS.GREEN:
-        return gene_list_data[GeneStatus.GREEN.value][list_type]
+        return GENE_LIST_RATING[GeneStatus.GREEN.value][list_type]
     elif review.rating == Evaluation.RATINGS.AMBER:
-        return gene_list_data[GeneStatus.AMBER.value][list_type]
+        return GENE_LIST_RATING[GeneStatus.AMBER.value][list_type]
     elif review.rating == Evaluation.RATINGS.RED:
-        return gene_list_data[GeneStatus.RED.value][list_type]
+        return GENE_LIST_RATING[GeneStatus.RED.value][list_type]
 
 
 @register.filter
 def evaluation_rating_name(review):
+    from panels.models import Evaluation
+
     try:
         return Evaluation.RATINGS[review.rating]
     except KeyError:
@@ -116,6 +108,8 @@ def reviewed_by(gene, user):
 
 @register.filter
 def human_issue_type(issue_type):
+    from panels.models import TrackRecord
+
     issues = issue_type.split(",")
     out_arr = []
 

@@ -22,13 +22,17 @@
 ## under the License.
 ##
 import json
+
 import djclick as click
 from django.db import transaction
-from panels.models import GenePanelSnapshot
-from panels.models import GenePanelEntrySnapshot
-from panels.models import Region
-from panels.models import STR
-from panels.models import Gene
+
+from panels.models import (
+    STR,
+    Gene,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    Region,
+)
 
 
 @click.command()

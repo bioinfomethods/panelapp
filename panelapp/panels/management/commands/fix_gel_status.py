@@ -1,6 +1,12 @@
 from django.core.management.base import BaseCommand
 from django.db.models import Q
-from panels.models import GenePanelSnapshot, GenePanelEntrySnapshot, Region, STR
+
+from panels.models import (
+    STR,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    Region,
+)
 
 
 class Command(BaseCommand):

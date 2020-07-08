@@ -22,9 +22,13 @@
 ## under the License.
 ##
 from datetime import datetime
+
+from django.contrib.postgres.fields import (
+    ArrayField,
+    JSONField,
+)
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.contrib.postgres.fields import JSONField, ArrayField
 
 
 class Gene(models.Model):

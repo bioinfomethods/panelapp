@@ -21,11 +21,10 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.template.loader import render_to_string
-from django.contrib.sites.models import Site
-from django.conf import settings
-
 from celery import shared_task
+from django.conf import settings
+from django.contrib.sites.models import Site
+from django.template.loader import render_to_string
 
 from panelapp.tasks import send_email
 

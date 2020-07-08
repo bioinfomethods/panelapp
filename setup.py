@@ -1,7 +1,11 @@
 """TODO: module doc..."""
 
 import os
-from setuptools import find_packages, setup
+
+from setuptools import (
+    find_packages,
+    setup,
+)
 
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
@@ -37,7 +41,7 @@ setup(
             "django-debug-toolbar==1.11",
             "ipython==6.4.0",
             "Werkzeug==0.14.1",
-            "pdbpp==0.10.2"
+            "pdbpp==0.10.2",
         ],
         "tests": [
             "pytest==3.7.1",

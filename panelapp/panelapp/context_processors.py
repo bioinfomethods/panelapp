@@ -31,14 +31,10 @@ def use_cognito(context):
     :param context:
     :return boolean:
     """
-    return {
-        "use_cognito": getattr(settings, "AWS_USE_COGNITO", False)
-    }
+    return {"use_cognito": getattr(settings, "AWS_USE_COGNITO", False)}
 
 
 def signed_off_message(context):
     """Add panel signed off message to the context"""
 
-    return {
-        "signed_off_message": getattr(settings, "SIGNED_OFF_MESSAGE", None)
-    }
+    return {"signed_off_message": getattr(settings, "SIGNED_OFF_MESSAGE", None)}

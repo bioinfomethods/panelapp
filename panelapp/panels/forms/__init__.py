@@ -23,31 +23,37 @@
 ##
 from django import forms
 from django.db import transaction
-from panels.models import UploadedGeneList
-from panels.models import UploadedReviewsList
-from panels.models import UploadedPanelList
-from panels.models import GenePanel
-from .panel import PanelForm  # noqa
-from .promotepanel import PromotePanelForm  # noqa
-from .panelgene import PanelGeneForm  # noqa
-from .genereview import GeneReviewForm  # noqa
-from .geneready import GeneReadyForm  # noqa
-from .str import PanelSTRForm  # noqa
-from .strreview import STRReviewForm  # noqa
-from .str_ready import STRReadyForm  # noqa
-from .activity import ActivityFilterForm
-from .region import PanelRegionForm  # noqa
-from .region_review import RegionReviewForm  # noqa
-from .region_ready import RegionReadyForm  # noqa
-from panels.models import ProcessingRunCode
-from panels.exceptions import UserDoesNotExist
-from panels.exceptions import GeneDoesNotExist
-from panels.exceptions import TSVIncorrectFormat
-from panels.exceptions import UsersDoNotExist
-from panels.exceptions import GenesDoNotExist
-from panels.exceptions import IncorrectGeneRating
-from panels.exceptions import IsSuperPanelException
+
+from panels.exceptions import (
+    GeneDoesNotExist,
+    GenesDoNotExist,
+    IncorrectGeneRating,
+    IsSuperPanelException,
+    TSVIncorrectFormat,
+    UserDoesNotExist,
+    UsersDoNotExist,
+)
+from panels.models import (
+    GenePanel,
+    ProcessingRunCode,
+    UploadedGeneList,
+    UploadedPanelList,
+    UploadedReviewsList,
+)
 from panels.tasks import background_copy_reviews
+
+from .activity import ActivityFilterForm
+from .geneready import GeneReadyForm  # noqa
+from .genereview import GeneReviewForm  # noqa
+from .panel import PanelForm  # noqa
+from .panelgene import PanelGeneForm  # noqa
+from .promotepanel import PromotePanelForm  # noqa
+from .region import PanelRegionForm  # noqa
+from .region_ready import RegionReadyForm  # noqa
+from .region_review import RegionReviewForm  # noqa
+from .str import PanelSTRForm  # noqa
+from .str_ready import STRReadyForm  # noqa
+from .strreview import STRReviewForm  # noqa
 
 
 class UploadGenesForm(forms.Form):

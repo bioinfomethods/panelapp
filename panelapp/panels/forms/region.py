@@ -24,22 +24,29 @@
 """Contains a form which is used to add/edit a gene in a panel."""
 
 from collections import OrderedDict
-from django import forms
-from django.contrib.postgres.forms import SimpleArrayField
-from django.contrib.postgres.forms import IntegerRangeField
-from dal_select2.widgets import ModelSelect2
-from dal_select2.widgets import Select2Multiple
-from dal_select2.widgets import ModelSelect2Multiple
-from panelapp.forms import Select2ListMultipleChoiceField
-from panels.models import Tag
-from panels.models import Gene
-from panels.models import Evidence
-from panels.models import Evaluation
-from panels.models import Region
-from panels.models import GenePanel
-from panels.models import GenePanelSnapshot
 
+from dal_select2.widgets import (
+    ModelSelect2,
+    ModelSelect2Multiple,
+    Select2Multiple,
+)
+from django import forms
+from django.contrib.postgres.forms import (
+    IntegerRangeField,
+    SimpleArrayField,
+)
+
+from panelapp.forms import Select2ListMultipleChoiceField
 from panels.forms.mixins import EntityFormMixin
+from panels.models import (
+    Evaluation,
+    Evidence,
+    Gene,
+    GenePanel,
+    GenePanelSnapshot,
+    Region,
+    Tag,
+)
 
 
 class PanelRegionForm(EntityFormMixin, forms.ModelForm):
@@ -111,9 +118,9 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
     comments = forms.CharField(widget=forms.Textarea, required=False)
 
     additional_panels = forms.ModelMultipleChoiceField(
-        queryset=GenePanelSnapshot.objects.only('panel__name', 'pk'),
+        queryset=GenePanelSnapshot.objects.only("panel__name", "pk"),
         required=False,
-        widget=ModelSelect2Multiple(url="autocomplete-simple-panels")
+        widget=ModelSelect2Multiple(url="autocomplete-simple-panels"),
     )
 
     class Meta:
@@ -132,7 +139,7 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
             "type_of_variants",
             "publications",
             "phenotypes",
-            "additional_panels"
+            "additional_panels",
         )
 
     def __init__(self, *args, **kwargs):
@@ -216,11 +223,13 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
     def clean_additional_panels(self):
         entity_name = self.cleaned_data["name"]
 
-        for panel in GenePanelSnapshot.objects.filter(pk__in=self.cleaned_data["additional_panels"]):
+        for panel in GenePanelSnapshot.objects.filter(
+            pk__in=self.cleaned_data["additional_panels"]
+        ):
             if panel.has_region(entity_name):
                 raise forms.ValidationError(
                     "Entity is already on additional panel",
-                    code="entitiy_exists_in_additional_panel"
+                    code="entitiy_exists_in_additional_panel",
                 )
         return self.cleaned_data["additional_panels"]
 
@@ -243,7 +252,13 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
         new_region_name = region_data["name"]
 
         if region_data.get("additional_panels"):
-            self.instance.copy_to_panels(self.cleaned_data["additional_panels"], self.request.user, new_region_name, initial_name, region_data)
+            self.instance.copy_to_panels(
+                self.cleaned_data["additional_panels"],
+                self.request.user,
+                new_region_name,
+                initial_name,
+                region_data,
+            )
 
         if self.initial and self.panel.has_region(initial_name):
             # check if the entity changed
@@ -251,11 +266,11 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
             # Because "Expert Review " sources are not in cleaned_data,
             # check if initial data has it and compare if other sources changed.
             changed = True
-            if self.changed_data == ['source']:
+            if self.changed_data == ["source"]:
                 non_expert_reviews = [
-                    s for s
-                    in self.initial["source"]
-                    if not s.startswith('Expert Review ')
+                    s
+                    for s in self.initial["source"]
+                    if not s.startswith("Expert Review ")
                 ]
 
                 if set(self.cleaned_data["source"]) == set(non_expert_reviews):
@@ -285,7 +300,7 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
                 panels=additional_panels,
                 user=self.request.user,
                 entity_data=region_data,
-                copy_data=bool(self.initial)
+                copy_data=bool(self.initial),
             )
 
         return entity

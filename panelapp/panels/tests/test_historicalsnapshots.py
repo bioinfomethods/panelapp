@@ -22,30 +22,35 @@
 ## under the License.
 ##
 import json
-from django.urls import reverse_lazy
-from django.test import Client
-from faker import Factory
 from random import choice
+
+from django.test import Client
+from django.urls import reverse_lazy
+from faker import Factory
+
 from accounts.tests.setup import LoginGELUser
-from panels.models import GenePanelEntrySnapshot
-from panels.models import Region
-from panels.models import GenePanelSnapshot
-from panels.models import Evidence
-from panels.models import GenePanel
-from panels.models import Evaluation
-from panels.models import HistoricalSnapshot
-from panels.tests.factories import GeneFactory
-from panels.tests.factories import RegionFactory
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
-from panels.tests.factories import TagFactory
-from panels.tests.factories import CommentFactory
+from panels.models import (
+    Evaluation,
+    Evidence,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    HistoricalSnapshot,
+    Region,
+)
+from panels.tests.factories import (
+    CommentFactory,
+    GeneFactory,
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+    RegionFactory,
+    TagFactory,
+)
 
 fake = Factory.create()
 
 
 class HistoricalSnapshotTest(LoginGELUser):
-
     def setUp(self):
         super().setUp()
         self.panel_data = self.create_panel_data()
@@ -80,7 +85,8 @@ class HistoricalSnapshotTest(LoginGELUser):
         HistoricalSnapshot.import_panel(gps)
         gps.increment_version()
         res = self.client.post(
-            reverse_lazy("panels:download_old_panel_tsv", args=(gps.panel.pk,)), {"panel_version": "0.0"}
+            reverse_lazy("panels:download_old_panel_tsv", args=(gps.panel.pk,)),
+            {"panel_version": "0.0"},
         )
         assert res.status_code == 200
 
@@ -91,8 +97,8 @@ class HistoricalSnapshotTest(LoginGELUser):
         HistoricalSnapshot.import_panel(gps)
 
         res = self.client.get(
-            reverse_lazy("webservices:get_panel", args=(gps.panel.pk,)), {"version": "0.0"}
+            reverse_lazy("webservices:get_panel", args=(gps.panel.pk,)),
+            {"version": "0.0"},
         )
 
         assert res.status_code == 200
-

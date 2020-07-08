@@ -25,24 +25,31 @@
 
 """
 from django.conf import settings
-from django.conf.urls import url
-from django.urls import path
-from django.conf.urls import include
+from django.conf.urls import (
+    include,
+    url,
+)
 from django.contrib import admin
-from .views import Homepage
-from .views import HealthCheckView
-from .views import VersionView
-from .autocomplete import GeneAutocomplete
-from .autocomplete import SourceAutocomplete
-from .autocomplete import TagsAutocomplete
-from .autocomplete import SimplePanelsAutocomplete
-from .autocomplete import SimplePanelTypesAutocomplete
-
-
-from django.urls import re_path
-from rest_framework import permissions
-from drf_yasg.views import get_schema_view
+from django.urls import (
+    path,
+    re_path,
+)
 from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
+
+from .autocomplete import (
+    GeneAutocomplete,
+    SimplePanelsAutocomplete,
+    SimplePanelTypesAutocomplete,
+    SourceAutocomplete,
+    TagsAutocomplete,
+)
+from .views import (
+    HealthCheckView,
+    Homepage,
+    VersionView,
+)
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -100,7 +107,8 @@ urlpatterns = [
 if settings.DEBUG:
     if "debug_toolbar" in settings.INSTALLED_APPS:
         import debug_toolbar
-        urlpatterns = [path("__debug__/", include(debug_toolbar.urls)), ] + urlpatterns
+
+        urlpatterns = [path("__debug__/", include(debug_toolbar.urls)),] + urlpatterns
 
     from django.conf.urls.static import static
 

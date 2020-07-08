@@ -21,34 +21,40 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from .panels import AdminView
-from .panels import AdminUploadGenesView
-from .panels import AdminUploadPanelsView
-from .panels import AdminUploadReviewsView
-from .panels import DownloadAllPanels
-from .panels import ActivityListView
-from .panels import CreatePanelView
-from .panels import GenePanelView
-from .panels import PanelsIndexView
-from .panels import UpdatePanelView
-from .panels import PromotePanelView
-from .panels import OldCodeURLRedirect
-from .genes import DownloadPanelTSVView
-from .genes import DownloadPanelVersionTSVView
-from .genes import ComparePanelsView
-from .genes import CompareGeneView
-from .genes import CopyReviewsView
-from .genes import DownloadAllGenes
-from .entities import EntityReviewView
-from .entities import PanelEditEntityView
-from .entities import PanelAddEntityView
-from .entities import PanelMarkNotReadyView
-from .entities import GenePanelSpanshotView
-from .entities import MarkEntityReadyView
-from .entities import MarkGeneNotReadyView
-from .entities import EntityDetailView
-from .entities import EntitiesListView
-from .entities import GeneDetailRedirectView
-from .entities import RedirectGenesToEntities
-from .strs import DownloadAllSTRs
+from .entities import (
+    EntitiesListView,
+    EntityDetailView,
+    EntityReviewView,
+    GeneDetailRedirectView,
+    GenePanelSpanshotView,
+    MarkEntityReadyView,
+    MarkGeneNotReadyView,
+    PanelAddEntityView,
+    PanelEditEntityView,
+    PanelMarkNotReadyView,
+    RedirectGenesToEntities,
+)
+from .genes import (
+    CompareGeneView,
+    ComparePanelsView,
+    CopyReviewsView,
+    DownloadAllGenes,
+    DownloadPanelTSVView,
+    DownloadPanelVersionTSVView,
+)
+from .panels import (
+    ActivityListView,
+    AdminUploadGenesView,
+    AdminUploadPanelsView,
+    AdminUploadReviewsView,
+    AdminView,
+    CreatePanelView,
+    DownloadAllPanels,
+    GenePanelView,
+    OldCodeURLRedirect,
+    PanelsIndexView,
+    PromotePanelView,
+    UpdatePanelView,
+)
 from .regions import DownloadAllRegions
+from .strs import DownloadAllSTRs

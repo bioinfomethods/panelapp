@@ -21,8 +21,9 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.views.generic.base import RedirectView
 from django.urls import reverse_lazy
+from django.views.generic.base import RedirectView
+
 from panels.models import GenePanel
 
 

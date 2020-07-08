@@ -25,27 +25,39 @@ from django.conf import settings
 from django.db import DatabaseError
 from django.db.models import Q
 from django.utils.functional import cached_property
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework import (
+    generics,
+    pagination,
+    permissions,
+)
+from rest_framework.decorators import (
+    api_view,
+    permission_classes,
+)
 from rest_framework.response import Response
-from rest_framework import permissions
-from rest_framework import pagination
-from rest_framework import generics
-from .utils import convert_moi
-from .utils import convert_mop
-from .utils import convert_evidences
-from .utils import convert_gel_status
-from .utils import convert_confidence_level
 
-from panels.models import GenePanel
-from panels.models import GenePanelSnapshot
-from panels.models import GenePanelEntrySnapshot
-from panels.models import STR
-from panels.models import Region
-from panels.models import HistoricalSnapshot
-from .serializers import PanelSerializer
-from .serializers import GenesSerializer
-from .serializers import EntitySerializer
-from .serializers import ListPanelSerializer
+from panels.models import (
+    STR,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    HistoricalSnapshot,
+    Region,
+)
+
+from .serializers import (
+    EntitySerializer,
+    GenesSerializer,
+    ListPanelSerializer,
+    PanelSerializer,
+)
+from .utils import (
+    convert_confidence_level,
+    convert_evidences,
+    convert_gel_status,
+    convert_moi,
+    convert_mop,
+)
 
 
 def filter_entity_list(
@@ -134,12 +146,18 @@ def get_panel(request, panel_name):
             )
         try:
             int(panel_name)
-            queryset = GenePanelSnapshot.objects.get_active(all=True, internal=True, deleted=True).filter(panel__pk=panel_name)
+            queryset = GenePanelSnapshot.objects.get_active(
+                all=True, internal=True, deleted=True
+            ).filter(panel__pk=panel_name)
         except ValueError:
-            queryset = GenePanelSnapshot.objects.get_active(all=True, internal=True, deleted=True).filter(panel__old_pk=panel_name)
+            queryset = GenePanelSnapshot.objects.get_active(
+                all=True, internal=True, deleted=True
+            ).filter(panel__old_pk=panel_name)
 
         instance = queryset.first()
-        if instance.major_version != int(major_version) or instance.minor_version != int(minor_version):
+        if instance.major_version != int(
+            major_version
+        ) or instance.minor_version != int(minor_version):
             if len(panel_name) == 24:
                 snap = HistoricalSnapshot.objects.filter(
                     panel__old_pk=panel_name,

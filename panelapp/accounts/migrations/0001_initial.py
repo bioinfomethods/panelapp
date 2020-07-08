@@ -27,9 +27,12 @@ from __future__ import unicode_literals
 
 import django.contrib.auth.models
 import django.contrib.auth.validators
-from django.db import migrations, models
 import django.utils.timezone
 import model_utils.fields
+from django.db import (
+    migrations,
+    models,
+)
 
 
 class Migration(migrations.Migration):

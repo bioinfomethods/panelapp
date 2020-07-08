@@ -23,32 +23,44 @@
 ##
 from math import ceil
 
-from rest_framework import status, viewsets
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import permissions
-from panels.models import GenePanelSnapshot
-from panels.models import GenePanelEntrySnapshot
-from panels.models import HistoricalSnapshot
-from panels.models import STR
-from panels.models import Region
-from panels.models import Activity
 from django import forms
-from django.db.models import Q
-from django.db.models import ObjectDoesNotExist
+from django.db.models import (
+    ObjectDoesNotExist,
+    Q,
+)
+from django.http import Http404
 from django.utils.functional import cached_property
 from django_filters import rest_framework as filters
-from .serializers import PanelSerializer
-from .serializers import ActivitySerializer
-from .serializers import GeneSerializer
-from .serializers import STRSerializer
-from .serializers import EvaluationSerializer
-from .serializers import RegionSerializer
-from .serializers import EntitySerializer
-from .serializers import HistoricalSnapshotSerializer
-from django.http import Http404
+from rest_framework import (
+    permissions,
+    status,
+    viewsets,
+)
+from rest_framework.decorators import action
 from rest_framework.exceptions import APIException
+from rest_framework.response import Response
+
 from panelapp.settings.base import REST_FRAMEWORK
+from panels.models import (
+    STR,
+    Activity,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    HistoricalSnapshot,
+    Region,
+)
+
+from .serializers import (
+    ActivitySerializer,
+    EntitySerializer,
+    EvaluationSerializer,
+    GeneSerializer,
+    HistoricalSnapshotSerializer,
+    PanelSerializer,
+    RegionSerializer,
+    STRSerializer,
+)
+
 
 class ReadOnlyListViewset(
     viewsets.mixins.RetrieveModelMixin,
@@ -137,7 +149,7 @@ class PanelsViewSet(ReadOnlyListViewset):
         version = self.request.query_params.get("version", None)
         param = {}
         if version:
-            param.update({'all': True, 'deleted': True, 'internal': True})
+            param.update({"all": True, "deleted": True, "internal": True})
         obj = GenePanelSnapshot.objects.get_active_annotated(
             name=self.kwargs["pk"], **param
         ).first()
@@ -166,18 +178,19 @@ class PanelsViewSet(ReadOnlyListViewset):
                 )
 
             panel_id = self.kwargs["pk"]
-            id_kwarg = 'panel_id' if panel_id.isdigit() else 'panel__old_pk'
-            filter_kwargs = {
-                id_kwarg: panel_id
-            }
+            id_kwarg = "panel_id" if panel_id.isdigit() else "panel__old_pk"
+            filter_kwargs = {id_kwarg: panel_id}
 
             latest = GenePanelSnapshot.objects.filter(**filter_kwargs).first()
 
-            if str(latest.major_version) == major_version and str(latest.minor_version) == minor_version:
+            if (
+                str(latest.major_version) == major_version
+                and str(latest.minor_version) == minor_version
+            ):
                 return super().retrieve(request, *args, **kwargs)
 
-            filter_kwargs['major_version'] = major_version
-            filter_kwargs['minor_version'] = minor_version
+            filter_kwargs["major_version"] = major_version
+            filter_kwargs["minor_version"] = minor_version
 
             snap = HistoricalSnapshot.objects.filter(**filter_kwargs).first()
             if snap:
@@ -249,7 +262,7 @@ class EntityViewSet(viewsets.mixins.ListModelMixin, viewsets.GenericViewSet):
     def paginate(self, obj):
         count = len(obj.data["genes"])
         start = 0
-        finish = REST_FRAMEWORK['PAGE_SIZE']
+        finish = REST_FRAMEWORK["PAGE_SIZE"]
         page = self.request.query_params.get("page", None)
         response = {
             "count": count,
@@ -299,23 +312,25 @@ class EntityViewSet(viewsets.mixins.ListModelMixin, viewsets.GenericViewSet):
                 )
 
             panel_id = self.kwargs["panel_pk"]
-            id_kwarg = 'panel_id' if panel_id.isdigit() else 'panel__old_pk'
-            filter_kwargs = {
-                id_kwarg: panel_id
-            }
+            id_kwarg = "panel_id" if panel_id.isdigit() else "panel__old_pk"
+            filter_kwargs = {id_kwarg: panel_id}
 
             latest = GenePanelSnapshot.objects.filter(**filter_kwargs).first()
 
-            if str(latest.major_version) == major_version and str(latest.minor_version) == minor_version:
+            if (
+                str(latest.major_version) == major_version
+                and str(latest.minor_version) == minor_version
+            ):
                 return super().list(request, *args, **kwargs)
 
             if self.recent_version_only:
-                raise Http400('Endpoint doesnt support version parameter')
+                raise Http400("Endpoint doesnt support version parameter")
 
-            obj = HistoricalSnapshot.objects.filter(**filter_kwargs).filter(
-                major_version=major_version,
-                minor_version=minor_version,
-            ).first()
+            obj = (
+                HistoricalSnapshot.objects.filter(**filter_kwargs)
+                .filter(major_version=major_version, minor_version=minor_version,)
+                .first()
+            )
 
             if obj:
                 response = self.paginate(obj)
@@ -345,10 +360,13 @@ class EntityViewSet(viewsets.mixins.ListModelMixin, viewsets.GenericViewSet):
         if version:
             try:
                 major_version, minor_version = version.split(".")
-                if str(obj.major_version) == major_version and str(obj.minor_version) == minor_version:
+                if (
+                    str(obj.major_version) == major_version
+                    and str(obj.minor_version) == minor_version
+                ):
                     return obj
                 else:
-                    raise Http400('Endpoint doesnt support version parameter')
+                    raise Http400("Endpoint doesnt support version parameter")
             except ValueError:
                 raise APIException(
                     detail="Incorrect version supplied", code="incorrect_version"

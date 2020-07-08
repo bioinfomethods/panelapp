@@ -23,21 +23,25 @@
 ##
 import os
 from random import randint
+
 from django.urls import reverse_lazy
 from django.utils import timezone
 from faker import Factory
+
 from accounts.tests.setup import LoginGELUser
-from panels.models import GenePanel
-from panels.models import Comment
-from panels.models import Evaluation
-from panels.models import Activity
-from panels.models import GenePanelSnapshot
-
-from panels.tests.factories import TagFactory
-from panels.tests.factories import GeneFactory
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
-
+from panels.models import (
+    Activity,
+    Comment,
+    Evaluation,
+    GenePanel,
+    GenePanelSnapshot,
+)
+from panels.tests.factories import (
+    GeneFactory,
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+    TagFactory,
+)
 
 fake = Factory.create()
 
@@ -763,14 +767,16 @@ class GeneReviewTest(LoginGELUser):
             gene_core=gene, panel=gps, evaluation=(None,)
         )
 
-        file_path = os.path.join(os.path.dirname(__file__), "import_review_data_error.tsv")
+        file_path = os.path.join(
+            os.path.dirname(__file__), "import_review_data_error.tsv"
+        )
         test_reviews_file = os.path.abspath(file_path)
 
         with open(test_reviews_file) as f:
             url = reverse_lazy("panels:upload_reviews")
             res = self.client.post(url, {"review_list": f})
             messages = [str(m) for m in res.wsgi_request._messages]
-            expected_messages = ['Line: 2 has incorrect Gene rating: INVALID-RANK']
+            expected_messages = ["Line: 2 has incorrect Gene rating: INVALID-RANK"]
             assert messages == expected_messages
 
         ap = GenePanel.objects.get(name="Panel One").active_panel

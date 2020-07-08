@@ -21,18 +21,22 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.http import Http404
-from django.views.generic import FormView
-from django.views.generic.edit import CreateView
-from django.views.generic import DetailView
-from django.views.generic import View
 from django.contrib import messages
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.http import Http404
 from django.shortcuts import redirect
 from django.urls import reverse_lazy
-from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import (
+    DetailView,
+    FormView,
+    View,
+)
+from django.views.generic.edit import CreateView
 
-from .forms import RegistrationForm
-from .forms import ChangePasswordForm
+from .forms import (
+    ChangePasswordForm,
+    RegistrationForm,
+)
 from .models import User
 
 

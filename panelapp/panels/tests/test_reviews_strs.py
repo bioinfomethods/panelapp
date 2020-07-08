@@ -23,19 +23,24 @@
 ##
 import os
 from random import randint
+
 from django.urls import reverse_lazy
 from django.utils import timezone
 from faker import Factory
-from accounts.tests.setup import LoginGELUser
-from panels.models import GenePanel
-from panels.models import Comment
-from panels.models import Evaluation
-from panels.tests.factories import TagFactory
-from panels.tests.factories import STRFactory
-from panels.tests.factories import GeneFactory
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
 
+from accounts.tests.setup import LoginGELUser
+from panels.models import (
+    Comment,
+    Evaluation,
+    GenePanel,
+)
+from panels.tests.factories import (
+    GeneFactory,
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+    STRFactory,
+    TagFactory,
+)
 
 fake = Factory.create()
 

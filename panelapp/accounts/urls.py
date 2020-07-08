@@ -21,19 +21,25 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.conf.urls import url
-from django.conf.urls import include
-from django.contrib.auth.views import LoginView
-from django.contrib.auth.views import PasswordResetView
-from django.contrib.auth.views import PasswordResetDoneView
-from django.contrib.auth.views import PasswordResetConfirmView
-from django.contrib.auth.views import PasswordResetCompleteView
+from django.conf.urls import (
+    include,
+    url,
+)
+from django.contrib.auth.views import (
+    LoginView,
+    PasswordResetCompleteView,
+    PasswordResetConfirmView,
+    PasswordResetDoneView,
+    PasswordResetView,
+)
 from django.urls import reverse_lazy
 
-from .views import UpdatePasswordView
-from .views import UserView
-from .views import UserRegistrationView
-from .views import VerifyEmailAddressView
+from .views import (
+    UpdatePasswordView,
+    UserRegistrationView,
+    UserView,
+    VerifyEmailAddressView,
+)
 
 app_name = "accounts"
 urlpatterns = [

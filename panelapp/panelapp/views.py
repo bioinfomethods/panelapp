@@ -21,16 +21,20 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-import os
 import logging
-from django.conf import settings
-from django.core.exceptions import PermissionDenied
-from django.views.generic import View
-from django.views.generic import ListView
-from django.http import JsonResponse
-from django.core import mail
+import os
+
 from celery.task.control import inspect
+from django.conf import settings
+from django.core import mail
+from django.core.exceptions import PermissionDenied
+from django.http import JsonResponse
+from django.views.generic import (
+    ListView,
+    View,
+)
 from kombu import Connection
+
 from .models import HomeText
 
 

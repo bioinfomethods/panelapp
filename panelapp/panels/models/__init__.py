@@ -52,22 +52,22 @@ embedded version for the previous versions in the list. Since we are moving
 to the Postgres it makes sense to keep the gene panel entry backup as a JSON.
 """
 
-from .codes import ProcessingRunCode  # noqa
-from .tag import Tag  # noqa
-from .gene import Gene  # noqa
 from .activity import Activity  # noqa
-from .Level4Title import Level4Title  # noqa
+from .codes import ProcessingRunCode  # noqa
 from .comment import Comment  # noqa
 from .evaluation import Evaluation  # noqa
 from .evidence import Evidence  # noqa
-from .trackrecord import TrackRecord  # noqa
+from .gene import Gene  # noqa
 from .genepanel import GenePanel  # noqa
-from .genepanelsnapshot import GenePanelSnapshot  # noqa
 from .genepanelentrysnapshot import GenePanelEntrySnapshot  # noqa
+from .genepanelsnapshot import GenePanelSnapshot  # noqa
+from .historical_snapshot import HistoricalSnapshot  # noqa
 from .import_tools import UploadedGeneList  # noqa
 from .import_tools import UploadedPanelList  # noqa
 from .import_tools import UploadedReviewsList  # noqa
-from .strs import STR  # noqa
-from .region import Region  # noqa
+from .Level4Title import Level4Title  # noqa
 from .panel_types import PanelType  # noqa
-from .historical_snapshot import HistoricalSnapshot #noqa
+from .region import Region  # noqa
+from .strs import STR  # noqa
+from .tag import Tag  # noqa
+from .trackrecord import TrackRecord  # noqa

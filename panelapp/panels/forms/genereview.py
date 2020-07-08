@@ -22,9 +22,12 @@
 ## under the License.
 ##
 from collections import OrderedDict
+
 from django import forms
-from .helpers import GELSimpleArrayField
+
 from panels.models import Evaluation
+
+from .helpers import GELSimpleArrayField
 
 
 class GeneReviewForm(forms.ModelForm):
@@ -71,7 +74,7 @@ class GeneReviewForm(forms.ModelForm):
         self.fields["comments"] = original_fields.get("comments")
 
     def clean_phenotypes(self):
-        clean_data = [p.replace('\t', ' ') for p in self.cleaned_data.get('phenotypes')]
+        clean_data = [p.replace("\t", " ") for p in self.cleaned_data.get("phenotypes")]
         return clean_data
 
     def save(self, *args, **kwargs):

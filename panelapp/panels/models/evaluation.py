@@ -21,12 +21,13 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.db import models
 from django.contrib.postgres.fields import ArrayField
-from model_utils.models import TimeStampedModel
+from django.db import models
 from model_utils import Choices
+from model_utils.models import TimeStampedModel
 
 from accounts.models import User
+
 from .comment import Comment
 
 

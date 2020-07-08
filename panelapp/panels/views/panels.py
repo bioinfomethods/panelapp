@@ -23,40 +23,58 @@
 ##
 import csv
 from datetime import datetime
-from django.db.models import Q, Count
-from django.contrib import messages
-from django.http import HttpResponse
-from django.core.exceptions import ValidationError
-from django.views.generic import ListView
-from django.views.generic import CreateView
-from django.views.generic import DetailView
-from django.views.generic import UpdateView
-from django.views.generic import TemplateView
-from django.views.generic import FormView
-from django.views.generic import RedirectView
-from django.views.generic.base import View
-from django.shortcuts import redirect
-from django.shortcuts import get_object_or_404
-from django.utils.functional import cached_property
-from django.urls import reverse_lazy
-from django.urls import reverse
-from django.utils import timezone
-from django.http import StreamingHttpResponse
+
 from django.conf import settings
-from panelapp.mixins import GELReviewerRequiredMixin
+from django.contrib import messages
+from django.core.exceptions import ValidationError
+from django.db.models import (
+    Count,
+    Q,
+)
+from django.http import (
+    HttpResponse,
+    StreamingHttpResponse,
+)
+from django.shortcuts import (
+    get_object_or_404,
+    redirect,
+)
+from django.urls import (
+    reverse,
+    reverse_lazy,
+)
+from django.utils import timezone
+from django.utils.functional import cached_property
+from django.views.generic import (
+    CreateView,
+    DetailView,
+    FormView,
+    ListView,
+    RedirectView,
+    TemplateView,
+    UpdateView,
+)
+from django.views.generic.base import View
+
 from accounts.models import User
-from panels.forms import PromotePanelForm
-from panels.forms import ComparePanelsForm
-from panels.forms import PanelForm
-from panels.forms import UploadGenesForm
-from panels.forms import UploadPanelsForm
-from panels.forms import UploadReviewsForm
-from panels.forms import ActivityFilterForm
+from panelapp.mixins import GELReviewerRequiredMixin
+from panels.forms import (
+    ActivityFilterForm,
+    ComparePanelsForm,
+    PanelForm,
+    PromotePanelForm,
+    UploadGenesForm,
+    UploadPanelsForm,
+    UploadReviewsForm,
+)
 from panels.mixins import PanelMixin
-from panels.models import ProcessingRunCode
-from panels.models import Activity
-from panels.models import GenePanel
-from panels.models import GenePanelSnapshot
+from panels.models import (
+    Activity,
+    GenePanel,
+    GenePanelSnapshot,
+    ProcessingRunCode,
+)
+
 from .entities import EchoWriter
 
 
@@ -448,7 +466,9 @@ class DownloadAllPanels(GELReviewerRequiredMixin, View):
                 panel.panel.status.upper(),
                 ";".join(panel.old_panels),
                 ";".join(panel.panel.types.values_list("name", flat=True)),
-                "v{}.{} on {}".format(*panel.signed_off) if panel.panel.signed_off else ""
+                "v{}.{} on {}".format(*panel.signed_off)
+                if panel.panel.signed_off
+                else "",
             )
 
     def get(self, request, *args, **kwargs):

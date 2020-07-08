@@ -22,61 +22,64 @@
 ## under the License.
 ##
 from django.conf.urls import url
-
 from django.views.generic import RedirectView
-from .views import AdminView
-from .views import AdminUploadGenesView
-from .views import AdminUploadPanelsView
-from .views import AdminUploadReviewsView
-from .views import EntitiesListView
-from .views import CreatePanelView
-from .views import EntityDetailView
-from .views import GenePanelView
-from .views import PanelsIndexView
-from .views import UpdatePanelView
-from .views import PromotePanelView
-from .views import PanelAddEntityView
-from .views import PanelEditEntityView
-from .views import PanelMarkNotReadyView
-from .views import GenePanelSpanshotView
-from .views import EntityReviewView
-from .views import MarkEntityReadyView
-from .views import DownloadPanelTSVView
-from .views import DownloadPanelVersionTSVView
-from .views import MarkGeneNotReadyView
-from .views import ComparePanelsView
-from .views import CompareGeneView
-from .views import CopyReviewsView
-from .views import DownloadAllGenes
-from .views import DownloadAllPanels
-from .views import ActivityListView
-from .views import DownloadAllSTRs
-from .views import DownloadAllRegions
-from .views import GeneDetailRedirectView
-from .views import RedirectGenesToEntities
-from .views import OldCodeURLRedirect
-from .ajax_views import ClearPublicationsAjaxView
-from .ajax_views import ClearPhoenotypesAjaxView
-from .ajax_views import ClearModeOfPathogenicityAjaxView
-from .ajax_views import ClearSourcesAjaxView
-from .ajax_views import ClearSingleSourceAjaxView
-from .ajax_views import ClearTranscriptAjaxView
-from .ajax_views import DeletePanelAjaxView
-from .ajax_views import DeleteEntityAjaxView
-from .ajax_views import RejectPanelAjaxView
-from .ajax_views import ApprovePanelAjaxView
-from .ajax_views import UpdateEntityTagsAjaxView
-from .ajax_views import UpdateEntityMOPAjaxView
-from .ajax_views import UpdateEntityMOIAjaxView
-from .ajax_views import UpdateEntityPhenotypesAjaxView
-from .ajax_views import UpdateEntityPublicationsAjaxView
-from .ajax_views import UpdateEntityRatingAjaxView
-from .ajax_views import DeleteEntityEvaluationAjaxView
-from .ajax_views import GetEntityCommentFormAjaxView
-from .ajax_views import DeleteEntityCommentAjaxView
-from .ajax_views import SubmitEntityCommentFormAjaxView
-from .ajax_views import ApproveEntityAjaxView
 
+from .ajax_views import (
+    ApproveEntityAjaxView,
+    ApprovePanelAjaxView,
+    ClearModeOfPathogenicityAjaxView,
+    ClearPhoenotypesAjaxView,
+    ClearPublicationsAjaxView,
+    ClearSingleSourceAjaxView,
+    ClearSourcesAjaxView,
+    ClearTranscriptAjaxView,
+    DeleteEntityAjaxView,
+    DeleteEntityCommentAjaxView,
+    DeleteEntityEvaluationAjaxView,
+    DeletePanelAjaxView,
+    GetEntityCommentFormAjaxView,
+    RejectPanelAjaxView,
+    SubmitEntityCommentFormAjaxView,
+    UpdateEntityMOIAjaxView,
+    UpdateEntityMOPAjaxView,
+    UpdateEntityPhenotypesAjaxView,
+    UpdateEntityPublicationsAjaxView,
+    UpdateEntityRatingAjaxView,
+    UpdateEntityTagsAjaxView,
+)
+from .views import (
+    ActivityListView,
+    AdminUploadGenesView,
+    AdminUploadPanelsView,
+    AdminUploadReviewsView,
+    AdminView,
+    CompareGeneView,
+    ComparePanelsView,
+    CopyReviewsView,
+    CreatePanelView,
+    DownloadAllGenes,
+    DownloadAllPanels,
+    DownloadAllRegions,
+    DownloadAllSTRs,
+    DownloadPanelTSVView,
+    DownloadPanelVersionTSVView,
+    EntitiesListView,
+    EntityDetailView,
+    EntityReviewView,
+    GeneDetailRedirectView,
+    GenePanelSpanshotView,
+    GenePanelView,
+    MarkEntityReadyView,
+    MarkGeneNotReadyView,
+    OldCodeURLRedirect,
+    PanelAddEntityView,
+    PanelEditEntityView,
+    PanelMarkNotReadyView,
+    PanelsIndexView,
+    PromotePanelView,
+    RedirectGenesToEntities,
+    UpdatePanelView,
+)
 
 app_name = "panels"
 

@@ -22,11 +22,14 @@
 ## under the License.
 ##
 from django.urls import reverse_lazy
+
 from accounts.tests.setup import LoginGELUser
+from panels.models import (
+    Evidence,
+    GenePanel,
+    TrackRecord,
+)
 from panels.tests.factories import GenePanelEntrySnapshotFactory
-from panels.models import GenePanel
-from panels.models import TrackRecord
-from panels.models import Evidence
 
 
 class AjaxGenePanelEntrySnapshotTest(LoginGELUser):

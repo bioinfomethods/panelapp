@@ -21,56 +21,71 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.http import Http404
 from django.contrib import messages
-from django.core.cache import cache
-from django.views.generic import DetailView
-from django.views.generic import RedirectView
-from django.views.generic import CreateView
-from django.views.generic import ListView
-from django.utils.functional import cached_property
-from django.views.generic import UpdateView
-from django.urls import reverse_lazy
-from django.shortcuts import redirect
-from django.shortcuts import get_list_or_404
-from django.db.models import Q
 from django.contrib.postgres.aggregates import ArrayAgg
-from panelapp.mixins import GELReviewerRequiredMixin
-from panelapp.mixins import VerifiedReviewerRequiredMixin
-from panels.forms import GeneReviewForm
-from panels.forms import STRReviewForm
-from panels.forms import PanelGeneForm
-from panels.forms import GeneReadyForm
-from panels.forms import PanelSTRForm
-from panels.forms import STRReadyForm
-from panels.forms import PanelRegionForm
-from panels.forms import RegionReviewForm
-from panels.forms import RegionReadyForm
-from panels.forms.ajax import UpdateGeneTagsForm
-from panels.forms.ajax import UpdateGeneMOPForm
-from panels.forms.ajax import UpdateGeneMOIForm
-from panels.forms.ajax import UpdateGenePhenotypesForm
-from panels.forms.ajax import UpdateGenePublicationsForm
-from panels.forms.ajax import UpdateGeneRatingForm
-from panels.forms.ajax import UpdateSTRTagsForm
-from panels.forms.ajax import UpdateSTRMOIForm
-from panels.forms.ajax import UpdateSTRPhenotypesForm
-from panels.forms.ajax import UpdateSTRPublicationsForm
-from panels.forms.ajax import UpdateSTRRatingForm
-from panels.forms.ajax import UpdateRegionTagsForm
-from panels.forms.ajax import UpdateRegionMOIForm
-from panels.forms.ajax import UpdateRegionPhenotypesForm
-from panels.forms.ajax import UpdateRegionPublicationsForm
-from panels.forms.ajax import UpdateRegionRatingForm
-from panels.mixins import PanelMixin
-from panels.mixins import ActAndRedirectMixin
-from panels.models import STR
-from panels.models import Tag
-from panels.models import Gene
-from panels.models import Region
-from panels.models import GenePanel
-from panels.models import GenePanelSnapshot
-from panels.models import GenePanelEntrySnapshot
+from django.core.cache import cache
+from django.db.models import Q
+from django.http import Http404
+from django.shortcuts import (
+    get_list_or_404,
+    redirect,
+)
+from django.urls import reverse_lazy
+from django.utils.functional import cached_property
+from django.views.generic import (
+    CreateView,
+    DetailView,
+    ListView,
+    RedirectView,
+    UpdateView,
+)
+
+from panelapp.mixins import (
+    GELReviewerRequiredMixin,
+    VerifiedReviewerRequiredMixin,
+)
+from panels.forms import (
+    GeneReadyForm,
+    GeneReviewForm,
+    PanelGeneForm,
+    PanelRegionForm,
+    PanelSTRForm,
+    RegionReadyForm,
+    RegionReviewForm,
+    STRReadyForm,
+    STRReviewForm,
+)
+from panels.forms.ajax import (
+    UpdateGeneMOIForm,
+    UpdateGeneMOPForm,
+    UpdateGenePhenotypesForm,
+    UpdateGenePublicationsForm,
+    UpdateGeneRatingForm,
+    UpdateGeneTagsForm,
+    UpdateRegionMOIForm,
+    UpdateRegionPhenotypesForm,
+    UpdateRegionPublicationsForm,
+    UpdateRegionRatingForm,
+    UpdateRegionTagsForm,
+    UpdateSTRMOIForm,
+    UpdateSTRPhenotypesForm,
+    UpdateSTRPublicationsForm,
+    UpdateSTRRatingForm,
+    UpdateSTRTagsForm,
+)
+from panels.mixins import (
+    ActAndRedirectMixin,
+    PanelMixin,
+)
+from panels.models import (
+    STR,
+    Gene,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    Region,
+    Tag,
+)
 
 
 class EchoWriter(object):
@@ -631,10 +646,15 @@ class EntityDetailView(DetailView):
             ).values_list("pk", flat=True)
         )
 
-        entries_genes = GenePanelEntrySnapshot.objects.get_gene_panels(self.kwargs["slug"], pks=gps).annotate(
-            superpanels_names=ArrayAgg("panel__genepanelsnapshot__level4title__name",
-            filter=Q(panel__genepanelsnapshot__panel__status__in=statuses),
-            distinct=True))
+        entries_genes = GenePanelEntrySnapshot.objects.get_gene_panels(
+            self.kwargs["slug"], pks=gps
+        ).annotate(
+            superpanels_names=ArrayAgg(
+                "panel__genepanelsnapshot__level4title__name",
+                filter=Q(panel__genepanelsnapshot__panel__status__in=statuses),
+                distinct=True,
+            )
+        )
 
         if isinstance(self.object, STR):
             # we couldn't find a gene linked to this STR, lookup by name
@@ -644,9 +664,13 @@ class EntityDetailView(DetailView):
                 gene_symbol=self.kwargs["slug"], pks=gps
             )
 
-        entries_strs = entries_strs.annotate(superpanels_names=ArrayAgg("panel__genepanelsnapshot__level4title__name",
-                                           filter=Q(panel__genepanelsnapshot__panel__status__in=statuses),
-                                           distinct=True))
+        entries_strs = entries_strs.annotate(
+            superpanels_names=ArrayAgg(
+                "panel__genepanelsnapshot__level4title__name",
+                filter=Q(panel__genepanelsnapshot__panel__status__in=statuses),
+                distinct=True,
+            )
+        )
 
         if isinstance(self.object, Region):
             # we couldn't find a gene linked to this STR, lookup by name
@@ -659,9 +683,12 @@ class EntityDetailView(DetailView):
             )
 
         entries_regions = entries_regions.annotate(
-                superpanels_names=ArrayAgg("panel__genepanelsnapshot__level4title__name",
-                                           filter=Q(panel__genepanelsnapshot__panel__status__in=statuses),
-                                           distinct=True))
+            superpanels_names=ArrayAgg(
+                "panel__genepanelsnapshot__level4title__name",
+                filter=Q(panel__genepanelsnapshot__panel__status__in=statuses),
+                distinct=True,
+            )
+        )
 
         if (
             not self.request.user.is_authenticated

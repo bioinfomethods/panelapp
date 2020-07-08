@@ -22,16 +22,22 @@
 ## under the License.
 ##
 import random
-from django.core import mail
+
 from django.contrib.messages import get_messages
+from django.core import mail
 from django.urls import reverse_lazy
 from faker import Factory
+
+from accounts.models import (
+    Reviewer,
+    User,
+)
+from accounts.tasks import (
+    registration_email,
+    revierwer_confirmed_email,
+    reviewer_confirmation_requset_email,
+)
 from accounts.tests.setup import SetupUsers
-from accounts.models import User
-from accounts.models import Reviewer
-from accounts.tasks import registration_email
-from accounts.tasks import reviewer_confirmation_requset_email
-from accounts.tasks import revierwer_confirmed_email
 
 fake = Factory.create()
 

@@ -23,13 +23,15 @@
 ##
 from django import forms
 from django.contrib import admin
-from django.contrib.auth.models import Group
-from django_object_actions import DjangoObjectActions
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.contrib.auth.forms import ReadOnlyPasswordHashField
+from django.contrib.auth.models import Group
+from django_object_actions import DjangoObjectActions
 
-from .models import User
-from .models import Reviewer
+from .models import (
+    Reviewer,
+    User,
+)
 
 
 class UserCreationForm(forms.ModelForm):

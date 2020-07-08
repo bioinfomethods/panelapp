@@ -26,13 +26,17 @@
 from collections import OrderedDict
 
 from django import forms
-from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import password_validation
+from django.contrib.auth.forms import UserCreationForm
 
-from .models import User
-from .models import Reviewer
-from .tasks import registration_email
-from .tasks import reviewer_confirmation_requset_email
+from .models import (
+    Reviewer,
+    User,
+)
+from .tasks import (
+    registration_email,
+    reviewer_confirmation_requset_email,
+)
 
 
 class RegistrationForm(UserCreationForm):

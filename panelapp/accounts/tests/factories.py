@@ -22,8 +22,11 @@
 ## under the License.
 ##
 import factory
-from accounts.models import User
-from accounts.models import Reviewer
+
+from accounts.models import (
+    Reviewer,
+    User,
+)
 
 
 class ReviewerFactory(factory.django.DjangoModelFactory):

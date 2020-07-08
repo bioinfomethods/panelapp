@@ -24,13 +24,19 @@
 from django.test import TestCase
 from django.urls import reverse_lazy
 from django.utils import timezone
+
 from accounts.tests.setup import LoginExternalUser
-from panels.models import GenePanel, HistoricalSnapshot
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
-from panels.tests.factories import STRFactory
-from panels.tests.factories import RegionFactory
-from panels.tests.factories import PanelTypeFactory
+from panels.models import (
+    GenePanel,
+    HistoricalSnapshot,
+)
+from panels.tests.factories import (
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+    PanelTypeFactory,
+    RegionFactory,
+    STRFactory,
+)
 
 
 class TestAPIV1(LoginExternalUser):
@@ -357,7 +363,9 @@ class TestAPIV1(LoginExternalUser):
         self.gps_public = self.gps_public.panel.active_panel
 
         r = self.client.get(
-            reverse_lazy("api:v1:panels_genes-list", args=(self.gpes.panel.panel.old_pk,))
+            reverse_lazy(
+                "api:v1:panels_genes-list", args=(self.gpes.panel.panel.old_pk,)
+            )
             + "?version=0.0"
         )
         j = r.json()
@@ -365,7 +373,9 @@ class TestAPIV1(LoginExternalUser):
         gene_symbols_v0 = [g["entity_name"] for g in j["results"]]
         self.assertIn(gene_symbol, gene_symbols_v0)
         r = self.client.get(
-            reverse_lazy("api:v1:panels_genes-list", args=(self.gpes.panel.panel.old_pk,))
+            reverse_lazy(
+                "api:v1:panels_genes-list", args=(self.gpes.panel.panel.old_pk,)
+            )
         )
         j = r.json()
         self.assertEqual(r.status_code, 200)
@@ -377,7 +387,9 @@ class TestAPIV1(LoginExternalUser):
         self.gps.delete_region(name)
 
         r = self.client.get(
-            reverse_lazy("api:v1:panels-regions-list", args=(self.region.panel.panel.old_pk, ))
+            reverse_lazy(
+                "api:v1:panels-regions-list", args=(self.region.panel.panel.old_pk,)
+            )
             + "?version=0.0"
         )
         j = r.json()
@@ -388,7 +400,9 @@ class TestAPIV1(LoginExternalUser):
         self.gps.delete_region(name)
 
         r = self.client.get(
-            reverse_lazy("api:v1:panels-regions-list", args=(self.region.panel.panel.pk, ))
+            reverse_lazy(
+                "api:v1:panels-regions-list", args=(self.region.panel.panel.pk,)
+            )
             + "?version=0.0"
         )
         j = r.json()
@@ -396,7 +410,9 @@ class TestAPIV1(LoginExternalUser):
         names_v0 = [g["entity_name"] for g in j["results"]]
         self.assertIn(name, names_v0)
         r = self.client.get(
-            reverse_lazy("api:v1:panels-regions-list", args=(self.region.panel.panel.pk, ))
+            reverse_lazy(
+                "api:v1:panels-regions-list", args=(self.region.panel.panel.pk,)
+            )
             + "?version=0.1"
         )
         j = r.json()
@@ -405,23 +421,38 @@ class TestAPIV1(LoginExternalUser):
         self.assertNotIn(name, names_v1)
 
     def test_entities_pagination_historical_version(self):
-        with self.settings(REST_FRAMEWORK={"PAGE_SIZE": 1, "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
-    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
-    "DEFAULT_FILTER_BACKENDS": ("django_filters.rest_framework.DjangoFilterBackend",),
-    "DEFAULT_VERSION": "v1",
-    "DEFAULT_AUTHENTICATION_CLASSES": (
-        "rest_framework.authentication.SessionAuthentication",
-        "rest_framework.authentication.TokenAuthentication",
-    )}):
+        with self.settings(
+            REST_FRAMEWORK={
+                "PAGE_SIZE": 1,
+                "DEFAULT_VERSIONING_CLASS": "rest_framework.versioning.NamespaceVersioning",
+                "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+                "DEFAULT_FILTER_BACKENDS": (
+                    "django_filters.rest_framework.DjangoFilterBackend",
+                ),
+                "DEFAULT_VERSION": "v1",
+                "DEFAULT_AUTHENTICATION_CLASSES": (
+                    "rest_framework.authentication.SessionAuthentication",
+                    "rest_framework.authentication.TokenAuthentication",
+                ),
+            }
+        ):
             self.gpes.panel.increment_version()
-            r = self.client.get(reverse_lazy("api:v1:panels_genes-list", args=(self.gpes.panel.panel.pk,)) + "?version=0.0")
+            r = self.client.get(
+                reverse_lazy(
+                    "api:v1:panels_genes-list", args=(self.gpes.panel.panel.pk,)
+                )
+                + "?version=0.0"
+            )
             self.assertEqual(r.status_code, 200)
             self.assertEqual(len(r.json()["results"]), 1)
 
     def test_filter_entities_list_historical(self):
         self.gps.panel.active_panel.increment_version()
-        r = self.client.get(reverse_lazy("api:v1:panels_genes-list", args=(self.gps.panel_id,)) +
-                            "?version=0.0&entity_name=" + self.gps.get_all_genes[0].gene.get("gene_symbol"))
+        r = self.client.get(
+            reverse_lazy("api:v1:panels_genes-list", args=(self.gps.panel_id,))
+            + "?version=0.0&entity_name="
+            + self.gps.get_all_genes[0].gene.get("gene_symbol")
+        )
         self.assertEqual(r.status_code, 200)
         self.assertEqual(len(r.json()["results"]), 1)
 
@@ -542,7 +573,7 @@ class TestAPIV1(LoginExternalUser):
         self.gps.delete_str(name)
 
         r = self.client.get(
-            reverse_lazy("api:v1:panels-strs-list", args=(self.str.panel.panel.old_pk, ))
+            reverse_lazy("api:v1:panels-strs-list", args=(self.str.panel.panel.old_pk,))
             + "?version=0.0"
         )
         j = r.json()
@@ -554,7 +585,7 @@ class TestAPIV1(LoginExternalUser):
         self.assertTrue(deleted)
 
         r = self.client.get(
-            reverse_lazy("api:v1:panels-strs-list", args=(self.str.panel.panel.pk, ))
+            reverse_lazy("api:v1:panels-strs-list", args=(self.str.panel.panel.pk,))
             + "?version=0.0"
         )
         j = r.json()
@@ -562,7 +593,7 @@ class TestAPIV1(LoginExternalUser):
         names_v0 = [g["entity_name"] for g in j["results"]]
         self.assertIn(name, names_v0)
         r = self.client.get(
-            reverse_lazy("api:v1:panels-strs-list", args=(self.str.panel.panel.pk, ))
+            reverse_lazy("api:v1:panels-strs-list", args=(self.str.panel.panel.pk,))
             + "?version=0.1"
         )
         j = r.json()
@@ -619,11 +650,16 @@ class TestAPIV1(LoginExternalUser):
 
         res = self.client.get(reverse_lazy("api:v1:signedoff_panels-list"))
         assert res.status_code == 200
-        assert date.strftime("%Y-%m-%d") in res.json()['results'][0]["signed_off"]
+        assert date.strftime("%Y-%m-%d") in res.json()["results"][0]["signed_off"]
 
-        res = self.client.get(reverse_lazy("api:v1:signedoff_panels-detail", kwargs={"pk": self.gps.panel.pk}))
+        res = self.client.get(
+            reverse_lazy(
+                "api:v1:signedoff_panels-detail", kwargs={"pk": self.gps.panel.pk}
+            )
+        )
         assert res.status_code == 200
         assert date.strftime("%Y-%m-%d") in res.json()["signed_off"]
+
 
 class NonAuthAPIv1Request(TestCase):
     def setUp(self):
@@ -703,7 +739,8 @@ class NonAuthAPIv1Request(TestCase):
             reverse_lazy(
                 "api:v1:strs-evaluations-list",
                 args=(self.gpes.panel.panel.pk, gene_symbol),
-            ) + "?version=0.0"
+            )
+            + "?version=0.0"
         )
         self.assertEqual(r.status_code, 400)
 
@@ -730,7 +767,8 @@ class NonAuthAPIv1Request(TestCase):
             reverse_lazy(
                 "api:v1:strs-evaluations-list",
                 args=(self.str.panel.panel.pk, self.str.name),
-            ) + "?version=0.0"
+            )
+            + "?version=0.0"
         )
         self.assertEqual(r.status_code, 400)
 
@@ -757,6 +795,7 @@ class NonAuthAPIv1Request(TestCase):
             reverse_lazy(
                 "api:v1:regions-evaluations-list",
                 args=(self.region.panel.panel.pk, self.region.name),
-            ) + "?version=0.0"
+            )
+            + "?version=0.0"
         )
         self.assertEqual(r.status_code, 400)

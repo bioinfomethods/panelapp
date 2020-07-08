@@ -21,10 +21,14 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.urls import path, include
 from django.conf import settings
-from drf_yasg.views import get_schema_view
+from django.urls import (
+    include,
+    path,
+)
 from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+
 from .permissions import ReadOnlyPermissions
 
 schema_view = get_schema_view(

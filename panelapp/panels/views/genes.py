@@ -25,25 +25,33 @@ import csv
 from datetime import datetime
 
 from django.contrib import messages
-from django.views.generic.base import View
-from django.views.generic import FormView
-from django.views.generic import DetailView
+from django.http import (
+    HttpResponse,
+    StreamingHttpResponse,
+)
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
 from django.template.defaultfilters import pluralize
-from django.http import HttpResponse
-from django.http import StreamingHttpResponse
+from django.urls import reverse_lazy
+from django.views.generic import (
+    DetailView,
+    FormView,
+)
+from django.views.generic.base import View
 
 from panelapp.mixins import GELReviewerRequiredMixin
-from panels.forms import ComparePanelsForm
-from panels.forms import CopyReviewsForm
-
-from panels.models import GenePanel
-from panels.models import GenePanelSnapshot
-from panels.models import ProcessingRunCode
-from panels.models import HistoricalSnapshot
+from panels.forms import (
+    ComparePanelsForm,
+    CopyReviewsForm,
+)
 from panels.mixins import PanelMixin
+from panels.models import (
+    GenePanel,
+    GenePanelSnapshot,
+    HistoricalSnapshot,
+    ProcessingRunCode,
+)
 from panels.utils import remove_non_ascii
+
 from .entities import EchoWriter
 
 

@@ -24,20 +24,26 @@
 """Contains a form which is used to add/edit a gene in a panel."""
 
 from collections import OrderedDict
-from django import forms
-from .helpers import GELSimpleArrayField
-from dal_select2.widgets import ModelSelect2
-from dal_select2.widgets import Select2Multiple
-from dal_select2.widgets import ModelSelect2Multiple
-from panelapp.forms import Select2ListMultipleChoiceField
-from panels.models import Tag
-from panels.models import Gene
-from panels.models import Evidence
-from panels.models import Evaluation
-from panels.models import GenePanelEntrySnapshot
-from panels.models import GenePanel
-from panels.models import GenePanelSnapshot
 
+from dal_select2.widgets import (
+    ModelSelect2,
+    ModelSelect2Multiple,
+    Select2Multiple,
+)
+from django import forms
+
+from panelapp.forms import Select2ListMultipleChoiceField
+from panels.models import (
+    Evaluation,
+    Evidence,
+    Gene,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    Tag,
+)
+
+from .helpers import GELSimpleArrayField
 from .mixins import EntityFormMixin
 
 
@@ -110,9 +116,9 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
     )
 
     additional_panels = forms.ModelMultipleChoiceField(
-        queryset=GenePanelSnapshot.objects.only('panel__name', 'pk'),
+        queryset=GenePanelSnapshot.objects.only("panel__name", "pk"),
         required=False,
-        widget=ModelSelect2Multiple(url="autocomplete-simple-panels")
+        widget=ModelSelect2Multiple(url="autocomplete-simple-panels"),
     )
 
     class Meta:
@@ -124,7 +130,7 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
             "publications",
             "phenotypes",
             "transcript",
-            "additional_panels"
+            "additional_panels",
         )
 
     def __init__(self, *args, **kwargs):
@@ -149,7 +155,7 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
         self.fields["phenotypes"] = original_fields.get("phenotypes")
         if self.request.user.is_authenticated and self.request.user.reviewer.is_GEL():
             self.fields["tags"] = original_fields.get("tags")
-            self.fields['transcript'] = original_fields.get("transcript")
+            self.fields["transcript"] = original_fields.get("transcript")
             self.fields["additional_panels"] = original_fields.get("additional_panels")
         if not self.instance.pk:
             self.fields["rating"] = original_fields.get("rating")
@@ -183,10 +189,13 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
     def clean_additional_panels(self):
         gene_symbol = self.cleaned_data["gene"].gene_symbol
 
-        for panel in GenePanelSnapshot.objects.filter(pk__in=self.cleaned_data["additional_panels"]):
+        for panel in GenePanelSnapshot.objects.filter(
+            pk__in=self.cleaned_data["additional_panels"]
+        ):
             if panel.has_gene(gene_symbol):
                 raise forms.ValidationError(
-                    "Entity is already on additional panel", code="gene_exists_in_additional_panel"
+                    "Entity is already on additional panel",
+                    code="gene_exists_in_additional_panel",
                 )
         return self.cleaned_data["additional_panels"]
 
@@ -214,11 +223,11 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
             # Because "Expert Review " sources are not in cleaned_data,
             # check if initial data has it and compare if other sources changed.
             changed = True
-            if self.changed_data == ['source']:
+            if self.changed_data == ["source"]:
                 non_expert_reviews = [
-                    s for s
-                    in self.initial["source"]
-                    if not s.startswith('Expert Review ')
+                    s
+                    for s in self.initial["source"]
+                    if not s.startswith("Expert Review ")
                 ]
 
                 if set(self.cleaned_data["source"]) == set(non_expert_reviews):
@@ -226,10 +235,12 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
 
             if changed:
                 self.panel = self.panel.increment_version()
-                self.panel.update_gene(self.request.user, initial_gene_symbol, gene_data)
+                self.panel.update_gene(
+                    self.request.user, initial_gene_symbol, gene_data
+                )
                 self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
             else:
-                print('nothing changed, yo')
+                print("nothing changed, yo")
             entity = self.panel.get_gene(new_gene_symbol)
         else:
             increment_version = (
@@ -245,7 +256,7 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
                 panels=additional_panels,
                 user=self.request.user,
                 entity_data=gene_data,
-                copy_data=bool(self.initial)
+                copy_data=bool(self.initial),
             )
 
         return entity

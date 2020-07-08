@@ -23,6 +23,7 @@
 ##
 from django.conf import settings
 from django.urls import reverse_lazy
+
 from accounts.tests.setup import SetupUsers
 
 

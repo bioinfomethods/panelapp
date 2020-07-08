@@ -33,7 +33,7 @@ Required:
     evaluations metadata.
 
 Example:
-    `DJANGO_LOG_LEVEL=WARNING scripts/populate_missing_evaluation_dates.py 
+    `DJANGO_LOG_LEVEL=WARNING scripts/populate_missing_evaluation_dates.py
     scripts/missing-evaluation-dates.tsv`
 
 Author Oleg Gerasimenko
@@ -41,19 +41,23 @@ Author Oleg Gerasimenko
 Internal
 """
 
+import csv
 import os
 import sys
-import csv
+
 import django
+from django.db import transaction
+
+from panels.models import (
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+)
 
 sys.path.insert(0, os.path.abspath(os.path.curdir))
 django.setup()
-from panels.models import GenePanelEntrySnapshot
 
 assert len(sys.argv) > 1
 
-from django.db import transaction
-from panels.models import GenePanelSnapshot
 
 missing_data = {}
 with open(sys.argv[1], "r") as f:

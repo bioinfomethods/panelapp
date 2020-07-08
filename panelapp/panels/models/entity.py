@@ -30,21 +30,24 @@ Author: Oleg Gerasimenko
 
 from typing import List
 
-from django.db.models import Manager
-from django.db.models import Count
-from django.db.models import Subquery
+from django.db.models import (
+    Count,
+    Manager,
+    Subquery,
+)
 from django.utils import timezone
 from model_utils import Choices
 
 from accounts.models import User
-from .evaluation import Evaluation
-from .comment import Comment
-from .trackrecord import TrackRecord
-from .evidence import Evidence
-from .genepanel import GenePanel
+from panels.enums import GeneDataType
 from panels.models.genepanelsnapshot import GenePanelSnapshot
 from panels.templatetags.panel_helpers import get_gene_list_data
-from panels.templatetags.panel_helpers import GeneDataType
+
+from .comment import Comment
+from .evaluation import Evaluation
+from .evidence import Evidence
+from .genepanel import GenePanel
+from .trackrecord import TrackRecord
 
 
 class EntityManager(Manager):
@@ -748,7 +751,7 @@ class AbstractEntity:
         panels: List[GenePanelSnapshot],
         user: User,
         entity_data: dict,
-        copy_data=False
+        copy_data=False,
     ):
         """Copy entity to additional panels
 
@@ -768,12 +771,12 @@ class AbstractEntity:
 
         if copy_data:
             tags = list(self.tags.all())
-            evaluations = list(self.evaluation.prefetch_related('comments'))
+            evaluations = list(self.evaluation.prefetch_related("comments"))
             comments = list(self.comments.all())
             evidences = [
-                ev for ev
-                in self.evidence.all()
-                if ev.name not in entity_data['sources']
+                ev
+                for ev in self.evidence.all()
+                if ev.name not in entity_data["sources"]
             ]
 
         for panel in panels:
@@ -786,9 +789,7 @@ class AbstractEntity:
 
             if copied_entity and copy_data:
                 panel.add_activity(
-                    user,
-                    f"Entity copied from {self.panel}",
-                    copied_entity
+                    user, f"Entity copied from {self.panel}", copied_entity
                 )
 
                 for evidence in evidences:

@@ -29,30 +29,22 @@
 
 import os
 
-
-for k,v in os.environ.items():
+for k, v in os.environ.items():
     if k.startswith("GUNICORN_"):
-        key = k.split('_', 1)[1].lower()
+        key = k.split("_", 1)[1].lower()
         locals()[key] = v
 
 # Logging
 
 logconfig_dict = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    "handlers": {
-        "console": {
-            "class": "logging.StreamHandler",
-            "formatter": "json",
-        },
-    },
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "json",},},
     "formatters": {
-        "json": {
-            "class": "simple_json_log_formatter.SimpleJsonFormatter",
-        },
+        "json": {"class": "simple_json_log_formatter.SimpleJsonFormatter",},
     },
-    "loggers" : {
-        "root" : {
+    "loggers": {
+        "root": {
             "handlers": ["console"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
         },
@@ -60,13 +52,13 @@ logconfig_dict = {
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
             "handlers": ["console"],
             "propagate": 1,
-            "qualname": "gunicorn.error"
+            "qualname": "gunicorn.error",
         },
         "gunicorn.access": {
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
             "handlers": ["console"],
             "propagate": 1,
-            "qualname": "gunicorn.access"
+            "qualname": "gunicorn.access",
         },
-    }
+    },
 }

@@ -21,42 +21,53 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-import logging
 import itertools
-from psycopg2.extras import NumericRange
+import logging
 from copy import deepcopy
+
+from django.contrib.postgres.aggregates import ArrayAgg
+from django.contrib.postgres.fields import (
+    ArrayField,
+    JSONField,
+)
 from django.core.cache import cache
-from django.db import models
-from django.db.utils import DatabaseError
-from django.db import transaction
-from django.db.models import Count
-from django.db.models import Case
+from django.db import (
+    models,
+    transaction,
+)
+from django.db.models import (
+    Case,
+    CharField,
+    Count,
+    Q,
+    Subquery,
+)
+from django.db.models import Value as V
 from django.db.models import When
-from django.db.models import Subquery
-from django.db.models import CharField, Value as V
 from django.db.models.functions import Concat
-from django.db.models import Q, Value
-from django.contrib.postgres.fields import JSONField
+from django.db.utils import DatabaseError
 from django.urls import reverse
 from django.utils import timezone
-from django.contrib.postgres.fields import ArrayField
-from django.contrib.postgres.aggregates import ArrayAgg
 from django.utils.functional import cached_property
 from model_utils.models import TimeStampedModel
+from psycopg2.extras import NumericRange
 
 from accounts.models import User
-from panels.tasks import email_panel_promoted
 from panels.exceptions import IsSuperPanelException
+from panels.tasks import (
+    email_panel_promoted,
+    increment_panel_async,
+)
+
 from .activity import Activity
+from .comment import Comment
+from .evaluation import Evaluation
+from .evidence import Evidence
+from .gene import Gene
 from .genepanel import GenePanel
 from .Level4Title import Level4Title
-from .trackrecord import TrackRecord
-from .evidence import Evidence
-from .evaluation import Evaluation
-from .gene import Gene
-from .comment import Comment
 from .tag import Tag
-from panels.tasks import increment_panel_async
+from .trackrecord import TrackRecord
 
 
 class GenePanelSnapshotManager(models.Manager):
@@ -136,12 +147,20 @@ class GenePanelSnapshotManager(models.Manager):
         )
 
     def get_active_annotated(
-        self, all=False, deleted=False, internal=False, name=None, panel_types=None, superpanels=True,
+        self,
+        all=False,
+        deleted=False,
+        internal=False,
+        name=None,
+        panel_types=None,
+        superpanels=True,
     ):
         """This method adds additional values to the queryset, such as number_of_genes, etc and returns active panels"""
 
         return self.annotate_panels(
-            self.get_active(all, deleted, internal, name, panel_types, superpanels=superpanels)
+            self.get_active(
+                all, deleted, internal, name, panel_types, superpanels=superpanels
+            )
         )
 
     def annotate_panels(self, qs):
@@ -151,18 +170,18 @@ class GenePanelSnapshotManager(models.Manager):
             panel_type_slugs=ArrayAgg("panel__types__slug", distinct=True),
         ).annotate(
             is_super_panel=Case(
-                When(child_panels_count__gt=0, then=Value(True)),
-                default=Value(False),
+                When(child_panels_count__gt=0, then=V(True)),
+                default=V(False),
                 output_field=models.BooleanField(),
             ),
             is_child_panel=Case(
-                When(superpanels_count__gt=0, then=Value(True)),
-                default=Value(False),
+                When(superpanels_count__gt=0, then=V(True)),
+                default=V(False),
                 output_field=models.BooleanField(),
             ),
             unique_id=Case(
-                When(panel__old_pk__isnull=False, then=(Value("panel__old_pk"))),
-                default=Value("panel_id"),
+                When(panel__old_pk__isnull=False, then=(V("panel__old_pk"))),
+                default=V("panel_id"),
                 output_field=models.CharField(),
             ),
         )
@@ -354,7 +373,11 @@ class GenePanelSnapshot(TimeStampedModel):
     def signed_off(self):
         signed_off = None
         if self.panel.signed_off:
-            signed_off = (self.panel.signed_off.major_version, self.panel.signed_off.minor_version, self.panel.signed_off.signed_off_date)
+            signed_off = (
+                self.panel.signed_off.major_version,
+                self.panel.signed_off.minor_version,
+                self.panel.signed_off.signed_off_date,
+            )
         return signed_off
 
     @cached_property
@@ -494,13 +517,13 @@ class GenePanelSnapshot(TimeStampedModel):
         out = {"gene_reviewers": [], "str_reviewers": [], "region_reviewers": []}
 
         for key in keys:
-            if key not in ['str_reviewers', 'region_reviewers']:
+            if key not in ["str_reviewers", "region_reviewers"]:
                 out[key] = out.get(key, 0) + info_genes.get(key, 0)
 
-            if key not in ['gene_reviewers', 'region_reviewers']:
+            if key not in ["gene_reviewers", "region_reviewers"]:
                 out[key] = out.get(key, 0) + info_strs.get(key, 0)
 
-            if key not in ['str_reviewers', 'gene_reviewers']:
+            if key not in ["str_reviewers", "gene_reviewers"]:
                 out[key] = out.get(key, 0) + info_regions.get(key, 0)
 
         out["gene_reviewers"] = list(
@@ -568,7 +591,9 @@ class GenePanelSnapshot(TimeStampedModel):
         if panels_changed:
             self.child_panels.set(updated_child_panels)
 
-    def increment_version(self, major=False, user=None, comment=None, include_superpanels=True):
+    def increment_version(
+        self, major=False, user=None, comment=None, include_superpanels=True
+    ):
         """Creates a new version of the panel.
 
         This script copies all genes, all information for these genes, and also
@@ -615,13 +640,24 @@ class GenePanelSnapshot(TimeStampedModel):
 
                 # increment versions of any super panel
                 if include_superpanels:
-                    super_panel_ids = self.genepanelsnapshot_set.values_list('pk', flat=True)
-                    super_panels = self.genepanelsnapshot_set.get_active_annotated(all=True, deleted=True, internal=True).filter(pk__in=super_panel_ids)
+                    super_panel_ids = self.genepanelsnapshot_set.values_list(
+                        "pk", flat=True
+                    )
+                    super_panels = self.genepanelsnapshot_set.get_active_annotated(
+                        all=True, deleted=True, internal=True
+                    ).filter(pk__in=super_panel_ids)
                     for panel in super_panels:
                         if user:
-                            increment_panel_async(panel.pk, user_pk=user.pk, major=major, update_stats=False)
+                            increment_panel_async(
+                                panel.pk,
+                                user_pk=user.pk,
+                                major=major,
+                                update_stats=False,
+                            )
                         else:
-                            increment_panel_async(panel.pk, major=major, update_stats=False)
+                            increment_panel_async(
+                                panel.pk, major=major, update_stats=False
+                            )
 
         return self
 
@@ -1518,13 +1554,17 @@ class GenePanelSnapshot(TimeStampedModel):
                 if append_only:
                     new_publications = list(set(publications + gene.publications))
                     description = "Publications for gene {} were updated from {} to {}".format(
-                        gene_symbol, "; ".join(gene.publications), "; ".join(new_publications)
+                        gene_symbol,
+                        "; ".join(gene.publications),
+                        "; ".join(new_publications),
                     )
                     gene.publications = new_publications
                 else:
                     gene.publications = publications
                     description = "Publications for gene {} were changed from {} to {}".format(
-                        gene_symbol, "; ".join(gene.publications), "; ".join(publications)
+                        gene_symbol,
+                        "; ".join(gene.publications),
+                        "; ".join(publications),
                     )
                 tracks.append((TrackRecord.ISSUE_TYPES.SetPublications, description))
 
@@ -1539,11 +1579,15 @@ class GenePanelSnapshot(TimeStampedModel):
                 if append_only:
                     new_transcript = list(set(transcript + gene.transcript))
                     description = "Transcript for gene {} was updated from {} to {}".format(
-                        gene_symbol, "; ".join(gene.transcript), "; ".join(new_transcript)
+                        gene_symbol,
+                        "; ".join(gene.transcript),
+                        "; ".join(new_transcript),
                     )
                     gene.transcript = new_transcript
                 else:
-                    current_transcript = "; ".join(gene.transcript) if gene.transcript else None
+                    current_transcript = (
+                        "; ".join(gene.transcript) if gene.transcript else None
+                    )
                     description = "Transcript for gene {} was changed from {} to {}".format(
                         gene_symbol, current_transcript, "; ".join(transcript)
                     )

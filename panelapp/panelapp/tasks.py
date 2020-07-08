@@ -22,9 +22,13 @@
 ## under the License.
 ##
 import logging
-from django.core.mail import send_mail
-from django.core.mail import send_mass_mail
+
 from django.conf import settings
+from django.core.mail import (
+    send_mail,
+    send_mass_mail,
+)
+
 from .celery import app
 
 

@@ -22,26 +22,35 @@
 ## under the License.
 ##
 import os
+
 from django.core import mail
-from django.test import Client
+from django.test import (
+    Client,
+    TestCase,
+    TransactionTestCase,
+)
 from django.urls import reverse_lazy
 from faker import Factory
-from django.test import TransactionTestCase, TestCase
+
 from accounts.tests.setup import LoginGELUser
-from panels.models import GenePanel
-from panels.models import GenePanelEntrySnapshot
-from panels.models import Region
-from panels.models import STR
-from panels.models import HistoricalSnapshot
-from panels.tasks import email_panel_promoted
-from panels.tests.factories import GeneFactory
-from panels.tests.factories import STRFactory
-from panels.tests.factories import RegionFactory
-from panels.tests.factories import EvidenceFactory
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
-from panels.tests.factories import PanelTypeFactory
 from panels.management.commands.update_gene_ensembl import process
+from panels.models import (
+    STR,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    HistoricalSnapshot,
+    Region,
+)
+from panels.tasks import email_panel_promoted
+from panels.tests.factories import (
+    EvidenceFactory,
+    GeneFactory,
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+    PanelTypeFactory,
+    RegionFactory,
+    STRFactory,
+)
 
 fake = Factory.create()
 

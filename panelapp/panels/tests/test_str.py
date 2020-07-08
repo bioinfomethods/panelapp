@@ -23,28 +23,36 @@
 ##
 import os
 from random import randint
+
 from django.core import mail
 from django.test import Client
 from django.test.client import RequestFactory
 from django.urls import reverse_lazy
 from faker import Factory
-from accounts.tests.setup import LoginGELUser
-from panels.models import GenePanel
-from panels.models import GenePanelEntrySnapshot
-from panels.models import Evaluation
-from panels.models import Evidence
-from panels.models import GenePanelSnapshot
-from panels.models import HistoricalSnapshot
-from accounts.models import User, Reviewer
-from panels.forms import PanelSTRForm
-from panels.tasks import email_panel_promoted
-from panels.tests.factories import GeneFactory
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
-from panels.tests.factories import STRFactory
-from panels.tests.factories import TagFactory
-from panels.tests.factories import CommentFactory
 
+from accounts.models import (
+    Reviewer,
+    User,
+)
+from accounts.tests.setup import LoginGELUser
+from panels.forms import PanelSTRForm
+from panels.models import (
+    Evaluation,
+    Evidence,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    HistoricalSnapshot,
+)
+from panels.tasks import email_panel_promoted
+from panels.tests.factories import (
+    CommentFactory,
+    GeneFactory,
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+    STRFactory,
+    TagFactory,
+)
 
 fake = Factory.create()
 
@@ -795,10 +803,19 @@ class STRTest(LoginGELUser):
         )
         req.user = user
 
-        form_data = {'additional_panels': [gps2.pk], 'name': str.name, 'chromosome': str.chromosome,
-                     'panel': gps, 'position_38_0': str.position_38.lower, 'position_38_1': str.position_38.upper,
-                     'source': ['Expert Review', 'Expert Review'], 'repeated_sequence':  'T',
-                    'normal_repeats': str.normal_repeats,'moi': str.moi, 'pathogenic_repeats': str.pathogenic_repeats}
+        form_data = {
+            "additional_panels": [gps2.pk],
+            "name": str.name,
+            "chromosome": str.chromosome,
+            "panel": gps,
+            "position_38_0": str.position_38.lower,
+            "position_38_1": str.position_38.upper,
+            "source": ["Expert Review", "Expert Review"],
+            "repeated_sequence": "T",
+            "normal_repeats": str.normal_repeats,
+            "moi": str.moi,
+            "pathogenic_repeats": str.pathogenic_repeats,
+        }
         form = PanelSTRForm(form_data, panel=gps, request=req)
         assert form.is_valid()
         form.save_str()
@@ -820,10 +837,19 @@ class STRTest(LoginGELUser):
         )
         req.user = user
 
-        form_data = {'additional_panels': [gps2.pk], 'name': str.name, 'chromosome': str.chromosome,
-                     'panel': gps, 'position_38_0': str.position_38.lower, 'position_38_1': str.position_38.upper,
-                     'source': ['Expert Review', 'Expert Review'], 'repeated_sequence':  'T',
-                    'normal_repeats': str.normal_repeats,'moi': str.moi, 'pathogenic_repeats': str.pathogenic_repeats}
+        form_data = {
+            "additional_panels": [gps2.pk],
+            "name": str.name,
+            "chromosome": str.chromosome,
+            "panel": gps,
+            "position_38_0": str.position_38.lower,
+            "position_38_1": str.position_38.upper,
+            "source": ["Expert Review", "Expert Review"],
+            "repeated_sequence": "T",
+            "normal_repeats": str.normal_repeats,
+            "moi": str.moi,
+            "pathogenic_repeats": str.pathogenic_repeats,
+        }
         form = PanelSTRForm(form_data, panel=gps, request=req)
         assert not form.is_valid()
         assert gps2.has_str(str.name)

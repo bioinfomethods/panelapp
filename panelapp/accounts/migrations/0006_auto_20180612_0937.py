@@ -27,12 +27,17 @@ from __future__ import unicode_literals
 
 from django.db import migrations
 from django.db.models import Q
-from panelapp.models import HomeText
-from panelapp.models import Image
-from panelapp.models import File
-from panels.models import UploadedGeneList
-from panels.models import UploadedPanelList
-from panels.models import UploadedReviewsList
+
+from panelapp.models import (
+    File,
+    HomeText,
+    Image,
+)
+from panels.models import (
+    UploadedGeneList,
+    UploadedPanelList,
+    UploadedReviewsList,
+)
 
 user_support_group = "User Support"
 site_editor_group = "Site Editor"

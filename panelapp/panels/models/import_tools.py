@@ -146,35 +146,46 @@ FULL example:
     }
 """
 
-import json
-import re
 import csv
+import json
 import logging
+import re
 from datetime import datetime
-from django.db import models
-from django.db import transaction
-from model_utils.models import TimeStampedModel
-from accounts.models import User, Reviewer
-from .genepanelentrysnapshot import GenePanelEntrySnapshot
-from .strs import STR
-from panels.tasks import import_panel
-from panels.tasks import import_reviews
-from panels.exceptions import TSVIncorrectFormat
-from panels.exceptions import GeneDoesNotExist
-from panels.exceptions import UsersDoNotExist
-from panels.exceptions import GenesDoNotExist
-from panels.exceptions import IncorrectGeneRating
-from panels.exceptions import IsSuperPanelException
-from .gene import Gene
-from .genepanel import GenePanel
-from .region import Region
-from .genepanelsnapshot import GenePanelSnapshot
-from .Level4Title import Level4Title
-from .codes import ProcessingRunCode
+
+from django.db import (
+    models,
+    transaction,
+)
 from django.utils.encoding import force_text
-from .evaluation import Evaluation
+from model_utils.models import TimeStampedModel
 from psycopg2.extras import NumericRange
 
+from accounts.models import (
+    Reviewer,
+    User,
+)
+from panels.exceptions import (
+    GeneDoesNotExist,
+    GenesDoNotExist,
+    IncorrectGeneRating,
+    IsSuperPanelException,
+    TSVIncorrectFormat,
+    UsersDoNotExist,
+)
+from panels.tasks import (
+    import_panel,
+    import_reviews,
+)
+
+from .codes import ProcessingRunCode
+from .evaluation import Evaluation
+from .gene import Gene
+from .genepanel import GenePanel
+from .genepanelentrysnapshot import GenePanelEntrySnapshot
+from .genepanelsnapshot import GenePanelSnapshot
+from .Level4Title import Level4Title
+from .region import Region
+from .strs import STR
 
 logger = logging.getLogger(__name__)
 
@@ -596,8 +607,7 @@ class UploadedPanelList(TimeStampedModel):
                 entity_data["position_38_start"], entity_data["position_38_end"]
             ),
             position_37=NumericRange(
-                entity_data["position_37_start"],
-                entity_data["position_37_end"],
+                entity_data["position_37_start"], entity_data["position_37_end"],
             ),
             repeated_sequence=entity_data.get("repeated_sequence"),
             normal_repeats=entity_data.get("normal_repeats"),
@@ -815,11 +825,15 @@ class UploadedPanelList(TimeStampedModel):
         except IndexError as e:
             logger.exception(e, exc_info=True)
             if not suppress_errors:
-                raise TSVIncorrectFormat("Extra columns on line {}".format(str(key + 2)))
+                raise TSVIncorrectFormat(
+                    "Extra columns on line {}".format(str(key + 2))
+                )
         except ValueError as e:
             logger.exception(e, exc_info=True)
             if not suppress_errors:
-                raise TSVIncorrectFormat("{} Incorrect field value".format(str(key + 2)))
+                raise TSVIncorrectFormat(
+                    "{} Incorrect field value".format(str(key + 2))
+                )
 
         if entity_data.get("entity_type", "") not in ["gene", "region", "str"]:
             logger.error(

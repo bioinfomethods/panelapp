@@ -21,8 +21,9 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.db import transaction
 from django.core.management.base import BaseCommand
+from django.db import transaction
+
 from panels.models import Gene
 
 

@@ -22,13 +22,17 @@
 ## under the License.
 ##
 import logging
+
 import requests
 from django.conf import settings
 from django.contrib import auth
 from django.contrib.auth import load_backend
 from django.contrib.auth.backends import RemoteUserBackend
 from django.core.exceptions import ObjectDoesNotExist
-from django.http import HttpResponseRedirect, SimpleCookie
+from django.http import (
+    HttpResponseRedirect,
+    SimpleCookie,
+)
 from jose import jwt
 
 from accounts.models import Reviewer
@@ -38,7 +42,6 @@ logger = logging.getLogger("panelapp.cognito.middleware")
 
 
 class ALBAuthMiddleware:
-
     def __init__(self, get_response):
         logger.debug("Cognito ALBAuthMiddleware is activated for login")
         self.get_response = get_response
@@ -158,7 +161,9 @@ class ALBAuthMiddleware:
         but only if the user is authenticated via the RemoteUserBackend.
         """
         try:
-            stored_backend = load_backend(request.session.get(auth.BACKEND_SESSION_KEY, ''))
+            stored_backend = load_backend(
+                request.session.get(auth.BACKEND_SESSION_KEY, "")
+            )
         except ImportError:
             # backend failed to load
             auth.logout(request)
@@ -174,7 +179,11 @@ class ALBAuthMiddleware:
         :param meta:
         :return:
         """
-        return settings.AWS_AMZN_OIDC_ACCESS_TOKEN in meta and settings.AWS_AMZN_OIDC_IDENTITY in meta and settings.AWS_AMZN_OIDC_DATA in meta
+        return (
+            settings.AWS_AMZN_OIDC_ACCESS_TOKEN in meta
+            and settings.AWS_AMZN_OIDC_IDENTITY in meta
+            and settings.AWS_AMZN_OIDC_DATA in meta
+        )
 
     @staticmethod
     def verify_amzn_jwt_structure(encoded_jwt_data):
@@ -216,7 +225,11 @@ class ALBAuthMiddleware:
         :return:
         """
         try:
-            return jwt.decode(encoded_jwt_data, public_key, algorithms=[settings.AWS_JWT_SIGNATURE_ALGORITHM])
+            return jwt.decode(
+                encoded_jwt_data,
+                public_key,
+                algorithms=[settings.AWS_JWT_SIGNATURE_ALGORITHM],
+            )
         except Exception as e:
             raise
 
