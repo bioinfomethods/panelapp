@@ -35,7 +35,7 @@ from panels.models import (
     GenePanelEntrySnapshot,
     HistoricalSnapshot,
 )
-from panels.tasks import email_panel_promoted
+from panels.tasks.panels import email_panel_promoted
 from panels.tests.factories import (
     EvidenceFactory,
     GeneFactory,

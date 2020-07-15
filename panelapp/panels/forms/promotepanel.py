@@ -24,7 +24,7 @@
 from django import forms
 
 from panels.models import GenePanelSnapshot
-from panels.tasks import increment_panel_async
+from panels.tasks.panels import increment_panel_async
 
 
 class PromotePanelForm(forms.ModelForm):

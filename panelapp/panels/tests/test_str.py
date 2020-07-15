@@ -44,7 +44,7 @@ from panels.models import (
     GenePanelSnapshot,
     HistoricalSnapshot,
 )
-from panels.tasks import email_panel_promoted
+from panels.tasks.panels import email_panel_promoted
 from panels.tests.factories import (
     CommentFactory,
     GeneFactory,

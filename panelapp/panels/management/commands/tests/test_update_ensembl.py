@@ -41,7 +41,7 @@ from panels.models import (
     HistoricalSnapshot,
     Region,
 )
-from panels.tasks import email_panel_promoted
+from panels.tasks.panels import email_panel_promoted
 from panels.tests.factories import (
     EvidenceFactory,
     GeneFactory,

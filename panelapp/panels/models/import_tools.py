@@ -173,10 +173,8 @@ from panels.exceptions import (
     TSVIncorrectFormat,
     UsersDoNotExist,
 )
-from panels.tasks import (
-    import_panel,
-    import_reviews,
-)
+from panels.tasks.panels import import_panel
+from panels.tasks.reviews import import_reviews
 
 from .codes import ProcessingRunCode
 from .evaluation import Evaluation

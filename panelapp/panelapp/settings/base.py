@@ -261,6 +261,17 @@ CORS_ALLOW_METHODS = ("GET",)
 
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "pyamqp://localhost:5672/")
 
+# Celery Beat Scheduler settings
+CELERY_BEAT_SCHEDULE = {
+    "daily-moi-check": {
+        "task": "panels.tasks.moi_check",
+        "schedule": crontab(
+            hour=os.getenv("MOI_CHECK_HOUR", 6),
+            minute=os.getenv("MOI_CHECK_MINUTE", 30),
+        ),
+    }
+}
+
 PACKAGE_VERSION = panelapp.__version__
 
 CACHES = {

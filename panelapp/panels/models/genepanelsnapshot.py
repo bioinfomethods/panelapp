@@ -54,7 +54,7 @@ from psycopg2.extras import NumericRange
 
 from accounts.models import User
 from panels.exceptions import IsSuperPanelException
-from panels.tasks import (
+from panels.tasks.panels import (
     email_panel_promoted,
     increment_panel_async,
 )

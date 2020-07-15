@@ -40,7 +40,7 @@ from panels.models import (
     UploadedPanelList,
     UploadedReviewsList,
 )
-from panels.tasks import background_copy_reviews
+from panels.tasks.reviews import background_copy_reviews
 
 from .activity import ActivityFilterForm
 from .geneready import GeneReadyForm  # noqa

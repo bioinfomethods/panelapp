@@ -46,10 +46,11 @@ setup(
         "tests": [
             "pytest==3.7.1",
             "pytest-django==3.3.3",
+            "pytest-cov==2.5.1",
+            "pytest-sugar==0.9.4",
             "flake8==3.5.0",
             "faker==0.8.15",
             "factory_boy==2.11.1",
-            "pytest-cov==2.5.1",
             "responses==0.10.12",
         ],
     },
