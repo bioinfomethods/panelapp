@@ -151,6 +151,7 @@ import json
 import logging
 import re
 from datetime import datetime
+from typing import Set
 
 from django.db import (
     models,
@@ -999,7 +1000,7 @@ class UploadedPanelList(TimeStampedModel):
                     file.read(), encoding="utf-8", errors="ignore"
                 )
                 reader = csv.reader(textfile_content.splitlines(), delimiter="\t")
-                _ = next(reader)  # noqa
+                _ = next(reader)  # skip header
             except csv.Error:
                 logger.error("File Import. Wrong file format")
                 raise TSVIncorrectFormat("Wrong File Format. Please use TSV.")
@@ -1007,6 +1008,11 @@ class UploadedPanelList(TimeStampedModel):
             lines = [line for line in reader]
 
             unique_panels = {l[4]: i for i, l in enumerate(lines)}
+            unique_genes = {l[2] for l in lines if l[2]}
+
+            missing_genes = get_missing_genes(unique_genes)
+            if missing_genes:
+                raise GenesDoNotExist(", ".join(missing_genes))
 
             errors = {"invalid_genes": [], "invalid_lines": []}
 
@@ -1072,6 +1078,25 @@ class UploadedPanelList(TimeStampedModel):
             self.save()
 
         return ProcessingRunCode.PROCESSED
+
+
+def get_missing_genes(unique_genes: Set[str]) -> Set[str]:
+    """Check if any genes are missing in our database (or aren't active)
+
+    :param unique_genes: set of gene symbols
+    :return: set of genes missing in the db
+    """
+
+    db_unique_genes = Gene.objects.filter(
+        gene_symbol__in=unique_genes, active=True
+    ).values_list("gene_symbol", flat=True)
+
+    missing_genes = set()
+
+    if db_unique_genes.count() != len(unique_genes):
+        missing_genes = unique_genes - set(db_unique_genes)
+
+    return missing_genes
 
 
 class UploadedReviewsList(TimeStampedModel):
