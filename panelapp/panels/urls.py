@@ -108,7 +108,7 @@ urlpatterns = [
     url(r"^(?P<pk>[0-9]+)/update$", UpdatePanelView.as_view(), name="update"),
     url(r"^(?P<pk>[0-9]+)/promote$", PromotePanelView.as_view(), name="promote"),
     url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/add".format(types=entity_types),
+        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/add$".format(types=entity_types),
         PanelAddEntityView.as_view(),
         name="add_entity",
     ),
