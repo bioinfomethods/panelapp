@@ -1,6 +1,6 @@
 {% extends "default.html" %}
 {% load staticfiles %}
-{% load bootstrap3 %}
+{% load bootstrap3 panel_helpers %}
 {% block header %}
 <script src="{% static 'django_ajax/js/jquery.ajax.min.js' %}"></script>
 <script src="{% static 'django_ajax/js/jquery.ajax-plugin.min.js' %}"></script>
@@ -23,7 +23,7 @@
 
     {% with signed_off_panel=signed_off %}
     {% if signed_off_panel %}
-        <div class="alert alert-info" role="alert"><strong>{{ signed_off_message }}. Version {{ signed_off_panel.major_version }}.{{ signed_off_panel.minor_version }} on {{ signed_off_panel.signed_off_date|date:"d M Y" }}</strong></div>
+        <div class="alert alert-info" role="alert"><strong>{% signed_off_panel_message signed_off_panel %}</strong></div>
     {% endif %}
     {% endwith %}
 

@@ -136,7 +136,6 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "panelapp.context_processors.use_cognito",
-                "panelapp.context_processors.signed_off_message",
             ]
         },
     }
@@ -307,6 +306,6 @@ SWAGGER_SETTINGS = {
 
 DEFAULT_PANEL_TYPES = os.getenv("DEFAULT_PANEL_TYPES", "rare-disease-100k").split(",")
 
-SIGNED_OFF_MESSAGE = "This Panel has been signed off for the GMS"
-
 OMIM_API_KEY = os.getenv("OMIM_API_KEY", None)
+
+SIGNED_OFF_MESSAGE = "Version {version} of this panel was signed-off for the GMS. The current version, shown here, may differ from the signed-off version."

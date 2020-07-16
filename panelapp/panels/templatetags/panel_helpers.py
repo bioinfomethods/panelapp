@@ -24,6 +24,7 @@
 import re
 
 from django import template
+from django.conf import settings
 from django.utils.safestring import SafeString
 
 from panels.enums import (
@@ -155,3 +156,12 @@ def human_variant_types(variant_type):
     from panels.models import Region
 
     return Region.VARIANT_TYPES[variant_type]
+
+
+@register.simple_tag
+def signed_off_panel_message(panel: "panels.models.GenePanelSnapshot") -> str:
+    if not settings.SIGNED_OFF_MESSAGE:
+        return ""
+
+    version = f"{panel.major_version}.{panel.minor_version}"
+    return settings.SIGNED_OFF_MESSAGE.format(version=version)
