@@ -46,7 +46,7 @@ class TestUsers(SetupUsers):
     def test_registration(self):
         email = fake.email()
         username = fake.user_name()
-        password = fake.sentence()
+        password = "P4s$wwword!"
 
         data = {
             "username": username,
@@ -133,7 +133,7 @@ class TestUsers(SetupUsers):
     def test_change_password(self):
         username = self.external_user.username
         self.client.login(username=username, password="pass")
-        password = fake.sentence()
+        password = "P4s$wwword!"
 
         data = {
             "current_password": "pass",
