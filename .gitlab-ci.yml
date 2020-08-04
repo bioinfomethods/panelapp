@@ -230,7 +230,7 @@ deploy_to_test:
      - export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
      - export AWS_SESSION_TOKEN=$(jq -r '.Token' aws_creds)
      - export AWS_DEFAULT_REGION=$default_region
-     - git clone --single-branch --branch $INFRA_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
+     - git clone --single-branch --branch $INFRA_TEST_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
      - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
    script:
      - export WORKING_DIR=$(pwd)
@@ -263,7 +263,7 @@ destroy_test:
     - export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
     - export AWS_SESSION_TOKEN=$(jq -r '.Token' aws_creds)
     - export AWS_DEFAULT_REGION=$default_region
-    - git clone --single-branch --branch $INFRA_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
+    - git clone --single-branch --branch $INFRA_TEST_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
     - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
   script:
     - export WORKING_DIR=$(pwd)
