@@ -25,10 +25,7 @@
 
 """
 from django.conf import settings
-from django.conf.urls import (
-    include,
-    url,
-)
+from django.conf.urls import include
 from django.contrib import admin
 from django.urls import (
     path,
@@ -45,8 +42,11 @@ from .autocomplete import (
     SourceAutocomplete,
     TagsAutocomplete,
 )
+from .health.views.health_check_views import (
+    HealthCheck,
+    ping,
+)
 from .views import (
-    HealthCheckView,
     Homepage,
     VersionView,
 )
@@ -100,8 +100,9 @@ urlpatterns = [
         SimplePanelTypesAutocomplete.as_view(),
         name="autocomplete-simple-panel-types",
     ),
-    path("health_check/", HealthCheckView.as_view(), name="health_check"),
     path("version/", VersionView.as_view(), name="version"),
+    path("health/1/", HealthCheck.as_view(), name="health-check"),
+    path("ping/1/", ping, name="ping"),
 ]
 
 if settings.DEBUG:

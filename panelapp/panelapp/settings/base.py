@@ -241,18 +241,6 @@ MARKDOWN_DEUX_STYLES = {
     "default": {"extras": {"wiki-tables": True}, "safe_mode": "escape"}
 }
 
-HEALTH_ACCESS_TOKEN_LOCATION = os.getenv("HEALTH_ACCESS_TOKEN_LOCATION", None)
-HEALTH_CHECK_TOKEN = None
-if HEALTH_ACCESS_TOKEN_LOCATION and os.path.isfile(HEALTH_ACCESS_TOKEN_LOCATION):
-    with open(HEALTH_ACCESS_TOKEN_LOCATION, "r") as f:
-        HEALTH_CHECK_TOKEN = f.readline().strip()
-
-HEALTH_MAINTENANCE_LOCATION = os.getenv("HEALTH_MAINTENANCE_LOCATION", None)
-
-HEALTH_CHECK_SERVICES = os.getenv(
-    "HEALTH_CHECK_SERVICES", "database,rabbitmq,email,celery,maintenance"
-).split(",")
-
 # CORS headers support
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_URLS_REGEX = r"^/(WebServices|api/v1)/.*$"
@@ -309,3 +297,15 @@ DEFAULT_PANEL_TYPES = os.getenv("DEFAULT_PANEL_TYPES", "rare-disease-100k").spli
 OMIM_API_KEY = os.getenv("OMIM_API_KEY", None)
 
 SIGNED_OFF_MESSAGE = "Version {version} of this panel was signed-off for the GMS. The current version, shown here, may differ from the signed-off version."
+
+# Health checks
+HEALTH_CHECK_SERVICE_NAME = "panelapp"
+HEALTH_CHECK_CACHE_SECONDS = 3
+HEALTH_CHECK_TIMEOUT = 3
+HEALTH_CHECK_TOKEN = os.getenv("HEALTH_CHECK_TOKEN", "panelapp-token")
+
+HEALTH_CHECK_CRITICAL = os.getenv("HEALTH_CHECK_CRITICAL", "database,sqs,email").split(
+    ","
+)
+
+HEALTH_CHECKS = os.getenv("HEALTH_CHECKS", "database,sqs,email").split(",")
