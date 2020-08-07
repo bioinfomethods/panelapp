@@ -1,23 +1,36 @@
 variables:
   PANNELAPP_TF_DIR : "panelapp-infra/terraform/panelapp/"
 
+include:
+  - template: Code-Quality.gitlab-ci.yml
+
 stages:
-   - tests
+   - test
    - image_build
    - deploy_to_stage         # Manual
    - deploy_to_production    # Manual
    - deploy_to_test          # Manual
 
+.tests:
+  stage: test
+  rules:
+    - if: $CI_MERGE_REQUEST_ID
+
+code_quality:
+  extends: .tests
+  artifacts:
+    paths: [gl-code-quality-report.json]
+  rules:
+    - if: '$CODE_QUALITY_DISABLED'
+      when: never
+    - if: $CI_MERGE_REQUEST_ID
+    - if: $CI_COMMIT_BRANCH
+
 # Code checks
 ## run unit and integration tests
 code_test:
   image: python:3.6.8-alpine3.9
-  except:
-    - schedules
-  stage: tests
-  only:
-    - merge_requests
-    - branches
+  extends: .tests
   services:
     - name: postgres:9.6.9
       alias: db-postgres
@@ -38,10 +51,7 @@ code_test:
 ## Linging, formatting, etc
 import_sorting:
   image: python:3.8
-  stage: tests
-  only:
-    - merge_requests
-    - branches
+  extends: .tests
   before_script:
     - pip install isort==5.0.5
   script:
@@ -49,10 +59,7 @@ import_sorting:
 
 formatter:
   image: python:3.8
-  stage: tests
-  only:
-    - merge_requests
-    - branches
+  extends: .tests
   before_script:
     - pip install black==19.10b0
   script:
@@ -60,14 +67,7 @@ formatter:
 
 # Build docker image
 image_build:
-  except:
-    - schedules
   image: docker:stable
-  only:
-    refs:
-      - tags
-    variables:
-      - $CI_COMMIT_TAG =~ /\d+\.\d+\.\d+\w*$/
   services:
     - docker:19.03.5-dind
   stage: image_build
@@ -99,14 +99,13 @@ image_build:
     - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-web:latest
     - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:latest
     - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-base:latest
+  rules:
+    - if: $CI_COMMIT_TAG =~ /\d+\.\d+\.\d+\w*$/
 
 # Deploy all the things
 ## Stage
 deploy_to_stage:
    stage: deploy_to_stage
-   except:
-     - schedules
-   when: manual
    environment:
      name: stage
      on_stop: destroy_stage
@@ -114,11 +113,6 @@ deploy_to_stage:
      - image_build
    tags:
      - TF_panelapp_stage
-   only:
-     refs:
-       - tags
-     variables:
-       - $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+b\d+$/
    variables:
      env_name : stage
    before_script:
@@ -137,17 +131,12 @@ deploy_to_stage:
      - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-stage -panelapp
      - sleep 30
      - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-stage -panelapp
+   rules:
+     - if: $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+b\d+$/
+       when: manual
 
 destroy_stage:
   stage: deploy_to_stage
-  when: manual
-  only:
-    refs:
-      - tags
-    variables:
-      - $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+b\d+$/
-  except:
-    - schedules
   variables:
      env_name : stage
   environment:
@@ -166,22 +155,17 @@ destroy_stage:
   script:
     - export WORKING_DIR=$(pwd)
     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var image_tag=$CI_COMMIT_TAG -var 'EC2_mgmt_count=0' && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var image_tag=$CI_COMMIT_TAG -var 'EC2_mgmt_count=0'
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+b\d+$/
+      when: manual
 
 ## Prod
 deploy_to_production:
    stage: deploy_to_production
-   except:
-    - schedules
-   when: manual
    environment:
      name: prod
    tags:
      - TF_panelapp_prod
-   only:
-     refs:
-       - tags
-     variables:
-       - $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+$/
    variables:
      env_name : prod
    before_script:
@@ -202,13 +186,13 @@ deploy_to_production:
      - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-prod -panelapp
      - sleep 30
      - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-prod -panelapp
+   rules:
+     - if: $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+$/
+       when: manual
 
 ## Test
 deploy_to_test:
    stage: deploy_to_test
-   except:
-     - schedules
-   when: manual
    environment:
      name: test
      on_stop: destroy_test
@@ -216,11 +200,6 @@ deploy_to_test:
      - image_build
    tags:
      - TF_panelapp_test
-   only:
-     refs:
-       - tags
-     variables:
-       - $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+a\d+$/
    variables:
      env_name : test
    before_script:
@@ -239,17 +218,12 @@ deploy_to_test:
      - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-test -panelapp
      - sleep 30
      - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-test -panelapp
+   rules:
+     - if: $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+a\d+$/
+       when: manual
 
 destroy_test:
   stage: deploy_to_test
-  when: manual
-  only:
-    refs:
-      - tags
-    variables:
-      - $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+a\d+$/
-  except:
-    - schedules
   variables:
      env_name : test
   environment:
@@ -268,3 +242,6 @@ destroy_test:
   script:
     - export WORKING_DIR=$(pwd)
     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var image_tag=$CI_COMMIT_TAG -var 'EC2_mgmt_count=0' && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var image_tag=$CI_COMMIT_TAG -var 'EC2_mgmt_count=0'
+  rules:
+    - if: $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+a\d+$/
+      when: manual
