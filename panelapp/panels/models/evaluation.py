@@ -27,6 +27,7 @@ from model_utils import Choices
 from model_utils.models import TimeStampedModel
 
 from accounts.models import User
+from panels.enums import MODE_OF_INHERITANCE_VALID_CHOICES
 
 from .comment import Comment
 
@@ -47,46 +48,7 @@ class Evaluation(TimeStampedModel):
     )
 
     MODES_OF_INHERITANCE = Choices(
-        ("", "Provide a mode of inheritance"),
-        (
-            "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
-            "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
-        ),  # noqa
-        (
-            "MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
-            "MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
-        ),  # noqa
-        (
-            "MONOALLELIC, autosomal or pseudoautosomal, paternally imprinted (maternal allele expressed)",
-            "MONOALLELIC, autosomal or pseudoautosomal, paternally imprinted (maternal allele expressed)",
-        ),  # noqa
-        (
-            "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
-            "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
-        ),  # noqa
-        (
-            "BIALLELIC, autosomal or pseudoautosomal",
-            "BIALLELIC, autosomal or pseudoautosomal",
-        ),
-        (
-            "BOTH monoallelic and biallelic, autosomal or pseudoautosomal",
-            "BOTH monoallelic and biallelic, autosomal or pseudoautosomal",
-        ),  # noqa
-        (
-            "BOTH monoallelic and biallelic (but BIALLELIC mutations cause a more SEVERE disease form), autosomal or pseudoautosomal",
-            "BOTH monoallelic and biallelic (but BIALLELIC mutations cause a more SEVERE disease form), autosomal or pseudoautosomal",
-        ),  # noqa
-        (
-            "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
-            "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
-        ),  # noqa
-        (
-            "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
-            "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
-        ),  # noqa
-        ("MITOCHONDRIAL", "MITOCHONDRIAL"),
-        ("Unknown", "Unknown"),
-        ("Other", "Other - please specifiy in evaluation comments"),
+        ("", "Provide a mode of inheritance"), *MODE_OF_INHERITANCE_VALID_CHOICES,
     )
 
     MODES_OF_PATHOGENICITY = Choices(

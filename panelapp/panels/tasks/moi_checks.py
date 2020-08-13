@@ -34,24 +34,26 @@ import logging
 import tempfile
 from functools import lru_cache
 from typing import (
+    Any,
     Dict,
-    Generator,
+    Iterator,
     List,
     Optional,
     Set,
-    Tuple,
 )
 
 import requests
 from celery import shared_task
 from django.conf import settings
 from django.core.mail import EmailMessage
+from django.utils import timezone
 from requests.exceptions import HTTPError
 
-from panels.models.genepanel import GenePanel
-from panels.models.genepanelentrysnapshot import GenePanelEntrySnapshot
+from panels.enums import MODE_OF_INHERITANCE_VALID_CHOICES
 
 LOGGER = logging.getLogger(__name__)
+
+MoiMistmatchDict = Dict[str, Dict[str, Any]]
 
 
 MOI_MAPPING = {
@@ -80,10 +82,13 @@ MOI_MAPPING = {
     "MITOCHONDRIAL": ["Mitochondrial"],
 }
 
-MULTIPLE_MOI_EXCEPTIONS = [
-    "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
-    "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
-]
+X_LINKED_MOI = {
+    "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
+    "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may "
+    "cause disease (may be less severe, later onset than males)",
+}
+
+VALID_MOI_VALUES = [k for k, _ in MODE_OF_INHERITANCE_VALID_CHOICES]
 
 
 class IncorrectMoiGene:
@@ -94,40 +99,27 @@ class IncorrectMoiGene:
         "panel",
         "panel_id",
         "moi",
-        "phenotypes",
-        "publications",
         "message",
     )
 
     __slots__ = CSV_HEADER
 
     def __init__(
-        self,
-        gene_name: str,
-        panel_name: str,
-        panel_id: int,
-        moi: str,
-        phenotypes: str,
-        publications: str,
-        message: str,
+        self, gene_name: str, panel_name: str, panel_id: int, moi: str, message: str,
     ):
         self.gene = gene_name
         self.panel = panel_name
         self.panel_id = panel_id
         self.moi = moi
-        self.phenotypes = phenotypes
-        self.publications = publications
         self.message = message
 
     @classmethod
-    def from_gene(cls, gene: GenePanelEntrySnapshot, msg: str):
+    def from_gene(cls, gene: "GenePanelEntrySnapshot", msg: str):
         return cls(
             gene_name=gene.name,
             panel_name=str(gene.panel),
-            panel_id=gene.panel_id,
+            panel_id=gene.panel.panel_id,
             moi=gene.moi,
-            phenotypes=";".join(gene.phenotypes) if gene.phenotypes else "",
-            publications=";".join(gene.publications) if gene.publications else "",
             message=msg,
         )
 
@@ -160,7 +152,7 @@ def moi_check():
         - review MOI between panels to ensure the MOI for a gene is consistent in all
           panels: pull out differences and provide a file to the Curation team. This
           file should include following columns:
-          gene, panel, panel code, MOI, phenotypes, publications.
+          gene, panel, panel code, MOI
           These differences may be valid, and the gene may have a different MOI for
           different phenotypes, but this will allow us to check this.
         - compare MOI in PanelApp against the MOI in OMIM
@@ -172,8 +164,10 @@ def moi_check():
 
     checks = [
         moi_check_is_empty,
+        moi_check_non_standard,
         moi_check_other,
         moi_check_chr_x,
+        moi_check_mt,
     ]
 
     if settings.OMIM_API_KEY:
@@ -187,7 +181,7 @@ def moi_check():
             if incorrect:
                 LOGGER.debug(
                     "Found incorrect MOI",
-                    extra_data={
+                    extra={
                         "func": str(check),
                         "gene_symbol": gene.name,
                         "panel": str(gene.panel),
@@ -196,14 +190,11 @@ def moi_check():
                 incorrect_moi.append(incorrect)
                 break
 
-    for gene, moi_values in multiple_moi_genes(green_genes):
-        msg = "Green gene {} has different moi {} on panel {} than {}".format(
-            gene.name, gene.moi, gene.panel, ";".join(moi_values)
-        )
-        incorrect_moi.append(IncorrectMoiGene.from_gene(gene, msg))
+    # add mismatching genes
+    incorrect_moi.extend(multiple_moi_genes(get_genes()))
 
     if incorrect_moi:
-        LOGGER.info("Found incorrect MOIs", extra_data={"count": len(incorrect_moi)})
+        LOGGER.info("Found incorrect MOIs", extra={"count": len(incorrect_moi)})
         content = get_csv_content(incorrect_moi)
         notify_panelapp_curators(content)
     else:
@@ -215,6 +206,10 @@ def get_genes():
 
     :return: QuerySet Iterator
     """
+    from panels.models.genepanelentrysnapshot import (
+        GenePanel,
+        GenePanelEntrySnapshot,
+    )
 
     queryset = (
         GenePanelEntrySnapshot.objects.get_active()
@@ -225,6 +220,15 @@ def get_genes():
                 GenePanel.STATUS.public,
                 GenePanel.STATUS.promoted,
             ],
+        )
+        .prefetch_related("panel", "panel__level4title", "gene_core")
+        .only(
+            "moi",
+            "gene",
+            "panel__panel_id",
+            "panel__level4title__name",
+            "panel__major_version",
+            "panel__minor_version",
         )
         .order_by("gene_core__omim_gene__0")  # for LRU caching
     )
@@ -245,13 +249,15 @@ def notify_panelapp_curators(content):
     :return:
     """
 
+    now = timezone.now().strftime("%Y-%m-%d")
+
     email = EmailMessage(
-        "MOI Errors",
+        f"MOI Errors - {now}",
         "Errors are attached in csv file.",
         settings.DEFAULT_FROM_EMAIL,
         [settings.PANEL_APP_EMAIL],
     )
-    email.attach("incorrect_moi.csv", content, "text/csv")
+    email.attach(f"incorrect_moi_{now}.csv", content, "text/csv")
     email.send()
 
     LOGGER.info("MOI Errors email sent")
@@ -275,7 +281,7 @@ def get_csv_content(incorrect_moi: List[IncorrectMoiGene]) -> str:
 
 
 # MOI Checks
-def moi_check_omim(gene: GenePanelEntrySnapshot) -> Optional[IncorrectMoiGene]:
+def moi_check_omim(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]:
     """Check if PanelApp MOI for the gene matches OMIM records
 
     :param gene:  GenePanelEntrySnapshot
@@ -298,7 +304,7 @@ def moi_check_omim(gene: GenePanelEntrySnapshot) -> Optional[IncorrectMoiGene]:
         # could be due to networking issue
         LOGGER.warning(
             "OMIM has no MOI data",
-            extra_data={
+            extra={
                 "omim_id": omim_id,
                 "gene_symbol": gene.name,
                 "panel": str(gene.panel),
@@ -311,14 +317,14 @@ def moi_check_omim(gene: GenePanelEntrySnapshot) -> Optional[IncorrectMoiGene]:
         # all good, we have overlapping MOI
         return
 
-    msg = "Green gene {} with discrepant OMIM moi {} and {} on panel {}".format(
+    msg = "Green gene {} with discrepant OMIM MOI {} and {} on panel {}".format(
         gene.name, omim_moi, gene.moi, gene.panel
     )
 
     return IncorrectMoiGene.from_gene(gene, msg)
 
 
-def moi_check_is_empty(gene: GenePanelEntrySnapshot) -> Optional[IncorrectMoiGene]:
+def moi_check_is_empty(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]:
     """Check if MOI is empty or unknown
 
     :param gene: Gene snapshot
@@ -326,13 +332,13 @@ def moi_check_is_empty(gene: GenePanelEntrySnapshot) -> Optional[IncorrectMoiGen
     """
 
     if not gene.moi or gene.moi == "Unknown":
-        msg = "Green gene {} with {} moi on panel {}".format(
-            gene.name, gene.moi, gene.panel
+        msg = "Green gene {} with {} MOI on panel {}".format(
+            gene.name, gene.moi or "empty", gene.panel
         )
         return IncorrectMoiGene.from_gene(gene, msg)
 
 
-def moi_check_other(gene: GenePanelEntrySnapshot) -> Optional[IncorrectMoiGene]:
+def moi_check_other(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]:
     """Check if MOI is Other on non chrY gene
 
     :param gene: GenePanelEntrySnapshot
@@ -342,15 +348,18 @@ def moi_check_other(gene: GenePanelEntrySnapshot) -> Optional[IncorrectMoiGene]:
     moi = gene.moi
     chromosome = get_chromosome(gene)
 
-    if moi == "Other - please specifiy in evaluation comments" and chromosome != "Y":
-        msg = "Green gene {} with {} moi on panel {}".format(
+    if (
+        moi in {"Other - please specifiy in evaluation comments", "Other"}
+        and chromosome != "Y"
+    ):
+        msg = "Green gene {} with {} MOI on panel {}".format(
             gene.name, gene.moi, gene.panel
         )
 
         return IncorrectMoiGene.from_gene(gene, msg)
 
 
-def moi_check_chr_x(gene: GenePanelEntrySnapshot) -> Optional[IncorrectMoiGene]:
+def moi_check_chr_x(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]:
     """Check if MOI is chrX linked
 
     :param gene: GenePanelEntrySnapshot
@@ -360,13 +369,42 @@ def moi_check_chr_x(gene: GenePanelEntrySnapshot) -> Optional[IncorrectMoiGene]:
     moi = gene.moi
     chromosome = get_chromosome(gene)
 
-    if chromosome == "X" and moi not in [
-        "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
-        "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may "
-        "cause disease (may be less severe, later onset than males)",
-    ]:
-        msg = "Green gene {} on X chromosome with {} moi on panel {}".format(
+    if chromosome == "X" and moi not in X_LINKED_MOI:
+        msg = "Green gene {} on chromosome X with {} MOI on panel {}".format(
             gene.name, gene.moi, gene.panel
+        )
+        return IncorrectMoiGene.from_gene(gene, msg)
+
+    if chromosome != "X" and moi in X_LINKED_MOI:
+        msg = "Green gene {} on chromosome {} with X-LINKED MOI on panel {}".format(
+            gene.name, chromosome, gene.panel
+        )
+        return IncorrectMoiGene.from_gene(gene, msg)
+
+
+def moi_check_non_standard(gene):
+    moi = gene.moi
+
+    if moi not in VALID_MOI_VALUES:
+        msg = "Green gene {} with non-standard {} MOI on panel {}".format(
+            gene.name, moi, gene.panel
+        )
+        return IncorrectMoiGene.from_gene(gene, msg)
+
+
+def moi_check_mt(gene) -> Optional[IncorrectMoiGene]:
+    moi = gene.moi
+    chromosome = get_chromosome(gene)
+
+    if chromosome == "MT" and moi != "MITOCHONDRIAL":
+        msg = "Green gene {} on chromosome MT with {} MOI on panel {}".format(
+            gene.name, gene.moi, gene.panel
+        )
+        return IncorrectMoiGene.from_gene(gene, msg)
+
+    if chromosome != "MT" and moi == "MITOCHONDRIAL":
+        msg = "Green gene {} on chromosome {} with MITOCHONDRIAL MOI on panel {}".format(
+            gene.name, chromosome, gene.panel
         )
         return IncorrectMoiGene.from_gene(gene, msg)
 
@@ -376,32 +414,126 @@ def moi_check_chr_x(gene: GenePanelEntrySnapshot) -> Optional[IncorrectMoiGene]:
 
 
 def multiple_moi_genes(
-    genes: List[GenePanelEntrySnapshot],
-) -> Generator[Tuple[GenePanelEntrySnapshot, Set[str]], None, None]:
+    genes: List["GenePanelEntrySnapshot"],
+) -> List[IncorrectMoiGene]:
     """Get genes which have different MOI on different panels
 
-    Only values that aren't MONOALLELIC MOI will be added
+    Unique genes and MOIs
 
-    :param genes: GenePanelEntrySnapshot
-    :return: Generator of tuple values of GenePanelEntrySnapshot and set of MOIs
+    ```
+    unique_genes: {
+        "Gene1": {
+            "moi": Set("A", "B", etc),
+            "gpes": Set("Gene1, Panel 1", etc)
+            "incorrect_moi": [IncorrectMoiGene],
+            "processed_gpes": Set("Gene1, Panel 1")
+        }
+    }
+    ```
+
+    If each gene has more than 1 MOI - report them
+
+    :param genes: GenePanelEntrySnapshot list
+    :return: List of genes with mismatching MOIs
     """
-    unique_genes: Dict[str, Set[str]] = {}
+
+    multiple_mois = get_unique_moi_genes(genes)
+    LOGGER.info(f"Found {len(multiple_mois)} genes with duplicates")
+    result = process_multiple_moi_dict(multiple_mois)
+    LOGGER.info(f"Generated {len(result)} IncorrectMoiGenes")
+
+    return result
+
+
+def get_unique_moi_genes(genes: List["GenePanelEntrySnapshot"]) -> MoiMistmatchDict:
+    unique_genes: MoiMistmatchDict = {}
 
     genes_with_moi = [g for g in genes if has_non_empty_moi(g.moi)]
     for gene in genes_with_moi:
-        if gene.moi in MULTIPLE_MOI_EXCEPTIONS:
-            continue
         key = gene.name
         if key not in unique_genes:
-            unique_genes[key] = set()
+            unique_genes[key] = {
+                "moi": set(),
+                "gpes": set(),
+            }
 
-        unique_genes[key].add(gene.moi)
+        unique_genes[key]["moi"].add(gene.moi)
+        unique_genes[key]["gpes"].add(gene)
 
-    LOGGER.debug("Genes with non unique MOI: %s", len(unique_genes))
+    mismatching_genes = {
+        key: val for key, val in unique_genes.items() if len(val["moi"]) > 1
+    }
+    LOGGER.debug("Genes with non unique MOI: %s", len(mismatching_genes))
 
-    for key, value in unique_genes.items():
-        if len(value) > 1:
-            yield unique_genes[key], value
+    return mismatching_genes
+
+
+MONOALLELIC_MOI = {
+    "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+    "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
+}
+
+
+def check_is_mismatching_gene(moi_set: Set[str]) -> bool:
+    if moi_set == MONOALLELIC_MOI:
+        return False
+    return len(moi_set) > 1
+
+
+def process_multiple_moi_dict(data: MoiMistmatchDict) -> List[IncorrectMoiGene]:
+    """This doesn't generate every single combination as it would take more time.
+    Example is provided in the tests.
+
+    I.e. each GPES is only processed once.
+
+    :param data: dictionary with genes and values (moi, gpes)
+    :return: List of incorrect moi errors
+    """
+    out = []
+
+    # in test it took ~ 15 seconds to run this for 728 genes
+    # since it runs in async the performance isn't critical factor here, but
+    # something to keep in mind and improve in the future
+
+    for moi_data in data.values():
+        gpes = sorted(moi_data["gpes"], key=lambda g: g.panel_id)
+        out.extend(process_multiple_moi_single_gene(gpes))
+
+    return out
+
+
+def process_multiple_moi_single_gene(gpes):
+    processed = set()  # to avoid processed genes
+    out = []
+
+    for gpe in gpes:
+        for other_gpe in _get_unprocessed_genes(gpes, gpe, processed):
+            out.append(
+                IncorrectMoiGene.from_gene(
+                    gpe, f"Is {other_gpe.moi} on {other_gpe.panel}"
+                )
+            )
+            processed.add(other_gpe)
+        processed.add(gpe)
+
+    return out
+
+
+def _get_unprocessed_genes(genes, current_gene, processed):
+    """Return the list of GPES which don't match current gene moi and haven't been processed
+
+    :param genes: list of GPES
+    :param current_gene: GPES
+    :param processed: set of processed GPES
+    :return: list of GPES which haven't been processed
+    """
+    return [
+        other_gene
+        for other_gene in genes
+        if current_gene.moi != other_gene.moi
+        and other_gene not in processed
+        and {current_gene.moi, other_gene.moi} != MONOALLELIC_MOI
+    ]
 
 
 def has_non_empty_moi(moi: str) -> bool:
@@ -410,7 +542,7 @@ def has_non_empty_moi(moi: str) -> bool:
     return bool(moi and moi != "Unknown")
 
 
-def get_chromosome(gene: GenePanelEntrySnapshot) -> Optional[str]:
+def get_chromosome(gene: "GenePanelEntrySnapshot") -> Optional[str]:
     """Get the chromosome
 
     :param gene: Gene snapshot
@@ -428,7 +560,7 @@ def get_chromosome(gene: GenePanelEntrySnapshot) -> Optional[str]:
 
     LOGGER.warning(
         "Can't get chromosome from gene data",
-        extra_data={"gene_symbol": gene.name, "panel": str(gene.panel)},
+        extra={"gene_symbol": gene.name, "panel": str(gene.panel)},
     )
 
 
@@ -462,17 +594,15 @@ def retrieve_omim_moi(omim_id):
                     moi.update(phenotype_inheritance.split(";"))
     except HTTPError:
         LOGGER.error(
-            "HTTP error on request to OMIM.",
-            exc_info=True,
-            extra_data={"omim_id": omim_id},
+            "HTTP error on request to OMIM.", exc_info=True, extra={"omim_id": omim_id},
         )
     except ValueError:
         LOGGER.error(
             "OMIM response not in JSON format.",
             exc_info=True,
-            extra_data={"omim_id": omim_id},
+            extra={"omim_id": omim_id},
         )
     except Exception as err:
-        LOGGER.error("Unexpected error", exc_info=True, extra_data={"omim_id": omim_id})
+        LOGGER.error("Unexpected error", exc_info=True, extra={"omim_id": omim_id})
 
     return moi

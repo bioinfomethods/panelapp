@@ -179,15 +179,69 @@ LOGOUT_REDIRECT_URL = os.getenv("LOGOUT_REDIRECT_URL", "accounts:login")
 
 # Logging
 
+DJANGO_LOG_LEVEL = os.getenv("DJANGO_LOG_LEVEL", "INFO").upper()
+APP_LOG_LEVEL = os.getenv("APP_LOG_LEVEL", "INFO").upper()
+
+CELERY_WORKER_HIJACK_ROOT_LOGGER = False  # no.
+LOG_FORMATTER_VALUES = [
+    "asctime",
+    "filename",
+    "levelname",
+    "lineno",
+    "module",
+    "message",
+    "name",
+    "pathname",
+    "dd.trace_id",
+    "dd.span_id",
+    "task_id",
+    "task_name",
+]
+
+LOG_FORMAT = " ".join(["%({0:s})".format(name) for name in LOG_FORMATTER_VALUES])
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "json",},},
+    "formatters": {
+        "json": {
+            "()": "panelapp.logs.TaskFormatter",
+            "fmt": LOG_FORMAT,
+            "datefmt": "%Y-%m-%dT%H:%M:%SZ",
+        },
+    },
     "loggers": {
-        "django": {
+        # all other apps
+        "": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL,},
+        # app logs
+        "panelapp": {
             "handlers": ["console"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-        }
+            "level": APP_LOG_LEVEL,
+            "propagate": False,
+        },
+        "panels": {"handlers": ["console"], "level": APP_LOG_LEVEL, "propagate": False},
+        "api": {"handlers": ["console"], "level": APP_LOG_LEVEL, "propagate": False},
+        "webservices": {
+            "handlers": ["console"],
+            "level": APP_LOG_LEVEL,
+            "propagate": False,
+        },
+        "accounts": {
+            "handlers": ["console"],
+            "level": APP_LOG_LEVEL,
+            "propagate": False,
+        },
+        # celery tasks logging
+        "celery.task": {
+            "handlers": ["console"],
+            "level": APP_LOG_LEVEL,
+            "propagate": False,
+        },
+        # these create too much noise if set to DEBUG level
+        "amqp": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "kombu.common": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "celery": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "ddtrace": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
 }
 
@@ -251,11 +305,12 @@ CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "pyamqp://localhost:5672/")
 # Celery Beat Scheduler settings
 CELERY_BEAT_SCHEDULE = {
     "daily-moi-check": {
-        "task": "panels.tasks.moi_check",
+        "task": "panels.tasks.moi_checks.moi_check",
         "schedule": crontab(
             hour=os.getenv("MOI_CHECK_HOUR", 6),
             minute=os.getenv("MOI_CHECK_MINUTE", 30),
         ),
+        "options": {"queue": "panelapp"},
     }
 }
 

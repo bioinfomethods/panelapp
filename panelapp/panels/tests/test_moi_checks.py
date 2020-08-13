@@ -3,6 +3,7 @@ from unittest import mock
 import pytest
 import responses
 from django.core import mail
+from django.utils import timezone
 
 from panels.models import GenePanel
 from panels.tasks.moi_checks import (
@@ -10,13 +11,17 @@ from panels.tasks.moi_checks import (
     get_chromosome,
     get_csv_content,
     get_genes,
+    get_unique_moi_genes,
     has_non_empty_moi,
     moi_check,
     moi_check_chr_x,
     moi_check_is_empty,
+    moi_check_mt,
+    moi_check_non_standard,
     moi_check_other,
     multiple_moi_genes,
     notify_panelapp_curators,
+    process_multiple_moi_dict,
     retrieve_omim_moi,
 )
 from panels.tests.factories import (
@@ -53,8 +58,6 @@ def incorrect_moi():
         panel_name="panel 1",
         panel_id=1,
         moi="moi1",
-        phenotypes="a;b;c",
-        publications="1;2;3",
         message="message",
     )
 
@@ -80,6 +83,7 @@ def test_moi_check(settings):
         saved_gel_status=3,
         moi="BIALLELIC, autosomal or pseudoautosomal",
     )
+    now = timezone.now().strftime("%Y-%m-%d")
 
     with mock.patch(
         "panels.tasks.moi_checks.get_csv_content", return_value="csv content"
@@ -87,7 +91,7 @@ def test_moi_check(settings):
         moi_check()
 
     assert mail.outbox[0].attachments == [
-        ("incorrect_moi.csv", "csv content", "text/csv")
+        (f"incorrect_moi_{now}.csv", "csv content", "text/csv")
     ]
 
 
@@ -97,8 +101,6 @@ def test_incorrect_moi_gene_row(incorrect_moi):
         "panel 1",
         1,
         "moi1",
-        "a;b;c",
-        "1;2;3",
         "message",
     ]
 
@@ -124,15 +126,16 @@ def test_get_genes():
 
 
 def test_notify_panelapp_curators():
+    now = timezone.now().strftime("%Y-%m-%d")
     notify_panelapp_curators("csv content")
 
     assert mail.outbox[0].attachments == [
-        ("incorrect_moi.csv", "csv content", "text/csv")
+        (f"incorrect_moi_{now}.csv", "csv content", "text/csv")
     ]
 
 
 def test_get_csv_content(incorrect_moi):
-    outcome = "gene,panel,panel_id,moi,phenotypes,publications,message\nABC,panel 1,1,moi1,a;b;c,1;2;3,message\n"
+    outcome = "gene,panel,panel_id,moi,message\nABC,panel 1,1,moi1,message\n"
     res = get_csv_content([incorrect_moi])
     assert res == outcome
 
@@ -158,6 +161,7 @@ def test_moi_is_empty(moi, error):
 @pytest.mark.parametrize(
     "moi,chromosome,error",
     [
+        ("Other", "X", True),
         ("Other - please specifiy in evaluation comments", "X", True),
         ("Other - please specifiy in evaluation comments", "Y", False),
     ],
@@ -176,6 +180,25 @@ def test_moi_other(moi, chromosome, error):
 @pytest.mark.parametrize(
     "moi,chromosome,error",
     [
+        ("Other", "MT", True),
+        ("MITOCHONDRIAL", "7", True),
+        ("MITOCHONDRIAL", "MT", False),
+    ],
+)
+def test_moi_mt(moi, chromosome, error):
+    gps = GenePanelSnapshotFactory.build()
+    gene = GenePanelEntrySnapshotFactory.build(panel=gps, moi=moi)
+
+    with mock.patch("panels.tasks.moi_checks.get_chromosome", return_value=chromosome):
+        result = moi_check_mt(gene)
+
+    assert bool(result) is error
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "moi,chromosome,error",
+    [
         (
             "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
             "X",
@@ -185,6 +208,11 @@ def test_moi_other(moi, chromosome, error):
             "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
             "X",
             False,
+        ),
+        (
+            "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
+            "3",
+            True,
         ),
         ("MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted", "Y", False),
         ("MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted", "X", True),
@@ -205,24 +233,130 @@ def test_moi_chr_x(moi, chromosome, error):
     "moi_1,moi_2,count",
     [
         ("A", "A", 0),
-        ("A", "B", 1),
-        ("A", "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted", 0),
-        ("A", "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown", 0),
+        ("A", "B", 2),
+        ("A", "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted", 2),
+        ("A", "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown", 2),
+        (
+            "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+            "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
+            0,
+        ),
     ],
 )
 def test_multiple_moi_genes(moi_1, moi_2, count):
-    """Get genes where gene MOI has different values except MONOALLELIC"""
+    """Get genes where gene MOI has different values
+
+    MOI A (on panel PA) will be compared against other MOI and panels, sorted by
+    panel_id. Instead of 6 Incorrect MOI we should get just 2, as the others are
+    duplicates.
+    """
 
     gene = {"gene_symbol": "GENE1"}
-    gps_1 = GenePanelSnapshotFactory.build()
-    gps_2 = GenePanelSnapshotFactory.build()
-    gene_1 = GenePanelEntrySnapshotFactory.build(panel=gps_1, gene=gene, moi=moi_1)
-    gene_2 = GenePanelEntrySnapshotFactory.build(panel=gps_2, gene=gene, moi=moi_2)
-    gene_3 = GenePanelEntrySnapshotFactory.build(panel=gps_1, gene=gene, moi=moi_2)
+    gps_1 = GenePanelSnapshotFactory(level4title__name="PA")
+    gps_2 = GenePanelSnapshotFactory(level4title__name="PB")
+    gps_3 = GenePanelSnapshotFactory(level4title__name="PC")
+    gene_1 = GenePanelEntrySnapshotFactory(panel=gps_1, gene=gene, moi=moi_1)
+    gene_2 = GenePanelEntrySnapshotFactory(panel=gps_2, gene=gene, moi=moi_2)
+    gene_3 = GenePanelEntrySnapshotFactory(panel=gps_3, gene=gene, moi=moi_2)
 
-    multiple_moi = list(multiple_moi_genes([gene_1, gene_2, gene_3]))
+    result = multiple_moi_genes([gene_1, gene_2, gene_3])
+    multiple_moi = sorted(result, key=lambda x: x.panel_id)
 
     assert count == len(multiple_moi)
+    if count:
+        assert str(gps_1) not in multiple_moi[0].message
+        assert str(gps_1) not in multiple_moi[1].message
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "moi_1,moi_2,count",
+    [
+        ("A", "A", 0),
+        ("A", "B", 1),
+        ("A", "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted", 1),
+        ("A", "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown", 1),
+    ],
+)
+def test_get_unique_moi_genes(moi_1, moi_2, count):
+    """Get genes where gene MOI has different values"""
+
+    gene = {"gene_symbol": "GENE1"}
+    gps_1 = GenePanelSnapshotFactory()
+    gps_2 = GenePanelSnapshotFactory()
+    gene_1 = GenePanelEntrySnapshotFactory(panel=gps_1, gene=gene, moi=moi_1)
+    gene_2 = GenePanelEntrySnapshotFactory(panel=gps_2, gene=gene, moi=moi_2)
+    gene_3 = GenePanelEntrySnapshotFactory(panel=gps_1, gene=gene, moi=moi_2)
+
+    multiple_moi = get_unique_moi_genes([gene_1, gene_2, gene_3])
+
+    assert count == len(multiple_moi)
+
+    if count:
+        assert gene_1.moi in multiple_moi["GENE1"]["moi"]
+        assert gene_1 in multiple_moi["GENE1"]["gpes"]
+        assert gene_3.moi in multiple_moi["GENE1"]["moi"]
+        assert gene_2 in multiple_moi["GENE1"]["gpes"]
+        assert gene_3 in multiple_moi["GENE1"]["gpes"]
+
+
+@pytest.mark.django_db
+def test_process_multiple_moi():
+    gene = {"gene_symbol": "GENE1"}
+    gene_1 = GenePanelEntrySnapshotFactory(gene=gene, moi="A")
+    gene_2 = GenePanelEntrySnapshotFactory(gene=gene, moi="B")
+    gene_3 = GenePanelEntrySnapshotFactory(gene=gene, moi="C")
+    gene_4 = GenePanelEntrySnapshotFactory(gene=gene, moi="D")
+    gene_5 = GenePanelEntrySnapshotFactory(gene=gene, moi="E")
+
+    input_dict = {
+        "GENE1": {
+            "gpes": {gene_1, gene_2, gene_3, gene_4, gene_5},
+            "moi": {"A", "B", "C", "D", "E"},
+        }
+    }
+
+    res = process_multiple_moi_dict(input_dict)
+
+    # (Pdb++) for r in res: print(r.panel, r.moi, r.message)
+    # Panel1 v0.0 A Is B on Panel2 v0.0
+    # Panel1 v0.0 A Is C on Panel3 v0.0
+    # Panel1 v0.0 A Is D on Panel4 v0.0
+    # Panel1 v0.0 A Is E on Panel5 v0.0
+    assert len(res) == 4
+
+
+@pytest.mark.django_db
+def test_process_multiple_moi_exclude_monoallelic():
+    # genes with MONOALLELIC... moi shouldn't be reported as they are treated the same
+    # by the pipeline
+
+    gene = {"gene_symbol": "GENE1"}
+    gene_1 = GenePanelEntrySnapshotFactory(
+        gene=gene, moi="MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted"
+    )
+    gene_2 = GenePanelEntrySnapshotFactory(
+        gene=gene,
+        moi="MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
+    )
+    gene_3 = GenePanelEntrySnapshotFactory(gene=gene, moi="C")
+
+    input_dict = {
+        "GENE1": {
+            "gpes": {gene_1, gene_2, gene_3},
+            "moi": {
+                "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+                "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
+                "C",
+            },
+        }
+    }
+
+    res = process_multiple_moi_dict(input_dict)
+
+    # (Pdb++) for r in res: print(r.panel, r.moi, r.message)
+    # Panel1 v0.0 MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted Is C on Panel3 v0.0
+    assert len(res) == 1
 
 
 @pytest.mark.parametrize(
@@ -235,9 +369,34 @@ def test_non_empty(moi, result):
 @pytest.mark.django_db
 def test_get_chromosome():
     gene = GenePanelEntrySnapshotFactory()
-    gene.gene = {"ensembl_genes": {"GRch37": {"38": {"location": "1:123-234"}}}}
+    gene.gene = {
+        "alias": ["hWNT5A"],
+        "biotype": "protein_coding",
+        "hgnc_id": "HGNC:12784",
+        "gene_name": "Wnt family member 5A",
+        "omim_gene": ["164975"],
+        "alias_name": ["WNT-5A protein"],
+        "gene_symbol": "WNT5A",
+        "hgnc_symbol": "WNT5A",
+        "hgnc_release": "2017-11-03",
+        "ensembl_genes": {
+            "GRch37": {
+                "82": {
+                    "location": "3:55499743-55523973",
+                    "ensembl_id": "ENSG00000114251",
+                }
+            },
+            "GRch38": {
+                "90": {
+                    "location": "3:55465715-55490539",
+                    "ensembl_id": "ENSG00000114251",
+                }
+            },
+        },
+        "hgnc_date_symbol_changed": "1993-07-06",
+    }
 
-    assert "1" == get_chromosome(gene)
+    assert "3" == get_chromosome(gene)
 
 
 @responses.activate
@@ -256,3 +415,19 @@ def test_retrieve_omim_data(settings):
     moi = retrieve_omim_moi(omim_id)
 
     assert "X-linked recessive" in moi
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "moi,error",
+    [
+        ("Unknown", False),
+        ("MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted", False),
+        ("Something", True),
+    ],
+)
+def test_moi_check_non_standard(moi, error):
+    gene = GenePanelEntrySnapshotFactory.build(moi=moi)
+
+    result = moi_check_non_standard(gene)
+    assert bool(result) is error

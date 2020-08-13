@@ -111,6 +111,7 @@ services:
       - USE_SQS=TRUE
       - CELERY_BROKER_URL=sqs://@localstack:4576
 #      - CELERY_BROKER_URL=amqp://rabbitmq/panelapp
+    command: celery worker --app panelapp --task-events --concurrency 1 --loglevel INFO -Q celery,panelapp
 
   beat:
     build:
