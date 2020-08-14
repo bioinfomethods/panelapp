@@ -32,6 +32,7 @@ Emails are scheduled via celery beat, time set in settings.
 import csv
 import logging
 import tempfile
+from enum import Enum
 from functools import lru_cache
 from typing import (
     Any,
@@ -88,13 +89,25 @@ X_LINKED_MOI = {
     "cause disease (may be less severe, later onset than males)",
 }
 
+MONOALLELIC_MOI = {
+    "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+    "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
+}
+
 VALID_MOI_VALUES = [k for k, _ in MODE_OF_INHERITANCE_VALID_CHOICES]
+
+
+class CheckType(Enum):
+    OMIM_COMPARISON = "OMIM Comparison"
+    ACROSS_PANELS_CHECKS = "Across Panel Checks"
+    VALUE_NOT_ALLOWED = "MOI Not Allowed Values"
 
 
 class IncorrectMoiGene:
     """Model to keep the incorrect data for each Gene"""
 
     CSV_HEADER = (
+        "check_type",
         "gene",
         "panel",
         "panel_id",
@@ -105,8 +118,15 @@ class IncorrectMoiGene:
     __slots__ = CSV_HEADER
 
     def __init__(
-        self, gene_name: str, panel_name: str, panel_id: int, moi: str, message: str,
+        self,
+        gene_name: str,
+        panel_name: str,
+        panel_id: int,
+        moi: str,
+        message: str,
+        check_type: CheckType,
     ):
+        self.check_type = check_type
         self.gene = gene_name
         self.panel = panel_name
         self.panel_id = panel_id
@@ -114,13 +134,14 @@ class IncorrectMoiGene:
         self.message = message
 
     @classmethod
-    def from_gene(cls, gene: "GenePanelEntrySnapshot", msg: str):
+    def from_gene(cls, gene: "GenePanelEntrySnapshot", check_type: CheckType, msg: str):
         return cls(
             gene_name=gene.name,
             panel_name=str(gene.panel),
             panel_id=gene.panel.panel_id,
             moi=gene.moi,
             message=msg,
+            check_type=check_type.value,
         )
 
     @property
@@ -290,12 +311,16 @@ def moi_check_omim(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]
 
     omim_ids = gene.gene.get("omim_gene")
     if not omim_ids or len(omim_ids) == 0:
-        return IncorrectMoiGene.from_gene(gene, msg="Gene has no OMIM ID")
+        return IncorrectMoiGene.from_gene(
+            gene, check_type=CheckType.OMIM_COMPARISON, msg="Gene has no OMIM ID"
+        )
 
     moi_prefix = gene.moi.split()[0]
     if moi_prefix not in MOI_MAPPING:
         return IncorrectMoiGene.from_gene(
-            gene, msg="Gene MOI can't be checked with OMIM"
+            gene,
+            check_type=CheckType.OMIM_COMPARISON,
+            msg="Gene MOI can't be checked with OMIM",
         )
 
     omim_id = omim_ids[0]
@@ -321,7 +346,9 @@ def moi_check_omim(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]
         gene.name, omim_moi, gene.moi, gene.panel
     )
 
-    return IncorrectMoiGene.from_gene(gene, msg)
+    return IncorrectMoiGene.from_gene(
+        gene, check_type=CheckType.OMIM_COMPARISON, msg=msg
+    )
 
 
 def moi_check_is_empty(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]:
@@ -335,7 +362,9 @@ def moi_check_is_empty(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiG
         msg = "Green gene {} with {} MOI on panel {}".format(
             gene.name, gene.moi or "empty", gene.panel
         )
-        return IncorrectMoiGene.from_gene(gene, msg)
+        return IncorrectMoiGene.from_gene(
+            gene, check_type=CheckType.VALUE_NOT_ALLOWED, msg=msg
+        )
 
 
 def moi_check_other(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]:
@@ -356,7 +385,9 @@ def moi_check_other(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene
             gene.name, gene.moi, gene.panel
         )
 
-        return IncorrectMoiGene.from_gene(gene, msg)
+        return IncorrectMoiGene.from_gene(
+            gene, check_type=CheckType.VALUE_NOT_ALLOWED, msg=msg
+        )
 
 
 def moi_check_chr_x(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]:
@@ -373,13 +404,17 @@ def moi_check_chr_x(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene
         msg = "Green gene {} on chromosome X with {} MOI on panel {}".format(
             gene.name, gene.moi, gene.panel
         )
-        return IncorrectMoiGene.from_gene(gene, msg)
+        return IncorrectMoiGene.from_gene(
+            gene, check_type=CheckType.VALUE_NOT_ALLOWED, msg=msg
+        )
 
     if chromosome != "X" and moi in X_LINKED_MOI:
         msg = "Green gene {} on chromosome {} with X-LINKED MOI on panel {}".format(
             gene.name, chromosome, gene.panel
         )
-        return IncorrectMoiGene.from_gene(gene, msg)
+        return IncorrectMoiGene.from_gene(
+            gene, check_type=CheckType.VALUE_NOT_ALLOWED, msg=msg
+        )
 
 
 def moi_check_non_standard(gene):
@@ -389,7 +424,9 @@ def moi_check_non_standard(gene):
         msg = "Green gene {} with non-standard {} MOI on panel {}".format(
             gene.name, moi, gene.panel
         )
-        return IncorrectMoiGene.from_gene(gene, msg)
+        return IncorrectMoiGene.from_gene(
+            gene, check_type=CheckType.VALUE_NOT_ALLOWED, msg=msg
+        )
 
 
 def moi_check_mt(gene) -> Optional[IncorrectMoiGene]:
@@ -400,13 +437,17 @@ def moi_check_mt(gene) -> Optional[IncorrectMoiGene]:
         msg = "Green gene {} on chromosome MT with {} MOI on panel {}".format(
             gene.name, gene.moi, gene.panel
         )
-        return IncorrectMoiGene.from_gene(gene, msg)
+        return IncorrectMoiGene.from_gene(
+            gene, check_type=CheckType.VALUE_NOT_ALLOWED, msg=msg
+        )
 
     if chromosome != "MT" and moi == "MITOCHONDRIAL":
         msg = "Green gene {} on chromosome {} with MITOCHONDRIAL MOI on panel {}".format(
             gene.name, chromosome, gene.panel
         )
-        return IncorrectMoiGene.from_gene(gene, msg)
+        return IncorrectMoiGene.from_gene(
+            gene, check_type=CheckType.VALUE_NOT_ALLOWED, msg=msg
+        )
 
 
 #
@@ -468,12 +509,6 @@ def get_unique_moi_genes(genes: List["GenePanelEntrySnapshot"]) -> MoiMistmatchD
     return mismatching_genes
 
 
-MONOALLELIC_MOI = {
-    "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
-    "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
-}
-
-
 def check_is_mismatching_gene(moi_set: Set[str]) -> bool:
     if moi_set == MONOALLELIC_MOI:
         return False
@@ -510,7 +545,9 @@ def process_multiple_moi_single_gene(gpes):
         for other_gpe in _get_unprocessed_genes(gpes, gpe, processed):
             out.append(
                 IncorrectMoiGene.from_gene(
-                    gpe, f"Is {other_gpe.moi} on {other_gpe.panel}"
+                    gpe,
+                    check_type=CheckType.ACROSS_PANELS_CHECKS,
+                    msg=f"Is {other_gpe.moi} on {other_gpe.panel}",
                 )
             )
             processed.add(other_gpe)

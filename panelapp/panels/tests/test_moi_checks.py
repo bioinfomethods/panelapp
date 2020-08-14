@@ -7,6 +7,7 @@ from django.utils import timezone
 
 from panels.models import GenePanel
 from panels.tasks.moi_checks import (
+    CheckType,
     IncorrectMoiGene,
     get_chromosome,
     get_csv_content,
@@ -59,6 +60,7 @@ def incorrect_moi():
         panel_id=1,
         moi="moi1",
         message="message",
+        check_type=CheckType.VALUE_NOT_ALLOWED.value,
     )
 
 
@@ -97,6 +99,7 @@ def test_moi_check(settings):
 
 def test_incorrect_moi_gene_row(incorrect_moi):
     assert incorrect_moi.row == [
+        CheckType.VALUE_NOT_ALLOWED.value,
         "ABC",
         "panel 1",
         1,
@@ -135,7 +138,7 @@ def test_notify_panelapp_curators():
 
 
 def test_get_csv_content(incorrect_moi):
-    outcome = "gene,panel,panel_id,moi,message\nABC,panel 1,1,moi1,message\n"
+    outcome = "check_type,gene,panel,panel_id,moi,message\nMOI Not Allowed Values,ABC,panel 1,1,moi1,message\n"
     res = get_csv_content([incorrect_moi])
     assert res == outcome
 
@@ -155,6 +158,8 @@ def test_moi_is_empty(moi, error):
 
     result = moi_check_is_empty(gene)
     assert bool(result) is error
+    if result:
+        assert result.check_type == CheckType.VALUE_NOT_ALLOWED.value
 
 
 @pytest.mark.django_db
@@ -174,6 +179,8 @@ def test_moi_other(moi, chromosome, error):
         result = moi_check_other(gene)
 
     assert bool(result) is error
+    if result:
+        assert result.check_type == CheckType.VALUE_NOT_ALLOWED.value
 
 
 @pytest.mark.django_db
@@ -193,6 +200,8 @@ def test_moi_mt(moi, chromosome, error):
         result = moi_check_mt(gene)
 
     assert bool(result) is error
+    if result:
+        assert result.check_type == CheckType.VALUE_NOT_ALLOWED.value
 
 
 @pytest.mark.django_db
@@ -226,6 +235,8 @@ def test_moi_chr_x(moi, chromosome, error):
         result = moi_check_chr_x(gene)
 
     assert bool(result) is error
+    if result:
+        assert result.check_type == CheckType.VALUE_NOT_ALLOWED.value
 
 
 @pytest.mark.django_db
@@ -264,6 +275,7 @@ def test_multiple_moi_genes(moi_1, moi_2, count):
 
     assert count == len(multiple_moi)
     if count:
+        assert result[0].check_type == CheckType.ACROSS_PANELS_CHECKS.value
         assert str(gps_1) not in multiple_moi[0].message
         assert str(gps_1) not in multiple_moi[1].message
 
@@ -324,6 +336,7 @@ def test_process_multiple_moi():
     # Panel1 v0.0 A Is D on Panel4 v0.0
     # Panel1 v0.0 A Is E on Panel5 v0.0
     assert len(res) == 4
+    assert res[0].check_type == CheckType.ACROSS_PANELS_CHECKS.value
 
 
 @pytest.mark.django_db
@@ -357,6 +370,7 @@ def test_process_multiple_moi_exclude_monoallelic():
     # (Pdb++) for r in res: print(r.panel, r.moi, r.message)
     # Panel1 v0.0 MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted Is C on Panel3 v0.0
     assert len(res) == 1
+    assert res[0].check_type == CheckType.ACROSS_PANELS_CHECKS.value
 
 
 @pytest.mark.parametrize(
@@ -431,3 +445,5 @@ def test_moi_check_non_standard(moi, error):
 
     result = moi_check_non_standard(gene)
     assert bool(result) is error
+    if result:
+        assert result.check_type == CheckType.VALUE_NOT_ALLOWED.value
