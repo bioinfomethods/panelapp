@@ -31,13 +31,20 @@ class SQS(Resource):
         )
 
         try:
-            boto3.client(
-                "sqs",
-                aws_access_key_id=settings.AWS_ACCESS_KEY_ID,
-                aws_secret_access_key=settings.AWS_SECRET_ACCESS_KEY,
-                region_name=settings.AWS_REGION,
-                endpoint_url=settings.CELERY_BROKER_URL.replace("sqs", "http"),
-            ).get_queue_url(QueueName=settings.CELERY_TASK_DEFAULT_QUEUE)
+            client_config = {
+                "aws_access_key_id": settings.AWS_ACCESS_KEY_ID,
+                "aws_secret_access_key": settings.AWS_SECRET_ACCESS_KEY,
+                "region_name": settings.AWS_REGION,
+            }
+            if "localstack" in settings.CELERY_BROKER_URL:
+                client_config["endpoint_url"] = settings.CELERY_BROKER_URL.replace(
+                    "sqs", "http"
+                )
+
+            boto3.client("sqs", **client_config).get_queue_url(
+                QueueName=settings.CELERY_TASK_DEFAULT_QUEUE
+            )
+
             status = Status.OK
         except Exception as err:
             LOGGER.error(err, exc_info=True)
