@@ -19,6 +19,7 @@ from panels.tasks.moi_checks import (
     moi_check_is_empty,
     moi_check_mt,
     moi_check_non_standard,
+    moi_check_omim,
     moi_check_other,
     multiple_moi_genes,
     notify_panelapp_curators,
@@ -447,3 +448,26 @@ def test_moi_check_non_standard(moi, error):
     assert bool(result) is error
     if result:
         assert result.check_type == CheckType.VALUE_NOT_ALLOWED.value
+
+
+@pytest.mark.django_db
+@mock.patch("panels.tasks.moi_checks.retrieve_omim_moi")
+@pytest.mark.parametrize(
+    "moi,omim_values,error",
+    [
+        ("MONOALLELIC,", {"Autosomal dominant"}, False),
+        ("BOTH", {"Autosomal recessive", "Autosomal dominant"}, False),
+        ("MONOALLELIC,", {"Autosomal recessive"}, True),
+        ("MONOALLELIC,", {"Autosomal recessive", "Autosomal dominant"}, True),
+        ("BOTH", {"Autosomal dominant", "XLD"}, True),
+        ("X-LINKED:", {"Autosomal dominant", "XLD"}, True),
+    ],
+)
+def test_omim_check_multiple(retrieve_omim_mock, moi, omim_values, error):
+    # Report if OMIM MOI links to multiple MOI groups in PanelApp
+
+    retrieve_omim_mock.return_value = omim_values
+    gene = GenePanelEntrySnapshotFactory.build(moi=moi, gene={"omim_gene": ["164975"],})
+
+    res = moi_check_omim(gene)
+    assert bool(res) is error

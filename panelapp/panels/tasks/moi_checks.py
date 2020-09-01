@@ -337,9 +337,9 @@ def moi_check_omim(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]
         )
         return
 
-    moi = set(MOI_MAPPING[moi_prefix])
-    if moi & omim_moi:
-        # all good, we have overlapping MOI
+    groups_found = check_overlaping_group(moi_prefix, omim_moi)
+    if groups_found == {moi_prefix}:
+        # all good, we have matching MOI group
         return
 
     msg = "Green gene {} with discrepant OMIM MOI {} and {} on panel {}".format(
@@ -349,6 +349,30 @@ def moi_check_omim(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]
     return IncorrectMoiGene.from_gene(
         gene, check_type=CheckType.OMIM_COMPARISON, msg=msg
     )
+
+
+def check_overlaping_group(moi_prefix: str, omim_moi: Set[str]) -> Set[str]:
+    """Values in multiple MOI groups should be reported, the only exception is `BOTH`
+    moi value.
+
+    :param moi_prefix: MOI prefix used in MOI_MAPPING
+    :param omim_moi: set of MOI values from OMIM
+    :return: set of MOI_MAPPING keys
+    """
+    groups_found = set()
+
+    for key, val in MOI_MAPPING.items():
+        if (moi_prefix == "BOTH" and key in ["MONOALLELIC,", "BIALLELIC,"]) or (
+            moi_prefix in ["MONOALLELIC,", "BIALLELIC,"] and key == "BOTH"
+        ):
+            continue
+
+        for moi_val in omim_moi:
+            if moi_val in val:
+                groups_found.add(key)
+                break
+
+    return groups_found
 
 
 def moi_check_is_empty(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]:
