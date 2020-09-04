@@ -211,7 +211,7 @@ def moi_check():
                 incorrect_moi.append(incorrect)
                 break
 
-    # add mismatching genes
+    # add mismatching moi
     incorrect_moi.extend(multiple_moi_genes(get_genes()))
 
     if incorrect_moi:
@@ -548,36 +548,27 @@ def process_multiple_moi_dict(data: MoiMistmatchDict) -> List[IncorrectMoiGene]:
     :param data: dictionary with genes and values (moi, gpes)
     :return: List of incorrect moi errors
     """
-    out = []
 
-    # in test it took ~ 15 seconds to run this for 728 genes
-    # since it runs in async the performance isn't critical factor here, but
-    # something to keep in mind and improve in the future
-
-    for moi_data in data.values():
-        gpes = sorted(moi_data["gpes"], key=lambda g: g.panel_id)
-        out.extend(process_multiple_moi_single_gene(gpes))
-
-    return out
+    return [
+        img
+        for moi_data in data.values()
+        for img in process_multiple_moi_single_gene(moi_data["gpes"])  # returns a list
+    ]
 
 
 def process_multiple_moi_single_gene(gpes):
-    processed = set()  # to avoid processed genes
-    out = []
+    processed = {}  # {panel_id1, panel_id2}: Incorrect Moi
 
     for gpe in gpes:
         for other_gpe in _get_unprocessed_genes(gpes, gpe, processed):
-            out.append(
-                IncorrectMoiGene.from_gene(
-                    gpe,
-                    check_type=CheckType.ACROSS_PANELS_CHECKS,
-                    msg=f"Is {other_gpe.moi} on {other_gpe.panel}",
-                )
+            key = frozenset([other_gpe.panel_id, gpe.panel_id])
+            processed[key] = IncorrectMoiGene.from_gene(
+                gpe,
+                check_type=CheckType.ACROSS_PANELS_CHECKS,
+                msg=f"Is {other_gpe.moi} on {other_gpe.panel}",
             )
-            processed.add(other_gpe)
-        processed.add(gpe)
 
-    return out
+    return processed.values()
 
 
 def _get_unprocessed_genes(genes, current_gene, processed):
@@ -592,7 +583,7 @@ def _get_unprocessed_genes(genes, current_gene, processed):
         other_gene
         for other_gene in genes
         if current_gene.moi != other_gene.moi
-        and other_gene not in processed
+        and frozenset([other_gene.panel_id, current_gene.panel_id]) not in processed
         and {current_gene.moi, other_gene.moi} != MONOALLELIC_MOI
     ]
 

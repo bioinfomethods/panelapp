@@ -272,13 +272,10 @@ def test_multiple_moi_genes(moi_1, moi_2, count):
     gene_3 = GenePanelEntrySnapshotFactory(panel=gps_3, gene=gene, moi=moi_2)
 
     result = multiple_moi_genes([gene_1, gene_2, gene_3])
-    multiple_moi = sorted(result, key=lambda x: x.panel_id)
 
-    assert count == len(multiple_moi)
+    assert count == len(result)
     if count:
-        assert result[0].check_type == CheckType.ACROSS_PANELS_CHECKS.value
-        assert str(gps_1) not in multiple_moi[0].message
-        assert str(gps_1) not in multiple_moi[1].message
+        assert {r.check_type for r in result} == {CheckType.ACROSS_PANELS_CHECKS.value}
 
 
 @pytest.mark.django_db
@@ -336,8 +333,15 @@ def test_process_multiple_moi():
     # Panel1 v0.0 A Is C on Panel3 v0.0
     # Panel1 v0.0 A Is D on Panel4 v0.0
     # Panel1 v0.0 A Is E on Panel5 v0.0
-    assert len(res) == 4
-    assert res[0].check_type == CheckType.ACROSS_PANELS_CHECKS.value
+    # Panel2 v0.0 B Is C on Panel3 v0.0
+    # Panel2 v0.0 B Is D on Panel4 v0.0
+    # Panel2 v0.0 B Is E on Panel5 v0.0
+    # Panel3 v0.0 C Is D on Panel4 v0.0
+    # Panel3 v0.0 C Is E on Panel5 v0.0
+    # Panel4 v0.0 D Is E on Panel5 v0.0
+
+    assert len(res) == 10
+    assert {r.check_type for r in res} == {CheckType.ACROSS_PANELS_CHECKS.value}
 
 
 @pytest.mark.django_db
@@ -370,8 +374,9 @@ def test_process_multiple_moi_exclude_monoallelic():
 
     # (Pdb++) for r in res: print(r.panel, r.moi, r.message)
     # Panel1 v0.0 MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted Is C on Panel3 v0.0
-    assert len(res) == 1
-    assert res[0].check_type == CheckType.ACROSS_PANELS_CHECKS.value
+    # Panel2 v0.0 MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown Is C on Panel3 v0.0
+    assert len(res) == 2
+    assert {r.check_type for r in res} == {CheckType.ACROSS_PANELS_CHECKS.value}
 
 
 @pytest.mark.parametrize(
