@@ -70,9 +70,14 @@ MOI_MAPPING = {
         "DOMINANT/RECESSIVE",
         "RECESSIVE/DOMINANT",
     ],
-    "X-LINKED:": [
+    "X-LINKED: hemizygous mutation in males, biallelic mutations in females": [
         "X-linked recessive",
         "XLR",
+        "X-LINKED",
+        "X-linked",
+        "XL",
+    ],
+    "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)": [
         "X-linked dominant",
         "x-linked over-dominance",
         "X-LINKED",
@@ -317,11 +322,13 @@ def moi_check_omim(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]
 
     moi_prefix = gene.moi.split()[0]
     if moi_prefix not in MOI_MAPPING:
-        return IncorrectMoiGene.from_gene(
-            gene,
-            check_type=CheckType.OMIM_COMPARISON,
-            msg="Gene MOI can't be checked with OMIM",
-        )
+        if gene.moi not in MOI_MAPPING:
+            return IncorrectMoiGene.from_gene(
+                gene,
+                check_type=CheckType.OMIM_COMPARISON,
+                msg="Gene MOI can't be checked with OMIM",
+            )
+        moi_prefix = gene.moi
 
     omim_id = omim_ids[0]
     omim_moi = retrieve_omim_moi(omim_id)

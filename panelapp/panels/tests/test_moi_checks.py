@@ -465,7 +465,36 @@ def test_moi_check_non_standard(moi, error):
         ("MONOALLELIC,", {"Autosomal recessive"}, True),
         ("MONOALLELIC,", {"Autosomal recessive", "Autosomal dominant"}, True),
         ("BOTH", {"Autosomal dominant", "XLD"}, True),
-        ("X-LINKED:", {"Autosomal dominant", "XLD"}, True),
+        (
+            "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
+            {"Autosomal dominant", "XLD"},
+            True,
+        ),
+        (
+            "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
+            {"XLR"},
+            False,
+        ),
+        (
+            "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
+            {"XLD"},
+            True,
+        ),
+        (
+            "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
+            {"XLD"},
+            False,
+        ),
+        (
+            "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
+            {"XLR"},
+            True,
+        ),
+        (
+            "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
+            {"XLD", "XLR"},
+            True,
+        ),
     ],
 )
 def test_omim_check_multiple(retrieve_omim_mock, moi, omim_values, error):
