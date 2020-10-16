@@ -280,7 +280,9 @@ class GeneTest(LoginGELUser):
             == 3
         )
 
-        url = reverse_lazy("panels:entity_detail", kwargs={"slug": gene.gene_symbol})
+        url = reverse_lazy(
+            "panels:entity_detail", kwargs={"entity_name": gene.gene_symbol}
+        )
         res = self.client.get(url)
         assert len(res.context_data["entries"]) == 3
 
@@ -311,7 +313,9 @@ class GeneTest(LoginGELUser):
             2,
         )
 
-        url = reverse_lazy("panels:entity_detail", kwargs={"slug": gene.gene_symbol})
+        url = reverse_lazy(
+            "panels:entity_detail", kwargs={"entity_name": gene.gene_symbol}
+        )
         res = self.client.get(url)
         self.assertEqual(len(res.context_data["entries"]), 2)
 

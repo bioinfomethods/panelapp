@@ -36,6 +36,7 @@ from panels.models import (
     HistoricalSnapshot,
 )
 from panels.tasks.panels import email_panel_promoted
+from panels.tests._utils import get_test_request_messages
 from panels.tests.factories import (
     EvidenceFactory,
     GeneFactory,
@@ -218,13 +219,14 @@ class GenePanelTest(LoginGELUser):
         )
         res = self.client.get(url, HTTP_X_REQUESTED_WITH="XMLHttpRequest")
 
+        assert res.json().get("status") == 200
+        assert res.json().get("content").get("inner-fragments")
+
         new_gps = GenePanel.objects.get(pk=gps.panel.pk).active_panel
         assert new_gps.has_gene(gene_symbol) is False
         assert number_of_genes - 1 == new_gps.stats.get(
             "number_of_genes"
         )  # 4 is due to create_batch
-        assert res.json().get("status") == 200
-        assert res.json().get("content").get("inner-fragments")
 
     def test_active_panel(self):
         """
@@ -337,6 +339,9 @@ class GenePanelTest(LoginGELUser):
         self.assertEqual(r.status_code, 200)
 
     def test_import_panel(self):
+        GenePanelSnapshotFactory(panel__name="TestPanel")
+        GenePanelSnapshotFactory(panel__name="Panel One")
+
         GeneFactory(gene_symbol="ABCC5-AS1")
         GeneFactory(gene_symbol="A1CF")
         str_1 = GeneFactory(gene_symbol="STR_1")
@@ -384,21 +389,29 @@ class GenePanelTest(LoginGELUser):
             type_of_variants="cnv_gain",
             verbose_name="Verbose name",
             required_overlap_percentage=10,
+            triplosensitivity_score="0",
         )
 
-        file_path = os.path.join(os.path.dirname(__file__), "import_panel_data.tsv")
+        file_path = os.path.join(
+            os.path.dirname(__file__), "tsv_files/import_panel_data.tsv"
+        )
         test_panel_file = os.path.abspath(file_path)
 
         with open(test_panel_file) as f:
             url = reverse_lazy("panels:upload_panels")
             res = self.client.post(url, {"panel_list": f})
 
+        error_messages = get_test_request_messages(res.wsgi_request, 25)
         gp = GenePanel.objects.get(name="Panel One")
         active_panel = gp.active_panel
         entries = active_panel.get_all_genes
+        assert len(error_messages) == 0
         self.assertEqual(entries.count(), 2)
 
     def test_import_regions(self):
+        GenePanelSnapshotFactory(panel__name="TestPanel")
+        GenePanelSnapshotFactory(panel__name="Panel One")
+
         GeneFactory(gene_symbol="ABCC5-AS1")
         GeneFactory(gene_symbol="A1CF")
         str_1 = GeneFactory(gene_symbol="STR_1")
@@ -446,20 +459,28 @@ class GenePanelTest(LoginGELUser):
             type_of_variants="cnv_gain",
             verbose_name="Verbose name",
             required_overlap_percentage=10,
+            triplosensitivity_score="0",
         )
 
-        file_path = os.path.join(os.path.dirname(__file__), "import_panel_data.tsv")
+        file_path = os.path.join(
+            os.path.dirname(__file__), "tsv_files/import_panel_data.tsv"
+        )
         test_panel_file = os.path.abspath(file_path)
 
         with open(test_panel_file) as f:
             url = reverse_lazy("panels:upload_panels")
             res = self.client.post(url, {"panel_list": f})
 
+        error_messages = get_test_request_messages(res.wsgi_request, 25)
         gp = GenePanel.objects.get(name="Panel One")
         active_panel = gp.active_panel
+        assert len(error_messages) == 0
         self.assertEqual(active_panel.get_all_regions.count(), 1)
 
     def test_import_strs(self):
+        GenePanelSnapshotFactory(panel__name="TestPanel")
+        GenePanelSnapshotFactory(panel__name="Panel One")
+
         GeneFactory(gene_symbol="ABCC5-AS1")
         GeneFactory(gene_symbol="A1CF")
         gene = GeneFactory(gene_symbol="STR_1")
@@ -506,24 +527,32 @@ class GenePanelTest(LoginGELUser):
             position_38=NumericRange(341468368, 341468388),
             type_of_variants="cnv_gain",
             verbose_name="Verbose name",
+            triplosensitivity_score="0",
             required_overlap_percentage=10,
         )
 
-        file_path = os.path.join(os.path.dirname(__file__), "import_panel_data.tsv")
+        file_path = os.path.join(
+            os.path.dirname(__file__), "tsv_files/import_panel_data.tsv"
+        )
         test_panel_file = os.path.abspath(file_path)
         with open(test_panel_file) as f:
             url = reverse_lazy("panels:upload_panels")
-            self.client.post(url, {"panel_list": f})
+            res = self.client.post(url, {"panel_list": f})
+
+        error_messages = get_test_request_messages(res.wsgi_request, 25)
 
         self.assertEqual(GenePanel.objects.count(), 6)
         gp = GenePanel.objects.get(name="TestPanel")
         active_panel = gp.active_panel
+        assert len(error_messages) == 0
         self.assertEqual(active_panel.get_all_strs.count(), 3)
         self.assertEqual(active_panel.get_str("STR_1").gene_core, gene)
         self.assertEqual(active_panel.get_str("STR_2").gene_core, str_2)
         self.assertEqual(active_panel.get_str("STR_3").gene_core, str_3)
 
     def test_import_panel_sources(self):
+        GenePanelSnapshotFactory(panel__name="TestPanel")
+
         gene = GeneFactory(gene_symbol="ABCC5-AS1")
         A1CF = GeneFactory(gene_symbol="A1CF")
         str_1 = GeneFactory(gene_symbol="STR_1")
@@ -571,6 +600,7 @@ class GenePanelTest(LoginGELUser):
             type_of_variants="cnv_gain",
             verbose_name="Verbose name",
             required_overlap_percentage=10,
+            triplosensitivity_score="0",
         )
 
         gps = GenePanelSnapshotFactory()
@@ -586,41 +616,118 @@ class GenePanelTest(LoginGELUser):
             gps.get_gene(gene.gene_symbol).evidence.first().name, "Expert Review Amber"
         )
 
-        file_path = os.path.join(os.path.dirname(__file__), "import_panel_data.tsv")
-        test_panel_file = os.path.abspath(file_path)
-
-        with open(test_panel_file) as f:
-            url = reverse_lazy("panels:upload_panels")
-            self.client.post(url, {"panel_list": f})
-
-        ap = GenePanel.objects.get(name="Panel One").active_panel
-        self.assertEqual(
-            ap.get_gene(gene.gene_symbol).evidence.first().name, "Expert Review Green"
-        )
-        self.assertEqual(ap.get_gene(gene.gene_symbol).evidence.count(), 1)
-        self.assertEqual(sorted(ap.get_gene("A1CF").phenotypes), sorted(["57h", "wef"]))
-
-    def test_import_incorrect_position(self):
-        GeneFactory(gene_symbol="STR_1")
-
         file_path = os.path.join(
-            os.path.dirname(__file__), "import_panel_data_error.tsv"
+            os.path.dirname(__file__), "tsv_files/import_panel_data.tsv"
         )
         test_panel_file = os.path.abspath(file_path)
 
         with open(test_panel_file) as f:
             url = reverse_lazy("panels:upload_panels")
             res = self.client.post(url, {"panel_list": f})
-            messages = [str(m) for m in res.wsgi_request._messages]
-            expected_messages = [
-                "Line: 3 Incorrect STR Name, 4 Incorrect Region Name, 5 Incorrect Region Name, 6 Incorrect MOI is not properly formatted, please check it and try again."
-            ]
-            self.assertEqual(expected_messages, messages)
 
-        self.assertEqual(GenePanel.objects.count(), 0)
+        ap = GenePanel.objects.get(name="Panel One").active_panel
+        error_messages = get_test_request_messages(res.wsgi_request, 25)
+        assert len(error_messages) == 0
+        self.assertEqual(
+            ap.get_gene(gene.gene_symbol).evidence.first().name, "Expert Review Green"
+        )
+        self.assertEqual(ap.get_gene(gene.gene_symbol).evidence.count(), 1)
+        self.assertEqual(sorted(ap.get_gene("A1CF").phenotypes), sorted(["57h", "wef"]))
+
+    def test_import_incorrect_str(self):
+        GeneFactory(gene_symbol="STR_1")
+        GenePanelSnapshotFactory(panel__name="TestPanel")
+        GenePanelSnapshotFactory(panel__name="Panel One")
+
+        file_path = os.path.join(
+            os.path.dirname(__file__), "tsv_files/panel_error_str.tsv"
+        )
+        test_panel_file = os.path.abspath(file_path)
+
+        with open(test_panel_file) as f:
+            url = reverse_lazy("panels:upload_panels")
+            res = self.client.post(url, {"panel_list": f})
+            error_messages = get_test_request_messages(res.wsgi_request, 25)
+            expected_messages = [
+                "Can't find following STRs: STR_1, please check it and try again."
+            ]
+            self.assertEqual(expected_messages, error_messages)
+
+    def test_import_incorrect_str_position(self):
+        GeneFactory(gene_symbol="STR_1")
+        GenePanelSnapshotFactory(panel__name="TestPanel")
+        GenePanelSnapshotFactory(panel__name="Panel One")
+
+        file_path = os.path.join(
+            os.path.dirname(__file__), "tsv_files/panel_error_str_missing_position.tsv"
+        )
+        test_panel_file = os.path.abspath(file_path)
+
+        with open(test_panel_file) as f:
+            url = reverse_lazy("panels:upload_panels")
+            res = self.client.post(url, {"panel_list": f})
+            error_messages = get_test_request_messages(res.wsgi_request, 25)
+            expected_messages = [
+                "Can't find following STRs: STR_1, please check it and try again."
+            ]
+            self.assertEqual(expected_messages, error_messages)
+
+    def test_import_incorrect_moi(self):
+        gene = GeneFactory(gene_symbol="STR_1")
+        GenePanelSnapshotFactory(panel__name="TestPanel")
+        GenePanelSnapshotFactory(panel__name="Panel One")
+
+        STRFactory(
+            name="STR_1",
+            moi="MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            chromosome="1",
+            position_37=NumericRange(12, 20),
+            position_38=NumericRange(12, 20),
+            repeated_sequence="AT",
+            normal_repeats=10,
+            pathogenic_repeats=889,
+            gene_core=gene,
+        )
+
+        file_path = os.path.join(
+            os.path.dirname(__file__), "tsv_files/panel_error_moi.tsv"
+        )
+        test_panel_file = os.path.abspath(file_path)
+
+        with open(test_panel_file) as f:
+            url = reverse_lazy("panels:upload_panels")
+            res = self.client.post(url, {"panel_list": f})
+            error_messages = get_test_request_messages(res.wsgi_request, 25)
+            expected_messages = [
+                "Row 2, column 'moi' is invalid: Incorrect MOI: None",
+            ]
+            self.assertEqual(expected_messages, error_messages)
+
+    def test_import_incorrect_region(self):
+        GenePanelSnapshotFactory(panel__name="TestPanel")
+        GenePanelSnapshotFactory(panel__name="Panel One")
+
+        file_path = os.path.join(
+            os.path.dirname(__file__), "tsv_files/panel_error_region.tsv"
+        )
+        test_panel_file = os.path.abspath(file_path)
+
+        with open(test_panel_file) as f:
+            url = reverse_lazy("panels:upload_panels")
+            res = self.client.post(url, {"panel_list": f})
+            error_messages = get_test_request_messages(res.wsgi_request, 25)
+            expected_messages = [
+                "Can't find following Regions: ISCA-37477, ISCA-37478, ISCA-37479, please check it and try again."
+            ]
+            self.assertEqual(expected_messages, error_messages)
 
     def test_import_wrong_panel(self):
-        file_path = os.path.join(os.path.dirname(__file__), "import_panel_data.tsv")
+        GenePanelSnapshotFactory(panel__name="TestPanel")
+        GenePanelSnapshotFactory(panel__name="Panel One")
+
+        file_path = os.path.join(
+            os.path.dirname(__file__), "tsv_files/import_panel_data.tsv"
+        )
         test_panel_file = os.path.abspath(file_path)
 
         with open(test_panel_file) as f:

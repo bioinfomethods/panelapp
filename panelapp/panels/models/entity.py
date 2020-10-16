@@ -567,7 +567,7 @@ class AbstractEntity:
             user, "Classified {} as {}".format(self.label, human_status), self
         )
 
-    def update_evaluation(self, user, evaluation_data):
+    def update_evaluation(self, user, evaluation_data, append_only=False):
         """
         This method adds or updates an evaluation in case the user has already
         added an evaluation in the past. In this case it just checks the new values
@@ -585,7 +585,8 @@ class AbstractEntity:
                 - moi
                 - current_diagnostic
                 - rating
-
+            append_only (bool): if True publications and phenotypes will be added
+                rather than overwritten.
         returns:
             Evaluation: new or updated evaluation
         """
@@ -624,17 +625,27 @@ class AbstractEntity:
             publications = evaluation_data.get("publications")
             if publications and evaluation.publications != publications:
                 changed = True
-                evaluation.publications = publications
+                new_publications = (
+                    list(set(publications + evaluation.publications))
+                    if append_only
+                    else publications
+                )
+                evaluation.publications = new_publications
                 activities.append(
-                    "Changed publications: {}".format(", ".join(publications))
+                    "Changed publications to: {}".format(", ".join(new_publications))
                 )
 
             phenotypes = evaluation_data.get("phenotypes")
             if phenotypes and evaluation.phenotypes != phenotypes:
                 changed = True
-                evaluation.phenotypes = phenotypes
+                new_phenotypes = (
+                    list(set(phenotypes + evaluation.phenotypes))
+                    if append_only
+                    else phenotypes
+                )
+                evaluation.phenotypes = new_phenotypes
                 activities.append(
-                    "Changed phenotypes: {}".format(", ".join(phenotypes))
+                    "Changed phenotypes to: {}".format(", ".join(new_phenotypes))
                 )
 
             moi = evaluation_data.get("moi")

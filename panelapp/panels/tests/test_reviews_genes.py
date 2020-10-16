@@ -36,6 +36,7 @@ from panels.models import (
     GenePanel,
     GenePanelSnapshot,
 )
+from panels.tests._utils import get_test_request_messages
 from panels.tests.factories import (
     GeneFactory,
     GenePanelEntrySnapshotFactory,
@@ -746,14 +747,18 @@ class GeneReviewTest(LoginGELUser):
             gene_core=gene2, panel=gps, evaluation=(None,)
         )
 
-        file_path = os.path.join(os.path.dirname(__file__), "import_reviews_data.tsv")
+        file_path = os.path.join(
+            os.path.dirname(__file__), "tsv_files/import_reviews_data.tsv"
+        )
         test_reviews_file = os.path.abspath(file_path)
 
         with open(test_reviews_file) as f:
             url = reverse_lazy("panels:upload_reviews")
-            self.client.post(url, {"review_list": f})
+            res = self.client.post(url, {"review_list": f})
 
-        ap = GenePanel.objects.get(name="Panel One").active_panel
+        error_messages = get_test_request_messages(res.wsgi_request, 25)
+        ap = GenePanelSnapshot.objects.get(panel__name="Panel One")
+        assert len(error_messages) == 0
         assert ap.get_gene(gene.gene_symbol).evaluation.count() == 1
         assert ap.get_gene(gene2.gene_symbol).evaluation.count() == 1
         assert current_version != ap.version
@@ -768,16 +773,18 @@ class GeneReviewTest(LoginGELUser):
         )
 
         file_path = os.path.join(
-            os.path.dirname(__file__), "import_review_data_error.tsv"
+            os.path.dirname(__file__), "tsv_files/import_review_data_error.tsv"
         )
         test_reviews_file = os.path.abspath(file_path)
 
         with open(test_reviews_file) as f:
             url = reverse_lazy("panels:upload_reviews")
             res = self.client.post(url, {"review_list": f})
-            messages = [str(m) for m in res.wsgi_request._messages]
-            expected_messages = ["Line: 2 has incorrect Gene rating: INVALID-RANK"]
-            assert messages == expected_messages
+            error_messages = get_test_request_messages(res.wsgi_request, 25)
+            expected_messages = [
+                "Row 2, column 'rating' is invalid: Incorrect gene rating: INVALID-RANK"
+            ]
+            assert error_messages == expected_messages
 
         ap = GenePanel.objects.get(name="Panel One").active_panel
         assert ap.get_gene(gene.gene_symbol).evaluation.count() == 0

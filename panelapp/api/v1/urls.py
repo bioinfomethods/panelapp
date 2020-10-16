@@ -45,44 +45,42 @@ from .viewsets import (
 
 router = routers.DefaultRouter()
 
-router.register(
-    r"panels/signedoff", SignedOffPanelViewSet, base_name="signedoff_panels"
-)
-router.register(r"panels", PanelsViewSet, base_name="panels")
+router.register(r"panels/signedoff", SignedOffPanelViewSet, basename="signedoff_panels")
+router.register(r"panels", PanelsViewSet, basename="panels")
 
 genes_router = routers.NestedSimpleRouter(router, r"panels", lookup="panel")
-genes_router.register(r"genes", GeneViewSet, base_name="panels_genes")
+genes_router.register(r"genes", GeneViewSet, basename="panels_genes")
 
 genes_evaluations_router = routers.NestedSimpleRouter(
     genes_router, r"genes", lookup="gene"
 )
 genes_evaluations_router.register(
-    r"evaluations", GeneEvaluationsViewSet, base_name="genes-evaluations"
+    r"evaluations", GeneEvaluationsViewSet, basename="genes-evaluations"
 )
 
 strs_router = routers.NestedSimpleRouter(router, r"panels", lookup="panel")
-strs_router.register(r"strs", STRViewSet, base_name="panels-strs")
+strs_router.register(r"strs", STRViewSet, basename="panels-strs")
 
 strs_evaluations_router = routers.NestedSimpleRouter(strs_router, r"strs", lookup="str")
 strs_evaluations_router.register(
-    r"evaluations", STREvaluationsViewSet, base_name="strs-evaluations"
+    r"evaluations", STREvaluationsViewSet, basename="strs-evaluations"
 )
 
 regions_router = routers.NestedSimpleRouter(router, r"panels", lookup="panel")
-regions_router.register(r"regions", RegionViewSet, base_name="panels-regions")
+regions_router.register(r"regions", RegionViewSet, basename="panels-regions")
 
 regions_evaluations_router = routers.NestedSimpleRouter(
     regions_router, r"regions", lookup="region"
 )
 regions_evaluations_router.register(
-    r"evaluations", RegionEvaluationsViewSet, base_name="regions-evaluations"
+    r"evaluations", RegionEvaluationsViewSet, basename="regions-evaluations"
 )
 
-router.register(r"activities", ActivityViewSet, base_name="activities")
-router.register(r"genes", GeneSearchViewSet, base_name="genes")
-router.register(r"strs", STRSearchViewSet, base_name="strs")
-router.register(r"regions", RegionSearchViewSet, base_name="regions")
-router.register(r"entities", EntitySearchViewSet, base_name="entities")
+router.register(r"activities", ActivityViewSet, basename="activities")
+router.register(r"genes", GeneSearchViewSet, basename="genes")
+router.register(r"strs", STRSearchViewSet, basename="strs")
+router.register(r"regions", RegionSearchViewSet, basename="regions")
+router.register(r"entities", EntitySearchViewSet, basename="entities")
 
 
 app_name = "apiv1"

@@ -21,8 +21,19 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+from typing import List
+
+
 class ImportException(Exception):
-    pass
+    def __init__(self, message):
+        self.message = message
+
+
+class ImportValidationError(ImportException):
+    def __init__(self, message, invalid_rows: List[str]):
+        super().__init__(message)
+
+        self.invalid_rows = invalid_rows
 
 
 class UsersDoNotExist(ImportException):
@@ -30,6 +41,14 @@ class UsersDoNotExist(ImportException):
 
 
 class GenesDoNotExist(ImportException):
+    pass
+
+
+class STRsDoNotExist(ImportException):
+    pass
+
+
+class RegionsDoNotExist(ImportException):
     pass
 
 

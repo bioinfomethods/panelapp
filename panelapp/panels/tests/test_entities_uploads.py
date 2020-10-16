@@ -1,6 +1,6 @@
 import pytest
 
-from panels.models.import_tools import get_missing_genes
+from panels.models.uploaded_panel_list import get_missing_genes
 from panels.tests.factories import GeneFactory
 
 

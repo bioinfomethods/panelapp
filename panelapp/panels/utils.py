@@ -23,6 +23,24 @@
 ##
 import re
 
+from panels.exceptions import TSVIncorrectFormat
+
 
 def remove_non_ascii(text, replacemenet=" "):
     return re.sub(r"[^\x00-\x7F]+", " ", text)
+
+
+def clean_tsv_value(value, key):
+    """
+    Check tsv value for non-ascii characters and clean tabs, quotes and extra spaces
+    :param value:
+    :param key:
+    :return:
+    """
+
+    try:
+        value.encode("ascii")
+    except UnicodeDecodeError:
+        raise TSVIncorrectFormat(f"Line: {key} Invalid Character")
+
+    return value.replace("\t", " ").replace('"', "").strip()

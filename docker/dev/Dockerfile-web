@@ -1,4 +1,4 @@
-FROM python:3.6-jessie
+FROM python:3.8-buster
 
 RUN mkdir -p /app/panelapp
 
@@ -34,4 +34,3 @@ CMD ["python", "manage.py", "runserver_plus"]
 
 # runserver_plus exposes 8000
 EXPOSE 8000
-

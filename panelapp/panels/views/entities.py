@@ -615,22 +615,23 @@ class EntityDetailView(DetailView):
 
     def get_object(self, queryset=None):
         try:
-            return self.model.objects.get(gene_symbol=self.kwargs["slug"])
+            return self.model.objects.get(gene_symbol=self.kwargs["entity_name"])
         except self.model.DoesNotExist:
             # try STR
             try:
-                return get_list_or_404(STR, name=self.kwargs["slug"])[0]
+                return get_list_or_404(STR, name=self.kwargs["entity_name"])[0]
             except Http404:
                 # try region
-                return get_list_or_404(Region, name=self.kwargs["slug"])[0]
+                return get_list_or_404(Region, name=self.kwargs["entity_name"])[0]
 
     def get_context_data(self, *args, **kwargs):
         """Context data for Gene Detail page"""
 
         ctx = super().get_context_data(*args, **kwargs)
         tag_filter = self.request.GET.get("tag_filter", None)
+        entity_name = self.kwargs["entity_name"]
         ctx["tag_filter"] = tag_filter
-        ctx["gene_symbol"] = self.kwargs["slug"]
+        ctx["gene_symbol"] = entity_name
 
         statuses = [GenePanel.STATUS.public, GenePanel.STATUS.promoted]
         is_admin_user = (
@@ -642,12 +643,12 @@ class EntityDetailView(DetailView):
 
         gps = list(
             GenePanelSnapshot.objects.get_shared_panels(
-                self.kwargs["slug"], all=is_admin_user, internal=is_admin_user
+                entity_name, all=is_admin_user, internal=is_admin_user
             ).values_list("pk", flat=True)
         )
 
         entries_genes = GenePanelEntrySnapshot.objects.get_gene_panels(
-            self.kwargs["slug"], pks=gps
+            entity_name, pks=gps
         ).annotate(
             superpanels_names=ArrayAgg(
                 "panel__genepanelsnapshot__level4title__name",
@@ -658,11 +659,9 @@ class EntityDetailView(DetailView):
 
         if isinstance(self.object, STR):
             # we couldn't find a gene linked to this STR, lookup by name
-            entries_strs = STR.objects.get_str_panels(name=self.kwargs["slug"], pks=gps)
+            entries_strs = STR.objects.get_str_panels(name=entity_name, pks=gps)
         else:
-            entries_strs = STR.objects.get_gene_panels(
-                gene_symbol=self.kwargs["slug"], pks=gps
-            )
+            entries_strs = STR.objects.get_gene_panels(gene_symbol=entity_name, pks=gps)
 
         entries_strs = entries_strs.annotate(
             superpanels_names=ArrayAgg(
@@ -675,11 +674,11 @@ class EntityDetailView(DetailView):
         if isinstance(self.object, Region):
             # we couldn't find a gene linked to this STR, lookup by name
             entries_regions = Region.objects.get_region_panels(
-                name=self.kwargs["slug"], pks=gps
+                name=entity_name, pks=gps
             )
         else:
             entries_regions = Region.objects.get_gene_panels(
-                gene_symbol=self.kwargs["slug"], pks=gps
+                gene_symbol=entity_name, pks=gps
             )
 
         entries_regions = entries_regions.annotate(
@@ -782,7 +781,7 @@ class GeneDetailRedirectView(RedirectView):
 
     def dispatch(self, request, *args, **kwargs):
         self.url = reverse_lazy(
-            "panels:entity_detail", kwargs={"slug": self.kwargs["slug"]}
+            "panels:entity_detail", kwargs={"entity_name": self.kwargs["entity_name"]}
         )
         return super().dispatch(request, *args, **kwargs)
 

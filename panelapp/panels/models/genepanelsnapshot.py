@@ -69,6 +69,8 @@ from .Level4Title import Level4Title
 from .tag import Tag
 from .trackrecord import TrackRecord
 
+LOGGER = logging.getLogger(__name__)
+
 
 class GenePanelSnapshotManager(models.Manager):
     def get_latest_ids(self, deleted=False, exclude_superpanels=False):
@@ -1379,14 +1381,14 @@ class GenePanelSnapshot(TimeStampedModel):
         if self.is_super_panel:
             raise IsSuperPanelException
 
-        logging.debug(
+        LOGGER.debug(
             "Updating gene:{} panel:{} gene_data:{}".format(
                 gene_symbol, self, gene_data
             )
         )
         has_gene = self.has_gene(gene_symbol=gene_symbol)
         if has_gene:
-            logging.debug(
+            LOGGER.debug(
                 "Found gene:{} in panel:{}. Incrementing version.".format(
                     gene_symbol, self
                 )
@@ -1401,7 +1403,7 @@ class GenePanelSnapshot(TimeStampedModel):
                 ev.strip() for ev in gene.evidence.values_list("name", flat=True)
             ]
 
-            logging.debug(
+            LOGGER.debug(
                 "Updating evidences_names for gene:{} in panel:{}".format(
                     gene_symbol, self
                 )
@@ -1440,7 +1442,7 @@ class GenePanelSnapshot(TimeStampedModel):
                         evs = gene.evidence.filter(name=source)
                         for ev in evs:
                             gene.evidence.remove(ev)
-                        logging.debug(
+                        LOGGER.debug(
                             "Removing evidence:{} for gene:{} panel:{}".format(
                                 source, gene_symbol, self
                             )
@@ -1453,7 +1455,7 @@ class GenePanelSnapshot(TimeStampedModel):
                         )
 
                 for source in add_evidences:
-                    logging.debug(
+                    LOGGER.debug(
                         "Adding new source:{} for gene:{} panel:{}".format(
                             source, gene_symbol, self
                         )
@@ -1470,7 +1472,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             moi = gene_data.get("moi")
             if moi and gene.moi != moi and not gene_symbol.startswith("MT-"):
-                logging.debug(
+                LOGGER.debug(
                     "Updating moi for gene:{} in panel:{}".format(gene_symbol, self)
                 )
 
@@ -1482,7 +1484,7 @@ class GenePanelSnapshot(TimeStampedModel):
                     (TrackRecord.ISSUE_TYPES.SetModeofInheritance, description)
                 )
             elif gene_symbol.startswith("MT-") and gene.moi != "MITOCHONDRIAL":
-                logging.debug(
+                LOGGER.debug(
                     "Updating moi for gene:{} in panel:{}".format(gene_symbol, self)
                 )
                 gene.moi = "MITOCHONDRIAL"
@@ -1496,7 +1498,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             mop = gene_data.get("mode_of_pathogenicity")
             if mop and gene.mode_of_pathogenicity != mop:
-                logging.debug(
+                LOGGER.debug(
                     "Updating mop for gene:{} in panel:{}".format(gene_symbol, self)
                 )
 
@@ -1510,7 +1512,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             phenotypes = gene_data.get("phenotypes")
             if phenotypes:
-                logging.debug(
+                LOGGER.debug(
                     "Updating phenotypes for {} in panel:{}".format(gene.label, self)
                 )
 
@@ -1532,7 +1534,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             penetrance = gene_data.get("penetrance")
             if penetrance and gene.penetrance != penetrance:
-                logging.debug(
+                LOGGER.debug(
                     "Updating penetrance for gene:{} in panel:{}".format(
                         gene_symbol, self
                     )
@@ -1545,32 +1547,24 @@ class GenePanelSnapshot(TimeStampedModel):
 
             publications = gene_data.get("publications")
             if publications and gene.publications != publications:
-                logging.debug(
-                    "Updating publications for gene:{} in panel:{}".format(
-                        gene_symbol, self
-                    )
-                )
+                LOGGER.debug(f"Updating publications for {gene.label} in panel:{self}")
 
-                if append_only:
-                    new_publications = list(set(publications + gene.publications))
-                    description = "Publications for gene {} were updated from {} to {}".format(
-                        gene_symbol,
-                        "; ".join(gene.publications),
-                        "; ".join(new_publications),
-                    )
-                    gene.publications = new_publications
-                else:
-                    gene.publications = publications
-                    description = "Publications for gene {} were changed from {} to {}".format(
-                        gene_symbol,
-                        "; ".join(gene.publications),
-                        "; ".join(publications),
-                    )
+                new_publications = (
+                    list(set(publications + gene.publications))
+                    if append_only
+                    else publications
+                )
+                description = f"Publications for {gene.label} were updated from {'; '.join(gene.publications)} to {'; '.join(new_publications)}"
+                gene.publications = new_publications
+
                 tracks.append((TrackRecord.ISSUE_TYPES.SetPublications, description))
+                LOGGER.debug(
+                    "Updating publications for {} in panel:{}".format(gene.label, self)
+                )
 
             transcript = gene_data.get("transcript")
             if transcript and gene.transcript != transcript:
-                logging.debug(
+                LOGGER.debug(
                     "Updating transcripts for gene:{} in panel:{}".format(
                         gene_symbol, self
                     )
@@ -1608,7 +1602,7 @@ class GenePanelSnapshot(TimeStampedModel):
                     for tag in delete_tags:
                         tag = gene.tags.get(pk=tag)
                         gene.tags.remove(tag)
-                        logging.debug(
+                        LOGGER.debug(
                             "Removing tag:{} for gene:{} panel:{}".format(
                                 tag.name, gene_symbol, self
                             )
@@ -1619,7 +1613,7 @@ class GenePanelSnapshot(TimeStampedModel):
                         tracks.append((TrackRecord.ISSUE_TYPES.RemovedTag, description))
 
                 for tag in add_tags:
-                    logging.debug(
+                    LOGGER.debug(
                         "Adding new tag:{} for gene:{} panel:{}".format(
                             tag, gene_symbol, self
                         )
@@ -1630,7 +1624,7 @@ class GenePanelSnapshot(TimeStampedModel):
                     tracks.append((TrackRecord.ISSUE_TYPES.AddedTag, description))
 
             if tracks:
-                logging.debug(
+                LOGGER.debug(
                     "Adding tracks for gene:{} in panel:{}".format(gene_symbol, self)
                 )
                 current_status = gene.saved_gel_status
@@ -1675,7 +1669,7 @@ class GenePanelSnapshot(TimeStampedModel):
             gene_name = gene_data.get("gene_name")
 
             if new_gene and gene.gene_core != new_gene:
-                logging.debug(
+                LOGGER.debug(
                     "Gene:{} in panel:{} has changed to gene:{}".format(
                         gene_symbol, self, new_gene.gene_symbol
                     )
@@ -1826,7 +1820,7 @@ class GenePanelSnapshot(TimeStampedModel):
                 self._update_saved_stats()
                 return new_gpes
             elif gene_name and gene.gene.get("gene_name") != gene_name:
-                logging.debug(
+                LOGGER.debug(
                     "Updating gene_name for gene:{} in panel:{}".format(
                         gene_symbol, self
                     )
@@ -1900,7 +1894,6 @@ class GenePanelSnapshot(TimeStampedModel):
 
             str_item.gene_core = gene_core
             str_item.gene = gene_info
-
         str_item.save()
         str_item = self.add_entity_info(str_item, user, str_item.label, str_data)
 
@@ -1946,12 +1939,12 @@ class GenePanelSnapshot(TimeStampedModel):
         if self.is_super_panel:
             raise IsSuperPanelException
 
-        logging.debug(
+        LOGGER.debug(
             "Updating STR:{} panel:{} str_data:{}".format(str_name, self, str_data)
         )
         has_str = self.has_str(str_name)
         if has_str:
-            logging.debug(
+            LOGGER.debug(
                 "Found STR:{} in panel:{}. Incrementing version.".format(str_name, self)
             )
             str_item = self.get_str(str_name)
@@ -1963,7 +1956,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             if str_data.get("name") and str_data.get("name") != str_name:
                 if self.has_str(str_data.get("name")):
-                    logging.info(
+                    LOGGER.info(
                         "Can't change STR name as the new name already exist in panel:{}".format(
                             self
                         )
@@ -2068,7 +2061,7 @@ class GenePanelSnapshot(TimeStampedModel):
                 description = "{} was changed to {}".format(old_str_name, str_item.name)
                 tracks.append((TrackRecord.ISSUE_TYPES.ChangedSTRName, description))
                 self.delete_str(old_str_name, increment=False)
-                logging.debug(
+                LOGGER.debug(
                     "Changed STR name:{} to {} panel:{}".format(
                         str_name, str_data.get("name"), self
                     )
@@ -2076,7 +2069,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             chromosome = str_data.get("chromosome")
             if chromosome and chromosome != str_item.chromosome:
-                logging.debug(
+                LOGGER.debug(
                     "Chromosome for {} was changed from {} to {} panel:{}".format(
                         str_item.label,
                         str_item.chromosome,
@@ -2101,7 +2094,7 @@ class GenePanelSnapshot(TimeStampedModel):
                 position_37 = NumericRange(position_37[0], position_37[1])
 
             if position_37 != str_item.position_37:
-                logging.debug(
+                LOGGER.debug(
                     "GRCh37 position for {} was changed from {} to {} panel:{}".format(
                         str_item.label,
                         str_item.position_37,
@@ -2146,7 +2139,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
                 new_position = "{}-{}".format(position_38.lower, position_38.upper)
 
-                logging.debug(
+                LOGGER.debug(
                     "GRCh38 position for {} was changed from {} to {} panel:{}".format(
                         str_item.label,
                         str_item.position_38,
@@ -2165,7 +2158,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             repeated_sequence = str_data.get("repeated_sequence")
             if repeated_sequence and repeated_sequence != str_item.repeated_sequence:
-                logging.debug(
+                LOGGER.debug(
                     "Repeated Sequence for {} was changed from {} to {} panel:{}".format(
                         str_item.label,
                         str_item.repeated_sequence,
@@ -2188,7 +2181,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             normal_repeats = str_data.get("normal_repeats")
             if normal_repeats and normal_repeats != str_item.normal_repeats:
-                logging.debug(
+                LOGGER.debug(
                     "Normal Number of Repeats for {} was changed from {} to {} panel:{}".format(
                         str_item.label,
                         str_item.normal_repeats,
@@ -2211,7 +2204,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             pathogenic_repeats = str_data.get("pathogenic_repeats")
             if pathogenic_repeats and pathogenic_repeats != str_item.pathogenic_repeats:
-                logging.debug(
+                LOGGER.debug(
                     "Pathogenic Number of Repeats for {} was changed from {} to {} panel:{}".format(
                         str_item.label,
                         str_item.pathogenic_repeats,
@@ -2236,7 +2229,7 @@ class GenePanelSnapshot(TimeStampedModel):
                 ev.strip() for ev in str_item.evidence.values_list("name", flat=True)
             ]
 
-            logging.debug(
+            LOGGER.debug(
                 "Updating evidences_names for {} in panel:{}".format(
                     str_item.label, self
                 )
@@ -2275,7 +2268,7 @@ class GenePanelSnapshot(TimeStampedModel):
                         evs = str_item.evidence.filter(name=source)
                         for ev in evs:
                             str_item.evidence.remove(ev)
-                        logging.debug(
+                        LOGGER.debug(
                             "Removing evidence:{} for {} panel:{}".format(
                                 source, str_item.label, self
                             )
@@ -2288,7 +2281,7 @@ class GenePanelSnapshot(TimeStampedModel):
                         )
 
                 for source in add_evidences:
-                    logging.debug(
+                    LOGGER.debug(
                         "Adding new evidence:{} for {} panel:{}".format(
                             source, str_item.label, self
                         )
@@ -2305,7 +2298,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             moi = str_data.get("moi")
             if moi and str_item.moi != moi:
-                logging.debug(
+                LOGGER.debug(
                     "Updating moi for {} in panel:{}".format(str_item.label, self)
                 )
 
@@ -2319,7 +2312,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             phenotypes = str_data.get("phenotypes")
             if phenotypes and phenotypes != str_item.phenotypes:
-                logging.debug(
+                LOGGER.debug(
                     "Updating phenotypes for {} in panel:{}".format(
                         str_item.label, self
                     )
@@ -2345,7 +2338,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             penetrance = str_data.get("penetrance")
             if penetrance and str_item.penetrance != penetrance:
-                logging.debug(
+                LOGGER.debug(
                     "Updating penetrance for {} in panel:{}".format(
                         str_item.label, self
                     )
@@ -2358,18 +2351,23 @@ class GenePanelSnapshot(TimeStampedModel):
 
             publications = str_data.get("publications")
             if publications and str_item.publications != publications:
-                logging.debug(
+                LOGGER.info(
+                    f"Updating publications for {str_item.label} in panel:{self}"
+                )
+                new_publications = (
+                    list(set(publications + str_item.publications))
+                    if append_only
+                    else publications
+                )
+                description = f"Publications for {str_item.label} were updated from {'; '.join(str_item.publications)} to {'; '.join(new_publications)}"
+                str_item.publications = new_publications
+
+                tracks.append((TrackRecord.ISSUE_TYPES.SetPublications, description))
+                LOGGER.debug(
                     "Updating publications for {} in panel:{}".format(
                         str_item.label, self
                     )
                 )
-                description = "Publications for {} were changed from {} to {}".format(
-                    str_item.label,
-                    "; ".join(str_item.publications),
-                    "; ".join(publications),
-                )
-                str_item.publications = publications
-                tracks.append((TrackRecord.ISSUE_TYPES.SetPublications, description))
 
             current_tags = [tag.pk for tag in str_item.tags.all()]
             tags = str_data.get("tags")
@@ -2385,7 +2383,7 @@ class GenePanelSnapshot(TimeStampedModel):
                     for tag in delete_tags:
                         tag = str_item.tags.get(pk=tag)
                         str_item.tags.remove(tag)
-                        logging.debug(
+                        LOGGER.debug(
                             "Removing tag:{} for {} panel:{}".format(
                                 tag.name, str_item.label, self
                             )
@@ -2396,7 +2394,7 @@ class GenePanelSnapshot(TimeStampedModel):
                         tracks.append((TrackRecord.ISSUE_TYPES.RemovedTag, description))
 
                 for tag in add_tags:
-                    logging.debug(
+                    LOGGER.debug(
                         "Adding new tag:{} for {} panel:{}".format(
                             tag, str_item.label, self
                         )
@@ -2410,7 +2408,7 @@ class GenePanelSnapshot(TimeStampedModel):
             gene_name = str_data.get("gene_name")
 
             if (not new_gene or remove_gene) and str_item.gene_core:
-                logging.debug(
+                LOGGER.debug(
                     "{} in panel:{} was removed".format(
                         str_item.gene["gene_name"], self
                     )
@@ -2425,7 +2423,7 @@ class GenePanelSnapshot(TimeStampedModel):
                 str_item.gene = None
                 self.clear_django_cache()
             elif new_gene and str_item.gene_core != new_gene:
-                logging.debug(
+                LOGGER.debug(
                     "{} in panel:{} has changed to gene:{}".format(
                         str_name, self, new_gene.gene_symbol
                     )
@@ -2444,13 +2442,13 @@ class GenePanelSnapshot(TimeStampedModel):
                 str_item.gene = new_gene.dict_tr()
                 self.clear_django_cache()
             elif gene_name and str_item.gene.get("gene_name") != gene_name:
-                logging.debug(
+                LOGGER.debug(
                     "Updating gene_name for {} in panel:{}".format(str_item.label, self)
                 )
                 str_item.gene["gene_name"] = gene_name
 
             if tracks:
-                logging.debug(
+                LOGGER.debug(
                     "Adding tracks for {} in panel:{}".format(str_item.label, self)
                 )
                 current_status = str_item.saved_gel_status
@@ -2603,14 +2601,14 @@ class GenePanelSnapshot(TimeStampedModel):
             Region if the it was successfully updated, False otherwise
         """
 
-        logging.debug(
+        LOGGER.debug(
             "Updating Region:{} panel:{} region_data:{}".format(
                 region_name, self, region_data
             )
         )
         has_region = self.has_region(region_name)
         if has_region:
-            logging.debug(
+            LOGGER.debug(
                 "Found Region:{} in panel:{}. Incrementing version.".format(
                     region_name, self
                 )
@@ -2624,7 +2622,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             if region_data.get("name") and region_data.get("name") != region_name:
                 if self.has_region(region_data.get("name")):
-                    logging.info(
+                    LOGGER.info(
                         "Can't change Region name as the new name already exist in panel:{}".format(
                             self
                         )
@@ -2732,7 +2730,7 @@ class GenePanelSnapshot(TimeStampedModel):
                 tracks.append((TrackRecord.ISSUE_TYPES.ChangedName, description))
 
                 self.delete_region(old_region_name, increment=False)
-                logging.debug(
+                LOGGER.debug(
                     "Changed region name:{} to {} panel:{}".format(
                         region_name, region_data.get("name"), self
                     )
@@ -2748,7 +2746,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             chromosome = region_data.get("chromosome")
             if chromosome and chromosome != region.chromosome:
-                logging.debug(
+                LOGGER.debug(
                     "Chromosome for {} was changed from {} to {}".format(
                         region.label, region.chromosome, region_data.get("chromosome")
                     )
@@ -2766,7 +2764,7 @@ class GenePanelSnapshot(TimeStampedModel):
             if isinstance(position_37, list):
                 position_37 = NumericRange(position_37[0], position_37[1])
             if position_37 != region.position_37:
-                logging.debug(
+                LOGGER.debug(
                     "GRCh37 position for {} was changed from {} to {} panel:{}".format(
                         region.label,
                         region.position_37,
@@ -2811,7 +2809,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
                 new_position = "{}-{}".format(position_38.lower, position_38.upper)
 
-                logging.debug(
+                LOGGER.debug(
                     "GRCh38 position for {} was changed from {} to {} panel:{}".format(
                         region.label,
                         region.position_38,
@@ -2830,7 +2828,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             type_of_variants = region_data.get("type_of_variants")
             if type_of_variants and type_of_variants != region.type_of_variants:
-                logging.debug(
+                LOGGER.debug(
                     "Variant Type for {} was changed from {} to {} panel:{}".format(
                         region.label,
                         region.type_of_variants,
@@ -2851,7 +2849,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             haploinsufficiency_score = region_data.get("haploinsufficiency_score", "")
             if haploinsufficiency_score != region.haploinsufficiency_score:
-                logging.debug(
+                LOGGER.debug(
                     "Haploinsufficiency Score for {} were changed from {} to {}".format(
                         region.label,
                         region.haploinsufficiency_score,
@@ -2876,7 +2874,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             triplosensitivity_score = region_data.get("triplosensitivity_score", "")
             if triplosensitivity_score != region.triplosensitivity_score:
-                logging.debug(
+                LOGGER.debug(
                     "Triplosensitivity Score for {} were changed from {} to {}".format(
                         region.label,
                         region.triplosensitivity_score,
@@ -2899,7 +2897,7 @@ class GenePanelSnapshot(TimeStampedModel):
                 required_overlap_percentage
                 and required_overlap_percentage != region.required_overlap_percentage
             ):
-                logging.debug(
+                LOGGER.debug(
                     "required_overlap_percentage Score for {} were changed from {} to {}".format(
                         region.label,
                         region.required_overlap_percentage,
@@ -2926,7 +2924,7 @@ class GenePanelSnapshot(TimeStampedModel):
                 ev.strip() for ev in region.evidence.values_list("name", flat=True)
             ]
 
-            logging.debug(
+            LOGGER.debug(
                 "Updating evidences_names for {} in panel:{}".format(region.label, self)
             )
             if region_data.get("sources"):
@@ -2963,7 +2961,7 @@ class GenePanelSnapshot(TimeStampedModel):
                         evs = region.evidence.filter(name=source)
                         for ev in evs:
                             region.evidence.remove(ev)
-                        logging.debug(
+                        LOGGER.debug(
                             "Removing evidence:{} for {} panel:{}".format(
                                 source, region.label, self
                             )
@@ -2976,7 +2974,7 @@ class GenePanelSnapshot(TimeStampedModel):
                         )
 
                 for source in add_evidences:
-                    logging.debug(
+                    LOGGER.debug(
                         "Adding new evidence:{} for {} panel:{}".format(
                             source, region.label, self
                         )
@@ -2993,7 +2991,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             moi = region_data.get("moi")
             if moi and region.moi != moi:
-                logging.debug(
+                LOGGER.debug(
                     "Updating moi for {} in panel:{}".format(region.label, self)
                 )
 
@@ -3007,7 +3005,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             phenotypes = region_data.get("phenotypes")
             if phenotypes and phenotypes != region.phenotypes:
-                logging.debug(
+                LOGGER.debug(
                     "Updating phenotypes for {} in panel:{}".format(region.label, self)
                 )
 
@@ -3031,7 +3029,7 @@ class GenePanelSnapshot(TimeStampedModel):
 
             penetrance = region_data.get("penetrance")
             if penetrance and region.penetrance != penetrance:
-                logging.debug(
+                LOGGER.debug(
                     "Updating penetrance for {} in panel:{}".format(region.label, self)
                 )
                 description = "Penetrance for {} was change from {} to {}".format(
@@ -3042,18 +3040,21 @@ class GenePanelSnapshot(TimeStampedModel):
 
             publications = region_data.get("publications")
             if publications and region.publications != publications:
-                logging.debug(
+                LOGGER.info(f"Updating publications for {region.label} in panel:{self}")
+                new_publications = (
+                    list(set(publications + region.publications))
+                    if append_only
+                    else publications
+                )
+                description = f"Publications for {region.label} were updated from {'; '.join(region.publications)} to {'; '.join(new_publications)}"
+                region.publications = new_publications
+
+                tracks.append((TrackRecord.ISSUE_TYPES.SetPublications, description))
+                LOGGER.debug(
                     "Updating publications for {} in panel:{}".format(
                         region.label, self
                     )
                 )
-                description = "Publications for {} were changed from {} to {}".format(
-                    region.label,
-                    "; ".join(region.publications),
-                    "; ".join(publications),
-                )
-                region.publications = publications
-                tracks.append((TrackRecord.ISSUE_TYPES.SetPublications, description))
 
             current_tags = [tag.pk for tag in region.tags.all()]
             tags = region_data.get("tags")
@@ -3069,7 +3070,7 @@ class GenePanelSnapshot(TimeStampedModel):
                     for tag in delete_tags:
                         tag = region.tags.get(pk=tag)
                         region.tags.remove(tag)
-                        logging.debug(
+                        LOGGER.debug(
                             "Removing tag:{} for {} panel:{}".format(
                                 tag.name, region.label, self
                             )
@@ -3080,7 +3081,7 @@ class GenePanelSnapshot(TimeStampedModel):
                         tracks.append((TrackRecord.ISSUE_TYPES.RemovedTag, description))
 
                 for tag in add_tags:
-                    logging.debug(
+                    LOGGER.debug(
                         "Adding new tag:{} for {} panel:{}".format(
                             tag, region.label, self
                         )
@@ -3094,7 +3095,7 @@ class GenePanelSnapshot(TimeStampedModel):
             gene_name = region_data.get("gene_name")
 
             if (not new_gene or remove_gene) and region.gene_core:
-                logging.debug(
+                LOGGER.debug(
                     "{} in panel:{} was removed".format(region.gene["gene_name"], self)
                 )
 
@@ -3107,7 +3108,7 @@ class GenePanelSnapshot(TimeStampedModel):
                 region.gene = None
                 self.clear_django_cache()
             elif new_gene and region.gene_core != new_gene:
-                logging.debug(
+                LOGGER.debug(
                     "{} in panel:{} has changed to gene:{}".format(
                         gene_name, self, new_gene.gene_symbol
                     )
@@ -3130,13 +3131,13 @@ class GenePanelSnapshot(TimeStampedModel):
                 region.gene = new_gene.dict_tr()
                 self.clear_django_cache()
             elif gene_name and region.gene.get("gene_name") != gene_name:
-                logging.debug(
+                LOGGER.debug(
                     "Updating gene_name for {} in panel:{}".format(region.label, self)
                 )
                 region.gene["gene_name"] = gene_name
 
             if tracks:
-                logging.debug(
+                LOGGER.debug(
                     "Adding tracks for {} in panel:{}".format(region.label, self)
                 )
                 current_status = region.saved_gel_status

@@ -63,11 +63,11 @@ from .genepanelentrysnapshot import GenePanelEntrySnapshot  # noqa
 from .genepanelsnapshot import GenePanelSnapshot  # noqa
 from .historical_snapshot import HistoricalSnapshot  # noqa
 from .import_tools import UploadedGeneList  # noqa
-from .import_tools import UploadedPanelList  # noqa
-from .import_tools import UploadedReviewsList  # noqa
 from .Level4Title import Level4Title  # noqa
 from .panel_types import PanelType  # noqa
 from .region import Region  # noqa
 from .strs import STR  # noqa
 from .tag import Tag  # noqa
 from .trackrecord import TrackRecord  # noqa
+from .uploaded_panel_list import UploadedPanelList  # noqa
+from .uploaded_review_list import UploadedReviewsList  # noqa
