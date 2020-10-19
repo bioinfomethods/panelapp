@@ -465,6 +465,8 @@ def test_moi_check_non_standard(moi, error):
         ("MONOALLELIC,", {"Autosomal recessive"}, True),
         ("MONOALLELIC,", {"Autosomal recessive", "Autosomal dominant"}, True),
         ("BOTH", {"Autosomal dominant", "XLD"}, True),
+        ("BOTH", {"Autosomal dominant",}, True),
+        ("BOTH", {"AD/AR",}, False),
         (
             "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
             {"Autosomal dominant", "XLD"},

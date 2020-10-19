@@ -332,7 +332,7 @@ def moi_check_omim(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]
 
     omim_id = omim_ids[0]
     omim_moi = retrieve_omim_moi(omim_id)
-    if not any(omim_moi):
+    if not omim_moi:
         # could be due to networking issue
         LOGGER.warning(
             "OMIM has no MOI data",
@@ -344,14 +344,23 @@ def moi_check_omim(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]
         )
         return
 
+    msg = "Green gene {} with discrepant OMIM MOI {} and {} on panel {}".format(
+        gene.name, omim_moi, gene.moi, gene.panel
+    )
+
+    if (
+        gene.moi.startswith("BOTH")
+        and len(omim_moi) == 1
+        and "/" not in list(omim_moi)[0]
+    ):
+        return IncorrectMoiGene.from_gene(
+            gene, check_type=CheckType.OMIM_COMPARISON, msg=msg
+        )
+
     groups_found = check_overlaping_group(moi_prefix, omim_moi)
     if groups_found == {moi_prefix}:
         # all good, we have matching MOI group
         return
-
-    msg = "Green gene {} with discrepant OMIM MOI {} and {} on panel {}".format(
-        gene.name, omim_moi, gene.moi, gene.panel
-    )
 
     return IncorrectMoiGene.from_gene(
         gene, check_type=CheckType.OMIM_COMPARISON, msg=msg
