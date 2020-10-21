@@ -16,6 +16,7 @@ from panels.tasks.moi_checks import (
     has_non_empty_moi,
     moi_check,
     moi_check_chr_x,
+    moi_check_chr_y,
     moi_check_is_empty,
     moi_check_mt,
     moi_check_non_standard,
@@ -234,6 +235,30 @@ def test_moi_chr_x(moi, chromosome, error):
 
     with mock.patch("panels.tasks.moi_checks.get_chromosome", return_value=chromosome):
         result = moi_check_chr_x(gene)
+
+    assert bool(result) is error
+    if result:
+        assert result.check_type == CheckType.VALUE_NOT_ALLOWED.value
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "moi,chromosome,error",
+    [
+        ("Other", "Y", False,),
+        (
+            "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
+            "Y",
+            True,
+        ),
+    ],
+)
+def test_moi_chr_y(moi, chromosome, error):
+    gps = GenePanelSnapshotFactory.build()
+    gene = GenePanelEntrySnapshotFactory.build(panel=gps, moi=moi)
+
+    with mock.patch("panels.tasks.moi_checks.get_chromosome", return_value=chromosome):
+        result = moi_check_chr_y(gene)
 
     assert bool(result) is error
     if result:

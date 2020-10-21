@@ -88,6 +88,8 @@ MOI_MAPPING = {
     "MITOCHONDRIAL": ["Mitochondrial"],
 }
 
+OTHER_MOI = {"Other - please specifiy in evaluation comments", "Other"}
+
 X_LINKED_MOI = {
     "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
     "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may "
@@ -193,6 +195,7 @@ def moi_check():
         moi_check_non_standard,
         moi_check_other,
         moi_check_chr_x,
+        moi_check_chr_y,
         moi_check_mt,
     ]
 
@@ -417,10 +420,7 @@ def moi_check_other(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene
     moi = gene.moi
     chromosome = get_chromosome(gene)
 
-    if (
-        moi in {"Other - please specifiy in evaluation comments", "Other"}
-        and chromosome != "Y"
-    ):
+    if moi in OTHER_MOI and chromosome != "Y":
         msg = "Green gene {} with {} MOI on panel {}".format(
             gene.name, gene.moi, gene.panel
         )
@@ -451,6 +451,25 @@ def moi_check_chr_x(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene
     if chromosome != "X" and moi in X_LINKED_MOI:
         msg = "Green gene {} on chromosome {} with X-LINKED MOI on panel {}".format(
             gene.name, chromosome, gene.panel
+        )
+        return IncorrectMoiGene.from_gene(
+            gene, check_type=CheckType.VALUE_NOT_ALLOWED, msg=msg
+        )
+
+
+def moi_check_chr_y(gene: "GenePanelEntrySnapshot") -> Optional[IncorrectMoiGene]:
+    """Check if chrY gene MOI is Other
+
+    :param gene: GenePanelEntrySnapshot
+    :return: IncorrectMoiGene if it's non Other MOI in chrY gene
+    """
+
+    moi = gene.moi
+    chromosome = get_chromosome(gene)
+
+    if chromosome == "Y" and moi not in OTHER_MOI:
+        msg = "Green gene {} on chromosome Y with {} MOI on panel {}".format(
+            gene.name, gene.moi, gene.panel
         )
         return IncorrectMoiGene.from_gene(
             gene, check_type=CheckType.VALUE_NOT_ALLOWED, msg=msg
