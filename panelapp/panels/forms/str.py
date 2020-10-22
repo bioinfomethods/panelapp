@@ -23,6 +23,7 @@
 ##
 """Contains a form which is used to add/edit a gene in a panel."""
 
+import logging
 from collections import OrderedDict
 
 from dal_select2.widgets import (
@@ -47,6 +48,8 @@ from panels.models import (
     GenePanelSnapshot,
     Tag,
 )
+
+LOGGER = logging.getLogger(__name__)
 
 
 class PanelSTRForm(EntityFormMixin, forms.ModelForm):
@@ -175,6 +178,18 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
         if self.instance.pk:
             self.fields["gene_name"] = original_fields.get("gene_name")
         self.fields["source"] = original_fields.get("source")
+
+        # Fix for disappearing sources
+        # Select2ListMultipleChoiceField removes any values that don't belong in choices
+        # Any custom values are removed, including expert review
+        if self.initial and self.initial.get("source", []):
+            source_choices = set(self.fields["source"].choices)
+            source_choices.update(
+                [(val, val) for val in self.initial.get("source", [])]
+            )
+            self.fields["source"].choices = list(source_choices)
+            self.fields["source"].initial = self.initial.get("source", [])
+
         self.fields["moi"] = original_fields.get("moi")
         self.fields["moi"].required = False
         self.fields["penetrance"] = original_fields.get("penetrance")
@@ -262,22 +277,8 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
         new_str_name = str_data["name"]
 
         if self.initial and self.panel.has_str(initial_name):
-            # check if the entity changed
-            # if we only adding it to other panels, we don't need to increment version
-            # Because "Expert Review " sources are not in cleaned_data,
-            # check if initial data has it and compare if other sources changed.
-            changed = True
-            if self.changed_data == ["source"]:
-                non_expert_reviews = [
-                    s
-                    for s in self.initial["source"]
-                    if not s.startswith("Expert Review ")
-                ]
-
-                if set(self.cleaned_data["source"]) == set(non_expert_reviews):
-                    changed = False
-
-            if changed:
+            # When only copying entities don't create new version for the original one
+            if self.changed_data and self.changed_data != ["additional_panels"]:
                 self.panel = self.panel.increment_version()
                 self.panel.update_str(
                     self.request.user,
@@ -286,6 +287,9 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
                     remove_gene=True if not str_data.get("gene") else False,
                 )
                 self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
+            else:
+                LOGGER.info("Copying str to other panel")
+
             entity = self.panel.get_str(new_str_name)
         else:
             increment_version = (

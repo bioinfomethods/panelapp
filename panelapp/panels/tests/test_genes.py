@@ -440,6 +440,44 @@ class CopyToPanelsTest(LoginGELUser):
         # Same tag used in multiple panels
         self.assertEqual(gpes2.tags.first().pk, gpes.tags.first().pk)
 
+    def test_non_standard_source(self):
+        """Make sure non standard sources aren't wiped out"""
+
+        gpes = GenePanelEntrySnapshotFactory.create(gene_core=self.gene, panel=self.gps)
+        gpes.tags.all().delete()
+
+        evidence = Evidence(
+            name="something-123", rating=5, legacy_type=Reviewer.TYPES.GEL
+        )
+        evidence.save()
+        gpes.evidence.add(evidence)
+
+        version = self.gps.version
+
+        comment = Comment.objects.create(user=self.user, comment="Comment")
+        gpes.comments.add(comment)
+        gpes.evaluation.first().comments.add(comment)
+
+        sources = list(gpes.evidence.values_list("name", flat=True))
+
+        form_data = gpes.get_form_initial()
+        form_data["gene"] = self.gene.gene_symbol
+        form_data["gene_name"] = self.gene.gene_name
+        form_data["source"] = form_data["source"]
+
+        form = PanelGeneForm(
+            form_data,
+            panel=self.gps,
+            request=self.request,
+            instance=gpes,
+            initial=gpes.get_form_initial(),
+        )
+        assert form.is_valid()
+        entity = form.save_gene()
+
+        assert entity.evidence.count() == len(sources)
+        assert entity.panel.version == version
+
     def test_copy_original_panel(self):
         """Copy original panel in the evaluations"""
 

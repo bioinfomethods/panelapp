@@ -220,7 +220,7 @@ class GenePanelEntrySnapshot(AbstractEntity, TimeStampedModel):
             "gene": self.gene_core,
             "gene_json": self.gene,
             "gene_name": self.gene.get("gene_name"),
-            "source": [e.name for e in self.evidence.all() if e.is_GEL],
+            "source": list(self.evidence.values_list("name", flat=True)),
             "tags": self.tags.all(),
             "publications": self.publications,
             "phenotypes": self.phenotypes,
