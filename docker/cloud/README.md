@@ -12,17 +12,17 @@ The cloud docker images are designed to run on AWS, using S3 and SQS, and run wi
 * [Web Dockerfile](./Dockerfile-web), starts the Django application with Gunicorn
 * [Worker Dockerfile](./Dockerfile-worker), starts Celery
 
-> [Docker Compose](./docker-compose.yml) and [Makefile](./Makefile) in this directory are **for troubleshooting docker 
+> [Docker Compose](./docker-compose.yml) and [Makefile](./Makefile) in this directory are **for troubleshooting docker
 > images** only. They are not supposed to be used in any environments.
 
 ## Application configuration
 
-The Django settings module for these environments is 
+The Django settings module for these environments is
 [`panelapp.settings.docker-aws`](../../panelapp/panelapp/settings/docker-aws.py).
 
 The same Django settings module is used for all environments.
 All environment-specific parameters are passed as environment variables (not by switching Django setting module).
- 
+
 ###  Mandatory environment variables
 
 All of the following environment variables must be set:
@@ -60,17 +60,18 @@ All of the following environment variables must be set:
 * `DJANGO_LOG_LEVEL` - to override Django log-level (default=`INFO`). This also controls Gunicorn and Celery log level.
 * `EMAIL_USE_TLS` - Set to `False` to prevent SMTP from using TLS
 * `SQS_QUEUE_VISIBILITY_TIMEOUT` - SQS topic _Visibility Timeout_. Must be identical to the Visibility Timeout of the SQS queue
-* `TASK_QUEUE_NAME` - Name of the SQS queue (default: `panelapp`)     
+* `TASK_QUEUE_NAME` - Name of the SQS queue (default: `panelapp`)
 * `AWS_STATICFILES_LOCATION` - specify it to change the path static files are located within their S3 bucket (default: `static`)
 * `AWS_MEDIAFILES_LOCATION` - specify it to change the path media files are located within their S3 bucket (default: `media`)
+* `ACTIVE_SCHEDULED_TASKS` - Enable / disable periodic tasks, default in `panelapp-infra` repo is `moi-check`
 
 #### Secrets
 
 * `DATABASE_URL` - (**alternative to passing separate `DATABASE_*` parameters**)
     database config URL, in the format: `postgresql://{username}:{password}@{host}:{port}/{database_name}`
 * `DJANGO_ADMIN_URL` - change admin URL to something more secure (by obscurity) than the default `/admin`
-* `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` - required if not using IAM Roles to authenticate access to S3 buckets   
-* `CELERY_BROKER_URL` - Only required if not using IAM Roles for SQS authentication. 
+* `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` - required if not using IAM Roles to authenticate access to S3 buckets
+* `CELERY_BROKER_URL` - Only required if not using IAM Roles for SQS authentication.
     It must be in the format `sqs://{aws_access_key}:{aws_secret_key}@`.
 
 #### Cognito
@@ -90,17 +91,17 @@ All of the following environment variables must be set:
 
 ### Gunicorn settings (_Web_ image only)
 
-All [Gunicorn settings](http://docs.gunicorn.org/en/latest/settings.html) may be overridden by an environment variable 
-named `GUNICORN_<UPPERCASE-SETTING-NAME>` (e.g. `GUNICORN_WORKERS` overrides `workers`) 
+All [Gunicorn settings](http://docs.gunicorn.org/en/latest/settings.html) may be overridden by an environment variable
+named `GUNICORN_<UPPERCASE-SETTING-NAME>` (e.g. `GUNICORN_WORKERS` overrides `workers`)
 
 Defaults:
 
-* `GUNICORN_WORKERS` (`workers`): 8 
+* `GUNICORN_WORKERS` (`workers`): 8
 * `GUNICORN_TIMEOUT` (`timeout`, in seconds): 300
 
 # AWS resources
 
-_Web_ and _Worker_ are completely stateless. 
+_Web_ and _Worker_ are completely stateless.
 They may scale out for HA as required.
 
 ## S3 buckets
@@ -112,14 +113,14 @@ Two S3 buckets are used for storing files:
 
 The _Media_ bucket must be accessible for read+write by both _Web_ and _Worker_.
 
-The _Static_ bucket must be accessible for read+write by _Web_ only 
+The _Static_ bucket must be accessible for read+write by _Web_ only
 
-The _Static_ bucket must also be publicly accessible, either directly (not-recommended) or through CloudFront CDN 
+The _Static_ bucket must also be publicly accessible, either directly (not-recommended) or through CloudFront CDN
 (recommended).
 
 `AWS_S3_STATICFILES_CUSTOM_DOMAIN` defines the public DNS domain to access the _Static_ bucket (e.g. the CloudFront domain).
 
-> By default, static files are stored in a `/static` "subdirectory" of the bucket and are expected to be served from 
+> By default, static files are stored in a `/static` "subdirectory" of the bucket and are expected to be served from
 `https://<AWS_S3_STATICFILES_CUSTOM_DOMAIN>/static/` base URL.
 
 ## SQS queue
@@ -130,7 +131,7 @@ It is recommended to create the SQS queue beforehand.
 Infrastructure should be managed securely outside of the running application.
 You should not give the application permissions to create queues at runtime.
 
-The queue **_Visibility Timeout_ must be `360` (seconds)**. 
+The queue **_Visibility Timeout_ must be `360` (seconds)**.
 If you use a different value, do not forget to override `SQS_QUEUE_VISIBILITY_TIMEOUT` to match the queue timeout.
 
 > If the _Visibility Timeout_ does not match what the application is expecting, Celery will try to create a new queue.
@@ -151,7 +152,7 @@ The application expects a PostgreSQL-compatible DB.
 
 The application has been tested with AWS Aurora, but PostgreSQL RDS should also work.
 
-## AWS resource security 
+## AWS resource security
 
 Authentication with the database uses username and password (part of `DATABASE_URL`).
 
@@ -223,7 +224,7 @@ Note the default queue name is `panelapp`, unless overridden.
 
 ## Logging
 
-All application components logs to stdout in JSON, using `python3-json-log-formatter==1.6.1` as log formatter, for 
+All application components logs to stdout in JSON, using `python3-json-log-formatter==1.6.1` as log formatter, for
 easier log aggregation and indexing.
 
 Logging level is controlled by `DJANGO_LOG_LEVEL` (default = `INFO`). Note that this does not only control Django, but also
