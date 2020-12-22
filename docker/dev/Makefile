@@ -91,13 +91,13 @@ $(BUILDDIR):
 define create-s3-bucket-if-not-exits
 	@echo "Create s3://$(1) if not exists"
 	@aws configure set default.s3.addressing_style path
-	@aws --endpoint-url=http://localhost:4572 s3 mb s3://$(1) 2>/dev/null || true
-	@aws --endpoint-url=http://localhost:4572 s3api put-bucket-acl --bucket $(1) --acl public-read
+	@aws --endpoint-url=http://localhost:4566 s3 mb s3://$(1) 2>/dev/null || true
+	@aws --endpoint-url=http://localhost:4566 s3api put-bucket-acl --bucket $(1) --acl public-read
 endef
 
 define create-sqs-queue-if-not-exists
 	@echo "Create sqs queue '$(1)' if not exists"
-	@aws --endpoint-url=http://localhost:4576 sqs create-queue --queue-name $(1) --attributes VisibilityTimeout=360 2>/dev/null || true
+	@aws --endpoint-url=http://localhost:4566 sqs create-queue --queue-name $(1) --attributes VisibilityTimeout=360 2>/dev/null || true
 endef
 
 .mock-s3-static: ## Create mock S3 bucket for static files

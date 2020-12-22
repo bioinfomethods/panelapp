@@ -68,7 +68,7 @@ if USE_S3:  # Static and Media files on S3
     # What follows is specific to using LocalStack
     AWS_S3_USE_SSL = False
     AWS_S3_ENDPOINT_URL = (
-        "http://localstack:4572/"  # URL used by Boto3 to connect to S3 API
+        "http://localstack:4566/"  # URL used by Boto3 to connect to S3 API
     )
 
     ###############
@@ -90,7 +90,7 @@ if USE_S3:  # Static and Media files on S3
 
     # URL static files are served from
     #   STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
-    STATIC_URL = f'http://localstack:4572/{AWS_S3_STATICFILES_BUCKET_NAME}/{AWS_STATICFILES_LOCATION + ("/" if AWS_STATICFILES_LOCATION else "")}'  # noqa
+    STATIC_URL = f'http://localstack:4566/{AWS_S3_STATICFILES_BUCKET_NAME}/{AWS_STATICFILES_LOCATION + ("/" if AWS_STATICFILES_LOCATION else "")}'  # noqa
 
     AWS_S3_STATICFILES_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
 
@@ -110,7 +110,7 @@ if USE_S3:  # Static and Media files on S3
 
     AWS_S3_MEDIAFILES_CUSTOM_DOMAIN = None
     # URL media files are served from
-    MEDIA_URL = f'http://localstack:4572/{AWS_S3_MEDIAFILES_BUCKET_NAME}/{AWS_MEDIAFILES_LOCATION + ("/" if AWS_MEDIAFILES_LOCATION else "")}'  # noqa
+    MEDIA_URL = f'http://localstack:4566/{AWS_S3_MEDIAFILES_BUCKET_NAME}/{AWS_MEDIAFILES_LOCATION + ("/" if AWS_MEDIAFILES_LOCATION else "")}'  # noqa
     AWS_S3_MEDIAFILES_OBJECT_PARAMETERS = {}
 
     AWS_MEDIAFILES_DEFAULT_ACL = "public-read"  # LocalStack only
@@ -140,7 +140,7 @@ USE_SQS = os.getenv("USE_SQS") == "TRUE"
 
 if USE_SQS:  # Use SQS as message broker
 
-    CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "sqs://@localstack:4576")
+    CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "sqs://@localstack:4566")
     BROKER_TRANSPORT_OPTIONS = {
         "region": AWS_REGION,  # FIXME Is Kombo/Boto3 ignoring the region and always using us-east-1?
         "polling_interval": 1,  # seconds
