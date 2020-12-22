@@ -490,8 +490,8 @@ def test_moi_check_non_standard(moi, error):
         ("MONOALLELIC,", {"Autosomal recessive"}, True),
         ("MONOALLELIC,", {"Autosomal recessive", "Autosomal dominant"}, True),
         ("BOTH", {"Autosomal dominant", "XLD"}, True),
-        ("BOTH", {"Autosomal dominant",}, True),
-        ("BOTH", {"AD/AR",}, False),
+        ("BOTH", {"Autosomal dominant",}, True,),
+        ("BOTH", {"AD/AR",}, False,),
         (
             "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
             {"Autosomal dominant", "XLD"},
@@ -528,7 +528,9 @@ def test_omim_check_multiple(retrieve_omim_mock, moi, omim_values, error):
     # Report if OMIM MOI links to multiple MOI groups in PanelApp
 
     retrieve_omim_mock.return_value = omim_values
-    gene = GenePanelEntrySnapshotFactory.build(moi=moi, gene={"omim_gene": ["164975"],})
+    gene = GenePanelEntrySnapshotFactory.build(
+        moi=moi, gene={"omim_gene": ["164975"],},
+    )
 
     res = moi_check_omim(gene)
     assert bool(res) is error

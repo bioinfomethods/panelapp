@@ -126,7 +126,7 @@ class AbstractEntity:
         self.save()
 
     def evidence_status(self, update=False):
-        """ This is a refactored `get_gel_status` function.
+        """This is a refactored `get_gel_status` function.
 
         It goes through evidences, check if they are valid or were provided by
         curators, and returns the status.

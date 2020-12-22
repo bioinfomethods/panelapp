@@ -478,6 +478,33 @@ class CopyToPanelsTest(LoginGELUser):
         assert entity.evidence.count() == len(sources)
         assert entity.panel.version == version
 
+    def test_edit_multiple_exper_reviews(self):
+        gpes = GenePanelEntrySnapshotFactory.create(gene_core=self.gene, panel=self.gps)
+
+        for evidence_name in ["Expert Review Green", "Expert Review Amber"]:
+            evidence = Evidence(
+                name=evidence_name, rating=5, legacy_type=Reviewer.TYPES.GEL
+            )
+            evidence.save()
+            gpes.evidence.add(evidence)
+
+        form_data = gpes.get_form_initial()
+        form_data["gene"] = self.gene.gene_symbol
+        form_data["gene_name"] = self.gene.gene_name
+        form_data["source"] = form_data["source"]
+
+        form = PanelGeneForm(
+            form_data,
+            panel=self.gps,
+            request=self.request,
+            instance=gpes,
+            initial=gpes.get_form_initial(),
+        )
+        assert not form.is_valid()
+        assert form.errors == {
+            "source": ["Entity contains multiple Expert Review sources"]
+        }
+
     def test_copy_original_panel(self):
         """Copy original panel in the evaluations"""
 

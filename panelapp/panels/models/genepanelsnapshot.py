@@ -2883,7 +2883,9 @@ class GenePanelSnapshot(TimeStampedModel):
                 )
 
                 description = "Triplosensitivity Score for {} was changed from {} to {}.".format(
-                    region.name, region.triplosensitivity_score, triplosensitivity_score
+                    region.name,
+                    region.triplosensitivity_score,
+                    triplosensitivity_score,
                 )
 
                 tracks.append(

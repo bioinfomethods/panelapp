@@ -8,13 +8,19 @@ class EntityFormMixin:
         # check if there is an expert review evidence, i.e. green is rated
         # it's set manually and not via edit gene page
 
-        expert_review = [
-            s for s in self.initial.get("source", []) if s.startswith("Expert Review ")
-        ]
+        cleaned_sources = self.cleaned_data["source"]
 
-        if len(self.cleaned_data["source"]) < 1 and not expert_review:
+        if not cleaned_sources:
             raise forms.ValidationError("Please select a source")
-        return self.cleaned_data["source"]
+
+        expert_review = [s for s in cleaned_sources if s.startswith("Expert Review ")]
+
+        if len(expert_review) > 1:
+            raise forms.ValidationError(
+                "Entity contains multiple Expert Review sources"
+            )
+
+        return cleaned_sources
 
     def clean_moi(self):
         if not self.cleaned_data["moi"]:
