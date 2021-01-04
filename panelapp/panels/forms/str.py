@@ -183,11 +183,11 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
         # Select2ListMultipleChoiceField removes any values that don't belong in choices
         # Any custom values are removed, including expert review
         if self.initial and self.initial.get("source", []):
-            source_choices = list(self.fields["source"].choices)
-            source_choices.extend(
+            source_choices = set(self.fields["source"].choices)
+            source_choices.update(
                 [(val, val) for val in self.initial.get("source", [])]
             )
-            self.fields["source"].choices = source_choices
+            self.fields["source"].choices = list(source_choices)
             self.fields["source"].initial = self.initial.get("source", [])
 
         self.fields["moi"] = original_fields.get("moi")
