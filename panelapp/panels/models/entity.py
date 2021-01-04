@@ -813,7 +813,13 @@ class AbstractEntity:
                     evaluation_comments = list(evaluation.comments.all())
 
                     evaluation.pk = None
-                    evaluation.original_panel = str(self.panel)
+                    copied_from = str(self.panel)
+                    original_panel = evaluation.original_panel
+
+                    if original_panel:
+                        copied_from = f"{copied_from}, {original_panel}"
+
+                    evaluation.original_panel = copied_from
                     evaluation.save()
                     for comment in evaluation_comments:
                         comment.pk = None

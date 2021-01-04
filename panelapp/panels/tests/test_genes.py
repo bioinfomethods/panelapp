@@ -545,6 +545,44 @@ class CopyToPanelsTest(LoginGELUser):
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, f"<strong>Copied from panel: </strong>")
 
+    def test_copy_multiple_origins(self):
+        """Copy original panel in the evaluations"""
+
+        gpes = GenePanelEntrySnapshotFactory.create(gene_core=self.gene, panel=self.gps)
+
+        comment_text = "Comment123"
+        comment = Comment.objects.create(user=self.user, comment=comment_text)
+        ev = Evaluation.objects.create(
+            user=self.user,
+            rating=Evaluation.RATINGS.AMBER,
+            original_panel="initial source v1.1",
+        )
+        ev.comments.add(comment)
+        gpes.evaluation.add(ev)
+
+        entity_data = {
+            "additional_panels": [self.gps2.pk],
+            "gene": self.gene,
+            "sources": gpes.evidence.values_list("name", flat=True),
+            "moi": "Unknown",
+            "panel": self.gps,
+            "gene_name": self.gene.gene_symbol,
+            "tags": gpes.tags.all(),
+        }
+        gpes.copy_to_panels([self.gps2], self.user, entity_data, copy_data=True)
+
+        url = reverse_lazy(
+            "panels:evaluation",
+            kwargs={
+                "pk": self.gps2.pk,
+                "entity_type": "gene",
+                "entity_name": gpes.gene.get("gene_symbol"),
+            },
+        )
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+        self.assertContains(res, f"{str(gpes.panel)}, initial source v1.1")
+
     def test_copy_gene_to_panel_with_same_gene(self):
         GenePanelEntrySnapshotFactory.create(gene_core=self.gene, panel=self.gps2)
 
