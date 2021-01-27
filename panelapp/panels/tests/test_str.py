@@ -24,8 +24,6 @@
 import os
 from random import randint
 
-from django.core import mail
-from django.test import Client
 from django.test.client import RequestFactory
 from django.urls import reverse_lazy
 from faker import Factory
@@ -41,12 +39,11 @@ from panels.models import (
     Evidence,
     GenePanel,
     GenePanelEntrySnapshot,
-    GenePanelSnapshot,
     HistoricalSnapshot,
 )
-from panels.tasks.panels import email_panel_promoted
 from panels.tests.factories import (
     CommentFactory,
+    EvidenceFactory,
     GeneFactory,
     GenePanelEntrySnapshotFactory,
     GenePanelSnapshotFactory,
@@ -469,6 +466,54 @@ class STRTest(LoginGELUser):
             pk=str_item.panel.panel.pk
         ).active_panel.get_str(str_item.name)
         assert new_str.penetrance != str_item.penetrance
+
+    def test_remove_expert_source(self):
+        """Removing expert sources should throw an error"""
+
+        str_item = STRFactory()
+        str_item.evidence.all().delete()
+
+        evidence = EvidenceFactory(name="Research", reviewer__user_type="GEL")
+        expert_review = EvidenceFactory(
+            name="Expert Review Green", reviewer__user_type="GEL"
+        )
+
+        str_item.evidence.add(evidence, expert_review)
+
+        url = reverse_lazy(
+            "panels:edit_entity",
+            kwargs={
+                "pk": str_item.panel.panel.pk,
+                "entity_type": "str",
+                "entity_name": str_item.name,
+            },
+        )
+
+        str_data = {
+            "name": str_item.name,
+            "chromosome": "1",
+            "position_37_0": "12345",
+            "position_37_1": "12346",
+            "position_38_0": "12345",
+            "position_38_1": "123456",
+            "repeated_sequence": "ATAT",
+            "normal_repeats": "2",
+            "pathogenic_repeats": "5",
+            "gene": str_item.gene_core.pk,
+            "gene_name": "Gene name",
+            "source": ["Other"],
+            "tags": str_item.tags.values_list("pk", flat=True),
+            "publications": ";".join(str_item.publications),
+            "phenotypes": ";".join(str_item.phenotypes),
+            "moi": str_item.moi,
+            "penetrance": "",
+        }
+
+        form_error = "Please remove extra Expert Review sources from panel detail page"
+
+        res = self.client.post(url, str_data)
+        assert res.status_code == 200
+        assert res.context["form"].errors.get("source") == [form_error]
 
     def test_add_tag_via_edit_details(self):
         """Set tags via edit gene detail section"""
