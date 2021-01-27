@@ -59,9 +59,9 @@ class PanelForm(forms.ModelForm):
     child_panels = forms.ModelMultipleChoiceField(
         label="Child Panels",
         required=False,
-        queryset=GenePanelSnapshot.objects.get_active_annotated().exclude(
-            is_super_panel=True
-        ),
+        queryset=GenePanelSnapshot.objects.get_active_annotated(
+            all=True, internal=True, deleted=False, superpanels=False
+        ).exclude(is_super_panel=True, panel__status=GenePanel.STATUS.retired),
         widget=ModelSelect2Multiple(
             url="autocomplete-simple-panels", attrs={"data-minimum-input-length": 3}
         ),
