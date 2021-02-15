@@ -80,6 +80,26 @@ class SimplePublicPanelsAutocomplete(Select2QuerySetView):
         return qs
 
 
+class SimpleAllPanelsAutocomplete(Select2QuerySetView):
+    """Return public and internal panels.
+
+    Excludes deleted and retired panels.
+
+    Used for copying entities to other panels."""
+
+    def get_queryset(self):
+        qs = GenePanelSnapshot.objects.get_active_annotated(
+            all=True, internal=True, deleted=False, superpanels=False
+        ).exclude(panel__status=GenePanel.STATUS.retired)
+
+        if self.q:
+            qs = qs.filter(
+                Q(panel__name__icontains=self.q) | Q(panel__name__icontains=self.q)
+            )
+
+        return qs
+
+
 class SimplePanelTypesAutocomplete(Select2QuerySetView):
     def get_queryset(self):
         qs = PanelType.objects.all()
