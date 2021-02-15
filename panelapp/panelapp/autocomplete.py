@@ -66,11 +66,11 @@ class TagsAutocomplete(Select2QuerySetView):
         return qs
 
 
-class SimplePanelsAutocomplete(Select2QuerySetView):
+class SimplePublicPanelsAutocomplete(Select2QuerySetView):
     def get_queryset(self):
         qs = GenePanelSnapshot.objects.get_active_annotated(
-            all=True, internal=True, deleted=False, superpanels=False
-        ).exclude(panel__status=GenePanel.STATUS.retired)
+            all=False, superpanels=False
+        )
 
         if self.q:
             qs = qs.filter(

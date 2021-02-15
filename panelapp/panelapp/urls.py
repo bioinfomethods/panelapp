@@ -37,8 +37,8 @@ from rest_framework import permissions
 
 from .autocomplete import (
     GeneAutocomplete,
-    SimplePanelsAutocomplete,
     SimplePanelTypesAutocomplete,
+    SimplePublicPanelsAutocomplete,
     SourceAutocomplete,
     TagsAutocomplete,
 )
@@ -92,7 +92,7 @@ urlpatterns = [
     path("autocomplete/tags/", TagsAutocomplete.as_view(), name="autocomplete-tags"),
     path(
         "autocomplete/panels/simple/",
-        SimplePanelsAutocomplete.as_view(),
+        SimplePublicPanelsAutocomplete.as_view(),
         name="autocomplete-simple-panels",
     ),
     path(
