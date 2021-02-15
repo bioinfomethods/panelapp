@@ -93,7 +93,7 @@ urlpatterns = [
     path(
         "autocomplete/panels/simple/",
         SimplePublicPanelsAutocomplete.as_view(),
-        name="autocomplete-simple-panels",
+        name="autocomplete-simple-panels-public",
     ),
     path(
         "autocomplete/panels/type/",

@@ -63,7 +63,8 @@ class PanelForm(forms.ModelForm):
             all=True, internal=True, deleted=False, superpanels=False
         ).exclude(is_super_panel=True, panel__status=GenePanel.STATUS.retired),
         widget=ModelSelect2Multiple(
-            url="autocomplete-simple-panels", attrs={"data-minimum-input-length": 3}
+            url="autocomplete-simple-panels-public",
+            attrs={"data-minimum-input-length": 3},
         ),
     )
 

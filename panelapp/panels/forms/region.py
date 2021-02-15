@@ -123,7 +123,7 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
     additional_panels = forms.ModelMultipleChoiceField(
         queryset=GenePanelSnapshot.objects.only("panel__name", "pk"),
         required=False,
-        widget=ModelSelect2Multiple(url="autocomplete-simple-panels"),
+        widget=ModelSelect2Multiple(url="autocomplete-simple-panels-public"),
     )
 
     class Meta:
