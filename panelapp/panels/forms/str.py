@@ -127,7 +127,7 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
     additional_panels = forms.ModelMultipleChoiceField(
         queryset=GenePanelSnapshot.objects.all().only("panel__name", "pk"),
         required=False,
-        widget=ModelSelect2Multiple(url="autocomplete-simple-panels-public"),
+        widget=ModelSelect2Multiple(url="autocomplete-simple-panels-all"),
     )
 
     class Meta:
