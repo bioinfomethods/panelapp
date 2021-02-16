@@ -88,7 +88,7 @@ setup(
         "django-storages==1.10.1",
         "boto3==1.15.2",
         "pycurl==7.43.0.6",
-        "python-jose[cryptography]==3.2.0",
+        "python-jose==3.2.0",
         "click==7.1.2",
         "python-json-logger==0.1.11",
     ],
