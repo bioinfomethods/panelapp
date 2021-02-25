@@ -27,7 +27,7 @@ Author: Oleg Gerasimenko
 
 (c) 2018 Genomics England
 """
-
+from copy import deepcopy
 from typing import List
 
 from django.db.models import (
@@ -803,13 +803,13 @@ class AbstractEntity:
                     user, f"Entity copied from {self.panel}", copied_entity
                 )
 
-                for evidence in evidences:
+                for evidence in deepcopy(evidences):
                     evidence.pk = None
                     evidence.save()
                     copied_entity.evidence.add(evidence)
 
                 # Note - potentially slow if performed on large number of entities
-                for evaluation in evaluations:
+                for evaluation in deepcopy(evaluations):
                     evaluation_comments = list(evaluation.comments.all())
 
                     evaluation.pk = None
@@ -830,7 +830,7 @@ class AbstractEntity:
 
                 copied_entity.tags.add(*tags)
 
-                for comment in comments:
+                for comment in deepcopy(comments):
                     comment.pk = None
                     comment.save()
                     copied_entity.comments.add(comment)
