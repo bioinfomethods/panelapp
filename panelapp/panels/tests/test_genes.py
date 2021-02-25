@@ -545,6 +545,45 @@ class CopyToPanelsTest(LoginGELUser):
         self.assertEqual(res.status_code, 200)
         self.assertContains(res, f"<strong>Copied from panel: </strong>")
 
+    def test_copy_multiple_panels_original_panel(self):
+        """Copy original panel in the evaluations"""
+
+        gpes = GenePanelEntrySnapshotFactory.create(gene_core=self.gene, panel=self.gps)
+
+        gps3 = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+
+        comment_text = "Comment123"
+        comment = Comment.objects.create(user=self.user, comment=comment_text)
+        ev = Evaluation.objects.create(user=self.user, rating=Evaluation.RATINGS.AMBER,)
+        ev.comments.add(comment)
+        gpes.evaluation.add(ev)
+
+        original_panel_version = str(gpes.panel)
+
+        entity_data = {
+            "additional_panels": [self.gps2.pk],
+            "gene": self.gene,
+            "sources": gpes.evidence.values_list("name", flat=True),
+            "moi": "Unknown",
+            "panel": self.gps,
+            "gene_name": self.gene.gene_symbol,
+            "tags": gpes.tags.all(),
+        }
+        gpes.copy_to_panels([self.gps2, gps3], self.user, entity_data, copy_data=True)
+        copied_gene = self.gps2.get_gene(self.gene.gene_symbol)
+        copied_evaluation = copied_gene.evaluation.filter(
+            comments__comment=comment_text
+        ).first()
+        assert copied_gene
+        assert copied_evaluation.original_panel.count(original_panel_version) == 1
+
+        copied_gene_2 = gps3.get_gene(self.gene.gene_symbol)
+        copied_evaluation_2 = copied_gene_2.evaluation.filter(
+            comments__comment=comment_text
+        ).first()
+        assert copied_gene_2
+        assert copied_evaluation_2.original_panel.count(original_panel_version) == 1
+
     def test_copy_multiple_origins(self):
         """Copy original panel in the evaluations"""
 
