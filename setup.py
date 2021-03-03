@@ -68,7 +68,7 @@ setup(
         "django-markdown-deux==1.0.5",
         "django-bootstrap3==10.0.1",
         "django-markdownx==2.0.28",
-        "Markdown==2.6.11",
+        "Markdown==3.3.4",
         "django-object-actions==0.10.0",
         "django-mathfilters==0.4.0",
         "celery==4.4.7",
