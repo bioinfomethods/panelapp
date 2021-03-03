@@ -700,6 +700,115 @@ class GenePanelSnapshotTest(LoginGELUser):
         panel = GenePanel.objects.get(pk=gps.panel.pk)
         assert panel.signed_off == signed_off_panel
 
+    def test_sign_off_multiple_versions(self):
+        gps = GenePanelSnapshotFactory()
+
+        url = reverse_lazy("panels:update", kwargs={"pk": gps.panel.pk})
+        date = timezone.now().date()
+
+        data = {
+            "signed_off_version": gps.version,
+            "signed_off_date": date,
+            "level4": gps.level4title,
+            "description": "test",
+            "status": "public",
+        }
+        self.client.post(url, data)
+
+        data = {
+            "signed_off_version": f"{gps.major_version}.{gps.minor_version + 1}",
+            "signed_off_date": date,
+            "level4": gps.level4title,
+            "description": "test",
+            "status": "public",
+        }
+        self.client.post(url, data)
+
+        signed_off_count = HistoricalSnapshot.objects.filter(
+            panel=gps.panel, signed_off_date__isnull=False
+        ).count()
+        assert signed_off_count == 2
+
+    def test_sign_off_remove(self):
+        gps = GenePanelSnapshotFactory()
+
+        url = reverse_lazy("panels:update", kwargs={"pk": gps.panel.pk})
+        date = timezone.now().date()
+
+        data = {
+            "signed_off_version": gps.version,
+            "signed_off_date": date,
+            "level4": gps.level4title,
+            "description": "test",
+            "status": "public",
+        }
+        self.client.post(url, data)
+
+        signed_off_count = HistoricalSnapshot.objects.filter(
+            panel=gps.panel, signed_off_date__isnull=False
+        ).count()
+        assert signed_off_count == 1
+
+        data = {
+            "signed_off_version": gps.version,
+            "signed_off_date": "",
+            "level4": gps.level4title,
+            "description": "test",
+            "status": "public",
+        }
+        self.client.post(url, data)
+
+        signed_off_count = HistoricalSnapshot.objects.filter(
+            panel=gps.panel, signed_off_date__isnull=False
+        ).count()
+        assert signed_off_count == 0
+
+    def test_sign_off_incorrect_version(self):
+        gps = GenePanelSnapshotFactory()
+
+        url = reverse_lazy("panels:update", kwargs={"pk": gps.panel.pk})
+        date = timezone.now().date()
+
+        data = {
+            "signed_off_version": "1111",
+            "signed_off_date": date,
+            "level4": gps.level4title,
+            "description": "test",
+            "status": "public",
+        }
+        res = self.client.post(url, data)
+        assert res.status_code == 200
+        assert "Version is not in right format" in res.content.decode("utf-8")
+
+        signed_off_count = HistoricalSnapshot.objects.filter(
+            panel=gps.panel, signed_off_date__isnull=False
+        ).count()
+        assert signed_off_count == 0
+
+    def test_sign_off_wrong_version(self):
+        gps = GenePanelSnapshotFactory()
+
+        url = reverse_lazy("panels:update", kwargs={"pk": gps.panel.pk})
+        date = timezone.now().date()
+
+        data = {
+            "signed_off_version": "11.11",
+            "signed_off_date": date,
+            "level4": gps.level4title,
+            "description": "test",
+            "status": "public",
+        }
+        res = self.client.post(url, data)
+        assert res.status_code == 200
+        assert "Snapshot for version v11.11 doesn&#39;t exist" in res.content.decode(
+            "utf-8"
+        )
+
+        signed_off_count = HistoricalSnapshot.objects.filter(
+            panel=gps.panel, signed_off_date__isnull=False
+        ).count()
+        assert signed_off_count == 0
+
     def test_sign_off_panel_download_button(self):
         # Make sure download signed off panel button has the signed off version as the param
 

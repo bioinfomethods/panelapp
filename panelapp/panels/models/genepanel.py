@@ -21,6 +21,12 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+from datetime import datetime
+from typing import (
+    Optional,
+    Tuple,
+)
+
 from django.db import models
 from django.db.models import (
     Case,
@@ -58,6 +64,8 @@ class GenePanel(TimeStampedModel):
         choices=STATUS, default=STATUS.internal, max_length=36, db_index=True
     )
     types = models.ManyToManyField(PanelType)
+
+    # latest signed off panel
     signed_off = models.ForeignKey(
         "panels.HistoricalSnapshot", on_delete=models.PROTECT, blank=True, null=True
     )
@@ -177,3 +185,42 @@ class GenePanel(TimeStampedModel):
         """Adds activity for this panel"""
 
         self.active_panel.add_activity(user, text)
+
+    def update_signed_off_panel(
+        self, version: Tuple[int, int], signed_off_date: Optional[datetime] = None
+    ):
+        activities = []
+
+        major_version, minor_version = version
+        signed_off_version = f"{major_version}.{minor_version}"
+
+        # raise an error if it doesn't exist, should be checked in the form
+        snapshot = self.historicalsnapshot_set.get(
+            major_version=major_version, minor_version=minor_version
+        )
+
+        if signed_off_date and snapshot.signed_off_date != signed_off_date:
+            snapshot.signed_off_date = signed_off_date
+            activities.append(
+                f"Panel version {signed_off_version} has been signed off on {signed_off_date}"
+            )
+        else:
+            snapshot.signed_off_date = None
+            activities.append(
+                f"Panel signed off version {signed_off_version} has been removed"
+            )
+
+        snapshot.save(
+            update_fields=["signed_off_date",]
+        )
+
+        self.signed_off = (
+            self.historicalsnapshot_set.exclude(signed_off_date__isnull=True)
+            .order_by("-major_version", "-minor_version")
+            .first()
+        )
+        self.save(
+            update_fields=["signed_off",]
+        )
+
+        return activities

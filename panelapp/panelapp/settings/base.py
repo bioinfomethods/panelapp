@@ -355,7 +355,7 @@ DEFAULT_PANEL_TYPES = os.getenv("DEFAULT_PANEL_TYPES", "rare-disease-100k").spli
 
 OMIM_API_KEY = os.getenv("OMIM_API_KEY", None)
 
-SIGNED_OFF_MESSAGE = "Version {version} of this panel was signed-off for the GMS. The current version, shown here, may differ from the signed-off version."
+SIGNED_OFF_MESSAGE = "The latest signed off version for the GMS is v{version}. The current version, shown here, may differ from the signed-off version."
 
 # Health checks
 HEALTH_CHECK_SERVICE_NAME = "panelapp"

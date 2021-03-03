@@ -49,7 +49,7 @@
               <br />Panel types: {% for type in panel.panel.types.all %}{{ type.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
           {% endif %}
           {% if signed_off %}
-              <br />Panel version {{ signed_off.major_version }}.{{ signed_off.minor_version }} has been signed off on {{ signed_off.signed_off_date }}
+              <br />Latest signed off version: v{{ signed_off.major_version }}.{{ signed_off.minor_version }} ({{ signed_off.signed_off_date }})
               <br />
               <form action="{% url 'panels:download_old_panel_tsv' panel.panel.id %}" id="header_download_signedoff" method="post">{% csrf_token %}
                   <input type="hidden" value="{{ signed_off.major_version }}.{{ signed_off.minor_version }}" name="panel_version" class="input form-control">
