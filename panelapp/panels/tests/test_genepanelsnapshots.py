@@ -26,6 +26,7 @@ from random import (
     randint,
 )
 
+from django.test import Client
 from django.urls import reverse_lazy
 from django.utils import timezone
 from faker import Factory
@@ -698,6 +699,29 @@ class GenePanelSnapshotTest(LoginGELUser):
         assert signed_off_panel.signed_off_date == date
         panel = GenePanel.objects.get(pk=gps.panel.pk)
         assert panel.signed_off == signed_off_panel
+
+    def test_sign_off_panel_download_button(self):
+        # Make sure download signed off panel button has the signed off version as the param
+
+        gps = GenePanelSnapshotFactory()
+        gps_version = gps.version
+        url = reverse_lazy("panels:update", kwargs={"pk": gps.panel.pk})
+        date = timezone.now().date()
+        data = {
+            "signed_off_version": gps_version,
+            "signed_off_date": date,
+            "level4": gps.level4title,
+            "description": "test",
+            "status": "public",
+        }
+
+        res_post = self.client.post(url, data)
+
+        client = Client()
+        res = client.get(reverse_lazy("panels:detail", kwargs={"pk": gps.panel.pk}))
+        assert f'value="{gps_version}" name="panel_version"' in res.content.decode(
+            "utf-8"
+        )
 
     def test_add_transcript_to_gene(self):
         gpes = GenePanelEntrySnapshotFactory()
