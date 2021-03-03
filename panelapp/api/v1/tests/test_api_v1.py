@@ -641,7 +641,7 @@ class TestAPIV1(LoginExternalUser):
         self.assertEqual(r.status_code, 200)
         self.assertEqual(len(r.json()["results"]), 6)
 
-    def test_signed_off_panels(self):
+    def test_signed_off_panels_singe_version(self):
         self.gps.panel.active_panel.increment_version()
         snap = HistoricalSnapshot.objects.get(panel=self.gps.panel)
         date = timezone.now().date()
@@ -652,13 +652,77 @@ class TestAPIV1(LoginExternalUser):
         assert res.status_code == 200
         assert date.strftime("%Y-%m-%d") in res.json()["results"][0]["signed_off"]
 
-        res = self.client.get(
-            reverse_lazy(
-                "api:v1:signedoff_panels-detail", kwargs={"pk": self.gps.panel.pk}
-            )
+    def test_signed_off_panels_return_latest(self):
+        self.gps.panel.active_panel.increment_version()
+        self.gps.panel.active_panel.increment_version()
+        date = timezone.now().date()
+        HistoricalSnapshot.objects.filter(panel=self.gps.panel).update(
+            signed_off_date=date
         )
+
+        res = self.client.get(reverse_lazy("api:v1:signedoff_panels-list"))
+        payload = res.json()
         assert res.status_code == 200
-        assert date.strftime("%Y-%m-%d") in res.json()["signed_off"]
+        assert payload["count"] == 1
+        panel_data = payload["results"][0]
+        assert date.strftime("%Y-%m-%d") == panel_data["signed_off"]
+        assert panel_data["version"] == "0.1"
+
+    def test_signed_off_panels_display_all(self):
+        self.gps.panel.active_panel.increment_version()
+        self.gps.panel.active_panel.increment_version()
+        date = timezone.now().date()
+        HistoricalSnapshot.objects.filter(panel=self.gps.panel).update(
+            signed_off_date=date
+        )
+
+        signedoff_list = reverse_lazy("api:v1:signedoff_panels-list") + "?display=all"
+        res = self.client.get(signedoff_list)
+        payload = res.json()
+        assert res.status_code == 200
+        assert payload["count"] == 2
+        assert [r["version"] for r in payload["results"]] == ["0.1", "0.0"]
+
+    def test_signed_off_panels_filter_by_id(self):
+        self.gps.panel.active_panel.increment_version()
+        self.gps.panel.active_panel.increment_version()
+        self.gps_public.increment_version()
+        date = timezone.now().date()
+        HistoricalSnapshot.objects.update(signed_off_date=date)
+
+        panel_id = self.gps.panel_id
+
+        signedoff_list = (
+            reverse_lazy("api:v1:signedoff_panels-list") + f"?panel_id={panel_id}"
+        )
+        res = self.client.get(signedoff_list)
+        payload = res.json()
+
+        assert res.status_code == 200
+        assert payload["count"] == 1
+        assert payload["results"][0]["version"] == "0.1"
+        assert payload["results"][0]["id"] == panel_id
+
+    def test_signed_off_panels_get_all_by_id(self):
+        self.gps.panel.active_panel.increment_version()
+        self.gps.panel.active_panel.increment_version()
+        self.gps_public.increment_version()
+        date = timezone.now().date()
+        HistoricalSnapshot.objects.update(signed_off_date=date)
+
+        panel_id = self.gps.panel_id
+
+        signedoff_list = (
+            reverse_lazy("api:v1:signedoff_panels-list")
+            + f"?display=all&panel_id={panel_id}"
+        )
+        res = self.client.get(signedoff_list)
+        payload = res.json()
+
+        assert res.status_code == 200
+        assert payload["count"] == 2
+        assert [r["version"] for r in payload["results"]] == ["0.1", "0.0"]
+        assert {r["id"] for r in payload["results"]} == {panel_id}
 
 
 class NonAuthAPIv1Request(TestCase):

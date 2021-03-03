@@ -44,6 +44,7 @@ from panelapp.settings.base import REST_FRAMEWORK
 from panels.models import (
     STR,
     Activity,
+    GenePanel,
     GenePanelEntrySnapshot,
     GenePanelSnapshot,
     HistoricalSnapshot,
@@ -631,17 +632,69 @@ class EntitySearchViewSet(EntitySearch):
         return self.list(request, *args, **kwargs)
 
 
-class SignedOffPanelViewSet(ReadOnlyListViewset):
+SIGNEDOFF_DISPLAY_CHOICES = (
+    ("all", "all"),
+    ("latest", "latest"),
+)
+
+
+class SignedOffFilter(filters.FilterSet):
+    display = filters.ChoiceFilter(
+        choices=SIGNEDOFF_DISPLAY_CHOICES, method="filter_display"
+    )
+
+    class Meta:
+        model = HistoricalSnapshot
+        fields = [
+            "panel_id",
+            "display",
+        ]
+
+    def filter_display(self, queryset, name, value):
+        """No-op function, filtering happens in the queryset as
+        looks like there is no way to remove `distinct` from a
+        queryset once it's set. Distinct by panel_id is the
+        default behaviour.
+        """
+
+        return queryset
+
+
+class SignedOffPanelViewSet(
+    viewsets.mixins.ListModelMixin, viewsets.GenericViewSet,
+):
+    """Signed Off Panels Versions
+
+    By default only the latest versions on public panels are returned.
+
+    To get all public and retired panels use `display=all` URL parameter.
+    This also returns previous versions for the panels.
+
+    You can also filter by `panel_id` to return only the versions for a
+    specific panel. To get all versions for a panel use both `display=all`
+    and `panel_id` together.
+    """
+
     serializer_class = HistoricalSnapshotSerializer
+    filterset_class = SignedOffFilter
 
     def get_queryset(self):
-        return HistoricalSnapshot.objects.filter(signed_off_date__isnull=False)
+        qs = HistoricalSnapshot.objects.filter(signed_off_date__isnull=False)
 
-    def retrieve(self, request, *args, **kwargs):
-        pk = self.kwargs["pk"]
-        snap = self.get_queryset().filter(panel__pk=pk).first()
-        if snap:
-            json = snap.to_api_1()
-            return Response(json)
-        else:
-            raise Http404
+        filter_kwargs = {"panel__status__in": [GenePanel.STATUS.public,]}
+
+        display_all = self.request.GET.get("display", "latest") == "all"
+        if display_all:
+            filter_kwargs["panel__status__in"] = [
+                GenePanel.STATUS.public,
+                GenePanel.STATUS.retired,
+            ]
+
+        qs = qs.filter(**filter_kwargs)
+
+        if not display_all:
+            qs = qs.order_by("panel_id", "-major_version", "-minor_version").distinct(
+                "panel_id"
+            )
+
+        return qs
