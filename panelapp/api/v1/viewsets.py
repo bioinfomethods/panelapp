@@ -660,9 +660,7 @@ class SignedOffFilter(filters.FilterSet):
         return queryset
 
 
-class SignedOffPanelViewSet(
-    viewsets.mixins.ListModelMixin, viewsets.GenericViewSet,
-):
+class SignedOffPanelViewSet(ReadOnlyListViewset):
     """Signed Off Panels Versions
 
     By default only the latest versions on public panels are returned.
@@ -679,7 +677,9 @@ class SignedOffPanelViewSet(
     filterset_class = SignedOffFilter
 
     def get_queryset(self):
-        qs = HistoricalSnapshot.objects.filter(signed_off_date__isnull=False)
+        qs = HistoricalSnapshot.objects.filter(signed_off_date__isnull=False).order_by(
+            "panel_id"
+        )
 
         filter_kwargs = {"panel__status__in": [GenePanel.STATUS.public,]}
 
@@ -698,3 +698,21 @@ class SignedOffPanelViewSet(
             )
 
         return qs
+
+    def retrieve(self, request, *args, **kwargs):
+        """!!! Deprecated - see notes
+
+        Instead, use list of signed off panels endpoint with `panel_id=<panel id>`
+        parameter to get the latest version, and then use
+        `/api/v1/panels/<panel_id>/?version=<major_version>.<minor_version>` to get
+        the panel data.
+
+        This endpoint will be removed in the second part of 2021.
+        """
+        pk = self.kwargs["pk"]
+        snap = self.get_queryset().filter(panel__pk=pk).first()
+        if snap:
+            json = snap.to_api_1()
+            return Response(json)
+        else:
+            raise Http404

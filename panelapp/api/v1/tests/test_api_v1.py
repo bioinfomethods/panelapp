@@ -668,6 +668,26 @@ class TestAPIV1(LoginExternalUser):
         assert date.strftime("%Y-%m-%d") == panel_data["signed_off"]
         assert panel_data["version"] == "0.1"
 
+    def test_signed_off_panels_get_latest(self):
+        """This is a deprecated endpoint"""
+
+        self.gps.panel.active_panel.increment_version()
+        self.gps.panel.active_panel.increment_version()
+        date = timezone.now().date()
+        HistoricalSnapshot.objects.filter(panel=self.gps.panel).update(
+            signed_off_date=date
+        )
+
+        res = self.client.get(
+            reverse_lazy(
+                "api:v1:signedoff_panels-detail", kwargs={"pk": self.gps.panel.pk}
+            )
+        )
+        payload = res.json()
+        assert res.status_code == 200
+        assert date.strftime("%Y-%m-%d") == payload["signed_off"]
+        assert payload["version"] == "0.1"
+
     def test_signed_off_panels_display_all(self):
         self.gps.panel.active_panel.increment_version()
         self.gps.panel.active_panel.increment_version()
