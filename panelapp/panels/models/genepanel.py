@@ -23,6 +23,7 @@
 ##
 from datetime import datetime
 from typing import (
+    List,
     Optional,
     Tuple,
 )
@@ -224,3 +225,11 @@ class GenePanel(TimeStampedModel):
         )
 
         return activities
+
+    def signed_off_versions(self, exclude_pks: Optional[List[int]] = None):
+        if exclude_pks is None:
+            exclude_pks = []
+
+        return self.historicalsnapshot_set.exclude(
+            signed_off_date__isnull=True
+        ).exclude(pk__in=exclude_pks)

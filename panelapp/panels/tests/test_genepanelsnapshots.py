@@ -730,6 +730,21 @@ class GenePanelSnapshotTest(LoginGELUser):
         ).count()
         assert signed_off_count == 2
 
+    def test_sign_off_display_multiple_versions(self):
+        gps = GenePanelSnapshotFactory()
+        gps.increment_version()
+        gps.increment_version()
+        gps.increment_version()
+
+        HistoricalSnapshot.objects.update(signed_off_date=timezone.now())
+        gps.panel.signed_off = HistoricalSnapshot.objects.last()
+        gps.panel.save()
+
+        url = reverse_lazy("panels:detail", kwargs={"pk": gps.panel.pk})
+        res = self.client.get(url)
+        assert res.status_code == 200
+        assert "Previously signed off versions: 0.1, 0.0" in res.content.decode("utf-8")
+
     def test_sign_off_remove(self):
         gps = GenePanelSnapshotFactory()
 

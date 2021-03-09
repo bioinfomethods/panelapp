@@ -175,9 +175,17 @@ class GenePanelView(DetailView):
             request=self.request,
         )
         ctx["signed_off"] = None
-        signed_off = self.object.active_panel.panel.signed_off
+        ctx["signed_off_previous_versions"] = None
+        signed_off = self.object.signed_off
         if signed_off:
             ctx["signed_off"] = signed_off
+            signed_off_versions = self.object.signed_off_versions(
+                exclude_pks=[signed_off.pk,]
+            ).values_list("major_version", "minor_version")
+            signed_off_previous_versions = [
+                f"{v[0]}.{v[1]}" for v in signed_off_versions
+            ]
+            ctx["signed_off_previous_versions"] = signed_off_previous_versions
         ctx["contributors"] = ctx["panel"].contributors
         ctx["promote_panel_form"] = PromotePanelForm(
             instance=ctx["panel"],
@@ -345,7 +353,7 @@ class ActivityListView(ListView):
                     self.request.GET.get("panel"),
                     major_version,
                     minor_version,
-                    **self._filter_queryset_kwargs()
+                    **self._filter_queryset_kwargs(),
                 )
             except ValueError:
                 return []

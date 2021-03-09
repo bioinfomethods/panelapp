@@ -55,6 +55,7 @@
                   <input type="hidden" value="{{ signed_off.major_version }}.{{ signed_off.minor_version }}" name="panel_version" class="input form-control">
                   <button type="submit" class="btn btn-primary">Download Signed-Off Version</button>
               </form>
+              {% if signed_off_previous_versions %}Previously signed off versions: {{ signed_off_previous_versions|join:", " }}{% endif %}
           {% endif %}
 
           {% if panel.panel.old_pk %}<br />Previous code: {{ panel.panel.old_pk }}{% endif %}
