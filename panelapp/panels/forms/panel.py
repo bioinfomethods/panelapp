@@ -49,6 +49,11 @@ def version_validator(value):
         raise ValidationError("Version is not in right format: <major>.<minor>")
 
 
+def signed_off_date_validator(value):
+    if timezone.now().date() < value:
+        raise ValidationError("Date should be today or in the past")
+
+
 class PanelForm(forms.ModelForm):
     level2 = forms.CharField(required=False)
     level3 = forms.CharField(required=False)
@@ -78,6 +83,7 @@ class PanelForm(forms.ModelForm):
         widget=forms.DateInput(
             attrs={"placeholder": "Signed Off Date in format dd/mm/yyyy"}
         ),
+        validators=[signed_off_date_validator,],
     )
     child_panels = forms.ModelMultipleChoiceField(
         label="Child Panels",

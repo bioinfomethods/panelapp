@@ -21,6 +21,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+from datetime import timedelta
 from random import (
     choice,
     randint,
@@ -803,6 +804,28 @@ class GenePanelSnapshotTest(LoginGELUser):
         assert "Snapshot for version v11.11 doesn&#39;t exist" in res.content.decode(
             "utf-8"
         )
+
+        signed_off_count = HistoricalSnapshot.objects.filter(
+            panel=gps.panel, signed_off_date__isnull=False
+        ).count()
+        assert signed_off_count == 0
+
+    def test_sign_off_wrong_date(self):
+        gps = GenePanelSnapshotFactory()
+
+        url = reverse_lazy("panels:update", kwargs={"pk": gps.panel.pk})
+        date = (timezone.now() + timedelta(days=1)).date()
+
+        data = {
+            "signed_off_version": "11.11",
+            "signed_off_date": date,
+            "level4": gps.level4title,
+            "description": "test",
+            "status": "public",
+        }
+        res = self.client.post(url, data)
+        assert res.status_code == 200
+        assert "Date should be today or in the past" in res.content.decode("utf-8")
 
         signed_off_count = HistoricalSnapshot.objects.filter(
             panel=gps.panel, signed_off_date__isnull=False
