@@ -121,8 +121,8 @@
                       {% endif %}
                     {% endif %}
                     {%  if entry.panel.signed_off %}
-                        <br/>Signed off v.{{entry.panel.signed_off.0}}.{{ entry.panel.signed_off.1 }}
-                        on {{entry.panel.signed_off.2}}
+                        <br/>Latest signed off version: v{{entry.panel.signed_off.0}}.{{ entry.panel.signed_off.1 }}
+                        ({{ entry.panel.signed_off.2 }})
                     {% endif %}
                       <br>
                     {% if entry.superpanels_names %}
