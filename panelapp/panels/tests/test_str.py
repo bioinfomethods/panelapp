@@ -132,6 +132,29 @@ class STRTest(LoginGELUser):
             gene_data["tags"]
         )
 
+    def test_add_str_wrong_name(self):
+        gps = GenePanelSnapshotFactory()
+
+        url = reverse_lazy(
+            "panels:add_entity", kwargs={"pk": gps.panel.pk, "entity_type": "str"}
+        )
+        gene_data = {
+            "name": "Incorrect (Name)",
+            "chromosome": "1",
+            "position_37_0": "",
+            "position_37_1": "",
+            "position_38_0": "12345",
+            "position_38_1": "123456",
+            "repeated_sequence": "ATAT",
+            "normal_repeats": "2",
+            "pathogenic_repeats": "5",
+            "current_diagnostic": "True",
+            # other data omitted
+        }
+        res = self.client.post(url, gene_data)
+        assert res.status_code == 200
+        assert b"STR is not in the right format" in res.content
+
     def test_add_str_to_panel_no_gene_data(self):
         """STRs can exist without genes"""
 

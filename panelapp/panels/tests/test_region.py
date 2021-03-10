@@ -135,6 +135,25 @@ class RegionTest(LoginGELUser):
             list(new_region.tags.all().values_list("pk", flat=True))
         ) == sorted(region_data["tags"])
 
+    def test_add_region_wrong_name(self):
+        gps = GenePanelSnapshotFactory()
+
+        url = reverse_lazy(
+            "panels:add_entity", kwargs={"pk": gps.panel.pk, "entity_type": "region"}
+        )
+        region_data = {
+            "name": "Incorrect (Region)",
+            "chromosome": "1",
+            "position_37_0": "",
+            "position_37_1": "",
+            "position_38_0": "12345",
+            "position_38_1": "123456",
+            # other fields omitted
+        }
+        res = self.client.post(url, region_data)
+        assert res.status_code == 200
+        assert b"Region name is not in the right format" in res.content
+
     def test_add_region_to_panel_no_gene_data(self):
         """Regions can exist without genes"""
 

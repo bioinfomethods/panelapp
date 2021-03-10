@@ -24,6 +24,7 @@
 """Contains a form which is used to add/edit a gene in a panel."""
 
 import logging
+import re
 from collections import OrderedDict
 
 from dal_select2.widgets import (
@@ -38,6 +39,7 @@ from django.contrib.postgres.forms import (
 )
 
 from panelapp.forms import Select2ListMultipleChoiceField
+from panels.enums import VALID_ENTITY_FORMAT
 from panels.forms.mixins import EntityFormMixin
 from panels.models import (
     STR,
@@ -227,6 +229,12 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
         """Check if gene exists in a panel if we add a new gene or change the gene"""
 
         name = self.cleaned_data["name"]
+        if not re.fullmatch(VALID_ENTITY_FORMAT, name):
+            raise forms.ValidationError(
+                "STR is not in the right format, only letters, numbers, and following symbols allowed: -~.$@",
+                code="str_exists_in_panel",
+            )
+
         if not self.instance.pk and self.panel.has_str(name):
             raise forms.ValidationError(
                 "STR has already been added to the panel", code="str_exists_in_panel"
@@ -240,13 +248,14 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
             raise forms.ValidationError(
                 "STR has already been added to the panel", code="str_exists_in_panel"
             )
-        if not self.cleaned_data.get("name"):
-            self.cleaned_data["name"] = self.cleaned_data["name"]
 
-        return self.cleaned_data["name"]
+        return name
 
     def clean_additional_panels(self):
-        entity_name = self.cleaned_data["name"]
+        entity_name = self.cleaned_data.get("name")
+        if not entity_name:
+            # validation on name field failed
+            return self.cleaned_data["additional_panels"]
 
         for panel in GenePanelSnapshot.objects.filter(
             pk__in=self.cleaned_data["additional_panels"]
