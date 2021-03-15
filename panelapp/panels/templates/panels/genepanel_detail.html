@@ -53,7 +53,7 @@
               <br />
               <form action="{% url 'panels:download_old_panel_tsv' panel.panel.id %}" id="header_download_signedoff" method="post">{% csrf_token %}
                   <input type="hidden" value="{{ signed_off.major_version }}.{{ signed_off.minor_version }}" name="panel_version" class="input form-control">
-                  <button type="submit" class="btn btn-primary">Download Signed-Off Version</button>
+                  <button type="submit" class="btn btn-primary">Download Latest Signed-Off Version</button>
               </form>
               {% if signed_off_previous_versions %}Previously signed off versions: {{ signed_off_previous_versions|join:", " }}{% endif %}
           {% endif %}
@@ -165,7 +165,7 @@
           <div class="inline-group">
               <form class="form" action="{% url 'panels:download_old_panel_tsv' panel.panel.id %}" method="post">{% csrf_token %}
               <input type="hidden" value="{{ signed_off.major_version }}.{{ signed_off.minor_version }}" name="panel_version" class="input form-control">
-              <button type="submit" class="btn btn-primary">Download Signed-Off Version</button>
+              <button type="submit" class="btn btn-primary">Download Latest Signed-Off Version</button>
               </form>
           </div>
         </div>
