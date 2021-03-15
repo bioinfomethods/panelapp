@@ -163,5 +163,23 @@ def signed_off_panel_message(panel: "panels.models.GenePanelSnapshot") -> str:
     if not settings.SIGNED_OFF_MESSAGE:
         return ""
 
-    version = f"{panel.major_version}.{panel.minor_version}"
-    return settings.SIGNED_OFF_MESSAGE.format(version=version)
+    version = f"v{panel.major_version}.{panel.minor_version}"
+
+    if settings.SIGNED_OFF_ARCHIVE_BASE_URL:
+        href = (
+            f"{settings.SIGNED_OFF_ARCHIVE_BASE_URL}/panels/{panel.panel_id}/{version}"
+        )
+        version = f'<a href="{href}">{version}</a>'
+
+    return SafeString(settings.SIGNED_OFF_MESSAGE.format(version=version))
+
+
+@register.simple_tag
+def signed_off_version(panel_id: str, major_version: str, minor_version):
+    version = f"v{major_version}.{minor_version}"
+
+    if settings.SIGNED_OFF_ARCHIVE_BASE_URL:
+        href = f"{settings.SIGNED_OFF_ARCHIVE_BASE_URL}/panels/{panel_id}/{version}"
+        version = f'<a href="{href}">{version}</a>'
+
+    return SafeString(version)

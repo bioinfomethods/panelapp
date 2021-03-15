@@ -27,7 +27,10 @@ from random import (
     randint,
 )
 
-from django.test import Client
+from django.test import (
+    Client,
+    override_settings,
+)
 from django.urls import reverse_lazy
 from django.utils import timezone
 from faker import Factory
@@ -743,7 +746,29 @@ class GenePanelSnapshotTest(LoginGELUser):
         url = reverse_lazy("panels:detail", kwargs={"pk": gps.panel.pk})
         res = self.client.get(url)
         assert res.status_code == 200
-        assert "Previously signed off versions: 0.1, 0.0" in res.content.decode("utf-8")
+        assert "Previously signed off versions: v0.1, v0.0" in res.content.decode(
+            "utf-8"
+        )
+
+    @override_settings(SIGNED_OFF_ARCHIVE_BASE_URL="http://panels-archive.local")
+    def test_sign_off_display_link_to_archive(self):
+        gps = GenePanelSnapshotFactory()
+        gps.increment_version()
+
+        HistoricalSnapshot.objects.update(signed_off_date=timezone.now())
+        gps.panel.signed_off = HistoricalSnapshot.objects.last()
+        gps.panel.save()
+
+        so = gps.panel.signed_off
+        version = f"v{so.major_version}.{so.minor_version}"
+
+        url = reverse_lazy("panels:detail", kwargs={"pk": gps.panel.pk})
+        res = self.client.get(url)
+        assert res.status_code == 200
+        assert (
+            f'<a href="http://panels-archive.local/panels/{gps.panel_id}/{version}"'
+            in res.content.decode("utf-8")
+        )
 
     def test_sign_off_remove(self):
         gps = GenePanelSnapshotFactory()

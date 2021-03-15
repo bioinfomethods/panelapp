@@ -49,13 +49,13 @@
               <br />Panel types: {% for type in panel.panel.types.all %}{{ type.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
           {% endif %}
           {% if signed_off %}
-              <br />Latest signed off version: v{{ signed_off.major_version }}.{{ signed_off.minor_version }} ({{ signed_off.signed_off_date }})
+              <br />Latest signed off version: {% signed_off_version panel_id=panel.panel_id major_version=signed_off.major_version minor_version=signed_off.minor_version %} ({{ signed_off.signed_off_date }})
               <br />
               <form action="{% url 'panels:download_old_panel_tsv' panel.panel.id %}" id="header_download_signedoff" method="post">{% csrf_token %}
                   <input type="hidden" value="{{ signed_off.major_version }}.{{ signed_off.minor_version }}" name="panel_version" class="input form-control">
                   <button type="submit" class="btn btn-primary">Download Latest Signed-Off Version</button>
               </form>
-              {% if signed_off_previous_versions %}Previously signed off versions: {{ signed_off_previous_versions|join:", " }}{% endif %}
+              {% if signed_off_previous_versions %}Previously signed off versions: {% for major_version, minor_version in signed_off_previous_versions %}{% signed_off_version panel_id=panel.panel_id major_version=major_version minor_version=minor_version %}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}
           {% endif %}
 
           {% if panel.panel.old_pk %}<br />Previous code: {{ panel.panel.old_pk }}{% endif %}

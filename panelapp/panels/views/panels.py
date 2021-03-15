@@ -182,10 +182,7 @@ class GenePanelView(DetailView):
             signed_off_versions = self.object.signed_off_versions(
                 exclude_pks=[signed_off.pk,]
             ).values_list("major_version", "minor_version")
-            signed_off_previous_versions = [
-                f"{v[0]}.{v[1]}" for v in signed_off_versions
-            ]
-            ctx["signed_off_previous_versions"] = signed_off_previous_versions
+            ctx["signed_off_previous_versions"] = signed_off_versions
         ctx["contributors"] = ctx["panel"].contributors
         ctx["promote_panel_form"] = PromotePanelForm(
             instance=ctx["panel"],

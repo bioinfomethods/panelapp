@@ -1,4 +1,4 @@
-{% load mathfilters %}
+{% load mathfilters panel_helpers %}
 
 <div class="table-responsive add-top-margin" data-module="sortable-table" data-default-key="panel">
   <table class="table table-bordered" data-module="filterable-table">
@@ -83,7 +83,7 @@
                 {%  endif %}
                 {% if entry.panel.signed_off_id %}
                     <strong>
-                    Latest signed off version v{{ entry.signed_off.0 }}.{{ entry.signed_off.1 }} ({{ entry.signed_off.2 }})
+                    Latest signed off version: {% signed_off_version panel_id=entry.panel_id major_version=entry.signed_off.0 minor_version=entry.signed_off.1 %} ({{ entry.signed_off.2 }})
                     </strong>
                 {% endif %}
               </td>
