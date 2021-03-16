@@ -169,7 +169,7 @@ def signed_off_panel_message(panel: "panels.models.GenePanelSnapshot") -> str:
         href = (
             f"{settings.SIGNED_OFF_ARCHIVE_BASE_URL}/panels/{panel.panel_id}/{version}"
         )
-        version = f'<a href="{href}">{version}</a>'
+        version = f'<a href="{href}" target="_blank">{version}</a>'
 
     return SafeString(settings.SIGNED_OFF_MESSAGE.format(version=version))
 
@@ -180,6 +180,6 @@ def signed_off_version(panel_id: str, major_version: str, minor_version):
 
     if settings.SIGNED_OFF_ARCHIVE_BASE_URL:
         href = f"{settings.SIGNED_OFF_ARCHIVE_BASE_URL}/panels/{panel_id}/{version}"
-        version = f'<a href="{href}">{version}</a>'
+        version = f'<a href="{href}" target="_blank">{version}</a>'
 
     return SafeString(version)
