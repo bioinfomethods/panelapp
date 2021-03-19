@@ -86,7 +86,7 @@ class ALBAuthMiddleware:
         This will authenticate pass in user using email as username and set mandatory fields first_name and last_name.
         It will use Django RemoteUserBackend to facilitate creation of a new user if none exist before.
         Additionally, it will create PanelApp specific Reviewer and send email to curators for a new
-        reviewer sign up email workflow. And put this new user to Reviewer.TYPES.EXTERNAL.
+        reviewer sign up email workflow. And put this new user to Reviewer.TYPES.REVIEWER.
 
         :param request:
         :param email:
@@ -110,19 +110,21 @@ class ALBAuthMiddleware:
         user = auth.authenticate(request, remote_user=email)
 
         if user:
-            # update required user attributes
-            user.email = email
-            user.first_name = first_name
-            user.last_name = last_name
-            user.save()
 
             # create a reviewer profile if None exist before
             try:
                 user.reviewer
             except ObjectDoesNotExist:
+
+                # update required user attributes
+                user.email = email
+                user.first_name = first_name
+                user.last_name = last_name
+                user.save()
+
                 Reviewer.objects.create(
                     user=user,
-                    user_type=Reviewer.TYPES.EXTERNAL,
+                    user_type=Reviewer.TYPES.REVIEWER,
                     affiliation="Other",
                     role=Reviewer.ROLES.Other,
                     workplace=Reviewer.WORKPLACES.Other,
