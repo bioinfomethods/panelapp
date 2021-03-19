@@ -6,4 +6,3 @@ Please verify your email address by visiting the following link: {{ settings.PAN
 
 Warmest regards,
 The PanelApp Team
-Genomics England

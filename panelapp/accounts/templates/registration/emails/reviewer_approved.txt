@@ -31,10 +31,9 @@ To start exploring the PanelApp please go to {{ settings.PANEL_APP_BASE_URL }}
 
 More information about the role of reviewers, guidelines for gene panel review and instructions can be found on the PanelApp homepage.
 
-If you have any difficulties logging in, navigating the website, or any queries please contact us at panelapp@genomicsengland.co.uk.
+If you have any difficulties logging in, navigating the website, or any queries please contact us.
 
 We would like to take this opportunity to thank you for registering to be a reviewer of the gene panels in PanelApp. Please encourage others with expertise to register and contribute to establishing consensus gene panels.
 
 Warmest regards,
 The PanelApp Team
-Genomics England
