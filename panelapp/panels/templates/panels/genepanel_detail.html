@@ -65,6 +65,7 @@
               {% for contributor in contributors %}
                   <li class="list-group-item">
                       <p class="bold">{{ contributor.get_full_name }} ({{contributor.reviewer.affiliation}})</p>
+{% comment %}
                       <p class="text-muted">
                           Group: {{ contributor.reviewer.group }}<br />
                           Workplace: {{ contributor.reviewer.workplace }}
@@ -72,6 +73,7 @@
                               <br /><a href="mailto:{{ contributor.email }}" class="link-muted word-break">{{ contributor.email }}</a>
                           {% endif %}
                       </p>
+{% endcomment %}
                   </li>
               {% endfor %}
               </ul>

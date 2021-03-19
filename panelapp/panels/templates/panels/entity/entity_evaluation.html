@@ -5,9 +5,11 @@
     <h4 class="normal remove-top-margin add-label-margin">
       {{ user.first_name }} {{ user.last_name }} ({{ user.reviewer.affiliation }})
     </h4>
+{% comment %}
     {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
       <a href="mailto:{{ user.email }}" class="link-muted">{{ user.email }}</a>
     {% endif %}
+{% endcomment %}
   </div>
 
   {% if ev.rating %}
