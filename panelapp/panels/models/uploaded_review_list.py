@@ -205,7 +205,7 @@ class UploadedReviewsList(TimeStampedModel):
 
         Returns ProcessingRunCode
         """
-        with self.reviews.open(mode="rt") as file:
+        with self.reviews.open(mode="rb") as file:
             try:
                 textfile_content = force_text(
                     file.read(), encoding="utf-8", errors="ignore"

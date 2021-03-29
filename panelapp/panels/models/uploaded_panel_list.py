@@ -191,7 +191,7 @@ class UploadedPanelList(TimeStampedModel):
 
         returns ProcessingRunCode
         """
-        with self.panel_list.open(mode="rt") as file:
+        with self.panel_list.open(mode="rb") as file:
             # When file is stored in S3 we need to read the file returned by FieldFile.open(), then force it into text
             # and split the content into lines
             try:
