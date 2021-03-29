@@ -230,6 +230,8 @@ class GenePanel(TimeStampedModel):
         if exclude_pks is None:
             exclude_pks = []
 
-        return self.historicalsnapshot_set.exclude(
-            signed_off_date__isnull=True
-        ).exclude(pk__in=exclude_pks)
+        return (
+            self.historicalsnapshot_set.exclude(signed_off_date__isnull=True)
+            .exclude(pk__in=exclude_pks)
+            .order_by("-major_version", "-minor_version")
+        )
