@@ -5,11 +5,11 @@ include:
   - template: Code-Quality.gitlab-ci.yml
 
 stages:
-   - test
-   - image_build
-   - deploy_to_test
-   - deploy_to_stage
-   - deploy_to_production    # Manual
+  - test
+  - image_build
+  - deploy_to_test
+  - deploy_to_stage
+  - deploy_to_production    # Manual
 
 # Common deploy functionality
 .check_docker_hub_version:
@@ -125,74 +125,74 @@ image_build:
 # Deploy all the things
 ## Stage
 deploy_to_stage:
-   stage: deploy_to_stage
-   extends:
-     - .check_docker_hub_version
-     - .clone_terraform_repo
-   environment:
-     name: stage
-   dependencies:
-     - image_build
-   tags:
-     - TF_panelapp_stage
-   variables:
-     env_name : stage
-   script:
-     - export WORKING_DIR=$(pwd)
-     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
-     - sleep 30
-     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-stage -panelapp
-     - sleep 30
-     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-stage -panelapp
-   rules:
-     - if: $env_name == "stage" && $version =~ /^\d+\.\d+\.\d+\w+?$/
+  stage: deploy_to_stage
+  extends:
+    - .check_docker_hub_version
+    - .clone_terraform_repo
+  environment:
+    name: stage
+  dependencies:
+    - image_build
+  tags:
+    - TF_panelapp_stage
+  variables:
+    env_name : stage
+  script:
+    - export WORKING_DIR=$(pwd)
+    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
+    - sleep 30
+    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-stage -panelapp
+    - sleep 30
+    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-stage -panelapp
+  rules:
+    - if: $env_name == "stage" && $version =~ /^\d+\.\d+\.\d+\w+?$/
 
 ## Prod
 deploy_to_production:
-   stage: deploy_to_production
-   extends:
-     - .check_docker_hub_version
-     - .clone_terraform_repo
-   environment:
-     name: prod
-   tags:
-     - TF_panelapp_prod
-   variables:
-     env_name : prod
-   script:
-     - export WORKING_DIR=$(pwd)
-     # Take DB snapshot and delete the old one
-     - python3 $WORKING_DIR/panelapp-infra/rds_snapshot.py -create -recycle
-     - sleep 60
-     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
-     - sleep 30
-     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-prod -panelapp
-     - sleep 30
-     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-prod -panelapp
-   rules:
-     - if: $env_name == "prod" && $version =~ /^\d+\.\d+\.\d+\w+?$/
-       when: manual
+  stage: deploy_to_production
+  extends:
+    - .check_docker_hub_version
+    - .clone_terraform_repo
+  environment:
+    name: prod
+  tags:
+    - TF_panelapp_prod
+  variables:
+    env_name : prod
+  script:
+    - export WORKING_DIR=$(pwd)
+    # Take DB snapshot and delete the old one
+    - python3 $WORKING_DIR/panelapp-infra/rds_snapshot.py -create -recycle
+    - sleep 60
+    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
+    - sleep 30
+    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-prod -panelapp
+    - sleep 30
+    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-prod -panelapp
+  rules:
+    - if: $env_name == "prod" && $version =~ /^\d+\.\d+\.\d+\w+?$/
+      when: manual
 
 ## Test
 deploy_to_test:
-   extends:
-     - .check_docker_hub_version
-     - .clone_terraform_repo
-   stage: deploy_to_test
-   environment:
-     name: test
-   dependencies:
-     - image_build
-   tags:
-     - TF_panelapp_test
-   variables:
-     env_name : test
-   script:
-     - export WORKING_DIR=$(pwd)
-     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
-     - sleep 30
-     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-test -panelapp
-     - sleep 30
-     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-test -panelapp
-   rules:
-     - if: $env_name == "test" && $version =~ /^\d+\.\d+\.\d+\w*?$/
+  extends:
+    - .check_docker_hub_version
+    - .clone_terraform_repo
+  stage: deploy_to_test
+  environment:
+    name: test
+  dependencies:
+    - image_build
+  tags:
+    - TF_panelapp_test
+  variables:
+    env_name : test
+  script:
+    - export WORKING_DIR=$(pwd)
+    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
+    - sleep 30
+    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-test -panelapp
+    - sleep 30
+    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-test -panelapp
+  rules:
+    - if: $env_name == "test" && $version =~ /^\d+\.\d+\.\d+\w*?$/
