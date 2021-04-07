@@ -7,9 +7,29 @@ include:
 stages:
    - test
    - image_build
-   - deploy_to_stage         # Manual
+   - deploy_to_test
+   - deploy_to_stage
    - deploy_to_production    # Manual
-   - deploy_to_test          # Manual
+
+# Common deploy functionality
+.check_docker_hub_version:
+  # check version exists in docker hub
+
+  before_script:
+    - export DOCKER_HUB_VERSION_URL="https://hub.docker.com/v2/repositories/${DOCKERHUB_ORG}/${PACKAGE_NAME}-web/tags/${version}"
+    - curl --silent -f --head -lL ${DOCKER_HUB_VERSION_URL} > /dev/null || (echo "Version ${version} doesn't exist in Docker Hub" && exit 1)
+
+.clone_terraform_repo:
+  # This will initialize the required environment variable and files to run Terraform
+
+  before_script:
+    - wget -q 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -O aws_creds
+    - export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' aws_creds)
+    - export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
+    - export AWS_SESSION_TOKEN=$(jq -r '.Token' aws_creds)
+    - export AWS_DEFAULT_REGION=$default_region
+    - git clone --single-branch --branch $INFRA_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
+    - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
 
 .tests:
   stage: test
@@ -100,12 +120,15 @@ image_build:
     - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:latest
     - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-base:latest
   rules:
-    - if: $CI_COMMIT_TAG =~ /\d+\.\d+\.\d+\w*$/
+    - if: $CI_COMMIT_TAG =~ /\d+\.\d+\.\d+\w+?$/
 
 # Deploy all the things
 ## Stage
 deploy_to_stage:
    stage: deploy_to_stage
+   extends:
+     - .check_docker_hub_version
+     - .clone_terraform_repo
    environment:
      name: stage
    dependencies:
@@ -114,59 +137,47 @@ deploy_to_stage:
      - TF_panelapp_stage
    variables:
      env_name : stage
-   before_script:
-     # This will initialize the required environment variable and files to run Terraform
-     - wget -q 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -O aws_creds
-     - export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' aws_creds)
-     - export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
-     - export AWS_SESSION_TOKEN=$(jq -r '.Token' aws_creds)
-     - export AWS_DEFAULT_REGION=$default_region
-     - git clone --single-branch --branch $INFRA_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-     - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
    script:
      - export WORKING_DIR=$(pwd)
-     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$CI_COMMIT_TAG && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$CI_COMMIT_TAG
+     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
      - sleep 30
      - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-stage -panelapp
      - sleep 30
      - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-stage -panelapp
    rules:
-     - if: $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+b\d+$/
-       when: manual
+     - if: $env_name == "stage" && $version =~ /^\d+\.\d+\.\d+\w+?$/
 
 ## Prod
 deploy_to_production:
    stage: deploy_to_production
+   extends:
+     - .check_docker_hub_version
+     - .clone_terraform_repo
    environment:
      name: prod
    tags:
      - TF_panelapp_prod
    variables:
      env_name : prod
-   before_script:
-     - wget -q 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -O aws_creds
-     - export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' aws_creds)
-     - export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
-     - export AWS_SESSION_TOKEN=$(jq -r '.Token' aws_creds)
-     - export AWS_DEFAULT_REGION=$default_region
-     - git clone --single-branch --branch $INFRA_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-     - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
    script:
      - export WORKING_DIR=$(pwd)
      # Take DB snapshot and delete the old one
      - python3 $WORKING_DIR/panelapp-infra/rds_snapshot.py -create -recycle
      - sleep 60
-     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$CI_COMMIT_TAG && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$CI_COMMIT_TAG
+     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
      - sleep 30
      - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-prod -panelapp
      - sleep 30
      - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-prod -panelapp
    rules:
-     - if: $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+$/
+     - if: $env_name == "prod" && $version =~ /^\d+\.\d+\.\d+\w+?$/
        when: manual
 
 ## Test
 deploy_to_test:
+   extends:
+     - .check_docker_hub_version
+     - .clone_terraform_repo
    stage: deploy_to_test
    environment:
      name: test
@@ -176,22 +187,12 @@ deploy_to_test:
      - TF_panelapp_test
    variables:
      env_name : test
-   before_script:
-     # This will initialize the required environment variable and files to run Terraform
-     - wget -q 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -O aws_creds
-     - export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' aws_creds)
-     - export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
-     - export AWS_SESSION_TOKEN=$(jq -r '.Token' aws_creds)
-     - export AWS_DEFAULT_REGION=$default_region
-     - git clone --single-branch --branch $INFRA_TEST_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-     - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
    script:
      - export WORKING_DIR=$(pwd)
-     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$CI_COMMIT_TAG && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$CI_COMMIT_TAG
+     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
      - sleep 30
      - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-test -panelapp
      - sleep 30
      - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-test -panelapp
    rules:
-     - if: $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+a\d+$/
-       when: manual
+     - if: $env_name == "test" && $version =~ /^\d+\.\d+\.\d+\w*?$/
