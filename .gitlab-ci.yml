@@ -108,7 +108,6 @@ deploy_to_stage:
    stage: deploy_to_stage
    environment:
      name: stage
-     on_stop: destroy_stage
    dependencies:
      - image_build
    tags:
@@ -134,30 +133,6 @@ deploy_to_stage:
    rules:
      - if: $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+b\d+$/
        when: manual
-
-destroy_stage:
-  stage: deploy_to_stage
-  variables:
-     env_name : stage
-  environment:
-    name: stage
-    action: stop
-  tags:
-    - TF_panelapp_stage
-  before_script:
-    - wget -q 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -O aws_creds
-    - export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' aws_creds)
-    - export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
-    - export AWS_SESSION_TOKEN=$(jq -r '.Token' aws_creds)
-    - export AWS_DEFAULT_REGION=$default_region
-    - git clone --single-branch --branch $INFRA_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-    - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
-  script:
-    - export WORKING_DIR=$(pwd)
-    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var image_tag=$CI_COMMIT_TAG -var 'EC2_mgmt_count=0' && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var image_tag=$CI_COMMIT_TAG -var 'EC2_mgmt_count=0'
-  rules:
-    - if: $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+b\d+$/
-      when: manual
 
 ## Prod
 deploy_to_production:
@@ -195,7 +170,6 @@ deploy_to_test:
    stage: deploy_to_test
    environment:
      name: test
-     on_stop: destroy_test
    dependencies:
      - image_build
    tags:
@@ -221,27 +195,3 @@ deploy_to_test:
    rules:
      - if: $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+a\d+$/
        when: manual
-
-destroy_test:
-  stage: deploy_to_test
-  variables:
-     env_name : test
-  environment:
-    name: test
-    action: stop
-  tags:
-    - TF_panelapp_test
-  before_script:
-    - wget -q 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -O aws_creds
-    - export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' aws_creds)
-    - export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
-    - export AWS_SESSION_TOKEN=$(jq -r '.Token' aws_creds)
-    - export AWS_DEFAULT_REGION=$default_region
-    - git clone --single-branch --branch $INFRA_TEST_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-    - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
-  script:
-    - export WORKING_DIR=$(pwd)
-    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var image_tag=$CI_COMMIT_TAG -var 'EC2_mgmt_count=0' && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var image_tag=$CI_COMMIT_TAG -var 'EC2_mgmt_count=0'
-  rules:
-    - if: $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+a\d+$/
-      when: manual
