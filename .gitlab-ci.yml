@@ -67,6 +67,8 @@ code_test:
     - pip install pytest-runner
   script:
     - pytest
+  rules:
+    - if: $NIGHTLY_TEST == "true" && $CI_PIPELINE_SOURCE == "schedule"
 
 ## Linging, formatting, etc
 import_sorting:
