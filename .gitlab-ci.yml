@@ -9,6 +9,7 @@ stages:
   - image_build
   - deploy_to_test
   - deploy_to_stage
+  - deploy_to_uat
   - deploy_to_production    # Manual
 
 # Common deploy functionality
@@ -197,3 +198,29 @@ deploy_to_test:
     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-test -panelapp
   rules:
     - if: $env_name == "test" && $version =~ /^\d+\.\d+\.\d+\w*?$/
+
+## UAT
+
+deploy_to_uat:
+  stage: deploy_to_uat
+  extends:
+    - .check_docker_hub_version
+    - .clone_terraform_repo
+  environment:
+    name: uat
+  dependencies:
+    - image_build
+  tags:
+    - TF_panelapp_uat
+  variables:
+    env_name : uat
+  script:
+    - export WORKING_DIR=$(pwd)
+    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
+    - sleep 30
+    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-uat -panelapp
+    - sleep 30
+    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-uat -panelapp
+  rules:
+    - if: $env_name == "uat" && $version =~ /^\d+\.\d+\.\d+\w+?$/
+      when: manual
