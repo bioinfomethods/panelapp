@@ -147,7 +147,7 @@ deploy_to_stage:
     - sleep 30
     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-stage -panelapp
   rules:
-    - if: $env_name == "stage" && $version =~ /^\d+\.\d+\.\d+\w+?$/
+    - if: $env_name == "stage" && $version =~ /^\d+\.\d+\.\d+(\w+)?$/
 
 ## Prod
 deploy_to_production:
@@ -172,7 +172,7 @@ deploy_to_production:
     - sleep 30
     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-prod -panelapp
   rules:
-    - if: $env_name == "prod" && $version =~ /^\d+\.\d+\.\d+\w+?$/
+    - if: $env_name == "prod" && $version =~ /^\d+\.\d+\.\d+(\w+)?$/
       when: manual
 
 ## Test
@@ -197,7 +197,7 @@ deploy_to_test:
     - sleep 30
     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-test -panelapp
   rules:
-    - if: $env_name == "test" && $version =~ /^\d+\.\d+\.\d+\w*?$/
+    - if: $env_name == "test" && $version =~ /^\d+\.\d+\.\d+(\w+)?$/
 
 ## UAT
 
@@ -222,5 +222,5 @@ deploy_to_uat:
     - sleep 30
     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-uat -panelapp
   rules:
-    - if: $env_name == "uat" && $version =~ /^\d+\.\d+\.\d+\w+?$/
+    - if: $env_name == "uat" && $version =~ /^\d+\.\d+\.\d+(\w+)?$/
       when: manual
