@@ -172,8 +172,9 @@ Service endpoints are LocalStack defaults:
     You have to pass `endpoint_url` to most of libraries/CLI commands. Also, you may have to disable `https` with
     `use_ssl=False` as LocalStack uses http while S3, for example, uses https by default.
 * Containers running inside the docker-compose cluster see all LocalStack service coming from `localstack` host. From the
-    host machine they are actually exposed to `localhost`. To make scripts running both inside the containers and from
-    the host machine, set an alias `localstack` alias to `localhost` in the host machine's `/etc/hosts` file
+    host machine they are actually exposed to `localhost`. To allow resources hosted at `localstack` to be accessible on the host machine:
+  * Linux: Alias `localstack` to `localhost` in the host machine's `/etc/hosts` file.
+  * Windows: Add the line `127.0.0.1 localstack` to the host machine's `C:\Windows\System32\drivers\etc\hosts` file.
 * LocalStack SES does not support SMTP
 
 ### AWScli-local
