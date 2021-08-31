@@ -10,7 +10,7 @@ Panel App is a crowd-sourced repository of information about various gene panels
 Panel App is a project based on Django Framework (v2.1).
 It uses PostgreSQL as database, AWS SQS as message queue backend and AWS S3 for file storage.
 
-Python version: 3.5
+Python version: 3.8
 
 Python dependencies are installed via `setup.py`.
 
