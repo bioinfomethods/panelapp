@@ -16,6 +16,7 @@ stages:
 .deploy_default:
   image: hashicorp/terraform:0.12.31
   before_script:
+    - apk add python3 curl wget jq
     - export DOCKER_HUB_VERSION_URL="https://hub.docker.com/v2/repositories/${DOCKERHUB_ORG}/${PACKAGE_NAME}-web/tags/${version}"
     - curl --silent -f --head -lL ${DOCKER_HUB_VERSION_URL} > /dev/null || (echo "Version ${version} doesn't exist in Docker Hub" && exit 1)
     - wget -q 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -O aws_creds
@@ -25,7 +26,6 @@ stages:
     - export AWS_DEFAULT_REGION=$default_region
     - git clone --single-branch --branch $INFRA_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
     - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
-    - apk add python3
     - python3 -m venv .venv
     - source .venv/bin/activate
     - pip install boto3==1.21.1
