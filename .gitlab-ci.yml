@@ -16,7 +16,7 @@ stages:
 .deploy_default:
   image: hashicorp/terraform:0.12.31
   before_script:
-    - apk add python3 curl wget jq
+    - apk --no-cache add --update python3 curl wget jq
     - export DOCKER_HUB_VERSION_URL="https://hub.docker.com/v2/repositories/${DOCKERHUB_ORG}/${PACKAGE_NAME}-web/tags/${version}"
     - curl --silent -f --head -lL ${DOCKER_HUB_VERSION_URL} > /dev/null || (echo "Version ${version} doesn't exist in Docker Hub" && exit 1)
     - wget -q 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -O aws_creds
