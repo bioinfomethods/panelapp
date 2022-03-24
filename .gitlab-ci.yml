@@ -49,6 +49,12 @@ code_quality:
 code_test:
   image: python:3.8-alpine3.12
   extends: .tests
+  coverage: /^TOTAL.+?(\d+\%)$/
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
   services:
     - name: postgres:9.6.9
       alias: db-postgres
@@ -61,12 +67,15 @@ code_test:
     DJANGO_LOG_LEVEL: INFO
   before_script:
     - apk add --no-cache postgresql-libs git curl jpeg-dev zlib-dev gcc musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev
+    - python -m venv .venv
+    - source .venv/bin/activate
     - pip install .[tests]
     - pip install pytest-runner
   script:
-    - pytest
+    - pytest --cov-report term --cov-report xml
   rules:
     - if: $NIGHTLY_TEST == "true" && $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
 ## Linging, formatting, etc
 import_sorting:
