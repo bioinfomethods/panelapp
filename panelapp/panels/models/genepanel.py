@@ -212,7 +212,9 @@ class GenePanel(TimeStampedModel):
             )
 
         snapshot.save(
-            update_fields=["signed_off_date",]
+            update_fields=[
+                "signed_off_date",
+            ]
         )
 
         self.signed_off = (
@@ -221,7 +223,9 @@ class GenePanel(TimeStampedModel):
             .first()
         )
         self.save(
-            update_fields=["signed_off",]
+            update_fields=[
+                "signed_off",
+            ]
         )
 
         return activities

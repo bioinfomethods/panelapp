@@ -94,12 +94,14 @@ def import_panel(user_pk, upload_pk):
             line
         )
     except UserDoesNotExist as line:
-        message = "Line: {} has a wrong username, please check it and try again.".format(
-            line
+        message = (
+            "Line: {} has a wrong username, please check it and try again.".format(line)
         )
     except TSVIncorrectFormat as line:
-        message = "Line: {} is not properly formatted, please check it and try again.".format(
-            line
+        message = (
+            "Line: {} is not properly formatted, please check it and try again.".format(
+                line
+            )
         )
     except GenesDoNotExist as genes_error:
         message = (
@@ -110,8 +112,10 @@ def import_panel(user_pk, upload_pk):
         message = "One of the panels contains child panels"
     except Exception as e:
         print(e)
-        message = "Unhandled error occured, please forward it to the dev team:\n\n{}".format(
-            e
+        message = (
+            "Unhandled error occured, please forward it to the dev team:\n\n{}".format(
+                e
+            )
         )
 
     panel_list.import_log = message

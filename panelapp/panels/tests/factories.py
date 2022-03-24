@@ -109,7 +109,7 @@ class GeneFactory(factory.django.DjangoModelFactory):
         model = Gene
 
     gene_symbol = factory.LazyAttribute(
-        lambda g: factory.Faker("md5").evaluate(0, 0, 0)[:7]
+        lambda g: factory.Faker("md5").evaluate(0, 0, {"locale": None})[:7]
     )
     gene_name = "gene_name"
     ensembl_genes = {}

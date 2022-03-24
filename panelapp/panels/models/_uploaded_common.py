@@ -199,7 +199,9 @@ def get_missing_panels(unique_panels: Set[str]) -> Set[str]:
     """
 
     db_unique_panels = (
-        GenePanelSnapshot.objects.filter(panel__name__in=unique_panels,)
+        GenePanelSnapshot.objects.filter(
+            panel__name__in=unique_panels,
+        )
         .exclude(panel__status=GenePanel.STATUS.deleted)
         .values_list("panel__name", flat=True)
     )

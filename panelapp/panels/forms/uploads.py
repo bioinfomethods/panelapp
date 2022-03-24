@@ -65,24 +65,32 @@ class UploadPanelsForm(forms.Form):
         try:
             return panel_list.process_file(kwargs.pop("user"))
         except GeneDoesNotExist as e:
-            message = "Line: {} has a wrong gene, please check it and try again.".format(
-                e
+            message = (
+                "Line: {} has a wrong gene, please check it and try again.".format(e)
             )
         except UserDoesNotExist as e:
-            message = "Line: {} has a wrong username, please check it and try again.".format(
-                e
+            message = (
+                "Line: {} has a wrong username, please check it and try again.".format(
+                    e
+                )
             )
         except UsersDoNotExist as e:
-            message = "Can't find following users: {}, please check it and try again.".format(
-                e
+            message = (
+                "Can't find following users: {}, please check it and try again.".format(
+                    e
+                )
             )
         except GenesDoNotExist as e:
-            message = "Can't find following genes: {}, please check it and try again.".format(
-                e
+            message = (
+                "Can't find following genes: {}, please check it and try again.".format(
+                    e
+                )
             )
         except STRsDoNotExist as e:
-            message = "Can't find following STRs: {}, please check it and try again.".format(
-                e
+            message = (
+                "Can't find following STRs: {}, please check it and try again.".format(
+                    e
+                )
             )
         except RegionsDoNotExist as e:
             message = "Can't find following Regions: {}, please check it and try again.".format(
@@ -114,20 +122,26 @@ class UploadReviewsForm(forms.Form):
         try:
             return review_list.process_file(kwargs.pop("user"))
         except GeneDoesNotExist as e:
-            message = "Line: {} has a wrong gene, please check it and try again.".format(
-                e
+            message = (
+                "Line: {} has a wrong gene, please check it and try again.".format(e)
             )
         except UserDoesNotExist as e:
-            message = "Line: {} has a wrong username, please check it and try again.".format(
-                e
+            message = (
+                "Line: {} has a wrong username, please check it and try again.".format(
+                    e
+                )
             )
         except UsersDoNotExist as e:
-            message = "Can't find following users: {}, please check it and try again.".format(
-                e
+            message = (
+                "Can't find following users: {}, please check it and try again.".format(
+                    e
+                )
             )
         except GenesDoNotExist as e:
-            message = "Can't find following genes: {}, please check it and try again.".format(
-                e
+            message = (
+                "Can't find following genes: {}, please check it and try again.".format(
+                    e
+                )
             )
         except ImportValidationError as err:
             message = err.invalid_rows  # ValidationError supports list of messages

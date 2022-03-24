@@ -119,7 +119,9 @@ urlpatterns = [
     url(rf"^{PK_PARAM}/delete$", DeletePanelAjaxView.as_view(), name="delete_panel"),
     url(rf"^{PK_PARAM}/reject$", RejectPanelAjaxView.as_view(), name="reject_panel"),
     url(
-        rf"^{PK_PARAM}/approve$", ApprovePanelAjaxView.as_view(), name="approve_panel",
+        rf"^{PK_PARAM}/approve$",
+        ApprovePanelAjaxView.as_view(),
+        name="approve_panel",
     ),
     url(
         rf"^{PK_PARAM}/download/(?P<categories>[0-4]+)/$",
@@ -266,8 +268,15 @@ urlpatterns = [
     url(r"^create/", CreatePanelView.as_view(), name="create"),
     url(r"^entities/$", EntitiesListView.as_view(), name="entities_list"),
     url(r"^genes/$", RedirectView.as_view(url="/panels/entities"), name="genes_list"),
-    url(rf"^entities/{NAME_PARAM}$", EntityDetailView.as_view(), name="entity_detail",),
-    url(rf"^genes/{NAME_PARAM}$", GeneDetailRedirectView.as_view(),),
+    url(
+        rf"^entities/{NAME_PARAM}$",
+        EntityDetailView.as_view(),
+        name="entity_detail",
+    ),
+    url(
+        rf"^genes/{NAME_PARAM}$",
+        GeneDetailRedirectView.as_view(),
+    ),
     url(r"^activity/$", ActivityListView.as_view(), name="activity"),
     url(r"^admin/", AdminView.as_view(), name="admin"),
     url(r"^upload_genes/", AdminUploadGenesView.as_view(), name="upload_genes"),

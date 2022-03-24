@@ -501,8 +501,10 @@ def moi_check_mt(gene) -> Optional[IncorrectMoiGene]:
         )
 
     if chromosome != "MT" and moi == "MITOCHONDRIAL":
-        msg = "Green gene {} on chromosome {} with MITOCHONDRIAL MOI on panel {}".format(
-            gene.name, chromosome, gene.panel
+        msg = (
+            "Green gene {} on chromosome {} with MITOCHONDRIAL MOI on panel {}".format(
+                gene.name, chromosome, gene.panel
+            )
         )
         return IncorrectMoiGene.from_gene(
             gene, check_type=CheckType.VALUE_NOT_ALLOWED, msg=msg
@@ -681,7 +683,9 @@ def retrieve_omim_moi(omim_id):
                     moi.update(phenotype_inheritance.split(";"))
     except HTTPError:
         LOGGER.error(
-            "HTTP error on request to OMIM.", exc_info=True, extra={"omim_id": omim_id},
+            "HTTP error on request to OMIM.",
+            exc_info=True,
+            extra={"omim_id": omim_id},
         )
     except ValueError:
         LOGGER.error(

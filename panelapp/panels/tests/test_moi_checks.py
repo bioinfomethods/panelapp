@@ -245,7 +245,11 @@ def test_moi_chr_x(moi, chromosome, error):
 @pytest.mark.parametrize(
     "moi,chromosome,error",
     [
-        ("Other", "Y", False,),
+        (
+            "Other",
+            "Y",
+            False,
+        ),
         (
             "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
             "Y",
@@ -405,7 +409,12 @@ def test_process_multiple_moi_exclude_monoallelic():
 
 
 @pytest.mark.parametrize(
-    "moi,result", [("", False), ("Unknown", False), ("Some val", True),],
+    "moi,result",
+    [
+        ("", False),
+        ("Unknown", False),
+        ("Some val", True),
+    ],
 )
 def test_non_empty(moi, result):
     assert result == has_non_empty_moi(moi)
@@ -490,8 +499,20 @@ def test_moi_check_non_standard(moi, error):
         ("MONOALLELIC,", {"Autosomal recessive"}, True),
         ("MONOALLELIC,", {"Autosomal recessive", "Autosomal dominant"}, True),
         ("BOTH", {"Autosomal dominant", "XLD"}, True),
-        ("BOTH", {"Autosomal dominant",}, True,),
-        ("BOTH", {"AD/AR",}, False,),
+        (
+            "BOTH",
+            {
+                "Autosomal dominant",
+            },
+            True,
+        ),
+        (
+            "BOTH",
+            {
+                "AD/AR",
+            },
+            False,
+        ),
         (
             "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
             {"Autosomal dominant", "XLD"},
@@ -529,7 +550,10 @@ def test_omim_check_multiple(retrieve_omim_mock, moi, omim_values, error):
 
     retrieve_omim_mock.return_value = omim_values
     gene = GenePanelEntrySnapshotFactory.build(
-        moi=moi, gene={"omim_gene": ["164975"],},
+        moi=moi,
+        gene={
+            "omim_gene": ["164975"],
+        },
     )
 
     res = moi_check_omim(gene)

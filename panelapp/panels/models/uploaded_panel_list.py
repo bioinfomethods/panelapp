@@ -80,10 +80,20 @@ MAP_COLUMN_TO_ENTITY_DATA = [
         "type": str,
         "validators": [lambda val, _: re.fullmatch(VALID_ENTITY_FORMAT, val)],
     },
-    {"name": "entity_type", "type": str,},
-    {"name": "gene_symbol", "type": str, "validators": [validate_gene_symbol],},
+    {
+        "name": "entity_type",
+        "type": str,
+    },
+    {
+        "name": "gene_symbol",
+        "type": str,
+        "validators": [validate_gene_symbol],
+    },
     {"name": "sources", "type": "unique-list"},
-    {"name": "level4", "type": str,},
+    {
+        "name": "level4",
+        "type": str,
+    },
     {"name": "level3", "type": str},
     {"name": "level2", "type": str},
     {"name": "moi", "type": str},
@@ -525,7 +535,8 @@ def validate_str_exists(line_number: int, entity_data: dict) -> Optional[Invalid
             entity_data["position_38_start"], entity_data["position_38_end"]
         ),
         position_37=NumericRange(
-            entity_data["position_37_start"], entity_data["position_37_end"],
+            entity_data["position_37_start"],
+            entity_data["position_37_end"],
         ),
         repeated_sequence=entity_data.get("repeated_sequence"),
         normal_repeats=entity_data.get("normal_repeats"),

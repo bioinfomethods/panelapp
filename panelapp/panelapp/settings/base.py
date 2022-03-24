@@ -202,7 +202,12 @@ LOG_FORMAT = " ".join(["%({0:s})".format(name) for name in LOG_FORMATTER_VALUES]
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "json",},},
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+        },
+    },
     "formatters": {
         "json": {
             "()": "panelapp.logs.TaskFormatter",
@@ -212,7 +217,10 @@ LOGGING = {
     },
     "loggers": {
         # all other apps
-        "": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL,},
+        "": {
+            "handlers": ["console"],
+            "level": DJANGO_LOG_LEVEL,
+        },
         # app logs
         "panelapp": {
             "handlers": ["console"],

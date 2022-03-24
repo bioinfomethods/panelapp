@@ -48,7 +48,8 @@ class Evaluation(TimeStampedModel):
     )
 
     MODES_OF_INHERITANCE = Choices(
-        ("", "Provide a mode of inheritance"), *MODE_OF_INHERITANCE_VALID_CHOICES,
+        ("", "Provide a mode of inheritance"),
+        *MODE_OF_INHERITANCE_VALID_CHOICES,
     )
 
     MODES_OF_PATHOGENICITY = Choices(

@@ -180,7 +180,9 @@ class GenePanelView(DetailView):
         if signed_off:
             ctx["signed_off"] = signed_off
             signed_off_versions = self.object.signed_off_versions(
-                exclude_pks=[signed_off.pk,]
+                exclude_pks=[
+                    signed_off.pk,
+                ]
             ).values_list("major_version", "minor_version")
             ctx["signed_off_previous_versions"] = signed_off_versions
         ctx["contributors"] = ctx["panel"].contributors

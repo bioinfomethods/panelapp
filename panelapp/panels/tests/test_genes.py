@@ -512,7 +512,10 @@ class CopyToPanelsTest(LoginGELUser):
 
         comment_text = "Comment123"
         comment = Comment.objects.create(user=self.user, comment=comment_text)
-        ev = Evaluation.objects.create(user=self.user, rating=Evaluation.RATINGS.AMBER,)
+        ev = Evaluation.objects.create(
+            user=self.user,
+            rating=Evaluation.RATINGS.AMBER,
+        )
         ev.comments.add(comment)
         gpes.evaluation.add(ev)
 
@@ -554,7 +557,10 @@ class CopyToPanelsTest(LoginGELUser):
 
         comment_text = "Comment123"
         comment = Comment.objects.create(user=self.user, comment=comment_text)
-        ev = Evaluation.objects.create(user=self.user, rating=Evaluation.RATINGS.AMBER,)
+        ev = Evaluation.objects.create(
+            user=self.user,
+            rating=Evaluation.RATINGS.AMBER,
+        )
         ev.comments.add(comment)
         gpes.evaluation.add(ev)
 

@@ -631,12 +631,14 @@ class GenePanelSnapshot(TimeStampedModel):
                     activity = "promoted panel to version {}".format(self.version)
                     self.add_activity(user, activity)
 
-                    self.version_comment = "{} {} promoted panel to {}\n{}\n\n{}".format(
-                        timezone.now().strftime("%Y-%m-%d %H:%M"),
-                        user.get_reviewer_name(),
-                        self.version,
-                        comment,
-                        self.version_comment if self.version_comment else "",
+                    self.version_comment = (
+                        "{} {} promoted panel to {}\n{}\n\n{}".format(
+                            timezone.now().strftime("%Y-%m-%d %H:%M"),
+                            user.get_reviewer_name(),
+                            self.version,
+                            comment,
+                            self.version_comment if self.version_comment else "",
+                        )
                     )
                     self.save()
 
@@ -895,7 +897,11 @@ class GenePanelSnapshot(TimeStampedModel):
                 entity_type=V("gene", output_field=models.CharField()),
                 entity_name=models.F("gene_core__gene_symbol"),
             )
-            .prefetch_related("evidence", "tags", "panel__panel__types",)
+            .prefetch_related(
+                "evidence",
+                "tags",
+                "panel__panel__types",
+            )
         )
 
         if self.is_super_panel:
@@ -938,7 +944,11 @@ class GenePanelSnapshot(TimeStampedModel):
                 entity_type=V("str", output_field=models.CharField()),
                 entity_name=models.F("name"),
             )
-            .prefetch_related("evidence", "tags", "panel__panel__types",)
+            .prefetch_related(
+                "evidence",
+                "tags",
+                "panel__panel__types",
+            )
         )
 
         if self.is_super_panel:
@@ -1476,8 +1486,10 @@ class GenePanelSnapshot(TimeStampedModel):
                     "Updating moi for gene:{} in panel:{}".format(gene_symbol, self)
                 )
 
-                description = "Mode of inheritance for gene {} was changed from {} to {}".format(
-                    gene_symbol, gene.moi, moi
+                description = (
+                    "Mode of inheritance for gene {} was changed from {} to {}".format(
+                        gene_symbol, gene.moi, moi
+                    )
                 )
                 gene.moi = moi
                 tracks.append(
@@ -1488,8 +1500,10 @@ class GenePanelSnapshot(TimeStampedModel):
                     "Updating moi for gene:{} in panel:{}".format(gene_symbol, self)
                 )
                 gene.moi = "MITOCHONDRIAL"
-                description = "Mode of inheritance for gene {} was changed from {} to {}".format(
-                    gene_symbol, gene.moi, "MITOCHONDRIAL"
+                description = (
+                    "Mode of inheritance for gene {} was changed from {} to {}".format(
+                        gene_symbol, gene.moi, "MITOCHONDRIAL"
+                    )
                 )
                 gene.moi = "MITOCHONDRIAL"
                 tracks.append(
@@ -1572,18 +1586,22 @@ class GenePanelSnapshot(TimeStampedModel):
 
                 if append_only:
                     new_transcript = list(set(transcript + gene.transcript))
-                    description = "Transcript for gene {} was updated from {} to {}".format(
-                        gene_symbol,
-                        "; ".join(gene.transcript),
-                        "; ".join(new_transcript),
+                    description = (
+                        "Transcript for gene {} was updated from {} to {}".format(
+                            gene_symbol,
+                            "; ".join(gene.transcript),
+                            "; ".join(new_transcript),
+                        )
                     )
                     gene.transcript = new_transcript
                 else:
                     current_transcript = (
                         "; ".join(gene.transcript) if gene.transcript else None
                     )
-                    description = "Transcript for gene {} was changed from {} to {}".format(
-                        gene_symbol, current_transcript, "; ".join(transcript)
+                    description = (
+                        "Transcript for gene {} was changed from {} to {}".format(
+                            gene_symbol, current_transcript, "; ".join(transcript)
+                        )
                     )
                     gene.transcript = transcript
                 tracks.append((TrackRecord.ISSUE_TYPES.SetTranscript, description))
@@ -1801,8 +1819,10 @@ class GenePanelSnapshot(TimeStampedModel):
 
                 if gene_symbol.startswith("MT-"):
                     new_gpes.moi = "MITOCHONDRIAL"
-                    description = "Mode of inheritance for gene {} was set to {}".format(
-                        gene_symbol, "MITOCHONDRIAL"
+                    description = (
+                        "Mode of inheritance for gene {} was set to {}".format(
+                            gene_symbol, "MITOCHONDRIAL"
+                        )
                     )
                     track_moi = TrackRecord.objects.create(
                         gel_status=new_gpes.status,
@@ -2078,11 +2098,13 @@ class GenePanelSnapshot(TimeStampedModel):
                     )
                 )
 
-                description = "Chromosome for {} was changed from {} to {}. Panel: {}".format(
-                    str_item.name,
-                    str_item.chromosome,
-                    str_data.get("chromosome"),
-                    self.panel.name,
+                description = (
+                    "Chromosome for {} was changed from {} to {}. Panel: {}".format(
+                        str_item.name,
+                        str_item.chromosome,
+                        str_data.get("chromosome"),
+                        self.panel.name,
+                    )
                 )
 
                 tracks.append((TrackRecord.ISSUE_TYPES.ChangedChromosome, description))
@@ -2113,8 +2135,10 @@ class GenePanelSnapshot(TimeStampedModel):
 
                     new_position = "{}-{}".format(position_37.lower, position_37.upper)
 
-                    description = "GRCh37 position for {} was changed from {} to {}.".format(
-                        str_item.name, old_position, new_position
+                    description = (
+                        "GRCh37 position for {} was changed from {} to {}.".format(
+                            str_item.name, old_position, new_position
+                        )
                     )
                 else:
                     description = "GRCh37 position for {} was removed.".format(
@@ -2148,8 +2172,10 @@ class GenePanelSnapshot(TimeStampedModel):
                     )
                 )
 
-                description = "GRCh38 position for {} was changed from {} to {}.".format(
-                    str_item.name, old_position, new_position
+                description = (
+                    "GRCh38 position for {} was changed from {} to {}.".format(
+                        str_item.name, old_position, new_position
+                    )
                 )
 
                 tracks.append((TrackRecord.ISSUE_TYPES.ChangedPosition38, description))
@@ -2167,10 +2193,12 @@ class GenePanelSnapshot(TimeStampedModel):
                     )
                 )
 
-                description = "Repeated Sequence for {} was changed from {} to {}.".format(
-                    str_item.name,
-                    str_item.repeated_sequence,
-                    str_data.get("repeated_sequence"),
+                description = (
+                    "Repeated Sequence for {} was changed from {} to {}.".format(
+                        str_item.name,
+                        str_item.repeated_sequence,
+                        str_data.get("repeated_sequence"),
+                    )
                 )
 
                 tracks.append(
@@ -2190,10 +2218,12 @@ class GenePanelSnapshot(TimeStampedModel):
                     )
                 )
 
-                description = "Normal Number of Repeats for {} was changed from {} to {}.".format(
-                    str_item.name,
-                    str_item.normal_repeats,
-                    str_data.get("normal_repeats"),
+                description = (
+                    "Normal Number of Repeats for {} was changed from {} to {}.".format(
+                        str_item.name,
+                        str_item.normal_repeats,
+                        str_data.get("normal_repeats"),
+                    )
                 )
 
                 tracks.append(
@@ -2302,8 +2332,10 @@ class GenePanelSnapshot(TimeStampedModel):
                     "Updating moi for {} in panel:{}".format(str_item.label, self)
                 )
 
-                description = "Mode of inheritance for {} was changed from {} to {}".format(
-                    str_item.label, str_item.moi, moi
+                description = (
+                    "Mode of inheritance for {} was changed from {} to {}".format(
+                        str_item.label, str_item.moi, moi
+                    )
                 )
                 str_item.moi = moi
                 tracks.append(
@@ -2783,8 +2815,10 @@ class GenePanelSnapshot(TimeStampedModel):
 
                     new_position = "{}-{}".format(position_37.lower, position_37.upper)
 
-                    description = "GRCh37 position for {} was changed from {} to {}.".format(
-                        region.name, old_position, new_position
+                    description = (
+                        "GRCh37 position for {} was changed from {} to {}.".format(
+                            region.name, old_position, new_position
+                        )
                     )
                 else:
                     description = "GRCh37 position for {} was removed.".format(
@@ -2818,8 +2852,10 @@ class GenePanelSnapshot(TimeStampedModel):
                     )
                 )
 
-                description = "GRCh38 position for {} was changed from {} to {}.".format(
-                    region.name, old_position, new_position
+                description = (
+                    "GRCh38 position for {} was changed from {} to {}.".format(
+                        region.name, old_position, new_position
+                    )
                 )
 
                 tracks.append((TrackRecord.ISSUE_TYPES.ChangedPosition38, description))
@@ -2857,10 +2893,12 @@ class GenePanelSnapshot(TimeStampedModel):
                     )
                 )
 
-                description = "Haploinsufficiency Score for {} was changed from {} to {}.".format(
-                    region.name,
-                    region.haploinsufficiency_score,
-                    haploinsufficiency_score,
+                description = (
+                    "Haploinsufficiency Score for {} was changed from {} to {}.".format(
+                        region.name,
+                        region.haploinsufficiency_score,
+                        haploinsufficiency_score,
+                    )
                 )
 
                 tracks.append(
@@ -2882,10 +2920,12 @@ class GenePanelSnapshot(TimeStampedModel):
                     )
                 )
 
-                description = "Triplosensitivity Score for {} was changed from {} to {}.".format(
-                    region.name,
-                    region.triplosensitivity_score,
-                    triplosensitivity_score,
+                description = (
+                    "Triplosensitivity Score for {} was changed from {} to {}.".format(
+                        region.name,
+                        region.triplosensitivity_score,
+                        triplosensitivity_score,
+                    )
                 )
 
                 tracks.append(
@@ -2997,8 +3037,10 @@ class GenePanelSnapshot(TimeStampedModel):
                     "Updating moi for {} in panel:{}".format(region.label, self)
                 )
 
-                description = "Model of inheritance for {} was changed from {} to {}".format(
-                    region.label, region.moi, moi
+                description = (
+                    "Model of inheritance for {} was changed from {} to {}".format(
+                        region.label, region.moi, moi
+                    )
                 )
                 region.moi = moi
                 tracks.append(

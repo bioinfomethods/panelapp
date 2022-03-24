@@ -63,12 +63,14 @@ def import_reviews(user_pk, review_pk):
             line
         )
     except UserDoesNotExist as line:
-        message = "Line: {} has a wrong username, please check it and try again.".format(
-            line
+        message = (
+            "Line: {} has a wrong username, please check it and try again.".format(line)
         )
     except TSVIncorrectFormat as line:
-        message = "Line: {} is not properly formatted, please check it and try again.".format(
-            line
+        message = (
+            "Line: {} is not properly formatted, please check it and try again.".format(
+                line
+            )
         )
     except IncorrectGeneRating as e:
         message = e

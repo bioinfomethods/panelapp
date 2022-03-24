@@ -63,7 +63,10 @@ MAP_COLUMN_TO_ENTITY_DATA = [
         "validators": [lambda val, _: re.fullmatch(VALID_ENTITY_FORMAT, val)],
     },
     {"name": "source", "ignore": True},
-    {"name": "level4", "type": str,},
+    {
+        "name": "level4",
+        "type": str,
+    },
     {"name": "level3", "ignore": True},
     {"name": "level2", "ignore": True},
     {"name": "moi", "type": str},

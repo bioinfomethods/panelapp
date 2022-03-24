@@ -365,8 +365,10 @@ class AbstractEntity:
             evidence = Evidence.objects.create(
                 name="Expert Review Green", rating=5, reviewer=user.reviewer
             )
-            issue_description = "{} has been classified as Green List (High Evidence).".format(
-                self.label.capitalize()
+            issue_description = (
+                "{} has been classified as Green List (High Evidence).".format(
+                    self.label.capitalize()
+                )
             )
             self.flagged = False
             self.evidence.add(evidence)
@@ -374,8 +376,10 @@ class AbstractEntity:
             evidence = Evidence.objects.create(
                 name="Expert Review Amber", rating=5, reviewer=user.reviewer
             )
-            issue_description = "{} has been classified as Amber List (Moderate Evidence).".format(
-                self.label.capitalize()
+            issue_description = (
+                "{} has been classified as Amber List (Moderate Evidence).".format(
+                    self.label.capitalize()
+                )
             )
             self.flagged = False
             self.evidence.add(evidence)
@@ -383,8 +387,10 @@ class AbstractEntity:
             evidence = Evidence.objects.create(
                 name="Expert Review Red", rating=5, reviewer=user.reviewer
             )
-            issue_description = "{} has been classified as Red List (Low Evidence).".format(
-                self.label.capitalize()
+            issue_description = (
+                "{} has been classified as Red List (Low Evidence).".format(
+                    self.label.capitalize()
+                )
             )
             self.evidence.add(evidence)
             self.flagged = False

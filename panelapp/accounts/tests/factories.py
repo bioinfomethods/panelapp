@@ -49,8 +49,8 @@ class UserFactory(factory.django.DjangoModelFactory):
     last_name = factory.Faker("first_name")
     username = factory.LazyAttribute(
         lambda u: "{}{}".format(
-            factory.Faker("user_name").evaluate(0, 0, 0),
-            factory.Faker("md5").evaluate(0, 0, 0),
+            factory.Faker("user_name").evaluate(0, 0, {"locale": None}),
+            factory.Faker("md5").evaluate(0, 0, {"locale": None}),
         )
     )
     email = factory.LazyAttribute(

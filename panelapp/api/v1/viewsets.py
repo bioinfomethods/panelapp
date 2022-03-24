@@ -329,7 +329,10 @@ class EntityViewSet(viewsets.mixins.ListModelMixin, viewsets.GenericViewSet):
 
             obj = (
                 HistoricalSnapshot.objects.filter(**filter_kwargs)
-                .filter(major_version=major_version, minor_version=minor_version,)
+                .filter(
+                    major_version=major_version,
+                    minor_version=minor_version,
+                )
                 .first()
             )
 
@@ -681,7 +684,11 @@ class SignedOffPanelViewSet(ReadOnlyListViewset):
             "panel_id"
         )
 
-        filter_kwargs = {"panel__status__in": [GenePanel.STATUS.public,]}
+        filter_kwargs = {
+            "panel__status__in": [
+                GenePanel.STATUS.public,
+            ]
+        }
 
         display_all = self.request.GET.get("display", "latest") == "all"
         if display_all:

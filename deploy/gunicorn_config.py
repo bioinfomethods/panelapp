@@ -59,7 +59,12 @@ LOG_FORMAT = " ".join(["%({0:s})".format(name) for name in LOG_FORMATTER_VALUES]
 logconfig_dict = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler", "formatter": "json",},},
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+        },
+    },
     "formatters": {
         "json": {
             "()": "panelapp.logs.TaskFormatter",
@@ -68,7 +73,10 @@ logconfig_dict = {
         },
     },
     "loggers": {
-        "": {"handlers": ["console"], "level": DJANGO_LOG_LEVEL,},
+        "": {
+            "handlers": ["console"],
+            "level": DJANGO_LOG_LEVEL,
+        },
         "root": {
             "handlers": ["console"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),

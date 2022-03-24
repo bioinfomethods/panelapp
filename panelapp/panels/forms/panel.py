@@ -75,7 +75,11 @@ class PanelForm(forms.ModelForm):
     # in the frontend, panels only reference the latest signed off version
     # you can get previous versions via API and on GMS archive website.
     signed_off_version = forms.CharField(
-        label="Signed Off Version", required=False, validators=[version_validator,]
+        label="Signed Off Version",
+        required=False,
+        validators=[
+            version_validator,
+        ],
     )
     signed_off_date = forms.DateField(
         label="Signed Off Date",
@@ -83,7 +87,9 @@ class PanelForm(forms.ModelForm):
         widget=forms.DateInput(
             attrs={"placeholder": "Signed Off Date in format dd/mm/yyyy"}
         ),
-        validators=[signed_off_date_validator,],
+        validators=[
+            signed_off_date_validator,
+        ],
     )
     child_panels = forms.ModelMultipleChoiceField(
         label="Child Panels",

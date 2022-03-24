@@ -90,7 +90,7 @@ formatter:
   image: python:3.8
   extends: .tests
   before_script:
-    - pip install black==19.10b0
+    - pip install black==22.1.0
   script:
     - black . --check
 
