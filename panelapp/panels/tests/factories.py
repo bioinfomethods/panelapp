@@ -269,13 +269,10 @@ class STRFactory(factory.django.DjangoModelFactory):
         if not create:
             return
 
-        evidences = extracted
-        if not extracted:
-            evidences = EvidenceFactory.create_batch(4)
-
-        for evidence in evidences:
-            if evidence:
-                self.evidence.add(evidence)
+        if extracted:
+            for evidence in extracted:
+                if evidence:
+                    self.evidence.add(evidence)
 
     @factory.post_generation
     def stats(self, create, stats, **kwargs):

@@ -24,6 +24,7 @@
 import os
 from random import randint
 
+import pytest
 from django.test.client import RequestFactory
 from django.urls import reverse_lazy
 from faker import Factory
@@ -32,6 +33,7 @@ from accounts.models import (
     Reviewer,
     User,
 )
+from accounts.tests.factories import UserFactory
 from accounts.tests.setup import LoginGELUser
 from panels.forms import PanelSTRForm
 from panels.models import (
@@ -243,7 +245,7 @@ class STRTest(LoginGELUser):
         assert res.status_code == 200
 
     def test_edit_str_in_panel(self):
-        str_item = STRFactory()
+        str_item = STRFactory(evidence=EvidenceFactory.create_batch(4))
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -297,7 +299,7 @@ class STRTest(LoginGELUser):
         self.assertEqual(int(str_data["position_37_1"]), new_str.position_37.upper)
 
     def test_edit_repeated_sequence(self):
-        str_item = STRFactory()
+        str_item = STRFactory(evidence=EvidenceFactory.create_batch(4))
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -346,7 +348,7 @@ class STRTest(LoginGELUser):
         assert new_str.repeated_sequence == "ATATAT"
 
     def test_edit_incorrect_repeated_sequence(self):
-        str_item = STRFactory()
+        str_item = STRFactory(evidence=EvidenceFactory.create_batch(4))
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -396,7 +398,7 @@ class STRTest(LoginGELUser):
     def test_remove_gene_from_str(self):
         """We need ability to remove genes from STRs"""
 
-        str_item = STRFactory()
+        str_item = STRFactory(evidence=EvidenceFactory.create_batch(4))
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -452,7 +454,10 @@ class STRTest(LoginGELUser):
     def test_remove_sources(self):
         """Remove sources via edit gene detail section"""
 
-        str_item = STRFactory(penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete)
+        str_item = STRFactory(
+            penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            evidence=EvidenceFactory.create_batch(4),
+        )
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -541,7 +546,10 @@ class STRTest(LoginGELUser):
     def test_add_tag_via_edit_details(self):
         """Set tags via edit gene detail section"""
 
-        str_item = STRFactory(penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete)
+        str_item = STRFactory(
+            penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            evidence=EvidenceFactory.create_batch(4),
+        )
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -590,7 +598,10 @@ class STRTest(LoginGELUser):
     def test_remove_tag_via_edit_details(self):
         """Remove tags via edit gene detail section"""
 
-        str_item = STRFactory(penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete)
+        str_item = STRFactory(
+            penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            evidence=EvidenceFactory.create_batch(4),
+        )
 
         tag = TagFactory(name="some tag")
         str_item.tags.add(tag)
@@ -635,7 +646,10 @@ class STRTest(LoginGELUser):
     def test_change_penetrance(self):
         """Test if a curator can change Gene penetrance"""
 
-        str_item = STRFactory(penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete)
+        str_item = STRFactory(
+            penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            evidence=EvidenceFactory.create_batch(4),
+        )
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -676,7 +690,10 @@ class STRTest(LoginGELUser):
     def test_add_publication(self):
         """Add a publication to a gene panel entry"""
 
-        str_item = STRFactory(penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete)
+        str_item = STRFactory(
+            penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            evidence=EvidenceFactory.create_batch(4),
+        )
         str_item.publications = []
         str_item.save()
 
@@ -718,7 +735,10 @@ class STRTest(LoginGELUser):
     def test_remove_publication(self):
         """Remove a publication to a gene panel entry"""
 
-        str_item = STRFactory(penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete)
+        str_item = STRFactory(
+            penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            evidence=EvidenceFactory.create_batch(4),
+        )
         str_item.publications = [fake.sentence(), fake.sentence()]
         str_item.save()
 
@@ -772,7 +792,7 @@ class STRTest(LoginGELUser):
         assert new_ap.has_str("NewSTR") is True
 
     def test_update_str_preserves_comments_order(self):
-        str_item = STRFactory()
+        str_item = STRFactory(evidence=EvidenceFactory.create_batch(4))
         comments = list(CommentFactory.create_batch(4, user=self.verified_user))
 
         for ev in str_item.evaluation.all():
@@ -796,7 +816,7 @@ class STRTest(LoginGELUser):
         self.assertEqual(1, max_comments_num_after_update)
 
     def test_edit_str_name_ajax(self):
-        str_item = STRFactory()
+        str_item = STRFactory(evidence=EvidenceFactory.create_batch(4))
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -921,3 +941,40 @@ class STRTest(LoginGELUser):
         form = PanelSTRForm(form_data, panel=gps, request=req)
         assert not form.is_valid()
         assert gps2.has_str(str.name)
+
+
+@pytest.mark.django_db
+@pytest.mark.xfail(
+    reason="PANELAPP-799: reported bug", strict=True, raises=AssertionError
+)
+def test_update_str_replace_expert_review_green_source():
+    """This test relates to PANELAPP-799"""
+    bilbo = UserFactory(username="bilbo", reviewer__user_type=Reviewer.TYPES.REVIEWER)
+    frodo = UserFactory(username="frodo", reviewer__user_type=Reviewer.TYPES.GEL)
+    panel = GenePanelSnapshotFactory(
+        panel__name="Amyotrophic lateral sclerosis/motor neuron disease",
+    )
+    ar_cag = STRFactory(
+        name="AR_CAG",
+        panel=panel,
+        evidence=[
+            EvidenceFactory(
+                name="Expert Review Green",
+                rating=5,
+                reviewer=bilbo.reviewer,
+            )
+        ],
+    )
+
+    panel.update_str(
+        frodo, "AR_CAG", {"sources": ["Expert Review Green"]}, append_only=True
+    )
+
+    ar_cag.refresh_from_db()
+
+    [evidence] = ar_cag.evidence.all()
+
+    assert evidence.name == "Expert Review Green"
+    assert evidence.rating == 5
+    assert evidence.comment == ""
+    assert evidence.reviewer.user.username == "frodo"

@@ -82,6 +82,8 @@ import_sorting:
   image: python:3.8
   extends: .tests
   before_script:
+    - python -m venv .venv
+    - source .venv/bin/activate
     - pip install isort==5.0.5
   script:
     - isort . -c
@@ -90,7 +92,9 @@ formatter:
   image: python:3.8
   extends: .tests
   before_script:
-    - pip install black==22.1.0
+    - python -m venv .venv
+    - source .venv/bin/activate
+    - pip install black==22.3.0
   script:
     - black . --check
 

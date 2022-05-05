@@ -42,6 +42,7 @@ setup(
             "ipython==7.18.1",
             "Werkzeug==1.0.1",
             "pdbpp==0.10.2",
+            "black==22.3.0",
         ],
         "tests": [
             "pytest==7.1.0",
