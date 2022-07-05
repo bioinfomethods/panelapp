@@ -133,7 +133,7 @@ image_build:
     - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:latest
     - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-base:latest
   rules:
-    - if: $CI_COMMIT_TAG =~ /\d+\.\d+\.\d+\w+?$/
+    - if: $CI_COMMIT_TAG =~ /\d+\.\d+\.\d+(\w+)?$/
 
 # Deploy all the things
 ## Stage
