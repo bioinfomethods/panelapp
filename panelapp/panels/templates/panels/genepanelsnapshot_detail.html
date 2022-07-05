@@ -48,7 +48,7 @@
                 {% endif %}
                 GRCh38 Position: {{ entity.position_38.lower }}-{{ entity.position_38.upper }}<br />
                 Repeated Sequence: {{ entity.repeated_sequence }}<br />
-                Normal Number of Repeats: &lt; or = {{ entity.normal_repeats }}<br />
+                Normal Number of Repeats: &lt; {{ entity.normal_repeats }}<br />
                 Pathogenic Number of Repeats: = or &gt; {{ entity.pathogenic_repeats }}<br />
                 <br />
             {% elif entity.is_region %}
