@@ -85,13 +85,14 @@ setup(
         "djangorestframework-jsonapi==2.8.0",
         "drf-nested-routers==0.91",
         "django-qurl-templatetag==0.0.14",
-        "django-click==2.2.0",  # TODO get rid of it, doesn't provide too much value
+        "django-click==2.3.0",  # TODO get rid of it, doesn't provide too much value
         "django-filter==2.3.0",
         "django-storages==1.10.1",
         "boto3==1.15.2",
         "pycurl==7.43.0.6",
         "python-jose==3.2.0",
-        "click==7.1.2",
+        "click==8.1.3",
         "python-json-logger==0.1.11",
+        "jsonschema<4.0",
     ],
 )
