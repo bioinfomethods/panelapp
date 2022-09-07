@@ -966,6 +966,10 @@ disabled look for disabled choices in the results dropdown
 
 /* multiselect */
 
+.select2-container .select2-selection--multiple {
+    height: auto;
+}
+
 .select2-container-multi .select2-choices {
     height: auto !important;
     height: 1%;
