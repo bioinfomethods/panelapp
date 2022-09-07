@@ -101,9 +101,15 @@ formatter:
 # Build docker image
 image_build:
   image: docker:stable
+  tags:
+    - "pool_name:panelapp_docker"
   services:
     - docker:19.03.5-dind
   stage: image_build
+  before_script:
+    - apk add aws-cli
+    - apk add jq
+    - source scripts/assume_role.sh
   script:
     # installing py-setuptools to extract the name and version
     - apk -U add py-setuptools make
@@ -116,22 +122,38 @@ image_build:
     - docker build -t ${PACKAGE_NAME}-base --file ./docker/cloud/Dockerfile-base .
     - docker build -t ${PACKAGE_NAME}-web --file ./docker/cloud/Dockerfile-web .
     - docker build -t ${PACKAGE_NAME}-worker --file ./docker/cloud/Dockerfile-worker .
-    # login into dockerHub to push the images
-    - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
-    # Tag the images with Version and push them to DockerHub
-    - docker tag ${PACKAGE_NAME}-web $DOCKERHUB_ORG/${PACKAGE_NAME}-web:${PACKAGE_VERSION}
-    - docker tag ${PACKAGE_NAME}-worker $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:${PACKAGE_VERSION}
-    - docker tag ${PACKAGE_NAME}-base $DOCKERHUB_ORG/${PACKAGE_NAME}-base:${PACKAGE_VERSION}
-    - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-web:${PACKAGE_VERSION}
-    - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:${PACKAGE_VERSION}
-    - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-base:${PACKAGE_VERSION}
-    # Tag images as latest and push them to DockerHub
-    - docker tag ${PACKAGE_NAME}-web $DOCKERHUB_ORG/${PACKAGE_NAME}-web:latest
-    - docker tag ${PACKAGE_NAME}-worker $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:latest
-    - docker tag ${PACKAGE_NAME}-base $DOCKERHUB_ORG/${PACKAGE_NAME}-base:latest
-    - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-web:latest
-    - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:latest
-    - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-base:latest
+    # # login into dockerHub to push the images
+    # - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
+    # # Tag the images with Version and push them to DockerHub
+    # - docker tag ${PACKAGE_NAME}-web $DOCKERHUB_ORG/${PACKAGE_NAME}-web:${PACKAGE_VERSION}
+    # - docker tag ${PACKAGE_NAME}-worker $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:${PACKAGE_VERSION}
+    # - docker tag ${PACKAGE_NAME}-base $DOCKERHUB_ORG/${PACKAGE_NAME}-base:${PACKAGE_VERSION}
+    # - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-web:${PACKAGE_VERSION}
+    # - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:${PACKAGE_VERSION}
+    # - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-base:${PACKAGE_VERSION}
+    # # Tag images as latest and push them to DockerHub
+    # - docker tag ${PACKAGE_NAME}-web $DOCKERHUB_ORG/${PACKAGE_NAME}-web:latest
+    # - docker tag ${PACKAGE_NAME}-worker $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:latest
+    # - docker tag ${PACKAGE_NAME}-base $DOCKERHUB_ORG/${PACKAGE_NAME}-base:latest
+    # - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-web:latest
+    # - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:latest
+    # - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-base:latest
+    # login into ECR to push the images
+    - aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin "${ECR_REPOSITORY}"
+    # Tag the images with Version and push them to ECR
+    - docker tag ${PACKAGE_NAME}-web ${ECR_REPOSITORY}/${PACKAGE_NAME}-web:${PACKAGE_VERSION}
+    - docker tag ${PACKAGE_NAME}-worker ${ECR_REPOSITORY}/${PACKAGE_NAME}-worker:${PACKAGE_VERSION}
+    - docker tag ${PACKAGE_NAME}-base ${ECR_REPOSITORY}/${PACKAGE_NAME}-base:${PACKAGE_VERSION}
+    - docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}-web:${PACKAGE_VERSION}
+    - docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}-worker:${PACKAGE_VERSION}
+    - docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}-base:${PACKAGE_VERSION}
+    # Tag images as latest and push them to ECR
+    - docker tag ${PACKAGE_NAME}-web ${ECR_REPOSITORY}/${PACKAGE_NAME}-web:latest
+    - docker tag ${PACKAGE_NAME}-worker ${ECR_REPOSITORY}/${PACKAGE_NAME}-worker:latest
+    - docker tag ${PACKAGE_NAME}-base ${ECR_REPOSITORY}/${PACKAGE_NAME}-base:latest
+    - docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}-web:latest
+    - docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}-worker:latest
+    - docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}-base:latest
   rules:
     - if: $CI_COMMIT_TAG =~ /\d+\.\d+\.\d+(\w+)?$/
 
