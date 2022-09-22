@@ -21,6 +21,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+import logging
 from math import ceil
 
 from django import forms
@@ -29,7 +30,9 @@ from django.db.models import (
     Q,
 )
 from django.http import Http404
+from django.utils.decorators import method_decorator
 from django.utils.functional import cached_property
+from django.views.decorators.cache import cache_page
 from django_filters import rest_framework as filters
 from rest_framework import (
     permissions,
@@ -40,7 +43,10 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import APIException
 from rest_framework.response import Response
 
-from panelapp.settings.base import REST_FRAMEWORK
+from panelapp.settings.base import (
+    REST_FRAMEWORK,
+    SIGNEDOFF_CACHE_TTL,
+)
 from panels.models import (
     STR,
     Activity,
@@ -70,6 +76,8 @@ class ReadOnlyListViewset(
 ):
     pass
 
+
+LOGGER = logging.getLogger(__name__)
 
 CONFIDENCE_CHOICES = ((3, "Green"), (2, "Amber"), (1, "Red"), (0, "No List"))
 
@@ -705,6 +713,15 @@ class SignedOffPanelViewSet(ReadOnlyListViewset):
             )
 
         return qs
+
+    @method_decorator(cache_page(SIGNEDOFF_CACHE_TTL))
+    def dispatch(self, request, *args, **kwargs):
+        if SIGNEDOFF_CACHE_TTL != 0:
+            LOGGER.info("Caching: %s", request, extra={"timeout": SIGNEDOFF_CACHE_TTL})
+        else:
+            LOGGER.info("Uncached: %s", request)
+
+        return super().dispatch(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
         """!!! Deprecated - see notes

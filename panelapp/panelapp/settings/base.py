@@ -377,3 +377,6 @@ HEALTH_CHECK_CRITICAL = os.getenv("HEALTH_CHECK_CRITICAL", "database,sqs,email")
 )
 
 HEALTH_CHECKS = os.getenv("HEALTH_CHECKS", "database,sqs,email").split(",")
+
+# Caching timeout on API 'signedoff' endpoint
+SIGNEDOFF_CACHE_TTL = os.getenv("SIGNEDOFF_CACHE_TTL", 60 * 15)
