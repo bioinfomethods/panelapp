@@ -1,32 +1,41 @@
-variables:
-  PANNELAPP_TF_DIR : "panelapp-infra/terraform/panelapp/"
-
 include:
+  - local: '.gitlab-ci/envs.yml'
   - template: Code-Quality.gitlab-ci.yml
 
+variables:
+  PANNELAPP_TF_DIR : "panelapp-infra/terraform/panelapp/"
+  AWS_REGION: eu-west-2
+  CI_DEBUG_TRACE: "true"
+  AWS_ASSUME_ROLE_TERRAFORM: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/CIDeploypanelapp"
+  
 stages:
   - test
   - image_build
-  - deploy_to_test
-  - deploy_to_stage
-  - deploy_to_uat
-  - deploy_to_production    # Manual
+  - deploy_to_dev
+  - deploy_to_e2e
 
 # Common deploy functionality
 .deploy_default:
-  image: hashicorp/terraform:0.12.31
+  image:
+    name: hashicorp/terraform:0.11.15
+    entrypoint: ["/bin/sh", "-c"]
+  variables:
+    CI_DEBUG_TRACE: "true"
+  tags:
+    - pool_name:panelapp_docker
   before_script:
-    - apk --no-cache add --update python3 curl wget jq
-    - wget -q 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -O aws_creds
-    - export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' aws_creds)
-    - export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
-    - export AWS_SESSION_TOKEN=$(jq -r '.Token' aws_creds)
-    - export AWS_DEFAULT_REGION=$default_region
-    - git clone --single-branch --branch $INFRA_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-    - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
+    - apk --no-cache add --update python3 curl jq aws-cli
     - python3 -m venv .venv
     - source .venv/bin/activate
     - pip install boto3==1.21.1
+    - aws sts get-caller-identity
+    - creds_json=$(aws sts assume-role --role-arn ${AWS_ASSUME_ROLE_TERRAFORM} --role-session-name runner-promotion )
+    - export AWS_ACCESS_KEY_ID=$(echo "$creds_json" | jq .Credentials.AccessKeyId |tr -d '"')
+    - export AWS_SECRET_ACCESS_KEY=$(echo "$creds_json" | jq .Credentials.SecretAccessKey| tr -d '"')
+    - export AWS_SESSION_TOKEN=$(echo "$creds_json" | jq .Credentials.SessionToken|tr -d '"')
+    - export AWS_DEFAULT_REGION=$default_region
+    - git clone --single-branch --branch KMDS-697/terraform-code https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
+    - git clone --single-branch --branch KMDS-697/panelapp-config-new https://$CONFIG_DEPLOY_TOKEN_USERNAME:$TF_CONFIG_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config-new.git
 
 .tests:
   stage: test
@@ -155,99 +164,50 @@ image_build:
   rules:
     - if: $CI_COMMIT_TAG =~ /\d+\.\d+\.\d+(\w+)?$/
 
+
 # Deploy all the things
-## Stage
-deploy_to_stage:
-  stage: deploy_to_stage
+## DEV
+deploy_to_dev:
+  stage: deploy_to_dev
   extends:
     - .deploy_default
   environment:
-    name: stage
+    name: dev
   dependencies:
     - image_build
-  tags:
-    - TF_panelapp_stage
   variables:
-    env_name : stage
+    env_name : dev
+    CI_DEBUG_TRACE: "true" 
   script:
+    - aws sts get-caller-identity
     - export WORKING_DIR=$(pwd)
-    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
+    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config-new/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config-new/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config-new/$env_name/terraform.tfvars" -var image_tag=$version
     - sleep 30
-    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-stage -panelapp
+    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-dev -panelapp
     - sleep 30
-    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-stage -panelapp
+    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-dev -panelapp
   rules:
-    - if: $env_name == "stage" && $version =~ /^\d+\.\d+\.\d+(\w+)?$/
+    - if: $env_name == "dev" && $version =~ /^\d+\.\d+\.\d+(\w+)?$/
 
-## Prod
-deploy_to_production:
-  stage: deploy_to_production
+## E2E
+deploy_to_e2e:
+  stage: deploy_to_e2e
   extends:
     - .deploy_default
   environment:
-    name: prod
-  tags:
-    - TF_panelapp_prod
-  variables:
-    env_name : prod
-  script:
-    - export WORKING_DIR=$(pwd)
-    # Take DB snapshot and delete the old one
-    - python3 $WORKING_DIR/panelapp-infra/rds_snapshot.py -create -recycle
-    - sleep 60
-    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
-    - sleep 30
-    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-prod -panelapp
-    - sleep 30
-    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-prod -panelapp
-  rules:
-    - if: $env_name == "prod" && $version =~ /^\d+\.\d+\.\d+(\w+)?$/
-      when: manual
-
-## Test
-deploy_to_test:
-  extends:
-    - .deploy_default
-  stage: deploy_to_test
-  environment:
-    name: test
+    name: e2e
   dependencies:
     - image_build
-  tags:
-    - TF_panelapp_test
   variables:
-    env_name : test
+    env_name : e2e
+    CI_DEBUG_TRACE: "true" 
   script:
+    - aws sts get-caller-identity
     - export WORKING_DIR=$(pwd)
-    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
+    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config-new/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config-new/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config-new/$env_name/terraform.tfvars" -var image_tag=$version
     - sleep 30
-    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-test -panelapp
+    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-e2e -panelapp
     - sleep 30
-    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-test -panelapp
+    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-e2e -panelapp
   rules:
-    - if: $env_name == "test" && $version =~ /^\d+\.\d+\.\d+(\w+)?$/
-
-## UAT
-
-deploy_to_uat:
-  stage: deploy_to_uat
-  extends:
-    - .deploy_default
-  environment:
-    name: uat
-  dependencies:
-    - image_build
-  tags:
-    - TF_panelapp_uat
-  variables:
-    env_name : uat
-  script:
-    - export WORKING_DIR=$(pwd)
-    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
-    - sleep 30
-    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-uat -panelapp
-    - sleep 30
-    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-uat -panelapp
-  rules:
-    - if: $env_name == "uat" && $version =~ /^\d+\.\d+\.\d+(\w+)?$/
-      when: manual
+    - if: $env_name == "e2e" && $version =~ /^\d+\.\d+\.\d+(\w+)?$/

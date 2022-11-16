@@ -1,0 +1,25 @@
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+      when: never
+    # MRs always run on dev environment
+    - if: '$env_name == "dev"'
+      variables:
+        AWS_ACCOUNT_ID: "577192787797"
+    - if: '$env_name == "test"'
+      variables:
+        AWS_ACCOUNT_ID: "455662437776"
+    # UAT, E2E, PreProd and Prod deployments must be triggered manually and from a protected branch
+    - if: '$env_name == "uat" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"'
+      variables:
+        AWS_ACCOUNT_ID: "400119055163"
+    # && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"
+    - if: '$env_name == "e2e"'
+      variables:
+        AWS_ACCOUNT_ID: "875605549679"
+    - if: '$env_name == "preprod" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"'
+      variables:
+        AWS_ACCOUNT_ID: "960907853420"
+    - if: '$env_name == "prod" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"'
+      variables:
+        AWS_ACCOUNT_ID: "876663091628"
