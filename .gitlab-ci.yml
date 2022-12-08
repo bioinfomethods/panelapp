@@ -1,5 +1,5 @@
 variables:
-  PANNELAPP_TF_DIR : "panelapp-infra/terraform/panelapp/"
+  PANNELAPP_TF_DIR: "panelapp-infra/terraform/panelapp/"
 
 include:
   - template: Code-Quality.gitlab-ci.yml
@@ -10,7 +10,7 @@ stages:
   - deploy_to_test
   - deploy_to_stage
   - deploy_to_uat
-  - deploy_to_production    # Manual
+  - deploy_to_production # Manual
 
 # Common deploy functionality
 .deploy_default:
@@ -38,7 +38,7 @@ code_quality:
   artifacts:
     paths: [gl-code-quality-report.json]
   rules:
-    - if: '$CODE_QUALITY_DISABLED'
+    - if: "$CODE_QUALITY_DISABLED"
       when: never
     - if: $CI_MERGE_REQUEST_ID
 
@@ -102,7 +102,12 @@ image_build:
   tags:
     - "pool_name:panelapp_docker"
   services:
-    - docker:19.03.5-dind
+    - name: docker:19.03.5-dind
+      command:
+        [
+          "--registry-mirror",
+          "http://dockerhubcache.shared-services.aws.gel.ac:5002",
+        ]
   stage: image_build
   before_script:
     - apk add aws-cli
@@ -168,7 +173,7 @@ deploy_to_stage:
   tags:
     - TF_panelapp_stage
   variables:
-    env_name : stage
+    env_name: stage
   script:
     - export WORKING_DIR=$(pwd)
     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
@@ -189,7 +194,7 @@ deploy_to_production:
   tags:
     - TF_panelapp_prod
   variables:
-    env_name : prod
+    env_name: prod
   script:
     - export WORKING_DIR=$(pwd)
     # Take DB snapshot and delete the old one
@@ -216,7 +221,7 @@ deploy_to_test:
   tags:
     - TF_panelapp_test
   variables:
-    env_name : test
+    env_name: test
   script:
     - export WORKING_DIR=$(pwd)
     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
@@ -240,7 +245,7 @@ deploy_to_uat:
   tags:
     - TF_panelapp_uat
   variables:
-    env_name : uat
+    env_name: uat
   script:
     - export WORKING_DIR=$(pwd)
     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$version
