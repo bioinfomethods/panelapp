@@ -102,7 +102,7 @@ STATIC_URL = os.getenv(
 AWS_STATICFILES_DEFAULT_ACL = os.getenv("AWS_DEFAULT_ACL", None)
 
 # Object parameters for static files.
-AWS_S3_STATICFILES_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
+AWS_S3_STATICFILES_OBJECT_PARAMETERS = eval(os.getenv("AWS_S3_OBJECT_PARAMETERS", {'CacheControl': 'max-age=86400', 'ServerSideEncryption': 'AES256'}))
 
 # Media files
 
@@ -133,8 +133,7 @@ MEDIA_URL = os.getenv(
 AWS_MEDIAFILES_DEFAULT_ACL = os.getenv("AWS_MEDIAFILES_DEFAULT_ACL", None)
 
 # Object parameters for media files.
-AWS_S3_MEDIAFILES_OBJECT_PARAMETERS = {}
-
+AWS_S3_MEDIAFILES_OBJECT_PARAMETERS = eval(os.getenv("AWS_S3_OBJECT_PARAMETERS", {'CacheControl': 'max-age=86400', 'ServerSideEncryption': 'AES256'}))
 
 # (Optional) Use Cognito settings
 AWS_USE_COGNITO = os.getenv("AWS_USE_COGNITO", "false").lower() == "true"
