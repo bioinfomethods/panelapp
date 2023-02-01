@@ -50,6 +50,7 @@ setup(
             "pytest-django==4.5.2",
             "pytest-cov==3.0.0",
             "pytest-sugar==0.9.4",
+            "pytest-mock==3.10.0",
             "flake8==3.5.0",
             "faker==13.3.2",
             "factory_boy==3.2.1",
