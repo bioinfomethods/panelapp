@@ -5,22 +5,26 @@ include:
 variables:
   PANNELAPP_TF_DIR : "panelapp-infra/terraform/panelapp/"
   AWS_REGION: eu-west-2
-  CI_DEBUG_TRACE: "true"
+  CI_DEBUG_TRACE: "false"
   AWS_ASSUME_ROLE_TERRAFORM: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/CIDeploypanelapp"
-  
+  env_name:
+    description: "Environment to target"
+    value: "dev"
+  version:
+    description: "Version to deploy"
+    value: ""
+
 stages:
   - test
   - image_build
-  - deploy_to_dev
-  - deploy_to_e2e
+  - plan
+  - apply
 
 # Common deploy functionality
 .deploy_default:
   image:
     name: hashicorp/terraform:0.11.15
     entrypoint: ["/bin/sh", "-c"]
-  variables:
-    CI_DEBUG_TRACE: "true"
   tags:
     - pool_name:panelapp_docker
   before_script:
@@ -34,9 +38,7 @@ stages:
     - export AWS_SECRET_ACCESS_KEY=$(echo "$creds_json" | jq .Credentials.SecretAccessKey| tr -d '"')
     - export AWS_SESSION_TOKEN=$(echo "$creds_json" | jq .Credentials.SessionToken|tr -d '"')
     - export AWS_DEFAULT_REGION=$default_region
-    - git clone --single-branch --branch KMDS-697/terraform-code https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-    - git clone --single-branch --branch KMDS-697/panelapp-config-new https://$CONFIG_DEPLOY_TOKEN_USERNAME:$TF_CONFIG_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config-new.git
-
+   
 .tests:
   stage: test
   rules:
@@ -164,48 +166,47 @@ image_build:
   rules:
     - if: $CI_COMMIT_TAG =~ /\d+\.\d+\.\d+(\w+)?$/
 
-
 # Deploy all the things
-## DEV
-deploy_to_dev:
-  stage: deploy_to_dev
+plan:
+  stage: plan
   extends:
     - .deploy_default
   environment:
-    name: dev
+    name: $env_name
   dependencies:
     - image_build
-  variables:
-    env_name : dev
-    CI_DEBUG_TRACE: "true" 
   script:
+    - git clone --single-branch --branch KMDS-697/terraform-code https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
+    - git clone --single-branch --branch KMDS-697/panelapp-config-new https://$CONFIG_DEPLOY_TOKEN_USERNAME:$TF_CONFIG_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config-new.git
     - export WORKING_DIR=$(pwd)
-    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config-new/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config-new/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config-new/$env_name/terraform.tfvars" -var image_tag=$version
-    - sleep 30
-    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-dev -panelapp
-    - sleep 30
-    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-dev -panelapp
+    - cd $PANNELAPP_TF_DIR 
+    - terraform init -backend-config "$WORKING_DIR/panelapp-config-new/$env_name/panelapp-backend.conf" 
+    - terraform plan -var-file="$WORKING_DIR/panelapp-config-new/$env_name/terraform.tfvars" -out=plan.tfplan -var image_tag=$version  
   rules:
-    - if: $env_name == "dev" && $version =~ /^\d+\.\d+\.\d+(\w+)?$/
+    - if: $version =~ /^\d+\.\d+\.\d+(\w+)?$/
+  artifacts:
+    paths:
+      - $PANNELAPP_TF_DIR/.terraform*
+      - $PANNELAPP_TF_DIR/plan.*
+      - $PANNELAPP_TF_DIR/*.zip
+      - panelapp-infra/*.py
 
-## E2E
-deploy_to_e2e:
-  stage: deploy_to_e2e
+apply:
+  stage: apply
   extends:
     - .deploy_default
   environment:
-    name: e2e
+    name: $env_name
   dependencies:
-    - image_build
-  variables:
-    env_name : e2e
-    CI_DEBUG_TRACE: "true" 
+    - plan
   script:
     - export WORKING_DIR=$(pwd)
-    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config-new/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config-new/$env_name/terraform.tfvars" -var image_tag=$version && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config-new/$env_name/terraform.tfvars" -var image_tag=$version
+    - cd $PANNELAPP_TF_DIR 
+    - terraform apply plan.tfplan
     - sleep 30
-    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-e2e -panelapp
+    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-$env_name -panelapp
     - sleep 30
-    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-e2e -panelapp
+    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-$env_name -panelapp
   rules:
-    - if: $env_name == "e2e" && $version =~ /^\d+\.\d+\.\d+(\w+)?$/
+    - if: $version =~ /^\d+\.\d+\.\d+(\w+)?$/
+      when: manual
