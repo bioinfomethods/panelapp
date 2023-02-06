@@ -12,6 +12,14 @@ stages:
   - deploy_to_uat
   - deploy_to_production # Manual
 
+services:
+  - name: docker:stable-dind
+    command:
+      [
+        "--registry-mirror",
+        "http://dockerhubcache.shared-services.aws.gel.ac:5002",
+      ]
+
 # Common deploy functionality
 .deploy_default:
   image: hashicorp/terraform:0.12.31

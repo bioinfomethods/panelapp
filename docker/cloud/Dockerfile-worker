@@ -2,4 +2,4 @@
 FROM panelapp-base
 
 WORKDIR /app/panelapp
-ENTRYPOINT celery worker --app panelapp --task-events --concurrency 2 --quiet -Q celery,panelapp
+ENTRYPOINT celery --app panelapp --quiet worker --task-events --concurrency 2 --quiet -Q celery,panelapp
