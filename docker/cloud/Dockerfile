@@ -1,4 +1,3 @@
-# Base image for both Web and Worker images
 FROM python:3.8-alpine3.17
 
 RUN mkdir -p /app/panelapp
@@ -8,6 +7,7 @@ RUN adduser -D -u 1000 -s /sbin/nologin  -g app app
 
 COPY --chown=app:app ./panelapp     /app/panelapp
 COPY --chown=app:app ./setup.py ./setup.cfg ./MANIFEST.in ./VERSION     /app/
+COPY --chown=app:app ./deploy/gunicorn_config.py  /app/
 
 # Python libraries get installed as root in /pythonlib (scripts are still installed in /usr/local/bin).
 # Ownership of all python modules have to be writable by the user running the application, to create __pycache__.
@@ -26,4 +26,14 @@ ENV DJANGO_SETTINGS_MODULE panelapp.settings.docker-aws
 ENV DJANGO_LOG_LEVEL INFO
 ENV CELERY_BROKER_URL sqs://
 
+# Gunicorn settings
+ENV GUNICORN_WORKERS 8
+ENV GUNICORN_TIMEOUT 300
+ENV GUNICORN_BACKLOG 4096
+ENV GUNICORN_BIND 0.0.0.0:8080
+ENV GUNICORN_LOG_LEVEL INFO
+EXPOSE 8080
+
+WORKDIR /app/panelapp
+ENTRYPOINT ["/bin/sh"]
 USER app:app

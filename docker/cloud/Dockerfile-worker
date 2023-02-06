@@ -1,5 +1,0 @@
-# FIXME fully qualify the base image, including a tag
-FROM panelapp-base
-
-WORKDIR /app/panelapp
-ENTRYPOINT celery --app panelapp --quiet worker --task-events --concurrency 2 -Q celery,panelapp

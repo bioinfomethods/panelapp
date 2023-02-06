@@ -6,7 +6,7 @@ variables:
   DOCKER_TERRAFORM: hashicorp/terraform:1.3.9
   DOCKER_PYTHON: python:3.8-alpine3.12
   DOCKER_POSTGRES: postgres:14.4
-  DOCKER_IN_DOCKER: docker:19.03.5-dind
+  DOCKER_IN_DOCKER: docker:23.0.3-dind
   PANELAPP_TF_DIR: "panelapp-infra/terraform/panelapp/"
   AWS_REGION: eu-west-2
   AWS_DEFAULT_REGION: eu-west-2
@@ -17,7 +17,7 @@ variables:
     value: "dev"
   version:
     description: "Version to deploy"
-    value: "3.4.0a6"
+    value: "3.4.0a8"
 
 stages:
   - test
@@ -128,25 +128,15 @@ image_build:
     # Check whether the Package Version matches with the TAG version
     #- (if [ PACKAGE_VERSION = $CI_COMMIT_TAG ]; then /bin/true; echo "TAG and file Version matches"; else echo "Error!! TAG NAME AND Version file did not Match";/bin/false; fi)
     # Build the docker image
-    - docker build -t ${PACKAGE_NAME}-base --file ./docker/cloud/Dockerfile-base .
-    - docker build -t ${PACKAGE_NAME}-web --file ./docker/cloud/Dockerfile-web .
-    - docker build -t ${PACKAGE_NAME}-worker --file ./docker/cloud/Dockerfile-worker .
+    - docker build -t ${PACKAGE_NAME} --file ./docker/cloud/Dockerfile .
     # login into ECR to push the images
     - aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin "${ECR_REPOSITORY}"
     # Tag the images with Version and push them to ECR
-    - docker tag ${PACKAGE_NAME}-web ${ECR_REPOSITORY}/${PACKAGE_NAME}-web:${PACKAGE_VERSION}
-    - docker tag ${PACKAGE_NAME}-worker ${ECR_REPOSITORY}/${PACKAGE_NAME}-worker:${PACKAGE_VERSION}
-    - docker tag ${PACKAGE_NAME}-base ${ECR_REPOSITORY}/${PACKAGE_NAME}-base:${PACKAGE_VERSION}
-    - docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}-web:${PACKAGE_VERSION}
-    - docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}-worker:${PACKAGE_VERSION}
-    - docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}-base:${PACKAGE_VERSION}
+    - docker tag ${PACKAGE_NAME} ${ECR_REPOSITORY}/${PACKAGE_NAME}:${PACKAGE_VERSION}
+    - docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}:${PACKAGE_VERSION}
     # Tag images as latest and push them to ECR
-    - docker tag ${PACKAGE_NAME}-web ${ECR_REPOSITORY}/${PACKAGE_NAME}-web:latest
-    - docker tag ${PACKAGE_NAME}-worker ${ECR_REPOSITORY}/${PACKAGE_NAME}-worker:latest
-    - docker tag ${PACKAGE_NAME}-base ${ECR_REPOSITORY}/${PACKAGE_NAME}-base:latest
-    - docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}-web:latest
-    - docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}-worker:latest
-    - docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}-base:latest
+    #- docker tag ${PACKAGE_NAME} ${ECR_REPOSITORY}/${PACKAGE_NAME}:latest
+    #- docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}:latest
   rules:
     - if: $CI_COMMIT_TAG =~ /\d+\.\d+\.\d+(\w+)?$/
 
