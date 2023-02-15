@@ -23,7 +23,7 @@ stages:
 # Common deploy functionality
 .deploy_default:
   image:
-    name: hashicorp/terraform:0.11.15
+    name: hashicorp/terraform:0.12.31
     entrypoint: ["/bin/sh", "-c"]
   tags:
     - pool_name:panelapp_docker
