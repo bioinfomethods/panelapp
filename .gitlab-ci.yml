@@ -3,7 +3,7 @@ include:
   - template: Code-Quality.gitlab-ci.yml
 
 variables:
-  PANNELAPP_TF_DIR : "panelapp-infra/terraform/panelapp/"
+  PANELAPP_TF_DIR : "panelapp-infra/terraform/panelapp/"
   AWS_REGION: eu-west-2
   CI_DEBUG_TRACE: "false"
   AWS_ASSUME_ROLE_TERRAFORM: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/CIDeploypanelapp"
@@ -179,16 +179,17 @@ plan:
     - git clone --single-branch --branch main https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
     - git clone --single-branch --branch main https://$CONFIG_DEPLOY_TOKEN_USERNAME:$TF_CONFIG_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config-new.git
     - export WORKING_DIR=$(pwd)
-    - cd $PANNELAPP_TF_DIR 
+    - cd $PANELAPP_TF_DIR 
     - terraform init -backend-config "$WORKING_DIR/panelapp-config-new/$env_name/panelapp-backend.conf" 
     - terraform plan -var-file="$WORKING_DIR/panelapp-config-new/$env_name/terraform.tfvars" -out=plan.tfplan -var image_tag=$version  
   rules:
     - if: $version =~ /^\d+\.\d+\.\d+(\w+)?$/
   artifacts:
     paths:
-      - $PANNELAPP_TF_DIR/.terraform*
-      - $PANNELAPP_TF_DIR/plan.*
-      - $PANNELAPP_TF_DIR/*.zip
+      - $PANELAPP_TF_DIR/.terraform*
+      - $PANELAPP_TF_DIR/plan.*
+      - $PANELAPP_TF_DIR/*.zip
+      - $PANELAPP_TF_DIR/templates/*
       - panelapp-infra/*.py
 
 apply:
@@ -201,7 +202,7 @@ apply:
     - plan
   script:
     - export WORKING_DIR=$(pwd)
-    - cd $PANNELAPP_TF_DIR 
+    - cd $PANELAPP_TF_DIR 
     - terraform apply plan.tfplan
     - sleep 30
     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-$env_name -panelapp
