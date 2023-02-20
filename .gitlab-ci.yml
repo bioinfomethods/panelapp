@@ -176,8 +176,8 @@ plan:
   dependencies:
     - image_build
   script:
-    - git clone --single-branch --branch KMDS-697/terraform-code https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-    - git clone --single-branch --branch KMDS-697/panelapp-config-new https://$CONFIG_DEPLOY_TOKEN_USERNAME:$TF_CONFIG_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config-new.git
+    - git clone --single-branch --branch main https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
+    - git clone --single-branch --branch main https://$CONFIG_DEPLOY_TOKEN_USERNAME:$TF_CONFIG_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config-new.git
     - export WORKING_DIR=$(pwd)
     - cd $PANNELAPP_TF_DIR 
     - terraform init -backend-config "$WORKING_DIR/panelapp-config-new/$env_name/panelapp-backend.conf" 
