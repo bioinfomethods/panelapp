@@ -102,7 +102,7 @@ STATIC_URL = os.getenv(
 AWS_STATICFILES_DEFAULT_ACL = os.getenv("AWS_DEFAULT_ACL", None)
 
 # Object parameters for static files.
-AWS_S3_STATICFILES_OBJECT_PARAMETERS = eval(os.getenv("AWS_S3_OBJECT_PARAMETERS", {'CacheControl': 'max-age=86400', 'ServerSideEncryption': 'AES256'}))
+AWS_S3_STATICFILES_OBJECT_PARAMETERS = eval(os.getenv("AWS_S3_OBJECT_PARAMETERS", "{'CacheControl': 'max-age=86400', 'ServerSideEncryption': 'AES256'}"))
 
 # Media files
 
@@ -126,14 +126,14 @@ AWS_S3_MEDIAFILES_CUSTOM_DOMAIN = os.getenv("AWS_S3_MEDIAFILES_CUSTOM_DOMAIN", N
 # Override to 'http://localstack:4572/media-bucket/uploads/' with LocalStack
 MEDIA_URL = os.getenv(
     "MEDIA_URL",
-    f'https://{AWS_S3_MEDIAFILES_BUCKET_NAME}.s3.amazonaws.com/{AWS_MEDIAFILES_LOCATION + ("/" if AWS_MEDIAFILES_LOCATION else "")}/',
+    f'https://{AWS_S3_MEDIAFILES_CUSTOM_DOMAIN}/{AWS_MEDIAFILES_LOCATION + ("/" if AWS_MEDIAFILES_LOCATION else "")}/',
 )
 
 # Files ACL. By default ('None') inherits bucket ACL. Override to 'public-read' for using LocalStack
 AWS_MEDIAFILES_DEFAULT_ACL = os.getenv("AWS_MEDIAFILES_DEFAULT_ACL", None)
 
 # Object parameters for media files.
-AWS_S3_MEDIAFILES_OBJECT_PARAMETERS = eval(os.getenv("AWS_S3_OBJECT_PARAMETERS", {'CacheControl': 'max-age=86400', 'ServerSideEncryption': 'AES256'}))
+AWS_S3_MEDIAFILES_OBJECT_PARAMETERS = eval(os.getenv("AWS_S3_OBJECT_PARAMETERS", "{'CacheControl': 'max-age=86400', 'ServerSideEncryption': 'AES256'}"))
 
 # (Optional) Use Cognito settings
 AWS_USE_COGNITO = os.getenv("AWS_USE_COGNITO", "false").lower() == "true"
