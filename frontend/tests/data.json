@@ -1,0 +1,5680 @@
+[
+  {
+    "model": "sites.site",
+    "pk": 1,
+    "fields": {
+      "domain": "example.com",
+      "name": "example.com"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 1,
+    "fields": {
+      "name": "Can add site",
+      "content_type": 10,
+      "codename": "add_site"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 2,
+    "fields": {
+      "name": "Can change site",
+      "content_type": 10,
+      "codename": "change_site"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 3,
+    "fields": {
+      "name": "Can delete site",
+      "content_type": 10,
+      "codename": "delete_site"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 4,
+    "fields": {
+      "name": "Can view site",
+      "content_type": 10,
+      "codename": "view_site"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 5,
+    "fields": {
+      "name": "Can add log entry",
+      "content_type": 11,
+      "codename": "add_logentry"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 6,
+    "fields": {
+      "name": "Can change log entry",
+      "content_type": 11,
+      "codename": "change_logentry"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 7,
+    "fields": {
+      "name": "Can delete log entry",
+      "content_type": 11,
+      "codename": "delete_logentry"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 8,
+    "fields": {
+      "name": "Can view log entry",
+      "content_type": 11,
+      "codename": "view_logentry"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 9,
+    "fields": {
+      "name": "Can add permission",
+      "content_type": 12,
+      "codename": "add_permission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 10,
+    "fields": {
+      "name": "Can change permission",
+      "content_type": 12,
+      "codename": "change_permission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 11,
+    "fields": {
+      "name": "Can delete permission",
+      "content_type": 12,
+      "codename": "delete_permission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 12,
+    "fields": {
+      "name": "Can view permission",
+      "content_type": 12,
+      "codename": "view_permission"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 13,
+    "fields": {
+      "name": "Can add group",
+      "content_type": 13,
+      "codename": "add_group"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 14,
+    "fields": {
+      "name": "Can change group",
+      "content_type": 13,
+      "codename": "change_group"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 15,
+    "fields": {
+      "name": "Can delete group",
+      "content_type": 13,
+      "codename": "delete_group"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 16,
+    "fields": {
+      "name": "Can view group",
+      "content_type": 13,
+      "codename": "view_group"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 17,
+    "fields": {
+      "name": "Can add content type",
+      "content_type": 14,
+      "codename": "add_contenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 18,
+    "fields": {
+      "name": "Can change content type",
+      "content_type": 14,
+      "codename": "change_contenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 19,
+    "fields": {
+      "name": "Can delete content type",
+      "content_type": 14,
+      "codename": "delete_contenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 20,
+    "fields": {
+      "name": "Can view content type",
+      "content_type": 14,
+      "codename": "view_contenttype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 21,
+    "fields": {
+      "name": "Can add session",
+      "content_type": 15,
+      "codename": "add_session"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 22,
+    "fields": {
+      "name": "Can change session",
+      "content_type": 15,
+      "codename": "change_session"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 23,
+    "fields": {
+      "name": "Can delete session",
+      "content_type": 15,
+      "codename": "delete_session"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 24,
+    "fields": {
+      "name": "Can view session",
+      "content_type": 15,
+      "codename": "view_session"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 25,
+    "fields": {
+      "name": "Can add Token",
+      "content_type": 16,
+      "codename": "add_token"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 26,
+    "fields": {
+      "name": "Can change Token",
+      "content_type": 16,
+      "codename": "change_token"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 27,
+    "fields": {
+      "name": "Can delete Token",
+      "content_type": 16,
+      "codename": "delete_token"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 28,
+    "fields": {
+      "name": "Can view Token",
+      "content_type": 16,
+      "codename": "view_token"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 29,
+    "fields": {
+      "name": "Can add token",
+      "content_type": 17,
+      "codename": "add_tokenproxy"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 30,
+    "fields": {
+      "name": "Can change token",
+      "content_type": 17,
+      "codename": "change_tokenproxy"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 31,
+    "fields": {
+      "name": "Can delete token",
+      "content_type": 17,
+      "codename": "delete_tokenproxy"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 32,
+    "fields": {
+      "name": "Can view token",
+      "content_type": 17,
+      "codename": "view_tokenproxy"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 33,
+    "fields": {
+      "name": "Can add home text",
+      "content_type": 3,
+      "codename": "add_hometext"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 34,
+    "fields": {
+      "name": "Can change home text",
+      "content_type": 3,
+      "codename": "change_hometext"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 35,
+    "fields": {
+      "name": "Can delete home text",
+      "content_type": 3,
+      "codename": "delete_hometext"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 36,
+    "fields": {
+      "name": "Can view home text",
+      "content_type": 3,
+      "codename": "view_hometext"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 37,
+    "fields": {
+      "name": "Can add image",
+      "content_type": 4,
+      "codename": "add_image"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 38,
+    "fields": {
+      "name": "Can change image",
+      "content_type": 4,
+      "codename": "change_image"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 39,
+    "fields": {
+      "name": "Can delete image",
+      "content_type": 4,
+      "codename": "delete_image"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 40,
+    "fields": {
+      "name": "Can view image",
+      "content_type": 4,
+      "codename": "view_image"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 41,
+    "fields": {
+      "name": "Can add file",
+      "content_type": 5,
+      "codename": "add_file"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 42,
+    "fields": {
+      "name": "Can change file",
+      "content_type": 5,
+      "codename": "change_file"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 43,
+    "fields": {
+      "name": "Can delete file",
+      "content_type": 5,
+      "codename": "delete_file"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 44,
+    "fields": {
+      "name": "Can view file",
+      "content_type": 5,
+      "codename": "view_file"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 45,
+    "fields": {
+      "name": "Can add user",
+      "content_type": 1,
+      "codename": "add_user"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 46,
+    "fields": {
+      "name": "Can change user",
+      "content_type": 1,
+      "codename": "change_user"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 47,
+    "fields": {
+      "name": "Can delete user",
+      "content_type": 1,
+      "codename": "delete_user"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 48,
+    "fields": {
+      "name": "Can view user",
+      "content_type": 1,
+      "codename": "view_user"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 49,
+    "fields": {
+      "name": "Can add reviewer",
+      "content_type": 2,
+      "codename": "add_reviewer"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 50,
+    "fields": {
+      "name": "Can change reviewer",
+      "content_type": 2,
+      "codename": "change_reviewer"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 51,
+    "fields": {
+      "name": "Can delete reviewer",
+      "content_type": 2,
+      "codename": "delete_reviewer"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 52,
+    "fields": {
+      "name": "Can view reviewer",
+      "content_type": 2,
+      "codename": "view_reviewer"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 53,
+    "fields": {
+      "name": "Can add uploaded gene list",
+      "content_type": 6,
+      "codename": "add_uploadedgenelist"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 54,
+    "fields": {
+      "name": "Can change uploaded gene list",
+      "content_type": 6,
+      "codename": "change_uploadedgenelist"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 55,
+    "fields": {
+      "name": "Can delete uploaded gene list",
+      "content_type": 6,
+      "codename": "delete_uploadedgenelist"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 56,
+    "fields": {
+      "name": "Can view uploaded gene list",
+      "content_type": 6,
+      "codename": "view_uploadedgenelist"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 57,
+    "fields": {
+      "name": "Can add uploaded panel list",
+      "content_type": 7,
+      "codename": "add_uploadedpanellist"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 58,
+    "fields": {
+      "name": "Can change uploaded panel list",
+      "content_type": 7,
+      "codename": "change_uploadedpanellist"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 59,
+    "fields": {
+      "name": "Can delete uploaded panel list",
+      "content_type": 7,
+      "codename": "delete_uploadedpanellist"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 60,
+    "fields": {
+      "name": "Can view uploaded panel list",
+      "content_type": 7,
+      "codename": "view_uploadedpanellist"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 61,
+    "fields": {
+      "name": "Can add uploaded reviews list",
+      "content_type": 8,
+      "codename": "add_uploadedreviewslist"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 62,
+    "fields": {
+      "name": "Can change uploaded reviews list",
+      "content_type": 8,
+      "codename": "change_uploadedreviewslist"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 63,
+    "fields": {
+      "name": "Can delete uploaded reviews list",
+      "content_type": 8,
+      "codename": "delete_uploadedreviewslist"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 64,
+    "fields": {
+      "name": "Can view uploaded reviews list",
+      "content_type": 8,
+      "codename": "view_uploadedreviewslist"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 65,
+    "fields": {
+      "name": "Can add gene",
+      "content_type": 18,
+      "codename": "add_gene"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 66,
+    "fields": {
+      "name": "Can change gene",
+      "content_type": 18,
+      "codename": "change_gene"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 67,
+    "fields": {
+      "name": "Can delete gene",
+      "content_type": 18,
+      "codename": "delete_gene"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 68,
+    "fields": {
+      "name": "Can view gene",
+      "content_type": 18,
+      "codename": "view_gene"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 69,
+    "fields": {
+      "name": "Can add activity",
+      "content_type": 19,
+      "codename": "add_activity"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 70,
+    "fields": {
+      "name": "Can change activity",
+      "content_type": 19,
+      "codename": "change_activity"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 71,
+    "fields": {
+      "name": "Can delete activity",
+      "content_type": 19,
+      "codename": "delete_activity"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 72,
+    "fields": {
+      "name": "Can view activity",
+      "content_type": 19,
+      "codename": "view_activity"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 73,
+    "fields": {
+      "name": "Can add comment",
+      "content_type": 20,
+      "codename": "add_comment"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 74,
+    "fields": {
+      "name": "Can change comment",
+      "content_type": 20,
+      "codename": "change_comment"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 75,
+    "fields": {
+      "name": "Can delete comment",
+      "content_type": 20,
+      "codename": "delete_comment"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 76,
+    "fields": {
+      "name": "Can view comment",
+      "content_type": 20,
+      "codename": "view_comment"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 77,
+    "fields": {
+      "name": "Can add evaluation",
+      "content_type": 21,
+      "codename": "add_evaluation"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 78,
+    "fields": {
+      "name": "Can change evaluation",
+      "content_type": 21,
+      "codename": "change_evaluation"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 79,
+    "fields": {
+      "name": "Can delete evaluation",
+      "content_type": 21,
+      "codename": "delete_evaluation"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 80,
+    "fields": {
+      "name": "Can view evaluation",
+      "content_type": 21,
+      "codename": "view_evaluation"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 81,
+    "fields": {
+      "name": "Can add evidence",
+      "content_type": 22,
+      "codename": "add_evidence"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 82,
+    "fields": {
+      "name": "Can change evidence",
+      "content_type": 22,
+      "codename": "change_evidence"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 83,
+    "fields": {
+      "name": "Can delete evidence",
+      "content_type": 22,
+      "codename": "delete_evidence"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 84,
+    "fields": {
+      "name": "Can view evidence",
+      "content_type": 22,
+      "codename": "view_evidence"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 85,
+    "fields": {
+      "name": "Can add gene panel",
+      "content_type": 23,
+      "codename": "add_genepanel"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 86,
+    "fields": {
+      "name": "Can change gene panel",
+      "content_type": 23,
+      "codename": "change_genepanel"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 87,
+    "fields": {
+      "name": "Can delete gene panel",
+      "content_type": 23,
+      "codename": "delete_genepanel"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 88,
+    "fields": {
+      "name": "Can view gene panel",
+      "content_type": 23,
+      "codename": "view_genepanel"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 89,
+    "fields": {
+      "name": "Can add gene panel entry snapshot",
+      "content_type": 24,
+      "codename": "add_genepanelentrysnapshot"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 90,
+    "fields": {
+      "name": "Can change gene panel entry snapshot",
+      "content_type": 24,
+      "codename": "change_genepanelentrysnapshot"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 91,
+    "fields": {
+      "name": "Can delete gene panel entry snapshot",
+      "content_type": 24,
+      "codename": "delete_genepanelentrysnapshot"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 92,
+    "fields": {
+      "name": "Can view gene panel entry snapshot",
+      "content_type": 24,
+      "codename": "view_genepanelentrysnapshot"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 93,
+    "fields": {
+      "name": "Can add gene panel snapshot",
+      "content_type": 25,
+      "codename": "add_genepanelsnapshot"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 94,
+    "fields": {
+      "name": "Can change gene panel snapshot",
+      "content_type": 25,
+      "codename": "change_genepanelsnapshot"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 95,
+    "fields": {
+      "name": "Can delete gene panel snapshot",
+      "content_type": 25,
+      "codename": "delete_genepanelsnapshot"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 96,
+    "fields": {
+      "name": "Can view gene panel snapshot",
+      "content_type": 25,
+      "codename": "view_genepanelsnapshot"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 97,
+    "fields": {
+      "name": "Can add level4 title",
+      "content_type": 26,
+      "codename": "add_level4title"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 98,
+    "fields": {
+      "name": "Can change level4 title",
+      "content_type": 26,
+      "codename": "change_level4title"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 99,
+    "fields": {
+      "name": "Can delete level4 title",
+      "content_type": 26,
+      "codename": "delete_level4title"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 100,
+    "fields": {
+      "name": "Can view level4 title",
+      "content_type": 26,
+      "codename": "view_level4title"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 101,
+    "fields": {
+      "name": "Can add track record",
+      "content_type": 27,
+      "codename": "add_trackrecord"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 102,
+    "fields": {
+      "name": "Can change track record",
+      "content_type": 27,
+      "codename": "change_trackrecord"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 103,
+    "fields": {
+      "name": "Can delete track record",
+      "content_type": 27,
+      "codename": "delete_trackrecord"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 104,
+    "fields": {
+      "name": "Can view track record",
+      "content_type": 27,
+      "codename": "view_trackrecord"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 105,
+    "fields": {
+      "name": "Can add tag",
+      "content_type": 28,
+      "codename": "add_tag"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 106,
+    "fields": {
+      "name": "Can change tag",
+      "content_type": 28,
+      "codename": "change_tag"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 107,
+    "fields": {
+      "name": "Can delete tag",
+      "content_type": 28,
+      "codename": "delete_tag"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 108,
+    "fields": {
+      "name": "Can view tag",
+      "content_type": 28,
+      "codename": "view_tag"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 109,
+    "fields": {
+      "name": "Can add str",
+      "content_type": 29,
+      "codename": "add_str"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 110,
+    "fields": {
+      "name": "Can change str",
+      "content_type": 29,
+      "codename": "change_str"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 111,
+    "fields": {
+      "name": "Can delete str",
+      "content_type": 29,
+      "codename": "delete_str"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 112,
+    "fields": {
+      "name": "Can view str",
+      "content_type": 29,
+      "codename": "view_str"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 113,
+    "fields": {
+      "name": "Can add region",
+      "content_type": 30,
+      "codename": "add_region"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 114,
+    "fields": {
+      "name": "Can change region",
+      "content_type": 30,
+      "codename": "change_region"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 115,
+    "fields": {
+      "name": "Can delete region",
+      "content_type": 30,
+      "codename": "delete_region"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 116,
+    "fields": {
+      "name": "Can view region",
+      "content_type": 30,
+      "codename": "view_region"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 117,
+    "fields": {
+      "name": "Can add panel type",
+      "content_type": 9,
+      "codename": "add_paneltype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 118,
+    "fields": {
+      "name": "Can change panel type",
+      "content_type": 9,
+      "codename": "change_paneltype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 119,
+    "fields": {
+      "name": "Can delete panel type",
+      "content_type": 9,
+      "codename": "delete_paneltype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 120,
+    "fields": {
+      "name": "Can view panel type",
+      "content_type": 9,
+      "codename": "view_paneltype"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 121,
+    "fields": {
+      "name": "Can add historical snapshot",
+      "content_type": 31,
+      "codename": "add_historicalsnapshot"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 122,
+    "fields": {
+      "name": "Can change historical snapshot",
+      "content_type": 31,
+      "codename": "change_historicalsnapshot"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 123,
+    "fields": {
+      "name": "Can delete historical snapshot",
+      "content_type": 31,
+      "codename": "delete_historicalsnapshot"
+    }
+  },
+  {
+    "model": "auth.permission",
+    "pk": 124,
+    "fields": {
+      "name": "Can view historical snapshot",
+      "content_type": 31,
+      "codename": "view_historicalsnapshot"
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 1,
+    "fields": {
+      "name": "User Support",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 2,
+    "fields": {
+      "name": "Site Editor",
+      "permissions": []
+    }
+  },
+  {
+    "model": "auth.group",
+    "pk": 3,
+    "fields": {
+      "name": "File Upload Curation",
+      "permissions": []
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 1,
+    "fields": {
+      "app_label": "accounts",
+      "model": "user"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 2,
+    "fields": {
+      "app_label": "accounts",
+      "model": "reviewer"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 3,
+    "fields": {
+      "app_label": "panelapp",
+      "model": "hometext"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 4,
+    "fields": {
+      "app_label": "panelapp",
+      "model": "image"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 5,
+    "fields": {
+      "app_label": "panelapp",
+      "model": "file"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 6,
+    "fields": {
+      "app_label": "panels",
+      "model": "uploadedgenelist"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 7,
+    "fields": {
+      "app_label": "panels",
+      "model": "uploadedpanellist"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 8,
+    "fields": {
+      "app_label": "panels",
+      "model": "uploadedreviewslist"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 9,
+    "fields": {
+      "app_label": "panels",
+      "model": "paneltype"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 10,
+    "fields": {
+      "app_label": "sites",
+      "model": "site"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 11,
+    "fields": {
+      "app_label": "admin",
+      "model": "logentry"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 12,
+    "fields": {
+      "app_label": "auth",
+      "model": "permission"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 13,
+    "fields": {
+      "app_label": "auth",
+      "model": "group"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 14,
+    "fields": {
+      "app_label": "contenttypes",
+      "model": "contenttype"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 15,
+    "fields": {
+      "app_label": "sessions",
+      "model": "session"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 16,
+    "fields": {
+      "app_label": "authtoken",
+      "model": "token"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 17,
+    "fields": {
+      "app_label": "authtoken",
+      "model": "tokenproxy"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 18,
+    "fields": {
+      "app_label": "panels",
+      "model": "gene"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 19,
+    "fields": {
+      "app_label": "panels",
+      "model": "activity"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 20,
+    "fields": {
+      "app_label": "panels",
+      "model": "comment"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 21,
+    "fields": {
+      "app_label": "panels",
+      "model": "evaluation"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 22,
+    "fields": {
+      "app_label": "panels",
+      "model": "evidence"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 23,
+    "fields": {
+      "app_label": "panels",
+      "model": "genepanel"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 24,
+    "fields": {
+      "app_label": "panels",
+      "model": "genepanelentrysnapshot"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 25,
+    "fields": {
+      "app_label": "panels",
+      "model": "genepanelsnapshot"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 26,
+    "fields": {
+      "app_label": "panels",
+      "model": "level4title"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 27,
+    "fields": {
+      "app_label": "panels",
+      "model": "trackrecord"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 28,
+    "fields": {
+      "app_label": "panels",
+      "model": "tag"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 29,
+    "fields": {
+      "app_label": "panels",
+      "model": "str"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 30,
+    "fields": {
+      "app_label": "panels",
+      "model": "region"
+    }
+  },
+  {
+    "model": "contenttypes.contenttype",
+    "pk": 31,
+    "fields": {
+      "app_label": "panels",
+      "model": "historicalsnapshot"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "0wt74dhoh0kt27oir4csfo2esn4vt5zg",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qolhI:0ZLMl55Ivrl1UyB2EpmgzvFisGCbemF-Kof0Mt83TiU",
+      "expire_date": "2023-10-20T14:20:56.489Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "1xqif9r79zszcykq5w2dmtffcif8dw1z",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qoldM:f-Uz_6tLa1jZDZOBJotG7aaXYyfhReqvGwRcsAeTu8A",
+      "expire_date": "2023-10-20T14:16:52.532Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "212sw8e11dm7n0ekxdxnyo9piz9d7v8z",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qollC:mEQ_y0H3o-asPss-TCeUW3Z_dzHclb-qgzjSG3xGzEk",
+      "expire_date": "2023-10-20T14:24:58.503Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "6vzk6tih44yotkr0rytyxw1ud9uh7kl3",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qolcj:kLDGqdIH76DJAhzJnhuX8RbKjlba8TdTNdr6aRuC44Q",
+      "expire_date": "2023-10-20T14:16:13.595Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "783yzmq9kp7wgi8gchvxjnrszap6jpb4",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1r3brH:jrEDp7bujDjUzhwEksM-3k-Ku1w_4Q4KKYlCIEl1w9s",
+      "expire_date": "2023-11-30T12:52:35.005Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "7vufm3snk8qja0tp0uqn5lkqnzdxfd85",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qolZV:RoSHLzWsKoDPTFPpLdqZVjs1gOlCFOzeRt_AMJh9tCs",
+      "expire_date": "2023-10-20T14:12:53.860Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "82bvgwivon2mb27za1uvqoh0v08rhr6o",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qolpv:b-_ACmRMdwr_aSnUzYXvlqyFDhR85gBs18tzT4j6mRY",
+      "expire_date": "2023-10-20T14:29:51.656Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "9ueobscruoa3x1k317wajxmpt4szmys6",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qoiOh:q6XhZPRYF8oX5uDPHZA2SuSzb8BcCJHID_83wdW8tp4",
+      "expire_date": "2023-10-20T10:49:31.475Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "bcflx1fpdlvfkrujdpufps1rul80b474",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qolpw:Wt_kUJP8Eo9pIbcj6KaZNpvF_7E45oLskJlwf_6NS6k",
+      "expire_date": "2023-10-20T14:29:52.272Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "cfwyqu5eeg4ytlq7ur7r89hrw3shkjmm",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1r3bxb:hhQ6ozQj53P5PvJKrcMBskiPz7V_oe2scsQNEqZNilQ",
+      "expire_date": "2023-11-30T12:59:07.701Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "g6mmjy3mrc5t37yqjfco3yeiugk9ksgg",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qoljD:tXkogF3E8IJOUxtyK8tb9_xFNnVdg5p_jYJZt3JuPaU",
+      "expire_date": "2023-10-20T14:22:55.012Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "gqxx7qo2udp2t1qu11nj22xwv0n73bno",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1r3bxc:DkahDy0hpuuPT8usZCrzac03UO8pgkSdR0bS0k907Ik",
+      "expire_date": "2023-11-30T12:59:08.639Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "j9it3mxwjq4cjuweg3w2l7r15t5d40na",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qoiTn:qsRndG06P_pB4z_L3pmwXz5VQZoXFnq9kgVgvHoUW2E",
+      "expire_date": "2023-10-20T10:54:47.260Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "ji4696i9axx0alkwg3yon2cglu3h73p2",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qolgP:-43hDTLvpCdL1AGy6tuNpVxjncNWfCWlPVObvJsTkyo",
+      "expire_date": "2023-10-20T14:20:01.812Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "mrpvzeg7q3sgjgpsygj951jpnn3xystv",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qoiTn:qsRndG06P_pB4z_L3pmwXz5VQZoXFnq9kgVgvHoUW2E",
+      "expire_date": "2023-10-20T10:54:47.898Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "nigld90j2liv00ib87ks9fy7op1xglok",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qolnb:AEMkn_4iKGahLx263oOPJj3ZkerLl0lE3uTDfxym4jI",
+      "expire_date": "2023-10-20T14:27:27.589Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "nmercg8ufkdxvcwa14qw8hc9xodpqzak",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qolmW:bG-jmT5LDe9HLv82m1zRq0x6PzeTjOE6RrijQoTjLAs",
+      "expire_date": "2023-10-20T14:26:20.909Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "oalz7oq6j4hqv75wg6wjtf65u8z8hr8c",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qolgQ:Qr9GjJDWB-JAqrF-wD6ONSXvWwZrNZSsuMdb6NhkC1o",
+      "expire_date": "2023-10-20T14:20:02.426Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "ofpve9atek9988jhp2pmov2yea6e80iu",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qollB:FKUdJA64_JmrQaZyXSaWDCyZMUJRepUHk45jFqmXH8c",
+      "expire_date": "2023-10-20T14:24:57.828Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "qaoh9i6jf3pj9wafluvhgx2r5ablszpy",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1qoljD:tXkogF3E8IJOUxtyK8tb9_xFNnVdg5p_jYJZt3JuPaU",
+      "expire_date": "2023-10-20T14:22:55.646Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "toqgx3cs5gjllr0002y6usxocpov7oea",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1r3bkW:ChCArL1lXh5v4VM3lMSJMLNXo2BunwMbA-l_e9W6BE0",
+      "expire_date": "2023-11-30T12:45:36.696Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "vboqn824u5sy1o2poox52cuna0ca5cnn",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1r3bxc:DkahDy0hpuuPT8usZCrzac03UO8pgkSdR0bS0k907Ik",
+      "expire_date": "2023-11-30T12:59:08.640Z"
+    }
+  },
+  {
+    "model": "sessions.session",
+    "pk": "ybosxbnh9u3fx7iorhjd08n8zgszvcb2",
+    "fields": {
+      "session_data": ".eJxVjMsOwiAQRf-FtSEdHgO4dO83kBlAqRpISrsy_rtp0oVu7znnvkWkba1xG2WJcxZnAeL0uzGlZ2k7yA9q9y5Tb-sys9wVedAhrz2X1-Vw_w4qjbrXOjmrkVyBrKxjbdFovLEDbwl5ogmATQghI0ygTEkueVTEWaNnS-LzBcaHNzc:1r3ZLb:R4HzoiSYGa-dijeVLUnvxj4ai62ScQcxG-EqhAYafoQ",
+      "expire_date": "2023-11-30T10:11:43.799Z"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 1,
+    "fields": {
+      "password": "pbkdf2_sha256$260000$W2NHUpzs803H57FHQvxlzo$O8fopXZiTEVKEqsnPFtH/EeekHdsYVQhk31YHTXJrkA=",
+      "last_login": "2023-11-16T12:59:08.637Z",
+      "is_superuser": true,
+      "username": "admin",
+      "first_name": "",
+      "last_name": "",
+      "email": "admin@local",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2023-10-05T13:13:08.197Z",
+      "created": "2023-10-05T13:13:08.197Z",
+      "modified": "2023-11-16T12:59:08.638Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "accounts.reviewer",
+    "pk": 1,
+    "fields": {
+      "user": 1,
+      "user_type": "GEL",
+      "affiliation": "Other",
+      "workplace": "Other",
+      "role": "Other",
+      "group": "Other"
+    }
+  },
+  {
+    "model": "panels.paneltype",
+    "pk": 1,
+    "fields": {
+      "name": "Rare Disease Test Directory",
+      "slug": "rare-disease-test-directory",
+      "description": "Rare Disease Test Directory"
+    }
+  },
+  {
+    "model": "panels.paneltype",
+    "pk": 2,
+    "fields": {
+      "name": "Actionable",
+      "slug": "actionable",
+      "description": "Actionable"
+    }
+  },
+  {
+    "model": "panels.paneltype",
+    "pk": 3,
+    "fields": {
+      "name": "Rare Disease 100K",
+      "slug": "rare-disease-100k",
+      "description": "Rare Disease 100K"
+    }
+  },
+  {
+    "model": "panels.paneltype",
+    "pk": 4,
+    "fields": {
+      "name": "Superpanel",
+      "slug": "superpanel",
+      "description": "Superpanel"
+    }
+  },
+  {
+    "model": "panels.paneltype",
+    "pk": 5,
+    "fields": {
+      "name": "testing",
+      "slug": "testing",
+      "description": "testing"
+    }
+  },
+  {
+    "model": "panels.paneltype",
+    "pk": 6,
+    "fields": {
+      "name": "Reference",
+      "slug": "reference",
+      "description": "Reference"
+    }
+  },
+  {
+    "model": "panels.paneltype",
+    "pk": 7,
+    "fields": {
+      "name": "ClinGen Curated genes",
+      "slug": "clingen-curated-genes",
+      "description": "ClinGen Curated genes"
+    }
+  },
+  {
+    "model": "panels.paneltype",
+    "pk": 8,
+    "fields": {
+      "name": "GA4GH collaboration",
+      "slug": "ga4gh-collaboration",
+      "description": "GA4GH collaboration"
+    }
+  },
+  {
+    "model": "panels.paneltype",
+    "pk": 9,
+    "fields": {
+      "name": "External Diagnostic Lab",
+      "slug": "external-diagnostic-lab",
+      "description": "External Diagnostic Lab"
+    }
+  },
+  {
+    "model": "panels.paneltype",
+    "pk": 10,
+    "fields": {
+      "name": "Cancer Test Directory",
+      "slug": "cancer-test-directory",
+      "description": "Cancer Test Directory"
+    }
+  },
+  {
+    "model": "panels.paneltype",
+    "pk": 11,
+    "fields": {
+      "name": "Cancer Germline 100K",
+      "slug": "cancer-germline-100k",
+      "description": "Cancer Germline 100K"
+    }
+  },
+  {
+    "model": "panels.genepanel",
+    "pk": 1,
+    "fields": {
+      "created": "2023-10-06T10:52:19.911Z",
+      "modified": "2023-10-06T10:52:19.911Z",
+      "old_pk": null,
+      "name": "Test Panel 01",
+      "status": "internal",
+      "signed_off": null,
+      "types": [
+        3
+      ]
+    }
+  },
+  {
+    "model": "panels.genepanel",
+    "pk": 2,
+    "fields": {
+      "created": "2023-10-06T10:52:35.865Z",
+      "modified": "2023-10-06T10:52:41.104Z",
+      "old_pk": null,
+      "name": "Test Panel 02",
+      "status": "public",
+      "signed_off": null,
+      "types": [
+        1
+      ]
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 1,
+    "fields": {
+      "created": "2023-10-06T10:52:19.917Z",
+      "modified": "2023-10-06T10:52:19.917Z",
+      "panel": 1,
+      "user": 1,
+      "text": "Added Panel Test Panel 01\nSet panel types to: Rare Disease 100K",
+      "item_type": "panel",
+      "entity_type": null,
+      "entity_name": null,
+      "extra_data": {
+        "panel_id": 1,
+        "item_type": "panel",
+        "user_name": "",
+        "panel_name": "Test Panel 01",
+        "panel_version": "0.0"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 2,
+    "fields": {
+      "created": "2023-10-06T10:52:35.870Z",
+      "modified": "2023-10-06T10:52:35.870Z",
+      "panel": 2,
+      "user": 1,
+      "text": "Added Panel Test Panel 02\nSet panel types to: Rare Disease Test Directory",
+      "item_type": "panel",
+      "entity_type": null,
+      "entity_name": null,
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "panel",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "panel_version": "0.0"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 3,
+    "fields": {
+      "created": "2023-10-06T10:52:41.109Z",
+      "modified": "2023-10-06T10:52:41.109Z",
+      "panel": 2,
+      "user": 1,
+      "text": "Panel status changed from internal to public",
+      "item_type": "panel",
+      "entity_type": null,
+      "entity_name": null,
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "panel",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "panel_version": "0.1"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 4,
+    "fields": {
+      "created": "2023-11-16T10:12:30.187Z",
+      "modified": "2023-11-16T10:12:30.187Z",
+      "panel": 2,
+      "user": 1,
+      "text": "gene: BRCA1 was added\ngene: BRCA1 was added to Test Panel 02. Sources: Radboud University Medical Center, Nijmegen\ntest01 tags were added to gene: BRCA1.\nMode of inheritance for gene: BRCA1 was set to MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted\nPublications for gene: BRCA1 were set to 1234\nPenetrance for gene: BRCA1 were set to Complete\nMode of pathogenicity for gene: BRCA1 was set to Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments\nReview for gene: BRCA1 was set to GREEN\ngene: BRCA1 was marked as current diagnostic\nAdded comment: Testing \nSources: Radboud University Medical Center, Nijmegen",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "BRCA1",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "BRCA1",
+        "entity_type": "gene",
+        "panel_version": "0.2"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 5,
+    "fields": {
+      "created": "2023-11-16T10:13:35.057Z",
+      "modified": "2023-11-16T10:13:35.057Z",
+      "panel": 2,
+      "user": 1,
+      "text": "changed review comment from: Testing \nSources: Radboud University Medical Center, Nijmegen; to: Testing\r\nOver\r\nSeveral\r\nLines\r\nSources: Radboud University Medical Center, Nijmegen",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "BRCA1",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "BRCA1",
+        "entity_type": "gene",
+        "panel_version": "0.2"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 6,
+    "fields": {
+      "created": "2023-11-16T11:44:27.670Z",
+      "modified": "2023-11-16T11:44:27.670Z",
+      "panel": 2,
+      "user": 1,
+      "text": "Gene: brca1 has been classified as Green List (High Evidence).",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "BRCA1",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "BRCA1",
+        "entity_type": "gene",
+        "panel_version": "0.3"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 7,
+    "fields": {
+      "created": "2023-11-16T11:44:27.677Z",
+      "modified": "2023-11-16T11:44:27.677Z",
+      "panel": 2,
+      "user": 1,
+      "text": "Classified gene: BRCA1 as Green List (high evidence)",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "BRCA1",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "BRCA1",
+        "entity_type": "gene",
+        "panel_version": "0.3"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 8,
+    "fields": {
+      "created": "2023-11-16T11:45:04.811Z",
+      "modified": "2023-11-16T11:45:04.811Z",
+      "panel": 2,
+      "user": 1,
+      "text": "gene: AAAS was added\ngene: AAAS was added to Test Panel 02. Sources: Other\ntest02 tags were added to gene: AAAS.\nMode of inheritance for gene: AAAS was set to MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)\nMode of pathogenicity for gene: AAAS was set to Other\nReview for gene: AAAS was set to GREEN\nAdded comment: This is a comment \nSources: Other",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "AAAS",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "AAAS",
+        "entity_type": "gene",
+        "panel_version": "0.4"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 9,
+    "fields": {
+      "created": "2023-11-16T11:45:14.328Z",
+      "modified": "2023-11-16T11:45:14.328Z",
+      "panel": 2,
+      "user": 1,
+      "text": "Gene: aaas has been classified as Green List (High Evidence).",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "AAAS",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "AAAS",
+        "entity_type": "gene",
+        "panel_version": "0.5"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 10,
+    "fields": {
+      "created": "2023-11-16T11:45:14.333Z",
+      "modified": "2023-11-16T11:45:14.333Z",
+      "panel": 2,
+      "user": 1,
+      "text": "Classified gene: AAAS as Green List (high evidence)",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "AAAS",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "AAAS",
+        "entity_type": "gene",
+        "panel_version": "0.5"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 11,
+    "fields": {
+      "created": "2023-11-16T11:45:57.458Z",
+      "modified": "2023-11-16T11:45:57.458Z",
+      "panel": 2,
+      "user": 1,
+      "text": "gene: CCDC154 was added\ngene: CCDC154 was added to Test Panel 02. Sources: Other\ntest03 tags were added to gene: CCDC154.\nMode of inheritance for gene: CCDC154 was set to X-LINKED: hemizygous mutation in males, biallelic mutations in females\nReview for gene: CCDC154 was set to AMBER\nAdded comment: This is a comment \nSources: Other",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "CCDC154",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "CCDC154",
+        "entity_type": "gene",
+        "panel_version": "0.6"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 12,
+    "fields": {
+      "created": "2023-11-16T11:46:04.985Z",
+      "modified": "2023-11-16T11:46:04.985Z",
+      "panel": 2,
+      "user": 1,
+      "text": "Gene: ccdc154 has been classified as Amber List (Moderate Evidence).",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "CCDC154",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "CCDC154",
+        "entity_type": "gene",
+        "panel_version": "0.7"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 13,
+    "fields": {
+      "created": "2023-11-16T11:46:04.987Z",
+      "modified": "2023-11-16T11:46:04.987Z",
+      "panel": 2,
+      "user": 1,
+      "text": "Classified gene: CCDC154 as Amber List (moderate evidence)",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "CCDC154",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "CCDC154",
+        "entity_type": "gene",
+        "panel_version": "0.7"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 14,
+    "fields": {
+      "created": "2023-11-16T11:48:03.973Z",
+      "modified": "2023-11-16T11:48:03.973Z",
+      "panel": 2,
+      "user": 1,
+      "text": "gene: DEFB115 was added\ngene: DEFB115 was added to Test Panel 02. Sources: UKGTN\nMode of inheritance for gene: DEFB115 was set to Unknown\nReview for gene: DEFB115 was set to GREEN\nAdded comment: This is a comment \nSources: UKGTN",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "DEFB115",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "DEFB115",
+        "entity_type": "gene",
+        "panel_version": "0.8"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 15,
+    "fields": {
+      "created": "2023-11-16T11:48:15.179Z",
+      "modified": "2023-11-16T11:48:15.179Z",
+      "panel": 2,
+      "user": 1,
+      "text": "Gene: defb115 has been classified as Green List (High Evidence).",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "DEFB115",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "DEFB115",
+        "entity_type": "gene",
+        "panel_version": "0.9"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 16,
+    "fields": {
+      "created": "2023-11-16T11:48:15.187Z",
+      "modified": "2023-11-16T11:48:15.187Z",
+      "panel": 2,
+      "user": 1,
+      "text": "Added comment: Comment on list classification: Yes",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "DEFB115",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "DEFB115",
+        "entity_type": "gene",
+        "panel_version": "0.9"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 17,
+    "fields": {
+      "created": "2023-11-16T11:48:15.188Z",
+      "modified": "2023-11-16T11:48:15.188Z",
+      "panel": 2,
+      "user": 1,
+      "text": "Classified gene: DEFB115 as Green List (high evidence)",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "DEFB115",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "DEFB115",
+        "entity_type": "gene",
+        "panel_version": "0.9"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 18,
+    "fields": {
+      "created": "2023-11-16T11:48:49.723Z",
+      "modified": "2023-11-16T11:48:49.723Z",
+      "panel": 2,
+      "user": 1,
+      "text": "gene: EIF3C was added\ngene: EIF3C was added to Test Panel 02. Sources: Other\nMode of inheritance for gene: EIF3C was set to BIALLELIC, autosomal or pseudoautosomal\nReview for gene: EIF3C was set to AMBER\nAdded comment: This is a comment \nSources: Other",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "EIF3C",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "EIF3C",
+        "entity_type": "gene",
+        "panel_version": "0.10"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 19,
+    "fields": {
+      "created": "2023-11-16T11:48:58.066Z",
+      "modified": "2023-11-16T11:48:58.066Z",
+      "panel": 2,
+      "user": 1,
+      "text": "Gene: eif3c has been classified as Amber List (Moderate Evidence).",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "EIF3C",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "EIF3C",
+        "entity_type": "gene",
+        "panel_version": "0.11"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 20,
+    "fields": {
+      "created": "2023-11-16T11:48:58.074Z",
+      "modified": "2023-11-16T11:48:58.074Z",
+      "panel": 2,
+      "user": 1,
+      "text": "Classified gene: EIF3C as Amber List (moderate evidence)",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "EIF3C",
+      "extra_data": {
+        "panel_id": 2,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 02",
+        "entity_name": "EIF3C",
+        "entity_type": "gene",
+        "panel_version": "0.11"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 21,
+    "fields": {
+      "created": "2023-11-16T12:44:41.105Z",
+      "modified": "2023-11-16T12:44:41.105Z",
+      "panel": 1,
+      "user": 1,
+      "text": "gene: AAAS was added\ngene: AAAS was added to Test Panel 01. Sources: Emory Genetics Laboratory\ntest04 tags were added to gene: AAAS.\nMode of inheritance for gene: AAAS was set to BOTH monoallelic and biallelic (but BIALLELIC mutations cause a more SEVERE disease form), autosomal or pseudoautosomal\nReview for gene: AAAS was set to AMBER\nAdded comment: This is a comment \nSources: Emory Genetics Laboratory",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "AAAS",
+      "extra_data": {
+        "panel_id": 1,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 01",
+        "entity_name": "AAAS",
+        "entity_type": "gene",
+        "panel_version": "0.1"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 22,
+    "fields": {
+      "created": "2023-11-16T12:44:48.385Z",
+      "modified": "2023-11-16T12:44:48.385Z",
+      "panel": 1,
+      "user": 1,
+      "text": "Gene: aaas has been classified as Amber List (Moderate Evidence).",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "AAAS",
+      "extra_data": {
+        "panel_id": 1,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 01",
+        "entity_name": "AAAS",
+        "entity_type": "gene",
+        "panel_version": "0.2"
+      }
+    }
+  },
+  {
+    "model": "panels.activity",
+    "pk": 23,
+    "fields": {
+      "created": "2023-11-16T12:44:48.391Z",
+      "modified": "2023-11-16T12:44:48.391Z",
+      "panel": 1,
+      "user": 1,
+      "text": "Classified gene: AAAS as Amber List (moderate evidence)",
+      "item_type": "entity",
+      "entity_type": "gene",
+      "entity_name": "AAAS",
+      "extra_data": {
+        "panel_id": 1,
+        "item_type": "entity",
+        "user_name": "",
+        "panel_name": "Test Panel 01",
+        "entity_name": "AAAS",
+        "entity_type": "gene",
+        "panel_version": "0.2"
+      }
+    }
+  },
+  {
+    "model": "panels.comment",
+    "pk": 1,
+    "fields": {
+      "created": "2023-11-16T10:12:30.147Z",
+      "modified": "2023-11-16T10:12:30.147Z",
+      "user": 1,
+      "comment": "Testing",
+      "flagged": false,
+      "last_updated": null,
+      "version": null
+    }
+  },
+  {
+    "model": "panels.comment",
+    "pk": 2,
+    "fields": {
+      "created": "2023-11-16T10:12:30.174Z",
+      "modified": "2023-11-16T10:13:35.050Z",
+      "user": 1,
+      "comment": "Testing\r\nOver\r\nSeveral\r\nLines\r\nSources: Radboud University Medical Center, Nijmegen",
+      "flagged": false,
+      "last_updated": "2023-11-16T10:13:35.050Z",
+      "version": "0.2"
+    }
+  },
+  {
+    "model": "panels.comment",
+    "pk": 3,
+    "fields": {
+      "created": "2023-11-16T11:45:04.768Z",
+      "modified": "2023-11-16T11:45:04.768Z",
+      "user": 1,
+      "comment": "This is a comment",
+      "flagged": false,
+      "last_updated": null,
+      "version": null
+    }
+  },
+  {
+    "model": "panels.comment",
+    "pk": 4,
+    "fields": {
+      "created": "2023-11-16T11:45:04.795Z",
+      "modified": "2023-11-16T11:45:04.795Z",
+      "user": 1,
+      "comment": "This is a comment \nSources: Other",
+      "flagged": false,
+      "last_updated": null,
+      "version": null
+    }
+  },
+  {
+    "model": "panels.comment",
+    "pk": 5,
+    "fields": {
+      "created": "2023-11-16T11:45:57.415Z",
+      "modified": "2023-11-16T11:45:57.415Z",
+      "user": 1,
+      "comment": "This is a comment",
+      "flagged": false,
+      "last_updated": null,
+      "version": null
+    }
+  },
+  {
+    "model": "panels.comment",
+    "pk": 6,
+    "fields": {
+      "created": "2023-11-16T11:45:57.441Z",
+      "modified": "2023-11-16T11:45:57.441Z",
+      "user": 1,
+      "comment": "This is a comment \nSources: Other",
+      "flagged": false,
+      "last_updated": null,
+      "version": null
+    }
+  },
+  {
+    "model": "panels.comment",
+    "pk": 7,
+    "fields": {
+      "created": "2023-11-16T11:48:03.940Z",
+      "modified": "2023-11-16T11:48:03.940Z",
+      "user": 1,
+      "comment": "This is a comment",
+      "flagged": false,
+      "last_updated": null,
+      "version": null
+    }
+  },
+  {
+    "model": "panels.comment",
+    "pk": 8,
+    "fields": {
+      "created": "2023-11-16T11:48:03.958Z",
+      "modified": "2023-11-16T11:48:03.958Z",
+      "user": 1,
+      "comment": "This is a comment \nSources: UKGTN",
+      "flagged": false,
+      "last_updated": null,
+      "version": null
+    }
+  },
+  {
+    "model": "panels.comment",
+    "pk": 9,
+    "fields": {
+      "created": "2023-11-16T11:48:15.182Z",
+      "modified": "2023-11-16T11:48:15.182Z",
+      "user": 1,
+      "comment": "Comment on list classification: Yes",
+      "flagged": false,
+      "last_updated": "2023-11-16T11:48:15.182Z",
+      "version": "0.9"
+    }
+  },
+  {
+    "model": "panels.comment",
+    "pk": 10,
+    "fields": {
+      "created": "2023-11-16T11:48:49.686Z",
+      "modified": "2023-11-16T11:48:49.686Z",
+      "user": 1,
+      "comment": "This is a comment",
+      "flagged": false,
+      "last_updated": null,
+      "version": null
+    }
+  },
+  {
+    "model": "panels.comment",
+    "pk": 11,
+    "fields": {
+      "created": "2023-11-16T11:48:49.707Z",
+      "modified": "2023-11-16T11:48:49.707Z",
+      "user": 1,
+      "comment": "This is a comment \nSources: Other",
+      "flagged": false,
+      "last_updated": null,
+      "version": null
+    }
+  },
+  {
+    "model": "panels.comment",
+    "pk": 12,
+    "fields": {
+      "created": "2023-11-16T12:44:41.061Z",
+      "modified": "2023-11-16T12:44:41.061Z",
+      "user": 1,
+      "comment": "This is a comment",
+      "flagged": false,
+      "last_updated": null,
+      "version": null
+    }
+  },
+  {
+    "model": "panels.comment",
+    "pk": 13,
+    "fields": {
+      "created": "2023-11-16T12:44:41.089Z",
+      "modified": "2023-11-16T12:44:41.089Z",
+      "user": 1,
+      "comment": "This is a comment \nSources: Emory Genetics Laboratory",
+      "flagged": false,
+      "last_updated": null,
+      "version": null
+    }
+  },
+  {
+    "model": "panels.evaluation",
+    "pk": 1,
+    "fields": {
+      "created": "2023-11-16T10:12:30.172Z",
+      "modified": "2023-11-16T10:13:35.054Z",
+      "user": 1,
+      "rating": "GREEN",
+      "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments",
+      "publications": "[\"1234\"]",
+      "phenotypes": "[]",
+      "moi": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+      "current_diagnostic": true,
+      "clinically_relevant": null,
+      "version": "0.2",
+      "original_panel": "",
+      "last_updated": "2023-11-16T10:13:35.050Z",
+      "comments": [
+        2
+      ]
+    }
+  },
+  {
+    "model": "panels.evaluation",
+    "pk": 2,
+    "fields": {
+      "created": "2023-11-16T11:45:04.792Z",
+      "modified": "2023-11-16T11:45:04.792Z",
+      "user": 1,
+      "rating": "GREEN",
+      "mode_of_pathogenicity": "Other",
+      "publications": "[]",
+      "phenotypes": "[]",
+      "moi": "MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+      "current_diagnostic": false,
+      "clinically_relevant": null,
+      "version": "0.4",
+      "original_panel": "",
+      "last_updated": null,
+      "comments": [
+        4
+      ]
+    }
+  },
+  {
+    "model": "panels.evaluation",
+    "pk": 3,
+    "fields": {
+      "created": "2023-11-16T11:45:57.439Z",
+      "modified": "2023-11-16T11:45:57.439Z",
+      "user": 1,
+      "rating": "AMBER",
+      "mode_of_pathogenicity": null,
+      "publications": "[]",
+      "phenotypes": "[]",
+      "moi": "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
+      "current_diagnostic": false,
+      "clinically_relevant": null,
+      "version": "0.6",
+      "original_panel": "",
+      "last_updated": null,
+      "comments": [
+        6
+      ]
+    }
+  },
+  {
+    "model": "panels.evaluation",
+    "pk": 4,
+    "fields": {
+      "created": "2023-11-16T11:48:03.955Z",
+      "modified": "2023-11-16T11:48:03.955Z",
+      "user": 1,
+      "rating": "GREEN",
+      "mode_of_pathogenicity": null,
+      "publications": "[]",
+      "phenotypes": "[]",
+      "moi": "Unknown",
+      "current_diagnostic": false,
+      "clinically_relevant": null,
+      "version": "0.8",
+      "original_panel": "",
+      "last_updated": null,
+      "comments": [
+        9,
+        8
+      ]
+    }
+  },
+  {
+    "model": "panels.evaluation",
+    "pk": 5,
+    "fields": {
+      "created": "2023-11-16T11:48:49.704Z",
+      "modified": "2023-11-16T11:48:49.704Z",
+      "user": 1,
+      "rating": "AMBER",
+      "mode_of_pathogenicity": null,
+      "publications": "[]",
+      "phenotypes": "[]",
+      "moi": "BIALLELIC, autosomal or pseudoautosomal",
+      "current_diagnostic": false,
+      "clinically_relevant": null,
+      "version": "0.10",
+      "original_panel": "",
+      "last_updated": null,
+      "comments": [
+        11
+      ]
+    }
+  },
+  {
+    "model": "panels.evaluation",
+    "pk": 6,
+    "fields": {
+      "created": "2023-11-16T12:44:41.086Z",
+      "modified": "2023-11-16T12:44:41.086Z",
+      "user": 1,
+      "rating": "AMBER",
+      "mode_of_pathogenicity": null,
+      "publications": "[]",
+      "phenotypes": "[]",
+      "moi": "BOTH monoallelic and biallelic (but BIALLELIC mutations cause a more SEVERE disease form), autosomal or pseudoautosomal",
+      "current_diagnostic": false,
+      "clinically_relevant": null,
+      "version": "0.1",
+      "original_panel": "",
+      "last_updated": null,
+      "comments": [
+        13
+      ]
+    }
+  },
+  {
+    "model": "panels.evidence",
+    "pk": 1,
+    "fields": {
+      "created": "2023-11-16T10:12:30.154Z",
+      "modified": "2023-11-16T10:12:30.154Z",
+      "name": "Radboud University Medical Center, Nijmegen",
+      "rating": 5,
+      "comment": "",
+      "reviewer": 1,
+      "legacy_type": null
+    }
+  },
+  {
+    "model": "panels.evidence",
+    "pk": 2,
+    "fields": {
+      "created": "2023-11-16T11:44:27.658Z",
+      "modified": "2023-11-16T11:44:27.658Z",
+      "name": "Expert Review Green",
+      "rating": 5,
+      "comment": "",
+      "reviewer": 1,
+      "legacy_type": null
+    }
+  },
+  {
+    "model": "panels.evidence",
+    "pk": 3,
+    "fields": {
+      "created": "2023-11-16T11:45:04.774Z",
+      "modified": "2023-11-16T11:45:04.774Z",
+      "name": "Other",
+      "rating": 5,
+      "comment": "",
+      "reviewer": 1,
+      "legacy_type": null
+    }
+  },
+  {
+    "model": "panels.evidence",
+    "pk": 4,
+    "fields": {
+      "created": "2023-11-16T11:45:14.316Z",
+      "modified": "2023-11-16T11:45:14.316Z",
+      "name": "Expert Review Green",
+      "rating": 5,
+      "comment": "",
+      "reviewer": 1,
+      "legacy_type": null
+    }
+  },
+  {
+    "model": "panels.evidence",
+    "pk": 5,
+    "fields": {
+      "created": "2023-11-16T11:45:57.421Z",
+      "modified": "2023-11-16T11:45:57.421Z",
+      "name": "Other",
+      "rating": 5,
+      "comment": "",
+      "reviewer": 1,
+      "legacy_type": null
+    }
+  },
+  {
+    "model": "panels.evidence",
+    "pk": 6,
+    "fields": {
+      "created": "2023-11-16T11:46:04.980Z",
+      "modified": "2023-11-16T11:46:04.980Z",
+      "name": "Expert Review Amber",
+      "rating": 5,
+      "comment": "",
+      "reviewer": 1,
+      "legacy_type": null
+    }
+  },
+  {
+    "model": "panels.evidence",
+    "pk": 7,
+    "fields": {
+      "created": "2023-11-16T11:48:03.947Z",
+      "modified": "2023-11-16T11:48:03.947Z",
+      "name": "UKGTN",
+      "rating": 5,
+      "comment": "",
+      "reviewer": 1,
+      "legacy_type": null
+    }
+  },
+  {
+    "model": "panels.evidence",
+    "pk": 8,
+    "fields": {
+      "created": "2023-11-16T11:48:15.169Z",
+      "modified": "2023-11-16T11:48:15.169Z",
+      "name": "Expert Review Green",
+      "rating": 5,
+      "comment": "",
+      "reviewer": 1,
+      "legacy_type": null
+    }
+  },
+  {
+    "model": "panels.evidence",
+    "pk": 9,
+    "fields": {
+      "created": "2023-11-16T11:48:49.692Z",
+      "modified": "2023-11-16T11:48:49.692Z",
+      "name": "Other",
+      "rating": 5,
+      "comment": "",
+      "reviewer": 1,
+      "legacy_type": null
+    }
+  },
+  {
+    "model": "panels.evidence",
+    "pk": 10,
+    "fields": {
+      "created": "2023-11-16T11:48:58.052Z",
+      "modified": "2023-11-16T11:48:58.052Z",
+      "name": "Expert Review Amber",
+      "rating": 5,
+      "comment": "",
+      "reviewer": 1,
+      "legacy_type": null
+    }
+  },
+  {
+    "model": "panels.evidence",
+    "pk": 11,
+    "fields": {
+      "created": "2023-11-16T12:44:41.068Z",
+      "modified": "2023-11-16T12:44:41.068Z",
+      "name": "Emory Genetics Laboratory",
+      "rating": 5,
+      "comment": "",
+      "reviewer": 1,
+      "legacy_type": null
+    }
+  },
+  {
+    "model": "panels.evidence",
+    "pk": 12,
+    "fields": {
+      "created": "2023-11-16T12:44:48.373Z",
+      "modified": "2023-11-16T12:44:48.373Z",
+      "name": "Expert Review Amber",
+      "rating": 5,
+      "comment": "",
+      "reviewer": 1,
+      "legacy_type": null
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "AAAS",
+    "fields": {
+      "gene_name": "aladin WD repeat nucleoporin",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "12:53701240-53718648",
+            "ensembl_id": "ENSG00000094914"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "12:53307456-53324864",
+            "ensembl_id": "ENSG00000094914"
+          }
+        }
+      },
+      "omim_gene": "[\"605378\"]",
+      "alias": "[]",
+      "biotype": "protein_coding",
+      "alias_name": "[\"aladin\", \"Allgrove, triple-A\", \"adracalin\"]",
+      "hgnc_symbol": "AAAS",
+      "hgnc_date_symbol_changed": "2000-11-08",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:13666",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "BRCA1",
+    "fields": {
+      "gene_name": "BRCA1, DNA repair associated",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "17:41196312-41277500",
+            "ensembl_id": "ENSG00000012048"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "17:43044295-43170245",
+            "ensembl_id": "ENSG00000012048"
+          }
+        }
+      },
+      "omim_gene": "[\"113705\"]",
+      "alias": "[\"RNF53\", \"BRCC1\", \"PPP1R53\", \"FANCS\"]",
+      "biotype": "protein_coding",
+      "alias_name": "[\"BRCA1/BRCA2-containing complex, subunit 1\", \"protein phosphatase 1, regulatory subunit 53\", \"Fanconi anemia, complementation group S\"]",
+      "hgnc_symbol": "BRCA1",
+      "hgnc_date_symbol_changed": "1991-02-20",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:1100",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "CCDC154",
+    "fields": {
+      "gene_name": "coiled-coil domain containing 154",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "16:1484384-1494557",
+            "ensembl_id": "ENSG00000197599"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "16:1434383-1444556",
+            "ensembl_id": "ENSG00000197599"
+          }
+        }
+      },
+      "omim_gene": null,
+      "alias": "[\"LOC645811\"]",
+      "biotype": "protein_coding",
+      "alias_name": null,
+      "hgnc_symbol": "CCDC154",
+      "hgnc_date_symbol_changed": "2008-08-07",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:34454",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "DEFB115",
+    "fields": {
+      "gene_name": "defensin beta 115",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "20:29845467-29847435",
+            "ensembl_id": "ENSG00000215547"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "20:31257664-31259632",
+            "ensembl_id": "ENSG00000215547"
+          }
+        }
+      },
+      "omim_gene": null,
+      "alias": "[\"DEFB-15\"]",
+      "biotype": "protein_coding",
+      "alias_name": null,
+      "hgnc_symbol": "DEFB115",
+      "hgnc_date_symbol_changed": "2002-05-09",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:18096",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "EIF3C",
+    "fields": {
+      "gene_name": "eukaryotic translation initiation factor 3 subunit C",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "16:28699879-28747051",
+            "ensembl_id": "ENSG00000184110"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "16:28688558-28735730",
+            "ensembl_id": "ENSG00000184110"
+          }
+        }
+      },
+      "omim_gene": "[\"603916\"]",
+      "alias": "[\"eIF3-p110\", \"eIF3c\"]",
+      "biotype": "protein_coding",
+      "alias_name": null,
+      "hgnc_symbol": "EIF3C",
+      "hgnc_date_symbol_changed": "2007-07-27",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:3279",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "FPR2",
+    "fields": {
+      "gene_name": "formyl peptide receptor 2",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "19:52255279-52273779",
+            "ensembl_id": "ENSG00000171049"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "19:51752026-51770526",
+            "ensembl_id": "ENSG00000171049"
+          }
+        }
+      },
+      "omim_gene": "[\"136538\"]",
+      "alias": "[\"LXA4R\", \"HM63\", \"FPRH2\", \"FMLPX\", \"FPR2A\", \"FMLP-R-II\", \"ALXR\"]",
+      "biotype": "protein_coding",
+      "alias_name": null,
+      "hgnc_symbol": "FPR2",
+      "hgnc_date_symbol_changed": "2008-04-17",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:3827",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "GCSHP4",
+    "fields": {
+      "gene_name": "glycine cleavage system protein H pseudogene 4",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "12:8293764-8295293",
+            "ensembl_id": "ENSG00000256171"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "12:8141168-8142697",
+            "ensembl_id": "ENSG00000256171"
+          }
+        }
+      },
+      "omim_gene": null,
+      "alias": "[]",
+      "biotype": "processed_pseudogene",
+      "alias_name": null,
+      "hgnc_symbol": "GCSHP4",
+      "hgnc_date_symbol_changed": "2012-05-04",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:43930",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "HKDC1",
+    "fields": {
+      "gene_name": "hexokinase domain containing 1",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "10:70980059-71027315",
+            "ensembl_id": "ENSG00000156510"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "10:69220303-69267559",
+            "ensembl_id": "ENSG00000156510"
+          }
+        }
+      },
+      "omim_gene": "[\"617221\"]",
+      "alias": "[\"FLJ37767\", \"FLJ22761\"]",
+      "biotype": "protein_coding",
+      "alias_name": null,
+      "hgnc_symbol": "HKDC1",
+      "hgnc_date_symbol_changed": "2004-05-27",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:23302",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "IFNK",
+    "fields": {
+      "gene_name": "interferon kappa",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "9:27524312-27526496",
+            "ensembl_id": "ENSG00000147896"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "9:27524314-27526498",
+            "ensembl_id": "ENSG00000147896"
+          }
+        }
+      },
+      "omim_gene": "[\"615326\"]",
+      "alias": "[]",
+      "biotype": "protein_coding",
+      "alias_name": null,
+      "hgnc_symbol": "IFNK",
+      "hgnc_date_symbol_changed": "2004-02-10",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:21714",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "JUN",
+    "fields": {
+      "gene_name": "Jun proto-oncogene, AP-1 transcription factor subunit",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "1:59246465-59249785",
+            "ensembl_id": "ENSG00000177606"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "1:58780788-58784327",
+            "ensembl_id": "ENSG00000177606"
+          }
+        }
+      },
+      "omim_gene": "[\"165160\"]",
+      "alias": "[\"c-Jun\", \"AP-1\"]",
+      "biotype": "protein_coding",
+      "alias_name": null,
+      "hgnc_symbol": "JUN",
+      "hgnc_date_symbol_changed": "1988-05-11",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:6204",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "KLHL38",
+    "fields": {
+      "gene_name": "kelch like family member 38",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "8:124657767-124665190",
+            "ensembl_id": "ENSG00000175946"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "8:123645527-123652950",
+            "ensembl_id": "ENSG00000175946"
+          }
+        }
+      },
+      "omim_gene": null,
+      "alias": "[\"C8ORFK36\"]",
+      "biotype": "protein_coding",
+      "alias_name": null,
+      "hgnc_symbol": "KLHL38",
+      "hgnc_date_symbol_changed": "2008-07-25",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:34435",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "LINC01254",
+    "fields": {
+      "gene_name": "long intergenic non-protein coding RNA 1254",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "18:10405130-10414512",
+            "ensembl_id": "ENSG00000260913"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "18:10405133-10414515",
+            "ensembl_id": "ENSG00000260913"
+          }
+        }
+      },
+      "omim_gene": null,
+      "alias": "[]",
+      "biotype": "lincRNA",
+      "alias_name": null,
+      "hgnc_symbol": "LINC01254",
+      "hgnc_date_symbol_changed": "2014-03-18",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:49870",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "MEF2A",
+    "fields": {
+      "gene_name": "myocyte enhancer factor 2A",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "15:100017370-100256671",
+            "ensembl_id": "ENSG00000068305"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "15:99565417-99716466",
+            "ensembl_id": "ENSG00000068305"
+          }
+        }
+      },
+      "omim_gene": "[\"600660\"]",
+      "alias": "[\"RSRFC4\", \"RSRFC9\"]",
+      "biotype": "protein_coding",
+      "alias_name": null,
+      "hgnc_symbol": "MEF2A",
+      "hgnc_date_symbol_changed": "1995-02-08",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:6993",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "NAP1L1P2",
+    "fields": {
+      "gene_name": "nucleosome assembly protein 1 like 1 pseudogene 2",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "Y:2797042-2799161",
+            "ensembl_id": "ENSG00000229163"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "Y:2929001-2931120",
+            "ensembl_id": "ENSG00000229163"
+          }
+        }
+      },
+      "omim_gene": null,
+      "alias": "[]",
+      "biotype": "processed_pseudogene",
+      "alias_name": null,
+      "hgnc_symbol": "NAP1L1P2",
+      "hgnc_date_symbol_changed": "2010-03-17",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:38005",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.gene",
+    "pk": "OLR1",
+    "fields": {
+      "gene_name": "oxidized low density lipoprotein receptor 1",
+      "ensembl_genes": {
+        "GRch37": {
+          "82": {
+            "location": "12:10310902-10324737",
+            "ensembl_id": "ENSG00000173391"
+          }
+        },
+        "GRch38": {
+          "90": {
+            "location": "12:10158301-10172138",
+            "ensembl_id": "ENSG00000173391"
+          }
+        }
+      },
+      "omim_gene": "[\"602601\"]",
+      "alias": "[\"LOX-1\", \"SCARE1\", \"CLEC8A\"]",
+      "biotype": "protein_coding",
+      "alias_name": null,
+      "hgnc_symbol": "OLR1",
+      "hgnc_date_symbol_changed": "1998-01-16",
+      "hgnc_release": "2017-11-03",
+      "hgnc_id": "HGNC:8133",
+      "active": true
+    }
+  },
+  {
+    "model": "panels.level4title",
+    "pk": 1,
+    "fields": {
+      "name": "Test Panel 01",
+      "description": "Test",
+      "level3title": "",
+      "level2title": "",
+      "omim": "[]",
+      "orphanet": "[]",
+      "hpo": "[]"
+    }
+  },
+  {
+    "model": "panels.level4title",
+    "pk": 2,
+    "fields": {
+      "name": "Test Panel 02",
+      "description": "Test",
+      "level3title": "",
+      "level2title": "",
+      "omim": "[]",
+      "orphanet": "[]",
+      "hpo": "[]"
+    }
+  },
+  {
+    "model": "panels.tag",
+    "pk": 1,
+    "fields": {
+      "name": "test01"
+    }
+  },
+  {
+    "model": "panels.tag",
+    "pk": 2,
+    "fields": {
+      "name": "test02"
+    }
+  },
+  {
+    "model": "panels.tag",
+    "pk": 3,
+    "fields": {
+      "name": "test03"
+    }
+  },
+  {
+    "model": "panels.tag",
+    "pk": 4,
+    "fields": {
+      "name": "test04"
+    }
+  },
+  {
+    "model": "panels.trackrecord",
+    "pk": 1,
+    "fields": {
+      "created": "2023-11-16T10:12:30.182Z",
+      "modified": "2023-11-16T10:12:30.182Z",
+      "issue_type": "Created,NewSource,AddedTag,SetModeofInheritance,SetPublications,SetPenetrance,SetModeofPathogenicity",
+      "issue_description": "gene: BRCA1 was added\ngene: BRCA1 was added to Test Panel 02. Sources: Radboud University Medical Center, Nijmegen\ntest01 tags were added to gene: BRCA1.\nMode of inheritance for gene: BRCA1 was set to MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted\nPublications for gene: BRCA1 were set to 1234\nPenetrance for gene: BRCA1 were set to Complete\nMode of pathogenicity for gene: BRCA1 was set to Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments\nReview for gene: BRCA1 was set to GREEN\ngene: BRCA1 was marked as current diagnostic",
+      "user": 1,
+      "curator_status": 0,
+      "gel_status": 1
+    }
+  },
+  {
+    "model": "panels.trackrecord",
+    "pk": 2,
+    "fields": {
+      "created": "2023-11-16T11:44:27.664Z",
+      "modified": "2023-11-16T11:44:27.664Z",
+      "issue_type": "EntityClassifiedbyGenomicsEnglandCurator",
+      "issue_description": "Gene: brca1 has been classified as Green List (High Evidence).",
+      "user": 1,
+      "curator_status": 0,
+      "gel_status": 3
+    }
+  },
+  {
+    "model": "panels.trackrecord",
+    "pk": 3,
+    "fields": {
+      "created": "2023-11-16T11:45:04.805Z",
+      "modified": "2023-11-16T11:45:04.805Z",
+      "issue_type": "Created,NewSource,AddedTag,SetModeofInheritance,SetModeofPathogenicity",
+      "issue_description": "gene: AAAS was added\ngene: AAAS was added to Test Panel 02. Sources: Other\ntest02 tags were added to gene: AAAS.\nMode of inheritance for gene: AAAS was set to MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)\nMode of pathogenicity for gene: AAAS was set to Other\nReview for gene: AAAS was set to GREEN",
+      "user": 1,
+      "curator_status": 0,
+      "gel_status": 1
+    }
+  },
+  {
+    "model": "panels.trackrecord",
+    "pk": 4,
+    "fields": {
+      "created": "2023-11-16T11:45:14.322Z",
+      "modified": "2023-11-16T11:45:14.322Z",
+      "issue_type": "EntityClassifiedbyGenomicsEnglandCurator",
+      "issue_description": "Gene: aaas has been classified as Green List (High Evidence).",
+      "user": 1,
+      "curator_status": 0,
+      "gel_status": 3
+    }
+  },
+  {
+    "model": "panels.trackrecord",
+    "pk": 5,
+    "fields": {
+      "created": "2023-11-16T11:45:57.452Z",
+      "modified": "2023-11-16T11:45:57.452Z",
+      "issue_type": "Created,NewSource,AddedTag,SetModeofInheritance",
+      "issue_description": "gene: CCDC154 was added\ngene: CCDC154 was added to Test Panel 02. Sources: Other\ntest03 tags were added to gene: CCDC154.\nMode of inheritance for gene: CCDC154 was set to X-LINKED: hemizygous mutation in males, biallelic mutations in females\nReview for gene: CCDC154 was set to AMBER",
+      "user": 1,
+      "curator_status": 0,
+      "gel_status": 1
+    }
+  },
+  {
+    "model": "panels.trackrecord",
+    "pk": 6,
+    "fields": {
+      "created": "2023-11-16T11:46:04.983Z",
+      "modified": "2023-11-16T11:46:04.983Z",
+      "issue_type": "EntityClassifiedbyGenomicsEnglandCurator",
+      "issue_description": "Gene: ccdc154 has been classified as Amber List (Moderate Evidence).",
+      "user": 1,
+      "curator_status": 0,
+      "gel_status": 2
+    }
+  },
+  {
+    "model": "panels.trackrecord",
+    "pk": 7,
+    "fields": {
+      "created": "2023-11-16T11:48:03.967Z",
+      "modified": "2023-11-16T11:48:03.967Z",
+      "issue_type": "Created,NewSource,SetModeofInheritance",
+      "issue_description": "gene: DEFB115 was added\ngene: DEFB115 was added to Test Panel 02. Sources: UKGTN\nMode of inheritance for gene: DEFB115 was set to Unknown\nReview for gene: DEFB115 was set to GREEN",
+      "user": 1,
+      "curator_status": 0,
+      "gel_status": 1
+    }
+  },
+  {
+    "model": "panels.trackrecord",
+    "pk": 8,
+    "fields": {
+      "created": "2023-11-16T11:48:15.177Z",
+      "modified": "2023-11-16T11:48:15.177Z",
+      "issue_type": "EntityClassifiedbyGenomicsEnglandCurator",
+      "issue_description": "Gene: defb115 has been classified as Green List (High Evidence).",
+      "user": 1,
+      "curator_status": 0,
+      "gel_status": 3
+    }
+  },
+  {
+    "model": "panels.trackrecord",
+    "pk": 9,
+    "fields": {
+      "created": "2023-11-16T11:48:49.716Z",
+      "modified": "2023-11-16T11:48:49.716Z",
+      "issue_type": "Created,NewSource,SetModeofInheritance",
+      "issue_description": "gene: EIF3C was added\ngene: EIF3C was added to Test Panel 02. Sources: Other\nMode of inheritance for gene: EIF3C was set to BIALLELIC, autosomal or pseudoautosomal\nReview for gene: EIF3C was set to AMBER",
+      "user": 1,
+      "curator_status": 0,
+      "gel_status": 1
+    }
+  },
+  {
+    "model": "panels.trackrecord",
+    "pk": 10,
+    "fields": {
+      "created": "2023-11-16T11:48:58.059Z",
+      "modified": "2023-11-16T11:48:58.059Z",
+      "issue_type": "EntityClassifiedbyGenomicsEnglandCurator",
+      "issue_description": "Gene: eif3c has been classified as Amber List (Moderate Evidence).",
+      "user": 1,
+      "curator_status": 0,
+      "gel_status": 2
+    }
+  },
+  {
+    "model": "panels.trackrecord",
+    "pk": 11,
+    "fields": {
+      "created": "2023-11-16T12:44:41.099Z",
+      "modified": "2023-11-16T12:44:41.099Z",
+      "issue_type": "Created,NewSource,AddedTag,SetModeofInheritance",
+      "issue_description": "gene: AAAS was added\ngene: AAAS was added to Test Panel 01. Sources: Emory Genetics Laboratory\ntest04 tags were added to gene: AAAS.\nMode of inheritance for gene: AAAS was set to BOTH monoallelic and biallelic (but BIALLELIC mutations cause a more SEVERE disease form), autosomal or pseudoautosomal\nReview for gene: AAAS was set to AMBER",
+      "user": 1,
+      "curator_status": 0,
+      "gel_status": 1
+    }
+  },
+  {
+    "model": "panels.trackrecord",
+    "pk": 12,
+    "fields": {
+      "created": "2023-11-16T12:44:48.379Z",
+      "modified": "2023-11-16T12:44:48.379Z",
+      "issue_type": "EntityClassifiedbyGenomicsEnglandCurator",
+      "issue_description": "Gene: aaas has been classified as Amber List (Moderate Evidence).",
+      "user": 1,
+      "curator_status": 0,
+      "gel_status": 2
+    }
+  },
+  {
+    "model": "panels.genepanelsnapshot",
+    "pk": 1,
+    "fields": {
+      "created": "2023-11-16T12:44:48.074Z",
+      "modified": "2023-11-16T12:44:48.419Z",
+      "level4title": 1,
+      "panel": 1,
+      "major_version": 0,
+      "minor_version": 2,
+      "version_comment": null,
+      "old_panels": "[]",
+      "stats": {
+        "str_reviewers": [],
+        "gene_reviewers": [
+          1
+        ],
+        "number_of_strs": 0,
+        "number_of_genes": 1,
+        "entity_reviewers": [
+          1
+        ],
+        "region_reviewers": [],
+        "number_of_regions": 0,
+        "number_of_entities": 1,
+        "number_of_reviewers": 1,
+        "number_of_green_strs": 0,
+        "number_of_ready_strs": 0,
+        "number_of_green_genes": 0,
+        "number_of_ready_genes": 0,
+        "number_of_green_regions": 0,
+        "number_of_ready_regions": 0,
+        "number_of_evaluated_strs": 0,
+        "number_of_green_entities": 0,
+        "number_of_ready_entities": 0,
+        "number_of_evaluated_genes": 1,
+        "number_of_evaluated_regions": 0,
+        "number_of_evaluated_entities": 1
+      },
+      "child_panels": []
+    }
+  },
+  {
+    "model": "panels.genepanelsnapshot",
+    "pk": 2,
+    "fields": {
+      "created": "2023-11-16T11:48:57.780Z",
+      "modified": "2023-11-16T11:48:58.105Z",
+      "level4title": 2,
+      "panel": 2,
+      "major_version": 0,
+      "minor_version": 11,
+      "version_comment": null,
+      "old_panels": "[]",
+      "stats": {
+        "str_reviewers": [],
+        "gene_reviewers": [
+          1
+        ],
+        "number_of_strs": 0,
+        "number_of_genes": 5,
+        "entity_reviewers": [
+          1
+        ],
+        "region_reviewers": [],
+        "number_of_regions": 0,
+        "number_of_entities": 5,
+        "number_of_reviewers": 1,
+        "number_of_green_strs": 0,
+        "number_of_ready_strs": 0,
+        "number_of_green_genes": 3,
+        "number_of_ready_genes": 0,
+        "number_of_green_regions": 0,
+        "number_of_ready_regions": 0,
+        "number_of_evaluated_strs": 0,
+        "number_of_green_entities": 3,
+        "number_of_ready_entities": 0,
+        "number_of_evaluated_genes": 5,
+        "number_of_evaluated_regions": 0,
+        "number_of_evaluated_entities": 5
+      },
+      "child_panels": []
+    }
+  },
+  {
+    "model": "panels.genepanelentrysnapshot",
+    "pk": 1,
+    "fields": {
+      "created": "2023-11-16T10:12:30.140Z",
+      "modified": "2023-11-16T11:44:27.673Z",
+      "panel": 2,
+      "gene": {
+        "alias": [
+          "RNF53",
+          "BRCC1",
+          "PPP1R53",
+          "FANCS"
+        ],
+        "biotype": "protein_coding",
+        "hgnc_id": "HGNC:1100",
+        "gene_name": "BRCA1, DNA repair associated",
+        "omim_gene": [
+          "113705"
+        ],
+        "alias_name": [
+          "BRCA1/BRCA2-containing complex, subunit 1",
+          "protein phosphatase 1, regulatory subunit 53",
+          "Fanconi anemia, complementation group S"
+        ],
+        "gene_symbol": "BRCA1",
+        "hgnc_symbol": "BRCA1",
+        "hgnc_release": "2017-11-03",
+        "ensembl_genes": {
+          "GRch37": {
+            "82": {
+              "location": "17:41196312-41277500",
+              "ensembl_id": "ENSG00000012048"
+            }
+          },
+          "GRch38": {
+            "90": {
+              "location": "17:43044295-43170245",
+              "ensembl_id": "ENSG00000012048"
+            }
+          }
+        },
+        "hgnc_date_symbol_changed": "1991-02-20"
+      },
+      "gene_core": "BRCA1",
+      "moi": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+      "penetrance": "Complete",
+      "publications": "[\"1234\"]",
+      "phenotypes": "[]",
+      "flagged": false,
+      "ready": false,
+      "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments",
+      "saved_gel_status": 3,
+      "transcript": "[]",
+      "evidence": [
+        2,
+        1
+      ],
+      "evaluation": [
+        1
+      ],
+      "track": [
+        2,
+        1
+      ],
+      "tags": [
+        1
+      ],
+      "comments": [
+        1
+      ]
+    }
+  },
+  {
+    "model": "panels.genepanelentrysnapshot",
+    "pk": 2,
+    "fields": {
+      "created": "2023-11-16T11:45:04.765Z",
+      "modified": "2023-11-16T11:45:14.331Z",
+      "panel": 2,
+      "gene": {
+        "alias": [],
+        "biotype": "protein_coding",
+        "hgnc_id": "HGNC:13666",
+        "gene_name": "aladin WD repeat nucleoporin",
+        "omim_gene": [
+          "605378"
+        ],
+        "alias_name": [
+          "aladin",
+          "Allgrove, triple-A",
+          "adracalin"
+        ],
+        "gene_symbol": "AAAS",
+        "hgnc_symbol": "AAAS",
+        "hgnc_release": "2017-11-03",
+        "ensembl_genes": {
+          "GRch37": {
+            "82": {
+              "location": "12:53701240-53718648",
+              "ensembl_id": "ENSG00000094914"
+            }
+          },
+          "GRch38": {
+            "90": {
+              "location": "12:53307456-53324864",
+              "ensembl_id": "ENSG00000094914"
+            }
+          }
+        },
+        "hgnc_date_symbol_changed": "2000-11-08"
+      },
+      "gene_core": "AAAS",
+      "moi": "MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+      "penetrance": null,
+      "publications": "[]",
+      "phenotypes": "[]",
+      "flagged": false,
+      "ready": false,
+      "mode_of_pathogenicity": "Other",
+      "saved_gel_status": 3,
+      "transcript": "[]",
+      "evidence": [
+        4,
+        3
+      ],
+      "evaluation": [
+        2
+      ],
+      "track": [
+        4,
+        3
+      ],
+      "tags": [
+        2
+      ],
+      "comments": [
+        3
+      ]
+    }
+  },
+  {
+    "model": "panels.genepanelentrysnapshot",
+    "pk": 3,
+    "fields": {
+      "created": "2023-11-16T11:45:57.411Z",
+      "modified": "2023-11-16T11:46:04.986Z",
+      "panel": 2,
+      "gene": {
+        "alias": [
+          "LOC645811"
+        ],
+        "biotype": "protein_coding",
+        "hgnc_id": "HGNC:34454",
+        "gene_name": "coiled-coil domain containing 154",
+        "omim_gene": null,
+        "alias_name": null,
+        "gene_symbol": "CCDC154",
+        "hgnc_symbol": "CCDC154",
+        "hgnc_release": "2017-11-03",
+        "ensembl_genes": {
+          "GRch37": {
+            "82": {
+              "location": "16:1484384-1494557",
+              "ensembl_id": "ENSG00000197599"
+            }
+          },
+          "GRch38": {
+            "90": {
+              "location": "16:1434383-1444556",
+              "ensembl_id": "ENSG00000197599"
+            }
+          }
+        },
+        "hgnc_date_symbol_changed": "2008-08-07"
+      },
+      "gene_core": "CCDC154",
+      "moi": "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
+      "penetrance": null,
+      "publications": "[]",
+      "phenotypes": "[]",
+      "flagged": false,
+      "ready": false,
+      "mode_of_pathogenicity": null,
+      "saved_gel_status": 2,
+      "transcript": "[]",
+      "evidence": [
+        6,
+        5
+      ],
+      "evaluation": [
+        3
+      ],
+      "track": [
+        6,
+        5
+      ],
+      "tags": [
+        3
+      ],
+      "comments": [
+        5
+      ]
+    }
+  },
+  {
+    "model": "panels.genepanelentrysnapshot",
+    "pk": 4,
+    "fields": {
+      "created": "2023-11-16T11:48:03.937Z",
+      "modified": "2023-11-16T11:48:15.181Z",
+      "panel": 2,
+      "gene": {
+        "alias": [
+          "DEFB-15"
+        ],
+        "biotype": "protein_coding",
+        "hgnc_id": "HGNC:18096",
+        "gene_name": "defensin beta 115",
+        "omim_gene": null,
+        "alias_name": null,
+        "gene_symbol": "DEFB115",
+        "hgnc_symbol": "DEFB115",
+        "hgnc_release": "2017-11-03",
+        "ensembl_genes": {
+          "GRch37": {
+            "82": {
+              "location": "20:29845467-29847435",
+              "ensembl_id": "ENSG00000215547"
+            }
+          },
+          "GRch38": {
+            "90": {
+              "location": "20:31257664-31259632",
+              "ensembl_id": "ENSG00000215547"
+            }
+          }
+        },
+        "hgnc_date_symbol_changed": "2002-05-09"
+      },
+      "gene_core": "DEFB115",
+      "moi": "Unknown",
+      "penetrance": null,
+      "publications": "[]",
+      "phenotypes": "[]",
+      "flagged": false,
+      "ready": false,
+      "mode_of_pathogenicity": null,
+      "saved_gel_status": 3,
+      "transcript": "[]",
+      "evidence": [
+        8,
+        7
+      ],
+      "evaluation": [
+        4
+      ],
+      "track": [
+        8,
+        7
+      ],
+      "tags": [],
+      "comments": [
+        7
+      ]
+    }
+  },
+  {
+    "model": "panels.genepanelentrysnapshot",
+    "pk": 5,
+    "fields": {
+      "created": "2023-11-16T11:48:49.683Z",
+      "modified": "2023-11-16T11:48:58.070Z",
+      "panel": 2,
+      "gene": {
+        "alias": [
+          "eIF3-p110",
+          "eIF3c"
+        ],
+        "biotype": "protein_coding",
+        "hgnc_id": "HGNC:3279",
+        "gene_name": "eukaryotic translation initiation factor 3 subunit C",
+        "omim_gene": [
+          "603916"
+        ],
+        "alias_name": null,
+        "gene_symbol": "EIF3C",
+        "hgnc_symbol": "EIF3C",
+        "hgnc_release": "2017-11-03",
+        "ensembl_genes": {
+          "GRch37": {
+            "82": {
+              "location": "16:28699879-28747051",
+              "ensembl_id": "ENSG00000184110"
+            }
+          },
+          "GRch38": {
+            "90": {
+              "location": "16:28688558-28735730",
+              "ensembl_id": "ENSG00000184110"
+            }
+          }
+        },
+        "hgnc_date_symbol_changed": "2007-07-27"
+      },
+      "gene_core": "EIF3C",
+      "moi": "BIALLELIC, autosomal or pseudoautosomal",
+      "penetrance": null,
+      "publications": "[]",
+      "phenotypes": "[]",
+      "flagged": false,
+      "ready": false,
+      "mode_of_pathogenicity": null,
+      "saved_gel_status": 2,
+      "transcript": "[]",
+      "evidence": [
+        10,
+        9
+      ],
+      "evaluation": [
+        5
+      ],
+      "track": [
+        10,
+        9
+      ],
+      "tags": [],
+      "comments": [
+        10
+      ]
+    }
+  },
+  {
+    "model": "panels.genepanelentrysnapshot",
+    "pk": 6,
+    "fields": {
+      "created": "2023-11-16T12:44:41.058Z",
+      "modified": "2023-11-16T12:44:48.388Z",
+      "panel": 1,
+      "gene": {
+        "alias": [],
+        "biotype": "protein_coding",
+        "hgnc_id": "HGNC:13666",
+        "gene_name": "aladin WD repeat nucleoporin",
+        "omim_gene": [
+          "605378"
+        ],
+        "alias_name": [
+          "aladin",
+          "Allgrove, triple-A",
+          "adracalin"
+        ],
+        "gene_symbol": "AAAS",
+        "hgnc_symbol": "AAAS",
+        "hgnc_release": "2017-11-03",
+        "ensembl_genes": {
+          "GRch37": {
+            "82": {
+              "location": "12:53701240-53718648",
+              "ensembl_id": "ENSG00000094914"
+            }
+          },
+          "GRch38": {
+            "90": {
+              "location": "12:53307456-53324864",
+              "ensembl_id": "ENSG00000094914"
+            }
+          }
+        },
+        "hgnc_date_symbol_changed": "2000-11-08"
+      },
+      "gene_core": "AAAS",
+      "moi": "BOTH monoallelic and biallelic (but BIALLELIC mutations cause a more SEVERE disease form), autosomal or pseudoautosomal",
+      "penetrance": null,
+      "publications": "[]",
+      "phenotypes": "[]",
+      "flagged": false,
+      "ready": false,
+      "mode_of_pathogenicity": null,
+      "saved_gel_status": 2,
+      "transcript": "[]",
+      "evidence": [
+        12,
+        11
+      ],
+      "evaluation": [
+        6
+      ],
+      "track": [
+        12,
+        11
+      ],
+      "tags": [
+        4
+      ],
+      "comments": [
+        12
+      ]
+    }
+  },
+  {
+    "model": "panels.historicalsnapshot",
+    "pk": 1,
+    "fields": {
+      "panel": 2,
+      "major_version": 0,
+      "minor_version": 0,
+      "reason": null,
+      "schema_version": "0.0.0",
+      "data": {
+        "id": 2,
+        "name": "Test Panel 02",
+        "strs": [],
+        "genes": [],
+        "stats": {},
+        "types": [
+          {
+            "name": "Rare Disease Test Directory",
+            "slug": "rare-disease-test-directory",
+            "description": "Rare Disease Test Directory"
+          }
+        ],
+        "status": "public",
+        "hash_id": null,
+        "regions": [],
+        "version": "0.0",
+        "disease_group": "",
+        "version_created": "2023-10-06T10:52:35.862598Z",
+        "disease_sub_group": "",
+        "relevant_disorders": []
+      },
+      "signed_off_date": null
+    }
+  },
+  {
+    "model": "panels.historicalsnapshot",
+    "pk": 2,
+    "fields": {
+      "panel": 2,
+      "major_version": 0,
+      "minor_version": 1,
+      "reason": null,
+      "schema_version": "0.0.0",
+      "data": {
+        "id": 2,
+        "name": "Test Panel 02",
+        "strs": [],
+        "genes": [],
+        "stats": {
+          "number_of_strs": 0,
+          "number_of_genes": 0,
+          "number_of_regions": 0
+        },
+        "types": [
+          {
+            "name": "Rare Disease Test Directory",
+            "slug": "rare-disease-test-directory",
+            "description": "Rare Disease Test Directory"
+          }
+        ],
+        "status": "public",
+        "hash_id": null,
+        "regions": [],
+        "version": "0.1",
+        "disease_group": "",
+        "version_created": "2023-10-06T10:52:41.099000Z",
+        "disease_sub_group": "",
+        "relevant_disorders": []
+      },
+      "signed_off_date": null
+    }
+  },
+  {
+    "model": "panels.historicalsnapshot",
+    "pk": 3,
+    "fields": {
+      "panel": 2,
+      "major_version": 0,
+      "minor_version": 2,
+      "reason": null,
+      "schema_version": "0.0.0",
+      "data": {
+        "id": 2,
+        "name": "Test Panel 02",
+        "strs": [],
+        "genes": [
+          {
+            "tags": [
+              "test01"
+            ],
+            "evidence": [
+              "Radboud University Medical Center, Nijmegen"
+            ],
+            "gene_data": {
+              "alias": [
+                "RNF53",
+                "BRCC1",
+                "PPP1R53",
+                "FANCS"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:1100",
+              "gene_name": "BRCA1, DNA repair associated",
+              "omim_gene": [
+                "113705"
+              ],
+              "alias_name": [
+                "BRCA1/BRCA2-containing complex, subunit 1",
+                "protein phosphatase 1, regulatory subunit 53",
+                "Fanconi anemia, complementation group S"
+              ],
+              "gene_symbol": "BRCA1",
+              "hgnc_symbol": "BRCA1",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "17:41196312-41277500",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "17:43044295-43170245",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "1991-02-20"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "BRCA1",
+            "entity_type": "gene",
+            "publications": [
+              "1234"
+            ],
+            "confidence_level": "1",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+            "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
+          }
+        ],
+        "stats": {
+          "number_of_strs": 0,
+          "number_of_genes": 1,
+          "number_of_regions": 0
+        },
+        "types": [
+          {
+            "name": "Rare Disease Test Directory",
+            "slug": "rare-disease-test-directory",
+            "description": "Rare Disease Test Directory"
+          }
+        ],
+        "status": "public",
+        "hash_id": null,
+        "regions": [],
+        "version": "0.2",
+        "disease_group": "",
+        "version_created": "2023-11-16T10:12:30.107000Z",
+        "disease_sub_group": "",
+        "relevant_disorders": []
+      },
+      "signed_off_date": null
+    }
+  },
+  {
+    "model": "panels.historicalsnapshot",
+    "pk": 4,
+    "fields": {
+      "panel": 2,
+      "major_version": 0,
+      "minor_version": 3,
+      "reason": null,
+      "schema_version": "0.0.0",
+      "data": {
+        "id": 2,
+        "name": "Test Panel 02",
+        "strs": [],
+        "genes": [
+          {
+            "tags": [
+              "test01"
+            ],
+            "evidence": [
+              "Expert Review Green",
+              "Radboud University Medical Center, Nijmegen"
+            ],
+            "gene_data": {
+              "alias": [
+                "RNF53",
+                "BRCC1",
+                "PPP1R53",
+                "FANCS"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:1100",
+              "gene_name": "BRCA1, DNA repair associated",
+              "omim_gene": [
+                "113705"
+              ],
+              "alias_name": [
+                "BRCA1/BRCA2-containing complex, subunit 1",
+                "protein phosphatase 1, regulatory subunit 53",
+                "Fanconi anemia, complementation group S"
+              ],
+              "gene_symbol": "BRCA1",
+              "hgnc_symbol": "BRCA1",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "17:41196312-41277500",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "17:43044295-43170245",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "1991-02-20"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "BRCA1",
+            "entity_type": "gene",
+            "publications": [
+              "1234"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+            "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
+          }
+        ],
+        "stats": {
+          "number_of_strs": 0,
+          "number_of_genes": 1,
+          "number_of_regions": 0
+        },
+        "types": [
+          {
+            "name": "Rare Disease Test Directory",
+            "slug": "rare-disease-test-directory",
+            "description": "Rare Disease Test Directory"
+          }
+        ],
+        "status": "public",
+        "hash_id": null,
+        "regions": [],
+        "version": "0.3",
+        "disease_group": "",
+        "version_created": "2023-11-16T11:44:27.253341Z",
+        "disease_sub_group": "",
+        "relevant_disorders": []
+      },
+      "signed_off_date": null
+    }
+  },
+  {
+    "model": "panels.historicalsnapshot",
+    "pk": 5,
+    "fields": {
+      "panel": 2,
+      "major_version": 0,
+      "minor_version": 4,
+      "reason": null,
+      "schema_version": "0.0.0",
+      "data": {
+        "id": 2,
+        "name": "Test Panel 02",
+        "strs": [],
+        "genes": [
+          {
+            "tags": [
+              "test01"
+            ],
+            "evidence": [
+              "Expert Review Green",
+              "Radboud University Medical Center, Nijmegen"
+            ],
+            "gene_data": {
+              "alias": [
+                "RNF53",
+                "BRCC1",
+                "PPP1R53",
+                "FANCS"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:1100",
+              "gene_name": "BRCA1, DNA repair associated",
+              "omim_gene": [
+                "113705"
+              ],
+              "alias_name": [
+                "BRCA1/BRCA2-containing complex, subunit 1",
+                "protein phosphatase 1, regulatory subunit 53",
+                "Fanconi anemia, complementation group S"
+              ],
+              "gene_symbol": "BRCA1",
+              "hgnc_symbol": "BRCA1",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "17:41196312-41277500",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "17:43044295-43170245",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "1991-02-20"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "BRCA1",
+            "entity_type": "gene",
+            "publications": [
+              "1234"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+            "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
+          },
+          {
+            "tags": [
+              "test02"
+            ],
+            "evidence": [
+              "Other"
+            ],
+            "gene_data": {
+              "alias": [],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:13666",
+              "gene_name": "aladin WD repeat nucleoporin",
+              "omim_gene": [
+                "605378"
+              ],
+              "alias_name": [
+                "aladin",
+                "Allgrove, triple-A",
+                "adracalin"
+              ],
+              "gene_symbol": "AAAS",
+              "hgnc_symbol": "AAAS",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "12:53701240-53718648",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "12:53307456-53324864",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2000-11-08"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "AAAS",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "1",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            "mode_of_pathogenicity": "Other"
+          }
+        ],
+        "stats": {
+          "number_of_strs": 0,
+          "number_of_genes": 2,
+          "number_of_regions": 0
+        },
+        "types": [
+          {
+            "name": "Rare Disease Test Directory",
+            "slug": "rare-disease-test-directory",
+            "description": "Rare Disease Test Directory"
+          }
+        ],
+        "status": "public",
+        "hash_id": null,
+        "regions": [],
+        "version": "0.4",
+        "disease_group": "",
+        "version_created": "2023-11-16T11:45:04.738255Z",
+        "disease_sub_group": "",
+        "relevant_disorders": []
+      },
+      "signed_off_date": null
+    }
+  },
+  {
+    "model": "panels.historicalsnapshot",
+    "pk": 6,
+    "fields": {
+      "panel": 2,
+      "major_version": 0,
+      "minor_version": 5,
+      "reason": null,
+      "schema_version": "0.0.0",
+      "data": {
+        "id": 2,
+        "name": "Test Panel 02",
+        "strs": [],
+        "genes": [
+          {
+            "tags": [
+              "test02"
+            ],
+            "evidence": [
+              "Expert Review Green",
+              "Other"
+            ],
+            "gene_data": {
+              "alias": [],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:13666",
+              "gene_name": "aladin WD repeat nucleoporin",
+              "omim_gene": [
+                "605378"
+              ],
+              "alias_name": [
+                "aladin",
+                "Allgrove, triple-A",
+                "adracalin"
+              ],
+              "gene_symbol": "AAAS",
+              "hgnc_symbol": "AAAS",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "12:53701240-53718648",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "12:53307456-53324864",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2000-11-08"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "AAAS",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            "mode_of_pathogenicity": "Other"
+          },
+          {
+            "tags": [
+              "test01"
+            ],
+            "evidence": [
+              "Expert Review Green",
+              "Radboud University Medical Center, Nijmegen"
+            ],
+            "gene_data": {
+              "alias": [
+                "RNF53",
+                "BRCC1",
+                "PPP1R53",
+                "FANCS"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:1100",
+              "gene_name": "BRCA1, DNA repair associated",
+              "omim_gene": [
+                "113705"
+              ],
+              "alias_name": [
+                "BRCA1/BRCA2-containing complex, subunit 1",
+                "protein phosphatase 1, regulatory subunit 53",
+                "Fanconi anemia, complementation group S"
+              ],
+              "gene_symbol": "BRCA1",
+              "hgnc_symbol": "BRCA1",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "17:41196312-41277500",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "17:43044295-43170245",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "1991-02-20"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "BRCA1",
+            "entity_type": "gene",
+            "publications": [
+              "1234"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+            "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
+          }
+        ],
+        "stats": {
+          "number_of_strs": 0,
+          "number_of_genes": 2,
+          "number_of_regions": 0
+        },
+        "types": [
+          {
+            "name": "Rare Disease Test Directory",
+            "slug": "rare-disease-test-directory",
+            "description": "Rare Disease Test Directory"
+          }
+        ],
+        "status": "public",
+        "hash_id": null,
+        "regions": [],
+        "version": "0.5",
+        "disease_group": "",
+        "version_created": "2023-11-16T11:45:14.033858Z",
+        "disease_sub_group": "",
+        "relevant_disorders": []
+      },
+      "signed_off_date": null
+    }
+  },
+  {
+    "model": "panels.historicalsnapshot",
+    "pk": 7,
+    "fields": {
+      "panel": 2,
+      "major_version": 0,
+      "minor_version": 6,
+      "reason": null,
+      "schema_version": "0.0.0",
+      "data": {
+        "id": 2,
+        "name": "Test Panel 02",
+        "strs": [],
+        "genes": [
+          {
+            "tags": [
+              "test02"
+            ],
+            "evidence": [
+              "Expert Review Green",
+              "Other"
+            ],
+            "gene_data": {
+              "alias": [],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:13666",
+              "gene_name": "aladin WD repeat nucleoporin",
+              "omim_gene": [
+                "605378"
+              ],
+              "alias_name": [
+                "aladin",
+                "Allgrove, triple-A",
+                "adracalin"
+              ],
+              "gene_symbol": "AAAS",
+              "hgnc_symbol": "AAAS",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "12:53701240-53718648",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "12:53307456-53324864",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2000-11-08"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "AAAS",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            "mode_of_pathogenicity": "Other"
+          },
+          {
+            "tags": [
+              "test01"
+            ],
+            "evidence": [
+              "Expert Review Green",
+              "Radboud University Medical Center, Nijmegen"
+            ],
+            "gene_data": {
+              "alias": [
+                "RNF53",
+                "BRCC1",
+                "PPP1R53",
+                "FANCS"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:1100",
+              "gene_name": "BRCA1, DNA repair associated",
+              "omim_gene": [
+                "113705"
+              ],
+              "alias_name": [
+                "BRCA1/BRCA2-containing complex, subunit 1",
+                "protein phosphatase 1, regulatory subunit 53",
+                "Fanconi anemia, complementation group S"
+              ],
+              "gene_symbol": "BRCA1",
+              "hgnc_symbol": "BRCA1",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "17:41196312-41277500",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "17:43044295-43170245",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "1991-02-20"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "BRCA1",
+            "entity_type": "gene",
+            "publications": [
+              "1234"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+            "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
+          },
+          {
+            "tags": [
+              "test03"
+            ],
+            "evidence": [
+              "Other"
+            ],
+            "gene_data": {
+              "alias": [
+                "LOC645811"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:34454",
+              "gene_name": "coiled-coil domain containing 154",
+              "omim_gene": null,
+              "alias_name": null,
+              "gene_symbol": "CCDC154",
+              "hgnc_symbol": "CCDC154",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "16:1484384-1494557",
+                    "ensembl_id": "ENSG00000197599"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "16:1434383-1444556",
+                    "ensembl_id": "ENSG00000197599"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2008-08-07"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "CCDC154",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "1",
+            "mode_of_inheritance": "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
+            "mode_of_pathogenicity": null
+          }
+        ],
+        "stats": {
+          "number_of_strs": 0,
+          "number_of_genes": 3,
+          "number_of_regions": 0
+        },
+        "types": [
+          {
+            "name": "Rare Disease Test Directory",
+            "slug": "rare-disease-test-directory",
+            "description": "Rare Disease Test Directory"
+          }
+        ],
+        "status": "public",
+        "hash_id": null,
+        "regions": [],
+        "version": "0.6",
+        "disease_group": "",
+        "version_created": "2023-11-16T11:45:57.386253Z",
+        "disease_sub_group": "",
+        "relevant_disorders": []
+      },
+      "signed_off_date": null
+    }
+  },
+  {
+    "model": "panels.historicalsnapshot",
+    "pk": 8,
+    "fields": {
+      "panel": 2,
+      "major_version": 0,
+      "minor_version": 7,
+      "reason": null,
+      "schema_version": "0.0.0",
+      "data": {
+        "id": 2,
+        "name": "Test Panel 02",
+        "strs": [],
+        "genes": [
+          {
+            "tags": [
+              "test02"
+            ],
+            "evidence": [
+              "Expert Review Green",
+              "Other"
+            ],
+            "gene_data": {
+              "alias": [],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:13666",
+              "gene_name": "aladin WD repeat nucleoporin",
+              "omim_gene": [
+                "605378"
+              ],
+              "alias_name": [
+                "aladin",
+                "Allgrove, triple-A",
+                "adracalin"
+              ],
+              "gene_symbol": "AAAS",
+              "hgnc_symbol": "AAAS",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "12:53701240-53718648",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "12:53307456-53324864",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2000-11-08"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "AAAS",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            "mode_of_pathogenicity": "Other"
+          },
+          {
+            "tags": [
+              "test01"
+            ],
+            "evidence": [
+              "Expert Review Green",
+              "Radboud University Medical Center, Nijmegen"
+            ],
+            "gene_data": {
+              "alias": [
+                "RNF53",
+                "BRCC1",
+                "PPP1R53",
+                "FANCS"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:1100",
+              "gene_name": "BRCA1, DNA repair associated",
+              "omim_gene": [
+                "113705"
+              ],
+              "alias_name": [
+                "BRCA1/BRCA2-containing complex, subunit 1",
+                "protein phosphatase 1, regulatory subunit 53",
+                "Fanconi anemia, complementation group S"
+              ],
+              "gene_symbol": "BRCA1",
+              "hgnc_symbol": "BRCA1",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "17:41196312-41277500",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "17:43044295-43170245",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "1991-02-20"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "BRCA1",
+            "entity_type": "gene",
+            "publications": [
+              "1234"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+            "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
+          },
+          {
+            "tags": [
+              "test03"
+            ],
+            "evidence": [
+              "Expert Review Amber",
+              "Other"
+            ],
+            "gene_data": {
+              "alias": [
+                "LOC645811"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:34454",
+              "gene_name": "coiled-coil domain containing 154",
+              "omim_gene": null,
+              "alias_name": null,
+              "gene_symbol": "CCDC154",
+              "hgnc_symbol": "CCDC154",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "16:1484384-1494557",
+                    "ensembl_id": "ENSG00000197599"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "16:1434383-1444556",
+                    "ensembl_id": "ENSG00000197599"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2008-08-07"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "CCDC154",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "2",
+            "mode_of_inheritance": "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
+            "mode_of_pathogenicity": null
+          }
+        ],
+        "stats": {
+          "number_of_strs": 0,
+          "number_of_genes": 3,
+          "number_of_regions": 0
+        },
+        "types": [
+          {
+            "name": "Rare Disease Test Directory",
+            "slug": "rare-disease-test-directory",
+            "description": "Rare Disease Test Directory"
+          }
+        ],
+        "status": "public",
+        "hash_id": null,
+        "regions": [],
+        "version": "0.7",
+        "disease_group": "",
+        "version_created": "2023-11-16T11:46:04.731415Z",
+        "disease_sub_group": "",
+        "relevant_disorders": []
+      },
+      "signed_off_date": null
+    }
+  },
+  {
+    "model": "panels.historicalsnapshot",
+    "pk": 9,
+    "fields": {
+      "panel": 2,
+      "major_version": 0,
+      "minor_version": 8,
+      "reason": null,
+      "schema_version": "0.0.0",
+      "data": {
+        "id": 2,
+        "name": "Test Panel 02",
+        "strs": [],
+        "genes": [
+          {
+            "tags": [
+              "test02"
+            ],
+            "evidence": [
+              "Expert Review Green",
+              "Other"
+            ],
+            "gene_data": {
+              "alias": [],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:13666",
+              "gene_name": "aladin WD repeat nucleoporin",
+              "omim_gene": [
+                "605378"
+              ],
+              "alias_name": [
+                "aladin",
+                "Allgrove, triple-A",
+                "adracalin"
+              ],
+              "gene_symbol": "AAAS",
+              "hgnc_symbol": "AAAS",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "12:53701240-53718648",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "12:53307456-53324864",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2000-11-08"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "AAAS",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            "mode_of_pathogenicity": "Other"
+          },
+          {
+            "tags": [
+              "test01"
+            ],
+            "evidence": [
+              "Expert Review Green",
+              "Radboud University Medical Center, Nijmegen"
+            ],
+            "gene_data": {
+              "alias": [
+                "RNF53",
+                "BRCC1",
+                "PPP1R53",
+                "FANCS"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:1100",
+              "gene_name": "BRCA1, DNA repair associated",
+              "omim_gene": [
+                "113705"
+              ],
+              "alias_name": [
+                "BRCA1/BRCA2-containing complex, subunit 1",
+                "protein phosphatase 1, regulatory subunit 53",
+                "Fanconi anemia, complementation group S"
+              ],
+              "gene_symbol": "BRCA1",
+              "hgnc_symbol": "BRCA1",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "17:41196312-41277500",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "17:43044295-43170245",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "1991-02-20"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "BRCA1",
+            "entity_type": "gene",
+            "publications": [
+              "1234"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+            "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
+          },
+          {
+            "tags": [
+              "test03"
+            ],
+            "evidence": [
+              "Expert Review Amber",
+              "Other"
+            ],
+            "gene_data": {
+              "alias": [
+                "LOC645811"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:34454",
+              "gene_name": "coiled-coil domain containing 154",
+              "omim_gene": null,
+              "alias_name": null,
+              "gene_symbol": "CCDC154",
+              "hgnc_symbol": "CCDC154",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "16:1484384-1494557",
+                    "ensembl_id": "ENSG00000197599"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "16:1434383-1444556",
+                    "ensembl_id": "ENSG00000197599"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2008-08-07"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "CCDC154",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "2",
+            "mode_of_inheritance": "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
+            "mode_of_pathogenicity": null
+          },
+          {
+            "tags": [],
+            "evidence": [
+              "UKGTN"
+            ],
+            "gene_data": {
+              "alias": [
+                "DEFB-15"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:18096",
+              "gene_name": "defensin beta 115",
+              "omim_gene": null,
+              "alias_name": null,
+              "gene_symbol": "DEFB115",
+              "hgnc_symbol": "DEFB115",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "20:29845467-29847435",
+                    "ensembl_id": "ENSG00000215547"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "20:31257664-31259632",
+                    "ensembl_id": "ENSG00000215547"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2002-05-09"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "DEFB115",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "1",
+            "mode_of_inheritance": "Unknown",
+            "mode_of_pathogenicity": null
+          }
+        ],
+        "stats": {
+          "number_of_strs": 0,
+          "number_of_genes": 4,
+          "number_of_regions": 0
+        },
+        "types": [
+          {
+            "name": "Rare Disease Test Directory",
+            "slug": "rare-disease-test-directory",
+            "description": "Rare Disease Test Directory"
+          }
+        ],
+        "status": "public",
+        "hash_id": null,
+        "regions": [],
+        "version": "0.8",
+        "disease_group": "",
+        "version_created": "2023-11-16T11:48:03.917737Z",
+        "disease_sub_group": "",
+        "relevant_disorders": []
+      },
+      "signed_off_date": null
+    }
+  },
+  {
+    "model": "panels.historicalsnapshot",
+    "pk": 10,
+    "fields": {
+      "panel": 2,
+      "major_version": 0,
+      "minor_version": 9,
+      "reason": null,
+      "schema_version": "0.0.0",
+      "data": {
+        "id": 2,
+        "name": "Test Panel 02",
+        "strs": [],
+        "genes": [
+          {
+            "tags": [
+              "test02"
+            ],
+            "evidence": [
+              "Expert Review Green",
+              "Other"
+            ],
+            "gene_data": {
+              "alias": [],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:13666",
+              "gene_name": "aladin WD repeat nucleoporin",
+              "omim_gene": [
+                "605378"
+              ],
+              "alias_name": [
+                "aladin",
+                "Allgrove, triple-A",
+                "adracalin"
+              ],
+              "gene_symbol": "AAAS",
+              "hgnc_symbol": "AAAS",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "12:53701240-53718648",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "12:53307456-53324864",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2000-11-08"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "AAAS",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            "mode_of_pathogenicity": "Other"
+          },
+          {
+            "tags": [
+              "test01"
+            ],
+            "evidence": [
+              "Expert Review Green",
+              "Radboud University Medical Center, Nijmegen"
+            ],
+            "gene_data": {
+              "alias": [
+                "RNF53",
+                "BRCC1",
+                "PPP1R53",
+                "FANCS"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:1100",
+              "gene_name": "BRCA1, DNA repair associated",
+              "omim_gene": [
+                "113705"
+              ],
+              "alias_name": [
+                "BRCA1/BRCA2-containing complex, subunit 1",
+                "protein phosphatase 1, regulatory subunit 53",
+                "Fanconi anemia, complementation group S"
+              ],
+              "gene_symbol": "BRCA1",
+              "hgnc_symbol": "BRCA1",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "17:41196312-41277500",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "17:43044295-43170245",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "1991-02-20"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "BRCA1",
+            "entity_type": "gene",
+            "publications": [
+              "1234"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+            "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
+          },
+          {
+            "tags": [],
+            "evidence": [
+              "Expert Review Green",
+              "UKGTN"
+            ],
+            "gene_data": {
+              "alias": [
+                "DEFB-15"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:18096",
+              "gene_name": "defensin beta 115",
+              "omim_gene": null,
+              "alias_name": null,
+              "gene_symbol": "DEFB115",
+              "hgnc_symbol": "DEFB115",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "20:29845467-29847435",
+                    "ensembl_id": "ENSG00000215547"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "20:31257664-31259632",
+                    "ensembl_id": "ENSG00000215547"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2002-05-09"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "DEFB115",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "3",
+            "mode_of_inheritance": "Unknown",
+            "mode_of_pathogenicity": null
+          },
+          {
+            "tags": [
+              "test03"
+            ],
+            "evidence": [
+              "Expert Review Amber",
+              "Other"
+            ],
+            "gene_data": {
+              "alias": [
+                "LOC645811"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:34454",
+              "gene_name": "coiled-coil domain containing 154",
+              "omim_gene": null,
+              "alias_name": null,
+              "gene_symbol": "CCDC154",
+              "hgnc_symbol": "CCDC154",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "16:1484384-1494557",
+                    "ensembl_id": "ENSG00000197599"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "16:1434383-1444556",
+                    "ensembl_id": "ENSG00000197599"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2008-08-07"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "CCDC154",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "2",
+            "mode_of_inheritance": "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
+            "mode_of_pathogenicity": null
+          }
+        ],
+        "stats": {
+          "number_of_strs": 0,
+          "number_of_genes": 4,
+          "number_of_regions": 0
+        },
+        "types": [
+          {
+            "name": "Rare Disease Test Directory",
+            "slug": "rare-disease-test-directory",
+            "description": "Rare Disease Test Directory"
+          }
+        ],
+        "status": "public",
+        "hash_id": null,
+        "regions": [],
+        "version": "0.9",
+        "disease_group": "",
+        "version_created": "2023-11-16T11:48:14.882047Z",
+        "disease_sub_group": "",
+        "relevant_disorders": []
+      },
+      "signed_off_date": null
+    }
+  },
+  {
+    "model": "panels.historicalsnapshot",
+    "pk": 11,
+    "fields": {
+      "panel": 2,
+      "major_version": 0,
+      "minor_version": 10,
+      "reason": null,
+      "schema_version": "0.0.0",
+      "data": {
+        "id": 2,
+        "name": "Test Panel 02",
+        "strs": [],
+        "genes": [
+          {
+            "tags": [
+              "test02"
+            ],
+            "evidence": [
+              "Expert Review Green",
+              "Other"
+            ],
+            "gene_data": {
+              "alias": [],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:13666",
+              "gene_name": "aladin WD repeat nucleoporin",
+              "omim_gene": [
+                "605378"
+              ],
+              "alias_name": [
+                "aladin",
+                "Allgrove, triple-A",
+                "adracalin"
+              ],
+              "gene_symbol": "AAAS",
+              "hgnc_symbol": "AAAS",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "12:53701240-53718648",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "12:53307456-53324864",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2000-11-08"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "AAAS",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
+            "mode_of_pathogenicity": "Other"
+          },
+          {
+            "tags": [
+              "test01"
+            ],
+            "evidence": [
+              "Expert Review Green",
+              "Radboud University Medical Center, Nijmegen"
+            ],
+            "gene_data": {
+              "alias": [
+                "RNF53",
+                "BRCC1",
+                "PPP1R53",
+                "FANCS"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:1100",
+              "gene_name": "BRCA1, DNA repair associated",
+              "omim_gene": [
+                "113705"
+              ],
+              "alias_name": [
+                "BRCA1/BRCA2-containing complex, subunit 1",
+                "protein phosphatase 1, regulatory subunit 53",
+                "Fanconi anemia, complementation group S"
+              ],
+              "gene_symbol": "BRCA1",
+              "hgnc_symbol": "BRCA1",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "17:41196312-41277500",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "17:43044295-43170245",
+                    "ensembl_id": "ENSG00000012048"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "1991-02-20"
+            },
+            "penetrance": "Complete",
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "BRCA1",
+            "entity_type": "gene",
+            "publications": [
+              "1234"
+            ],
+            "confidence_level": "3",
+            "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
+            "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
+          },
+          {
+            "tags": [],
+            "evidence": [
+              "Expert Review Green",
+              "UKGTN"
+            ],
+            "gene_data": {
+              "alias": [
+                "DEFB-15"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:18096",
+              "gene_name": "defensin beta 115",
+              "omim_gene": null,
+              "alias_name": null,
+              "gene_symbol": "DEFB115",
+              "hgnc_symbol": "DEFB115",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "20:29845467-29847435",
+                    "ensembl_id": "ENSG00000215547"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "20:31257664-31259632",
+                    "ensembl_id": "ENSG00000215547"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2002-05-09"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "DEFB115",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "3",
+            "mode_of_inheritance": "Unknown",
+            "mode_of_pathogenicity": null
+          },
+          {
+            "tags": [
+              "test03"
+            ],
+            "evidence": [
+              "Expert Review Amber",
+              "Other"
+            ],
+            "gene_data": {
+              "alias": [
+                "LOC645811"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:34454",
+              "gene_name": "coiled-coil domain containing 154",
+              "omim_gene": null,
+              "alias_name": null,
+              "gene_symbol": "CCDC154",
+              "hgnc_symbol": "CCDC154",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "16:1484384-1494557",
+                    "ensembl_id": "ENSG00000197599"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "16:1434383-1444556",
+                    "ensembl_id": "ENSG00000197599"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2008-08-07"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "CCDC154",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "2",
+            "mode_of_inheritance": "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
+            "mode_of_pathogenicity": null
+          },
+          {
+            "tags": [],
+            "evidence": [
+              "Other"
+            ],
+            "gene_data": {
+              "alias": [
+                "eIF3-p110",
+                "eIF3c"
+              ],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:3279",
+              "gene_name": "eukaryotic translation initiation factor 3 subunit C",
+              "omim_gene": [
+                "603916"
+              ],
+              "alias_name": null,
+              "gene_symbol": "EIF3C",
+              "hgnc_symbol": "EIF3C",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "16:28699879-28747051",
+                    "ensembl_id": "ENSG00000184110"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "16:28688558-28735730",
+                    "ensembl_id": "ENSG00000184110"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2007-07-27"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "EIF3C",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "1",
+            "mode_of_inheritance": "BIALLELIC, autosomal or pseudoautosomal",
+            "mode_of_pathogenicity": null
+          }
+        ],
+        "stats": {
+          "number_of_strs": 0,
+          "number_of_genes": 5,
+          "number_of_regions": 0
+        },
+        "types": [
+          {
+            "name": "Rare Disease Test Directory",
+            "slug": "rare-disease-test-directory",
+            "description": "Rare Disease Test Directory"
+          }
+        ],
+        "status": "public",
+        "hash_id": null,
+        "regions": [],
+        "version": "0.10",
+        "disease_group": "",
+        "version_created": "2023-11-16T11:48:49.656590Z",
+        "disease_sub_group": "",
+        "relevant_disorders": []
+      },
+      "signed_off_date": null
+    }
+  },
+  {
+    "model": "panels.historicalsnapshot",
+    "pk": 12,
+    "fields": {
+      "panel": 1,
+      "major_version": 0,
+      "minor_version": 0,
+      "reason": null,
+      "schema_version": "0.0.0",
+      "data": {
+        "id": 1,
+        "name": "Test Panel 01",
+        "strs": [],
+        "genes": [],
+        "stats": {},
+        "types": [
+          {
+            "name": "Rare Disease 100K",
+            "slug": "rare-disease-100k",
+            "description": "Rare Disease 100K"
+          }
+        ],
+        "status": "internal",
+        "hash_id": null,
+        "regions": [],
+        "version": "0.0",
+        "disease_group": "",
+        "version_created": "2023-10-06T10:52:19.907000Z",
+        "disease_sub_group": "",
+        "relevant_disorders": []
+      },
+      "signed_off_date": null
+    }
+  },
+  {
+    "model": "panels.historicalsnapshot",
+    "pk": 13,
+    "fields": {
+      "panel": 1,
+      "major_version": 0,
+      "minor_version": 1,
+      "reason": null,
+      "schema_version": "0.0.0",
+      "data": {
+        "id": 1,
+        "name": "Test Panel 01",
+        "strs": [],
+        "genes": [
+          {
+            "tags": [
+              "test04"
+            ],
+            "evidence": [
+              "Emory Genetics Laboratory"
+            ],
+            "gene_data": {
+              "alias": [],
+              "biotype": "protein_coding",
+              "hgnc_id": "HGNC:13666",
+              "gene_name": "aladin WD repeat nucleoporin",
+              "omim_gene": [
+                "605378"
+              ],
+              "alias_name": [
+                "aladin",
+                "Allgrove, triple-A",
+                "adracalin"
+              ],
+              "gene_symbol": "AAAS",
+              "hgnc_symbol": "AAAS",
+              "hgnc_release": "2017-11-03",
+              "ensembl_genes": {
+                "GRch37": {
+                  "82": {
+                    "location": "12:53701240-53718648",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                },
+                "GRch38": {
+                  "90": {
+                    "location": "12:53307456-53324864",
+                    "ensembl_id": "ENSG00000094914"
+                  }
+                }
+              },
+              "hgnc_date_symbol_changed": "2000-11-08"
+            },
+            "penetrance": null,
+            "phenotypes": [],
+            "transcript": [],
+            "entity_name": "AAAS",
+            "entity_type": "gene",
+            "publications": [],
+            "confidence_level": "1",
+            "mode_of_inheritance": "BOTH monoallelic and biallelic (but BIALLELIC mutations cause a more SEVERE disease form), autosomal or pseudoautosomal",
+            "mode_of_pathogenicity": null
+          }
+        ],
+        "stats": {
+          "number_of_strs": 0,
+          "number_of_genes": 1,
+          "number_of_regions": 0
+        },
+        "types": [
+          {
+            "name": "Rare Disease 100K",
+            "slug": "rare-disease-100k",
+            "description": "Rare Disease 100K"
+          }
+        ],
+        "status": "internal",
+        "hash_id": null,
+        "regions": [],
+        "version": "0.1",
+        "disease_group": "",
+        "version_created": "2023-11-16T12:44:41.033335Z",
+        "disease_sub_group": "",
+        "relevant_disorders": []
+      },
+      "signed_off_date": null
+    }
+  }
+]

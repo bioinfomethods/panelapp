@@ -72,11 +72,18 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
     6) Create new GenePanelEntrySnapshot with a link to the new GenePanelSnapshot
     """
 
+    # https://stackoverflow.com/questions/75249988/why-is-django-autocomplete-light-single-select-badly-styled-and-broken-when-mult
+    # https://github.com/yourlabs/django-autocomplete-light/issues/1318
     gene = forms.ModelChoiceField(
         label="Gene symbol",
         queryset=Gene.objects.filter(active=True),
         widget=ModelSelect2(
-            url="autocomplete-gene", attrs={"data-minimum-input-length": 1}
+            url="autocomplete-gene",
+            attrs={
+                "data-minimum-input-length": 1,
+                "data-theme": "bootstrap-5",
+                "style": "width: 100%;",
+            },
         ),
     )
 
@@ -85,12 +92,18 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
     source = Select2ListMultipleChoiceField(
         choice_list=Evidence.ALL_SOURCES,
         required=False,
-        widget=Select2Multiple(url="autocomplete-source"),
+        widget=Select2Multiple(
+            url="autocomplete-source",
+            attrs={"style": "width: 100%;"},
+        ),
     )
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
         required=False,
-        widget=ModelSelect2Multiple(url="autocomplete-tags"),
+        widget=ModelSelect2Multiple(
+            url="autocomplete-tags",
+            attrs={"style": "width: 100%;"},
+        ),
     )
 
     publications = GELSimpleArrayField(
@@ -121,7 +134,10 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
     additional_panels = forms.ModelMultipleChoiceField(
         queryset=GenePanelSnapshot.objects.only("panel__name", "pk"),
         required=False,
-        widget=ModelSelect2Multiple(url="autocomplete-simple-panels-all"),
+        widget=ModelSelect2Multiple(
+            url="autocomplete-simple-panels-all",
+            attrs={"style": "width: 100%;"},
+        ),
     )
 
     class Meta:

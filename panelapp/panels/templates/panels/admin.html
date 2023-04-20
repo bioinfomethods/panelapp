@@ -1,13 +1,13 @@
 {% extends "default.html" %}
 
 {% block content %}
-  <div class="page-header" id="banner">
+  <div class="page-header add-top-margin border-bottom" id="banner" style="--bs-border-color: rgb(221, 221, 221);">
     <h1>{% block title %}Import Genes{% endblock %}</h1>
   </div>
-  <div class="well">
+  <div class="card card-body bg-light add-top-margin">
     <form class="form-horizontal" action="{% url "panels:upload_genes" %}" method="post" enctype="multipart/form-data">{% csrf_token %}
       <fieldset>
-        <legend>Upload Gene tool</legend>
+        <legend class="border-bottom" style="--bs-border-color: rgb(221, 221, 221);">Upload Gene tool</legend>
         {% for field in gene_form %}
           <div class="form-group">
             {% if field.errors %}
@@ -15,7 +15,7 @@
                 <div class="row">
                   <div class="col-lg-4"></div>
                   <div class="col-lg-8">
-                    <span class="label label-danger">{{ error|escape }}</span>
+                    <span class="alert alert-danger">{{ error|escape }}</span>
                   </div>
                 </div>
               {% endfor %}
@@ -30,21 +30,21 @@
           </div>
         {% endfor %}
 
-        <div class="col-lg-4 col-lg-offset-8">
-          <button type="reset" class="btn btn-default">Cancel</button>
+        <div class="col-lg-4 col-lg-offset-8 add-top-margin">
+          <button type="reset" class="btn btn-outline-light-panelapp">Cancel</button>
           <button type="submit" class="btn btn-primary">Submit</button>
         </div>
       </fieldset>
     </form>
   </div>
 
-  <div class="page-header">
+  <div class="page-header add-top-margin border-bottom" style="--bs-border-color: rgb(221, 221, 221);">
     <h1>Import Gene Panel</h1>
   </div>
-  <div class="well">
+  <div class="card card-body bg-light add-top-margin">
     <form class="form-horizontal" action="{% url "panels:upload_panels" %}" method="post" enctype="multipart/form-data">{% csrf_token %}
       <fieldset>
-        <legend>Upload Panel Tool</legend>
+        <legend class="border-bottom" style="--bs-border-color: rgb(221, 221, 221);">Upload Panel Tool</legend>
         {% for field in panel_form %}
           <div class="form-group">
 
@@ -53,7 +53,7 @@
                 <div class="row">
                   <div class="col-lg-4"></div>
                   <div class="col-lg-8">
-                    <span class="label label-danger">{{ error|escape }}</span>
+                    <span class="alert alert-danger">{{ error|escape }}</span>
                   </div>
                 </div>
               {% endfor %}
@@ -68,20 +68,20 @@
           </div>
         {% endfor %}
 
-        <div class="col-lg-4 col-lg-offset-8">
-          <button type="reset" class="btn btn-default">Cancel</button>
+        <div class="col-lg-4 col-lg-offset-8 add-top-margin">
+          <button type="reset" class="btn btn-outline-light-panelapp">Cancel</button>
           <button type="submit" class="btn btn-primary">Submit</button>
         </div>
       </fieldset>
     </form>
   </div>
-  <div class="page-header">
+  <div class="page-header add-top-margin border-bottom" style="--bs-border-color: rgb(221, 221, 221);">
     <h1>Import Reviews</h1>
   </div>
-  <div class="well">
+  <div class="card card-body bg-light add-top-margin add-bottom-margin">
     <form class="form-horizontal" action="{% url "panels:upload_reviews" %}" method="post" enctype="multipart/form-data">{% csrf_token %}
       <fieldset>
-        <legend>Upload Reviews Tool</legend>
+        <legend class="border-bottom" style="--bs-border-color: rgb(221, 221, 221);">Upload Reviews Tool</legend>
 
         {% for field in review_form %}
           <div class="form-group">
@@ -90,7 +90,7 @@
                 <div class="row">
                   <div class="col-lg-4"></div>
                   <div class="col-lg-8">
-                    <span class="label label-danger">{{ error|escape }}</span>
+                    <span class="alert alert-danger">{{ error|escape }}</span>
                   </div>
                 </div>
               {% endfor %}
@@ -104,8 +104,8 @@
           </div>
         {% endfor %}
 
-        <div class="col-lg-4 col-lg-offset-8">
-          <button type="reset" class="btn btn-default">Cancel</button>
+        <div class="col-lg-4 col-lg-offset-8 add-top-margin">
+          <button type="reset" class="btn btn-outline-light-panelapp">Cancel</button>
           <button type="submit" class="btn btn-primary">Submit</button>
         </div>
       </fieldset>

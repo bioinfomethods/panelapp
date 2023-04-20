@@ -82,7 +82,12 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
         required=False,
         queryset=Gene.objects.filter(active=True),
         widget=ModelSelect2(
-            url="autocomplete-gene", attrs={"data-minimum-input-length": 1}
+            url="autocomplete-gene",
+            attrs={
+                "data-minimum-input-length": 1,
+                "data-theme": "bootstrap-5",
+                "style": "width: 100%;",
+            },
         ),
     )
 
@@ -94,12 +99,18 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
     source = Select2ListMultipleChoiceField(
         choice_list=Evidence.ALL_SOURCES,
         required=False,
-        widget=Select2Multiple(url="autocomplete-source"),
+        widget=Select2Multiple(
+            url="autocomplete-source",
+            attrs={"style": "width: 100%;"},
+        ),
     )
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
         required=False,
-        widget=ModelSelect2Multiple(url="autocomplete-tags"),
+        widget=ModelSelect2Multiple(
+            url="autocomplete-tags",
+            attrs={"style": "width: 100%;"},
+        ),
     )
 
     publications = SimpleArrayField(
@@ -125,7 +136,10 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
     additional_panels = forms.ModelMultipleChoiceField(
         queryset=GenePanelSnapshot.objects.only("panel__name", "pk"),
         required=False,
-        widget=ModelSelect2Multiple(url="autocomplete-simple-panels-all"),
+        widget=ModelSelect2Multiple(
+            url="autocomplete-simple-panels-all",
+            attrs={"style": "width: 100%;"},
+        ),
     )
 
     class Meta:
@@ -220,7 +234,7 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
         if not re.fullmatch(VALID_ENTITY_FORMAT, name):
             raise forms.ValidationError(
                 "Region name is not in the right format, only letters, numbers, and following symbols allowed: -~.$@",
-                code="str_exists_in_panel",
+                code="region_exists_in_panel",
             )
         if not self.instance.pk and self.panel.has_region(name):
             raise forms.ValidationError(

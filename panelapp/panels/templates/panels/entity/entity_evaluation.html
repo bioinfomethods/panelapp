@@ -1,5 +1,5 @@
 {% load panel_helpers %}
-<div class="panel-body">
+<div class="card-body">
   {% with user=ev.user %}
   <div class="add-bottom-margin">
     <h4 class="normal remove-top-margin add-label-margin">
@@ -17,13 +17,13 @@
   {% endif %}
 
   {% for comment in ev.comments.all %}
-    <blockquote class="add-top-margin" id="comment_{{ comment.pk }}">
+    <blockquote class="add-top-margin add-bottom-margin blockquote border-start border-5 ps-3 py-2" id="comment_{{ comment.pk }}" style="--bs-border-color: rgb(221, 221, 221);">
       {{ comment.comment|linebreaksbr|urlize }}
-      <h6>Created: {{ comment.created|date:'DATETIME_FORMAT' }} {% if comment.last_updated %}| Last Modified: {{ comment.last_updated|date:'DATETIME_FORMAT' }} {% endif %}</h6>
+      <h6 class="add-top-margin">Created: {{ comment.created|date:'DATETIME_FORMAT' }} {% if comment.last_updated %}| Last Modified: {{ comment.last_updated|date:'DATETIME_FORMAT' }} {% endif %}</h6>
       {% if comment.version %}<h6>Panel Version: {{ comment.version }}</h6>{% endif %}
       {% if request.user == user and panel and entity %}
-        <a href="{% url "panels:edit_comment_by_user" panel.panel_id entity_type entity_name comment.pk %}" class="btn btn-default btn-xs" data-ajax="true" data-success="djangoAjaxHandler">Edit your comment</a>
-        <a href="{% url "panels:delete_comment_by_user" panel.panel_id entity_type entity_name comment.pk %}" class="btn btn-default btn-xs" data-ajax="true" data-success="djangoAjaxHandler">Delete comment</a>
+        <a href="{% url "panels:edit_comment_by_user" panel.panel_id entity_type entity_name comment.pk %}" class="btn btn-outline-light-panelapp btn-xs" data-ajax="true" data-success="djangoAjaxHandler">Edit your comment</a>
+        <a href="{% url "panels:delete_comment_by_user" panel.panel_id entity_type entity_name comment.pk %}" class="btn btn-outline-light-panelapp btn-xs" data-ajax="true" data-success="djangoAjaxHandler">Delete comment</a>
       {% endif %}
     </blockquote>
   {% endfor %}
@@ -72,7 +72,7 @@
 </div>
 
 {% if ev.version or ev.original_panel %}
-<div class="panel-footer">
+<div class="card-footer">
   Created: {{ ev.created|date:'DATETIME_FORMAT' }}<br>
     {% if ev.last_updated %}Last Modified: {{ ev.last_updated|date:'DATETIME_FORMAT' }} {% endif %}<br>
   {% if ev.original_panel %}

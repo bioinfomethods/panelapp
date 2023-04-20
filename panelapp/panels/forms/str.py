@@ -82,7 +82,12 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
         required=False,
         queryset=Gene.objects.filter(active=True),
         widget=ModelSelect2(
-            url="autocomplete-gene", attrs={"data-minimum-input-length": 1}
+            url="autocomplete-gene",
+            attrs={
+                "data-minimum-input-length": 1,
+                "data-theme": "bootstrap-5",
+                "style": "width: 100%;",
+            },
         ),
     )
 
@@ -94,12 +99,18 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
     source = Select2ListMultipleChoiceField(
         choice_list=Evidence.ALL_SOURCES,
         required=False,
-        widget=Select2Multiple(url="autocomplete-source"),
+        widget=Select2Multiple(
+            url="autocomplete-source",
+            attrs={"style": "width: 100%;"},
+        ),
     )
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
         required=False,
-        widget=ModelSelect2Multiple(url="autocomplete-tags"),
+        widget=ModelSelect2Multiple(
+            url="autocomplete-tags",
+            attrs={"style": "width: 100%;"},
+        ),
     )
 
     publications = SimpleArrayField(
@@ -129,7 +140,10 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
     additional_panels = forms.ModelMultipleChoiceField(
         queryset=GenePanelSnapshot.objects.all().only("panel__name", "pk"),
         required=False,
-        widget=ModelSelect2Multiple(url="autocomplete-simple-panels-all"),
+        widget=ModelSelect2Multiple(
+            url="autocomplete-simple-panels-all",
+            attrs={"style": "width: 100%;"},
+        ),
     )
 
     class Meta:

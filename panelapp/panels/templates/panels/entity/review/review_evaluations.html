@@ -1,9 +1,9 @@
 {% for comment in entity.get_review_comments %}
-  <blockquote class="add-top-margin">
+  <blockquote class="add-top-margin add-bottom-margin blockquote border-start border-5 ps-3 py-2" style="--bs-border-color: rgb(221, 221, 221);">
     {{ comment.comment }}
-    <h6>{{ comment.user.get_reviewer_name }}, {{ comment.created|date }}</h6>
+    <h6 class="add-top-margin">{{ comment.user.get_reviewer_name }}, {{ comment.created|date }}</h6>
     {% if request.user == comment.user and panel and entity %}
-      <a href="{% url "panels:delete_comment_by_user" panel.panel_id entity_type entity_name comment.pk %}" class="btn btn-default btn-xs" data-ajax="true" data-success="djangoAjaxHandler">Delete comment</a>
+      <a href="{% url "panels:delete_comment_by_user" panel.panel_id entity_type entity_name comment.pk %}" class="btn btn-outline-light-panelapp btn-xs" data-ajax="true" data-success="djangoAjaxHandler">Delete comment</a>
     {% endif %}
   </blockquote>
 {% endfor %}

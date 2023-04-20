@@ -1,4 +1,4 @@
-{% load bootstrap3 %}
+{% load django_bootstrap5 %}
 {% load panel_helpers %}
 <h3 class="remove-bottom-margin">Review feedback</h3>
 <p class="lead">{{ entity.evaluation.all|length }} review{{ entity.evaluation.all|pluralize }}</p>
@@ -79,7 +79,7 @@
               </tr>
             {% endif %}
         {% endfor %}
-        <tr class="warning">
+        <tr style="background-color: #fcf8e3;">
           <td style="width: 40%">Current</td>
           <td style="width: 60%" data-module="toggle">
             <div data-module="ajax-form">
@@ -118,9 +118,9 @@
 
 {% if entity.ready %}
   <h3 class="add-top-margin">Mark {{ entity.label }} as not ready</h3>
-  <form action="{% url 'panels:mark_entity_as_not_ready' panel.panel_id entity_type entity_name %}#!review" method="post" class="add-top-margin well form">
+  <form action="{% url 'panels:mark_entity_as_not_ready' panel.panel_id entity_type entity_name %}#!review" method="post" class="add-top-margin add-bottom-margin card form">
     {% csrf_token %}
-    <input type="submit" class="btn btn-default" value="Mark as not ready">
+    <input type="submit" class="btn" value="Mark as not ready">
   </form>
 {% else %}
   <h3 class="add-top-margin">Mark {{ entity.label }} as ready</h3>
@@ -132,19 +132,13 @@
       <li>been updated based on valid feedback or curated evidence</li>
     </ul>
   </div>
-  <div class="well">
+  <div class="card card-body bg-light add-bottom-margin">
     <form action="{% url 'panels:mark_entity_as_ready' panel.panel_id entity_type entity_name %}#!review" method="post" class="form">
       {% csrf_token %}
       <fieldset>
         {% for field in entity_ready_form %}
           <div class="form-group">
-            {% if field.errors %}
-              {% for error in field.errors %}
-                <span class="label label-danger">{{ error|escape }}</span>
-              {% endfor %}
-            {% endif %}
-            {{ field.label_tag }}
-            {% bootstrap_field field show_label=False %}
+            {% bootstrap_field field %}
           </div>
         {% endfor %}
         <input type="submit" class="btn btn-info" value="Mark as ready">

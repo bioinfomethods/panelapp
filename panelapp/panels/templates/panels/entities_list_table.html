@@ -46,7 +46,7 @@
                 <label for="gene-filter" class="rm">Filter Entities</label>
                 <div class="input-group">
                     <input id="gene-filter" type="text" class="form-control normal js-filter-table-input" placeholder="Filter Entities">
-                    <span class="input-group-addon js-filter-table-count" data-singular="Entity" data-plural="Entities">
+                    <span class="input-group-text js-filter-table-count" data-singular="Entity" data-plural="Entities">
                         {{ entities|length }} Entities{{entities|length|pluralize}}
                     </span>
                 </div>
@@ -74,25 +74,43 @@
       <div class="add-top-margin">
         <a
             href="#lock_{{ entry.name|remove_special }}"
-            class="hidden lock_{{ entry.name|remove_special }}"
+            class="btn btn-outline-light-panelapp btn-sm text-primary lock_{{ entry.name|remove_special }} d-none"
             data-module="showhide"
             data-show="a.btn.unlock_{{ entry.name|remove_special }}"
             data-hide="a.lock_{{ entry.name|remove_special }}, a.btn.delete_entity_{{ entry.name|remove_special }}, a.btn.delete_source_{{ entry.name|remove_special }}"
+            data-testid="lock-entity-{{ entry.name|remove_special }}"
         >
             <i class="fa fa-lock fa-lg"></i>
         </a>
         <a
             href="#unlock_{{ entry.name|remove_special }}"
-            class="unlock_{{ entry.name|remove_special }}"
+            class="btn btn-outline-light-panelapp btn-sm text-primary unlock_{{ entry.name|remove_special }}"
             data-module="showhide"
             data-show="a.btn.lock_{{ entry.name|remove_special }}, a.delete_entity_{{ entry.name|remove_special }}, a.delete_source_{{ entry.name|remove_special }}"
-            data-hide="a.btn.unlock_{{ entry.name|remove_special }}" onClick="alert('{{ 'Entitiy '|add:entry.name|add:' is now unlocked, and you can delete it.' }}')"
+            data-hide="a.btn.unlock_{{ entry.name|remove_special }}"
+            data-testid="unlock-entity-{{ entry.name|remove_special }}"
+            onClick="alert('{{ 'Entity '|add:entry.name|add:' is now unlocked, and you can delete it.' }}')"
         >
             <i class="fa fa-unlock fa-lg"></i>
         </a>
-        <a href="{% url 'panels:delete_entity' panel.panel_id entry.entity_type entry.name %}" class="hidden delete_entity_{{ entry.name|remove_special }}" data-ajax="true" data-success="djangoAjaxHandler"> <i class="fa fa-trash fa-lg"></i></a>
+        <a
+            href="{% url 'panels:delete_entity' panel.panel_id entry.entity_type entry.name %}"
+            class="btn btn-outline-light-panelapp btn-sm text-primary d-none delete_entity_{{ entry.name|remove_special }}"
+            data-ajax="true"
+            data-success="djangoAjaxHandler"
+            data-testid="delete-entity-{{ entry.name|remove_special }}"
+        >
+            <i class="fa fa-trash fa-lg"></i>
+        </a>
         {% if entry.flagged %}
-        <a href="{% url 'panels:approve_entity' panel.panel_id entry.entity_type entry.name %}" data-ajax="true" data-success="djangoAjaxHandler"> <i class="fa fa-plus fa-lg"></i></a>
+        <a
+            href="{% url 'panels:approve_entity' panel.panel_id entry.entity_type entry.name %}"
+            data-ajax="true"
+            data-success="djangoAjaxHandler"
+            data-testid="approve-entity-{{ entry.name|remove_special }}"
+        >
+            <i class="fa fa-plus fa-lg"></i>
+        </a>
         {% endif %}
       </div>
     {% endif %}
@@ -178,7 +196,7 @@
         <ul class="list-inline tag-list">
             {% for tag in entry.entity_tags %}
                 {% if tag %}
-                <li class="label label-default">{{ tag }}</li>
+                <li class="list-inline-item border rounded border-1 px-1" style="--bs-border-color: rgb(221, 221, 221);">{{ tag }}</li>
                 {% endif %}
             {% endfor %}
         </ul>
@@ -191,15 +209,15 @@
 <tfoot>
     <tr class="table-header">
         <td colspan="100">
-            <a href="{% url 'panels:add_entity' panel.panel_id 'gene' %}" class="btn btn-default btn-large">
+            <a href="{% url 'panels:add_entity' panel.panel_id 'gene' %}" class="btn btn-outline-light-panelapp btn-large">
                 <i class="fa fa-plus add-right-margin"></i> Add a Gene to this panel
             </a>
 
-            <a href="{% url 'panels:add_entity' panel.panel_id 'str' %}" class="btn btn-default btn-large">
+            <a href="{% url 'panels:add_entity' panel.panel_id 'str' %}" class="btn btn-large btn-outline-light-panelapp">
                 <i class="fa fa-plus add-right-margin"></i> Add a STR to this panel
             </a>
 
-            <a href="{% url 'panels:add_entity' panel.panel_id 'region' %}" class="btn btn-default btn-large">
+            <a href="{% url 'panels:add_entity' panel.panel_id 'region' %}" class="btn btn-large btn-outline-light-panelapp">
                 <i class="fa fa-plus add-right-margin"></i> Add a Region to this panel
             </a>
         </td>

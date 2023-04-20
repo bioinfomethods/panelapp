@@ -1,18 +1,18 @@
 {% extends "default.html" %}
 {% load static %}
-{% load bootstrap3 %}
+{% load django_bootstrap5 %}
 
 {% block content %}
-<ol class="breadcrumb">
-    <li>
+<ol class="breadcrumb add-top-margin">
+    <li class="breadcrumb-item">
         <a href="{% url 'panels:index' %}">Panels</a>
     </li>
-    <li>
+    <li class="breadcrumb-item">
         <a href="{{ view.panel.get_absolute_url }}">
             {{ view.panel.level4title.name }}
         </a>
     </li>
-    <li class="active">
+    <li class="breadcrumb-item active">
         Edit STR
     </li>
 </ol>
@@ -25,27 +25,21 @@
     <form class="row add-top-margin remove-empty-array-val" method="post">
         {% csrf_token %}
         <div class="col-md-8">
-            <div class="well">
+            <div class="card card-body bg-light add-bottom-margin">
                 <fieldset>
                     {% for field in form %}
                         <div class="form-group">
-                            {% if field.errors %}
-                                {% for error in field.errors %}
-                                    <span class="label label-danger">{{ error|escape }}</span>
-                                {% endfor %}
-                            {% endif %}
-
                             {% if field.name == "mode_of_pathogenicity" %}
-                                {{ field.label_tag }} <a data-toggle="modal" data-target="#model_of_path" ><i class="fa fa-question-circle"></i></a>
+                                {{ field.label_tag }} <a data-bs-toggle="modal" href="#model_of_path" ><i class="fa fa-question-circle"></i></a>
                             {% elif field.name == "Model_of_inheritance" %}
-                                {{ field.label_tag }} <a data-toggle="modal" data-target="#moi" ><i class="fa fa-question-circle"></i></a>
+                                {{ field.label_tag }} <a data-bs-toggle="modal" href="#moi" ><i class="fa fa-question-circle"></i></a>
                             {% elif field.name == "rating" %}
                                 <hr />
                                 <h4 class="add-label-margin">Review STR</h4>
                                 <p class="text-muted">You can optionally include a review of this STR when you add it.</p>
                                 {{ field.label_tag }}
                             {% elif field.name == "current_diagnostic" %}
-                                {{ field.label_tag }} <a data-toggle="modal" data-target="#diagostic" ><i class="fa fa-question-circle"></i></a>
+                                {{ field.label_tag }} <a data-bs-toggle="modal" href="#diagostic" ><i class="fa fa-question-circle"></i></a>
                             {% else %}
                                 {{ field.label_tag }}
                             {% endif %}

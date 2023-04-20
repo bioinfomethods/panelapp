@@ -41,7 +41,10 @@ class UpdateGeneTagsForm(forms.ModelForm):
 
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
-        widget=ModelSelect2Multiple(url="autocomplete-tags"),
+        widget=ModelSelect2Multiple(
+            url="autocomplete-tags",
+            attrs={"style": "width: 100%;"},
+        ),
         required=False,
     )
 

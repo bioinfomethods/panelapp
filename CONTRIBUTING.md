@@ -117,3 +117,18 @@ When you create a merge request CI/CD pipelines will run the following pipelines
 
 You can use [pre-commit](https://pypi.org/project/pre-commit/) to check the code before
 creating a commit.
+
+## Visual tests
+
+If changes have occurred to the frontend that affect the look of the interface causing
+the tests to fail then these must be reflected in the set of snapshots to use for
+comparison.
+
+Once the changes have been reviewed and agreed by inspecting the test output the snapshots
+can be updated with this command:
+
+```
+make update-snapshots
+```
+
+Commit these changes to the repository with the descriptor `chore`.

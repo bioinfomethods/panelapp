@@ -4,10 +4,10 @@
 
 {% block content %}
 
-    <ol class="breadcrumb">
-        <li><a href="{% url 'panels:index' %}">Panels</a></li>
-        <li><a href="{% url 'panels:compare' panel_1.panel_id panel_2.panel_id %}">“{{ panel_1.level4title.name }}” &amp; “{{ panel_2.level4title.name }}”</a></li>
-        <li class="active">{{ gene_symbol }}</li>
+    <ol class="breadcrumb add-top-margin">
+        <li class="breadcrumb-item"><a href="{% url 'panels:index' %}">Panels</a></li>
+        <li class="breadcrumb-item"><a href="{% url 'panels:compare' panel_1.panel_id panel_2.panel_id %}">“{{ panel_1.level4title.name }}” &amp; “{{ panel_2.level4title.name }}”</a></li>
+        <li class="breadcrumb-item active">{{ gene_symbol }}</li>
     </ol>
     <h1>
         {% block title %}Comparing {{ gene_symbol }}{% endblock %}
@@ -21,7 +21,7 @@
             </thead>
             <tbody>
                 <tr>
-                    <td class="text-right">
+                    <td class="text-end">
                         <h4 class="remove-top-margin remove-bottom-margin">
                             <span style="font-size: 16px" class="gel-banner {{ panel_1_entry|gene_list_class }}" title="{{ panel_1_entry|gene_list_name }}">
                                 {{ panel_1_entry|gene_list_name }}
@@ -38,22 +38,22 @@
                     </td>
                 </tr>
                 <tr>
-                    <td class="text-right">{{ panel_1_entry.moi }}</td>
+                    <td class="text-end">{{ panel_1_entry.moi }}</td>
                     <td class="text-center">Mode of inheritance</td>
                     <td>{{ panel_2_entry.moi }}</td>
                 </tr>
                 <tr>
-                    <td class="text-right">{{ panel_1_entry.mode_of_pathogenicity }}</td>
+                    <td class="text-end">{{ panel_1_entry.mode_of_pathogenicity }}</td>
                     <td class="text-center">Mode of pathogenicity</td>
                     <td>{{ panel_2_entry.mode_of_pathogenicity }}</td>
                 </tr>
                 <tr>
-                    <td class="text-right">{{ panel_1_entry.phenotypes|join:', ' }}</td>
+                    <td class="text-end">{{ panel_1_entry.phenotypes|join:', ' }}</td>
                     <td class="text-center">Phenotypes</td>
                     <td>{{ panel_2_entry.phenotypes|join:', ' }}</td>
                 </tr>
                 <tr>
-                    <td class="text-right">{{ panel_1_entry.publications|join:', ' }}</td>
+                    <td class="text-end">{{ panel_1_entry.publications|join:', ' }}</td>
                     <td class="text-center">Publications</td>
                     <td>{{ panel_2_entry.publications|join:', ' }}</td>
                 </tr>
@@ -61,7 +61,7 @@
                     <td>
                         <h3 class="remove-top-margin text-center">{{ panel_1_entry.evaluation.all|length }} review{{panel_1_entry.evaluation.all|pluralize}}</h3>
                         {% for ev in panel_1_entry.evaluation.all %}
-                            <div class="panel panel-default">
+                            <div class="card card-body add-top-margin">
                                 {% include "panels/entity/entity_evaluation.html" %}
                             </div>
                         {% endfor %}
@@ -70,7 +70,7 @@
                     <td>
                         <h3 class="remove-top-margin text-center">{{ panel_2_entry.evaluation.all|length }} review{{panel_2_entry.evaluation.all|pluralize}}</h3>
                         {% for ev in panel_2_entry.evaluation.all %}
-                            <div class="panel panel-default">
+                            <div class="card card-body add-top-margin">
                                 {% include "panels/entity/entity_evaluation.html" %}
                             </div>
                         {% endfor %}

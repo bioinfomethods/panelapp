@@ -2,14 +2,14 @@
 {% load static %}
 {% load panel_helpers %}
 {% block header %}
-<script src="{% static 'django_ajax/js/jquery.ajax.min.js' %}"></script>
-<script src="{% static 'django_ajax/js/jquery.ajax-plugin.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'django_ajax/js/jquery.ajax.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'django_ajax/js/jquery.ajax-plugin.min.js' %}"></script>
 {% endblock %}
 
 {% block content %}
-<ol class="breadcrumb">
-  <li><a href="{% url 'panels:entities_list' %}">Genes and Genomic Entities</a></li>
-  <li class="active">{{ gene_symbol }}</li>
+<ol class="breadcrumb add-top-margin">
+  <li class="breadcrumb-item"><a href="{% url 'panels:entities_list' %}">Genes and Genomic Entities</a></li>
+  <li class="breadcrumb-item active">{{ gene_symbol }}</li>
 </ol>
 <h1>
   {% block title %}{{ gene_symbol }}{% endblock %}
@@ -67,7 +67,7 @@
                   <label for="panel-filter" class="rm">Filter panels</label>
                   <div class="input-group">
                     <input autofocus id="panel-filter" type="text" class="form-control normal js-filter-table-input" placeholder="Filter panels"{% if tag_filter %} value="{{ tag_filter }}"{% endif %}>
-                    <span class="input-group-addon js-filter-table-count" data-singular="panel" data-plural="panels">
+                    <span class="input-group-text js-filter-table-count" data-singular="panel" data-plural="panels">
                       {{ entries|length }} panel{{entries|pluralize}}
                     </span>
                   <div>
@@ -86,7 +86,7 @@
                 data-reviews="{{ entry.number_of_evaluated_genes }}"
               >
                 <td>
-                  <h4 class="remove-top-margin" title="Level 4 title">
+                  <h5 class="remove-top-margin" title="Level 4 title">
                     <span style="font-size: 16px" class="gel-banner {{ entry|gene_list_class }}" title="{{ entry|gene_list_name }}">
                       {{ entry|gene_list_short_name }}
                     </span>
@@ -167,7 +167,7 @@
                     <h6 class="add-label-margin">Tags</h6>
                     <ul class="list-inline tag-list">
                       {% for tag in entry.tags.all %}
-                        <li class="label label-default">{{ tag }}</li>
+                        <li class="list-inline-item border rounded border-1 px-1" style="--bs-border-color: rgb(221, 221, 221);">{{ tag }}</li>
                       {% endfor %}
                     </ul>
                   {% endif %}

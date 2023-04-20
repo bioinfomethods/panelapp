@@ -1,19 +1,19 @@
-{% load bootstrap3 %}
+{% load django_bootstrap5 %}
 
-<div class="panel panel-default">
-    <div class="panel-heading">Description</div>
-    <div class="panel-body">
+<div class="card add-top-margin" id="panel-default">
+    <div class="card-header">Description</div>
+    <div class="card-body">
         <pre class="panel-description">{{ panel.level4title.description|urlize }}</pre>
     </div>
     {% if request.user.is_authenticated and request.user.reviewer.is_GEL or not panel.is_super_panel %}
-    <div class="panel-footer">
+    <div class="card-footer bg-white">
         {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-        <a href="#editform" class="btn btn-default" data-module="showhide" data-show=".panel-form" data-hide=".panel-default">
+        <a href="#editform" class="btn btn-outline-light-panelapp" data-module="showhide" data-show="#panel-form" data-hide="#panel-default">
             <i class="fa fa-edit"></i> Edit panel
         </a>
         {% endif %}
         {% if not panel.is_super_panel %}
-        <a href="{% url 'panels:activity' %}?panel={{ panel.panel.pk }}" class="btn btn-default">
+        <a href="{% url 'panels:activity' %}?panel={{ panel.panel.pk }}" class="btn btn-outline-light-panelapp">
             Panel Activity
         </a>
         {% endif %}
@@ -21,29 +21,19 @@
     {% endif %}
 </div>
 {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-<div class="well panel-form hidden">
+<div class="card card-body bg-light d-none" id="panel-form">
     <form class="form" action="{% url 'panels:update' panel.panel.id %}" method="post">{% csrf_token %}
         <fieldset>
             <legend>Update Information</legend>
             {% for field in edit %}
                 <div class="form-group">
-                    {% if field.errors %}
-                        {% for error in field.errors %}
-                            <div class="row">
-                                <div class="col-lg-4"></div>
-                                <div class="col-lg-8">
-                                    <span class="label label-danger">{{ error|escape }}</span>
-                                </div>
-                            </div>
-                        {% endfor %}
-                    {% endif %}
                     {% bootstrap_field field %}
                 </div>
             {% endfor %}
 
             <button type="submit" class="btn btn-primary add-right-margin">Save</button>
             <a href="{{ panel.get_absolute_url }}" class="btn btn-link">Cancel</a>
-            <a href="{% url 'panels:mark_not_ready' panel.panel_id %}" class="btn btn-default pull-right">Mark all genes as not ready</a>
+            <a href="{% url 'panels:mark_not_ready' panel.panel_id %}" class="btn btn-outline-secondary float-end">Mark all genes as not ready</a>
         </fieldset>
     </form>
     {{ edit.media }}

@@ -66,7 +66,7 @@ setup(
         "django-admin-list-filter-dropdown==1.0.3",
         "django-array-field-select==0.2.0",  # remove it? there are some migration deps
         "django-autocomplete-light==3.9.4",
-        "django-bootstrap3==22.2",
+        "django-bootstrap5==23.1",
         "django-click==2.3.0",  # TODO get rid of it, doesn't provide too much value
         "django-cors-headers==3.13.0",
         "django-extensions==2.2.9",
@@ -89,7 +89,7 @@ setup(
         "jsonschema<4.0",
         "lenses==1.1.0",
         "mistletoe==1.2.1",
-        "psycopg2-binary==2.8.6",
+        "psycopg2-binary==2.9.7",
         "pycurl==7.45.2",
         "pyserde==0.12.2",
         "python-jose==3.3.0",

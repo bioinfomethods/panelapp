@@ -8,70 +8,64 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <script>(function(d){d.className=d.className.replace(/^no-js\b/,'js');}(document.documentElement));</script>
-    <link rel="stylesheet" href="{% static "bootstrap.min.css" %}" >
-    <link rel="stylesheet" href="{% static "font-awesome-4.3.0/css/font-awesome.min.css" %}">
-    <script src="{% static "jquery-1.10.2.min.js" %}"></script>
+    <link rel="stylesheet" href="{% static "app.css" %}" >
+    <script src="{% static "app.js" %}"></script>
     {% block header %}{% endblock %}
-    <link rel="stylesheet" href="{% static "panel_app.css" %}" >
     <title>{% block title %}PanelApp{% endblock %}</title>
   </head>
 <body>
-<div class="navbar navbar-default">
+<div>
+<nav class="navbar navbar-expand-md bg-primary navbar-dark overflow-x">
   <div class="container">
-    <div class="navbar-header">
-      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
-        <span class="sr-only">Toggle navigation</span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-        <span class="icon-bar"></span>
-      </button>
-      <a class="navbar-brand" href="{% url 'home' %}">PanelApp</a>
-    </div>
-    <div class="collapse navbar-collapse" id="navbar">
-      <ul class="nav navbar-nav">
-        <li><a href="{% url 'panels:index' %}">Panels</a></li>
-        <li><a href="{% url 'panels:entities_list' %}">Genes and Entities</a></li>
-        <li><a href="{% url 'panels:activity' %}">Activity</a></li>
+    <a class="navbar-brand" href="{% url 'home' %}">PanelApp</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarContent" aria-controls="navbarContent" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarContent">
+      <ul class="navbar-nav">
+        <li class="nav-item"><a class="nav-link nav-panelapp rounded mx-2 my-1" style="--bs-border-opacity: 0;" href="{% url 'panels:index' %}">Panels</a></li>
+        <li class="nav-item"><a class="nav-link nav-panelapp rounded mx-2 my-1" href="{% url 'panels:entities_list' %}">Genes and Entities</a></li>
+        <li class="nav-item"><a class="nav-link nav-panelapp rounded mx-2 my-1" href="{% url 'panels:activity' %}">Activity</a></li>
         {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-        <li><a href="{% url 'panels:create' %}">Add panel</a></li>
-        <li><a href="{% url 'panels:admin' %}">Import panel</a></li>
-        <li class="dropdown">
-          <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Resources <span class="caret"></span></a>
-          <ul class="dropdown-menu" role="menu">
-            <li><a href="{% url 'panels:download_genes' %}">Download all genes</a></li>
-            <li><a href="{% url 'panels:download_strs' %}">Download all STRs</a></li>
-              <li><a href="{% url 'panels:download_regions' %}">Download all Regions</a></li>
-            <li><a href="{% url 'panels:download_panels' %}">Download all panels</a></li>
+        <li class="nav-item"><a class="nav-link nav-panelapp rounded mx-2 my-1" href="{% url 'panels:create' %}">Add panel</a></li>
+        <li class="nav-item"><a class="nav-link nav-panelapp rounded mx-2 my-1" href="{% url 'panels:admin' %}">Import panel</a></li>
+        <li class="nav-item dropdown">
+          <a href="#" class="nav-link nav-panelapp dropdown-toggle rounded mx-2 my-1" data-bs-toggle="dropdown" role="button" aria-expanded="false">Resources <span class="caret"></span></a>
+          <ul class="dropdown-menu">
+            <li><a class="dropdown-item" href="{% url 'panels:download_genes' %}">Download all genes</a></li>
+            <li><a class="dropdown-item" href="{% url 'panels:download_strs' %}">Download all STRs</a></li>
+              <li><a class="dropdown-item" href="{% url 'panels:download_regions' %}">Download all Regions</a></li>
+            <li><a class="dropdown-item" href="{% url 'panels:download_panels' %}">Download all panels</a></li>
           </ul>
         </li>
         {% endif %}
       </ul>
 
       {% if request.user.is_authenticated %}
-      <ul class="nav navbar-nav navbar-right">
-        <li><a href="{% url 'accounts:profile' %}"><strong>{{ request.user }}</strong></a></li>
-        <li><a href="{% url 'accounts:logout' %}">Log out</a></li>
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link nav-panelapp rounded mx-2 my-1" href="{% url 'accounts:profile' %}"><strong>{{ request.user }}</strong></a></li>
+        <li class="nav-item"><a class="nav-link nav-panelapp rounded mx-2 my-1" href="{% url 'accounts:logout' %}">Log out</a></li>
       </ul>
       {% elif use_cognito %}
-      <ul class="nav navbar-nav navbar-right">
-        <li><a href="{% url 'accounts:login' %}">Log in</a></li>
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link nav-panelapp rounded mx-2 my-1" href="{% url 'accounts:login' %}">Log in</a></li>
       </ul>
       {% else %}
-      <ul class="nav navbar-nav navbar-right">
-        <li><a href="{% url 'accounts:login' %}?next={{ request.get_full_path }}">Log in</a></li>
-        <li><a href="{% url 'accounts:register' %}">Register</a></li>
+      <ul class="navbar-nav ms-auto">
+        <li class="nav-item"><a class="nav-link nav-panelapp rounded mx-2 my-1" href="{% url 'accounts:login' %}?next={{ request.get_full_path }}">Log in</a></li>
+        <li class="nav-item"><a class="nav-link nav-panelapp rounded mx-2 my-1" href="{% url 'accounts:register' %}">Register</a></li>
       </ul>
       {% endif %}
     </div>
   </div>
-</div>
+</nav>
 
 {% banner %}
 
 <div class="container">
   {% if messages %}
     {% for message in messages %}
-      <div class="add-bottom-margin alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">{{ message }}</div>
+      <div class="add-bottom-margin add-top-margin alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">{{ message }}</div>
     {% endfor %}
   {% endif %}
   {% block content %}{% endblock %}
@@ -79,8 +73,6 @@
 
 {% block body %}{% endblock %}
 {% block modals %}{% endblock %}
-<script src="{% static "bootstrap.min.js" %}"></script>
-<script src="{% static "panel_app.js" %}"></script>
 {% block js %}{% endblock %}
 </body>
 </html>

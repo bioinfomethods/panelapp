@@ -23,6 +23,7 @@ variables:
   #  TAGGER_DEBUG: 'yes'
   CI_DEBUG_TRACE: "false"
   #  TF_LOG: DEBUG
+  UI_TEST_IMAGE_TAG: "$CI_REGISTRY_IMAGE/ui-test:$CI_COMMIT_SHORT_SHA"
   env_name:
     description: "Environment to deploy to"
     value: dev
@@ -44,6 +45,7 @@ variables:
     value: ""
 
 stages:
+  - test_build
   - test
   - image_build
   - plan
@@ -115,6 +117,74 @@ code_test:
   script:
     - pytest --cov-report term --cov-report xml
 
+# Build docker image for UI testing purposes
+ui_test_image_build:
+  image: $DOCKER_IN_DOCKER
+  services:
+    - name: $DOCKER_IN_DOCKER
+      command:
+        - "--registry-mirror"
+        - "https://docker.artifactory.aws.gel.ac"
+  stage: test_build
+  before_script:
+    - apk add aws-cli jq py3-boto3
+    - source scripts/assume_role.sh
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker build -f ./docker/Dockerfile -t "$UI_TEST_IMAGE_TAG" --target test .
+    - docker push "$UI_TEST_IMAGE_TAG"
+  rules:
+    - if: $TEST
+
+ui_test:
+  image: mcr.microsoft.com/playwright:v1.40.0-jammy
+  stage: test
+  dependencies:
+    - ui_test_image_build
+  artifacts:
+    paths:
+      - test-results/
+      - playwright-report/
+    when: always
+  services:
+    # Alternative? Use docker-compose inline for all services + testing
+    # https://forum.gitlab.com/t/run-project-with-docker-compose/35975
+    # - name: $DOCKER_IN_DOCKER
+    #   command:
+    #     - "--registry-mirror"
+    #     - "https://docker.artifactory.aws.gel.ac"
+    - name: $DOCKER_POSTGRES
+      alias: db-postgres
+    - name: $UI_TEST_IMAGE_TAG
+      alias: panelapp
+      command:
+        - /bin/sh
+        - "-c"
+        - "python manage.py migrate && python manage.py loaddata /app/data.json && python manage.py runserver 0.0.0.0:8080"
+  variables:
+    # Allows inter-service communication: https://stackoverflow.com/questions/48041101/gitlab-ci-cross-service-communication
+    FF_NETWORK_PER_BUILD: 1
+    # Variables for services defined here
+    # Service-specific env config is only available from Gitlab runner version 14.5, we use version 13.9.0
+    # postgres
+    POSTGRES_DB: panelapp
+    POSTGRES_USER: panelapp
+    POSTGRES_PASSWORD: secret
+    # panelapp
+    PYTHONUNBUFFERED: "1"
+    DJANGO_LOG_LEVEL: DEBUG
+    DJANGO_SETTINGS_MODULE: panelapp.settings.test
+    DATABASE_URL: postgres://panelapp:secret@db-postgres:5432/panelapp
+    BASE_URL: http://panelapp:8080
+    ALLOWED_HOSTS: panelapp
+  script:
+    - corepack enable
+    - yarn set version 3.6.3
+    - yarn install
+    - yarn playwright test
+  rules:
+    - if: $TEST
+
 ## Linting, formatting, etc
 import_sorting:
   extends: .tests
@@ -174,7 +244,7 @@ image_build:
     - '(scripts/tagger validate-version "$CI_COMMIT_TAG" && ! scripts/tagger tag-exists "$CI_COMMIT_TAG") || scripts/tagger freestyle-tag "$CI_COMMIT_TAG"'
     - aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin "$ECR_REGISTRY"
     - if scripts/tagger validate-version "$CI_COMMIT_TAG"; then echo "${CI_COMMIT_TAG}" > ./VERSION; fi
-    - docker build -t "$ECR_REGISTRY/$ECR_REPOSITORY:$build_tag" --file ./docker/cloud/Dockerfile .
+    - docker build -f ./docker/Dockerfile -t "$ECR_REGISTRY/$ECR_REPOSITORY:$build_tag" --target prod .
     - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$build_tag"
     - scripts/tagger add-env-tags --env=build --add-latest=1 "$build_tag"
     - scripts/tagger add-tag "$build_tag" "$CI_COMMIT_TAG"

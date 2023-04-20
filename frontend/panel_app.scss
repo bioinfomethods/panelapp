@@ -1,0 +1,567 @@
+@import "~@fortawesome/fontawesome-free/css/all.css";
+@import "~select2/src/scss/core";
+
+/* Bootstrap overrides
+  ========================================================================== */
+
+blockquote {
+    border-color: #ddd;
+    overflow-wrap: break-word;
+}
+
+pre {
+    background-color: #fff;
+    border-color: #fff;
+    white-space: pre-line;
+}
+
+/*
+    In a table cell it needs to be forced to expand to full width
+    Used by
+*/
+.table-header-secondary .input-group {
+    width: 100%;
+}
+
+/* Helpers
+  ========================================================================== */
+
+.nowrap {
+    white-space: nowrap;
+}
+
+.word-break {
+    word-break: break-word;
+}
+
+.relative {
+    position: relative;
+}
+
+.inline {
+    display: inline;
+}
+
+.inline-block {
+    display: inline-block;
+}
+
+.bold {
+    font-weight: bold;
+}
+
+.normal {
+    font-weight: normal;
+}
+
+a.inherit,
+.inherit {
+    color: inherit;
+}
+
+.text-muted {
+    color: #777;
+}
+
+.link-muted {
+    color: #777;
+    text-decoration: underline;
+}
+
+.link-muted:hover,
+.link-muted:focus {
+    color: #666;
+}
+
+.link-inherit {
+    color: inherit;
+    text-decoration: underline;
+}
+
+/* Toggles
+   ========================================================================== */
+
+.no-js .if-no-js-hide,
+.js .if-js-hide,
+.hide {
+  display: none;
+}
+
+.rm,
+.js .if-js-rm {
+  border: 0;
+  clip: rect(0, 0, 0, 0);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  width: 1px;
+  z-index: -1;
+}
+
+/* Margin helpers
+   * Helpers use `!important` so they reliably work in all cases
+   ========================================================================== */
+
+.add-vertical-margins {
+    margin-top: 20px !important;
+    margin-bottom: 20px !important;
+}
+
+.add-top-margin {
+    margin-top: 20px !important;
+}
+
+.add-top-margin-small {
+    margin-top: 10px !important;
+}
+
+.remove-top-margin {
+    margin-top: 0 !important;
+}
+
+.add-bottom-margin {
+    margin-bottom: 20px !important;
+}
+
+.remove-bottom-margin {
+    margin-bottom: 0 !important;
+}
+
+.add-right-margin {
+    margin-right: 10px !important;
+}
+
+.add-left-margin {
+    margin-left: 10px !important;
+}
+
+.add-label-margin {
+    margin-bottom: 5px !important;
+}
+
+/* Table helpers
+   ========================================================================== */
+
+.table-header {
+    background-color: #eee;
+}
+
+.table-header-secondary {
+    background-color: #f5f5f5;
+    font-weight: bold;
+}
+
+thead .table-header-secondary td {
+    border-bottom: 1px solid #ccc;
+}
+
+[data-module="sortable-table"] th[data-sort-key]:hover {
+    cursor: pointer;
+    background-color: #ddd;
+}
+
+th .fa-arrow-down,
+th .fa-arrow-up {
+    display: none;
+}
+
+th.sorted-desc .fa-arrow-up,
+th.sorted-asc .fa-arrow-down {
+    display: inline-block;
+}
+
+.sorted-column {
+    background: #ddd;
+}
+
+/* Lead helpers
+   ========================================================================== */
+
+.lead {
+    font-weight: normal;
+    color: #666;
+}
+
+/* List group helpers
+   ========================================================================== */
+
+.list-group-item-active {
+    background: #eee;
+    font-weight: bold;
+}
+
+.list-group-item-active a {
+    color: inherit;
+}
+
+.dl-separated dd {
+    margin-bottom: 20px;
+}
+
+/* Autocomplete styles
+  Overriding `autocomplete_light/style.css`
+  ========================================================================== */
+
+/* Fix alignment of remove options in autocomplete */
+.autocomplete-light-widget .remove {
+    margin-right: 10px;
+    position: relative;
+    top: 5px;
+}
+
+/* Make the selected item look more like a bootstrap form widget */
+.autocomplete-light-widget .deck span[data-value] {
+    margin-top: 5px;
+    padding: 5px;
+    border: 1px solid #ccc;
+    border-radius: 3px;
+}
+
+/* Fix 1px mis-alignment when hovering the remove button */
+.autocomplete-light-widget .deck span[data-value] .remove:hover {
+    background-position: -15px -1px;
+}
+
+/* GEL branding
+   ========================================================================== */
+
+@import "~bootstrap/scss/functions";
+
+$primary: #007C83;
+$navbar-dark-color: #FFFF;
+$navbar-dark-hover-color: #FFFF;
+
+$list-group-active-bg: rgb(238, 238, 238);
+$list-group-border-radius: 0;
+
+$font-family-base: 'Helvetica Neue',Helvetica,Arial,sans-serif;
+
+$headings-font-weight: 700;
+$headings-color: rgb(51, 51, 51);
+
+$lead-font-weight: 400;
+
+// Match behaviour of original PanelApp
+$container-max-widths: (
+  sm: 540px,
+  md: 720px,
+  lg: 960px,
+  xl: 1200px,
+  xxl: 1201px, // a breakpoint must be greater than the previous breakpoint
+);
+
+// Match behaviour of original PanelApp
+// https://getbootstrap.com/docs/5.0/layout/grid/#variables
+$grid-breakpoints: (
+  xs: 0,
+  sm: 782px,
+  md: 783px,
+  lg: 960px,
+  xl: 1200px,
+  xxl: 1201px, // a breakpoint must be greater than the previous breakpoint
+);
+
+$link-decoration: none;
+$link-hover-decoration: underline;
+$link-hover-color: #00A3AD;
+
+$line-height-base: 1.4;
+
+$form-label-font-weight: 600;
+
+$breadcrumb-bg: rgb(245, 245, 245);
+$breadcrumb-padding-x: 15px;
+$breadcrumb-padding-y: 8px;
+$breadcrumb-active-color: rgb(179, 179, 179);
+
+@import "~bootstrap/scss/variables";
+@import "~bootstrap/scss/maps";
+@import "~bootstrap/scss/mixins";
+@import "~bootstrap/scss/utilities";
+
+$utilities: map-merge(
+  $utilities,
+  (
+    "border-hover": (
+      property: border,
+      state: hover,
+      values: (
+        null: var(--#{$prefix}border-width) var(--#{$prefix}border-style) var(--#{$prefix}border-color),
+        0: 0,
+      )
+    ),
+  )
+);
+
+@import "~bootstrap/scss/utilities/api";
+@import "~bootstrap/scss/bootstrap";
+
+.nav-panelapp {
+    border: 1px solid transparent;
+}
+
+.nav-panelapp:hover {
+    border: 1px solid;
+}
+
+// Must import this after bootstrap imports
+// https://apalfrey.github.io/select2-bootstrap-5-theme/getting-started/download-install/#package-managers
+@import "~select2-bootstrap-5-theme/src/include-all";
+
+.btn-outline-light-panelapp {
+    --bs-btn-font-weight: var(--bs-btn-font-weight);
+    --bs-btn-color: rgb(51, 51, 51);
+    --bs-btn-bg: var(--bs-white);
+    --bs-btn-border-color: rgb(221, 221, 221);
+    --bs-btn-hover-color: rgb(51, 51, 51);
+    --bs-btn-hover-bg: rgb(230, 230, 230);
+    --bs-btn-hover-border-color: rgb(190, 190, 190);
+    --bs-btn-focus-shadow-rgb: rgb(0, 0, 0, 0.125);
+    --bs-btn-active-color: rgb(51, 51, 51);
+    --bs-btn-active-bg: rgb(230, 230, 230);
+    --bs-btn-active-border-color: rgb(190, 190, 190);
+}
+
+/* GEL status helpers
+   ========================================================================== */
+
+.gel-green {
+    background-color: #3fad46;
+}
+
+.gel-amber {
+    background-color: #f0ad4e;
+}
+
+.gel-red {
+    background-color: #d9534f;
+}
+
+.gel-added {
+    background-color: #ccc;
+}
+
+.gel-badge {
+    background-color: transparent;
+    display: inline-block;
+    margin-top: 3px;
+    font-size: 1em;
+}
+
+.gel-text {
+    background-color: transparent;
+}
+
+.gel-text.gel-green,
+.gel-badge.gel-green {
+    color: #3fad46;
+}
+
+.gel-text.gel-amber,
+.gel-badge.gel-amber {
+    color: #f0ad4e;
+}
+
+.gel-text.gel-red,
+.gel-badge.gel-red {
+    color: #d9534f;
+}
+
+.gel-badge.gel-added {
+    color: #ccc;
+}
+
+.gel-text.gel-added {
+    color: #aaa;
+}
+
+.gel-banner,
+.banner {
+    padding: 5px 8px;
+    color: #fff;
+    font-weight: bold;
+    display: inline-block;
+    border-radius: 3px;
+}
+
+.gel-banner-block {
+    display: block;
+}
+
+.banner-ready {
+    color: #fff;
+    background: #777;
+    border: 1px solid #777;
+}
+
+.banner-reviewed {
+    color: #777;
+    border: 1px solid #777;
+}
+
+.gel-banner.gel-added {
+    color: #666;
+}
+
+/* No content helpers
+   ========================================================================== */
+
+.no-content {
+  font-size: 32px;
+  text-align: center;
+  padding: 60px 0;
+  color: #aaa;
+  border: 1px solid #aaa;
+  border-radius: 3px;
+}
+
+/* Bootstrap cards
+   ========================================================================== */
+
+.card-highlight {
+    background-color: #FFFFE0;
+    border-width: 2px;
+}
+
+/* Genes
+   ========================================================================== */
+
+.gene-nav-prev,
+.gene-nav-next {
+    border-top: none;
+    border-bottom: none;
+    border-left: none;
+    border-radius: 0;
+}
+
+.gene-nav-next {
+    border-right: none;
+}
+
+/* Gene browse
+   ========================================================================== */
+
+.panel-description {
+    font-family: inherit;
+    font-size: 17px;
+    max-width: 700px;
+    word-break: normal;
+}
+
+.gene-cell-title {
+    margin-top: 2px;
+    font-size: 25px;
+    color: #555;
+}
+
+.gene-cell-ready {
+    opacity: 0.8;
+    font-size: 14px;
+}
+
+/* Gene table
+   ========================================================================== */
+
+.tag-list .label {
+    font-size: 14px;
+}
+
+/* Reviewing
+   ========================================================================== */
+
+.review-table {
+    margin-bottom: 60px;
+}
+
+
+/* Panel browse
+   ========================================================================== */
+
+.panel-column {
+    width: 60%;
+}
+
+/* Home page
+   ========================================================================== */
+
+.splash {
+    margin-top: -24px;
+    margin-bottom: 40px;
+}
+
+.copy-container {
+    max-width: 800px;
+    font-size: 18px;
+    color: #444;
+    margin-top: 20px;
+}
+
+.copy-container h1,
+.copy-container h2,
+.copy-container h3,
+.copy-container h4 {
+    margin-top: 40px;
+    margin-bottom: 20px;
+    color: #333;
+}
+
+.copy-container h1 {
+    font-size: 30px;
+}
+
+.copy-container h2 {
+    font-size: 26px;
+}
+
+.copy-container h3,
+.copy-container h4 {
+    font-size: 20px;
+}
+
+.copy-container p,
+.copy-container ul,
+.copy-container img {
+    margin-bottom: 20px;
+}
+
+.copy-container li p:only-child {
+    margin-bottom: 0;
+}
+
+.copy-container a {
+    text-decoration: underline;
+}
+
+/* Sign up and acceptance
+   ========================================================================== */
+
+.single-box {
+    margin: 40px auto;
+    width: 600px;
+    padding: 40px;
+    border: 2px solid #ddd;
+    border-radius: 3px;
+    text-align: center;
+}
+
+/* Gene filter list
+   ========================================================================== */
+
+.gene-filter-list li {
+    margin-bottom: 5px;
+}
+
+#myTabContent img {
+    max-width: 100%;
+}
+
+.alert-info a,
+.alert-info a:hover,
+.alert-info a:active,
+.alert-info a:link,
+.alert-info a:visited {
+    color: var(--bs-alert-color);
+    text-decoration: underline;
+}

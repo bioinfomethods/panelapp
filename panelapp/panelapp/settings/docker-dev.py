@@ -60,7 +60,6 @@ AWS_REGION = os.getenv("AWS_REGION", "eu-west-2")
 AWS_DEFAULT_ACL = "public-read"  # To shut up a warning from s3boto3.py
 
 if USE_S3:  # Static and Media files on S3
-
     # AWS settings (regardless using LocalStack or the real thing)
     AWS_ACCESS_KEY_ID = os.getenv("AWS_ACCESS_KEY_ID", None)
     AWS_SECRET_ACCESS_KEY = os.getenv("AWS_SECRET_ACCESS_KEY", None)
@@ -116,7 +115,6 @@ if USE_S3:  # Static and Media files on S3
     AWS_MEDIAFILES_DEFAULT_ACL = "public-read"  # LocalStack only
 
 else:  # Static and Media files on local file system
-
     STATIC_URL = "/static/"
     STATIC_ROOT = os.getenv("STATIC_ROOT")
 
@@ -139,7 +137,6 @@ CELERY_TASK_PUBLISH_RETRY_POLICY = {
 USE_SQS = os.getenv("USE_SQS") == "TRUE"
 
 if USE_SQS:  # Use SQS as message broker
-
     CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "sqs://@localstack:4566")
     BROKER_TRANSPORT_OPTIONS = {
         "region": AWS_REGION,  # FIXME Is Kombo/Boto3 ignoring the region and always using us-east-1?

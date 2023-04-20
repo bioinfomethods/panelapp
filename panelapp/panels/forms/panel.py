@@ -99,7 +99,10 @@ class PanelForm(forms.ModelForm):
         ).exclude(is_super_panel=True, panel__status=GenePanel.STATUS.retired),
         widget=ModelSelect2Multiple(
             url="autocomplete-simple-panels-public",
-            attrs={"data-minimum-input-length": 3},
+            attrs={
+                "data-minimum-input-length": 3,
+                "style": "width: 100%;",
+            },
         ),
     )
 
@@ -109,7 +112,10 @@ class PanelForm(forms.ModelForm):
         queryset=PanelType.objects.all(),
         widget=ModelSelect2Multiple(
             url="autocomplete-simple-panel-types",
-            attrs={"data-minimum-input-length": 1},
+            attrs={
+                "data-minimum-input-length": 1,
+                "style": "width: 100%;",
+            },
         ),
     )
 

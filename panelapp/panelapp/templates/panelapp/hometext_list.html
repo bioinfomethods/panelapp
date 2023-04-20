@@ -2,31 +2,47 @@
 {% load static %}
 {% load markdown_deux_tags %}
 {% block body %}
-<div class="splash" style="background-color: #EAF1F1">
+<div class="container-fluid pb-1 pt-3 mb-4" style="background-color: #EAF1F1">
   <div class="container">
     <h1>{% block title %}Genomics England PanelApp{% endblock %}</h1>
-    <p class="lead">A crowdsourcing tool to allow gene panels to be shared, downloaded, viewed and evaluated by the Scientific Community</p>
+    <p class="lead col-lg-11 fs-4 fw-medium">A crowdsourcing tool to allow gene panels to be shared, downloaded, viewed and evaluated by the Scientific Community</p>
   </div>
 </div>
 
 <div class="container">
-  <div class="row" data-module="tab-switcher" data-default-tab="Introduction">
+  <div class="row">
     <div class="col-sm-3">
-      <ul class="nav nav-pills nav-stacked">
-        <li class="active"><a href="#Introduction" data-toggle="tab" aria-expanded="true">Home</a></li>
-        <li><a href="#News" data-toggle="tab" aria-expanded="false">News</a></li>
-        <li><a href="#Navigating" data-toggle="tab" aria-expanded="false">Navigate & Explore</a></li>
-        <li><a href="#Reviewers" data-toggle="tab" aria-expanded="false">Reviewers</a></li>
-        <li><a href="#Guidelines" data-toggle="tab" aria-expanded="false">Guidelines</a></li>
-        <li><a href="#API" data-toggle="tab" aria-expanded="false">API</a></li>
-        <li><a href="#FAQs" data-toggle="tab" aria-expanded="false">FAQs</a></li>
-        <li><a href="#Content" data-toggle="tab" aria-expanded="false">Contact, Content & Glossary</a></li>
+      <ul class="nav nav-pills nav-tabs flex-column" role="tablist" style="--bs-nav-tabs-border-width: 0px;">
+        <li class="nav-item">
+          <a class="nav-link active" data-bs-toggle="tab" data-bs-target="#Introduction" type="button" role="tab" aria-controls="Introduction" aria-selected="true">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" data-bs-target="#News" type="button" role="tab" aria-controls="News" aria-selected="false">News</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" data-bs-target="#Navigating" type="button" role="tab" aria-controls="Navigating" aria-selected="false">Navigate & Explore</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" data-bs-target="#Reviewers" type="button" role="tab" aria-controls="Reviewers" aria-selected="false">Reviewers</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" data-bs-target="#Guidelines" type="button" role="tab" aria-controls="Guidelines" aria-selected="false">Guidelines</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" data-bs-target="#API" type="button" role="tab" aria-controls="API" aria-selected="false">API</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" data-bs-target="#FAQs" type="button" role="tab" aria-controls="FAQs" aria-selected="false">FAQs</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" data-bs-toggle="tab" data-bs-target="#Content" type="button" role="tab" aria-controls="Content" aria-selected="false">Contact, Content & Glossary</a>
+        </li>
       </ul>
     </div>
     <div class="col-sm-9">
       <div id="myTabContent" class="tab-content">
         {% for hometext in object_list %}
-        <div class="tab-pane active in" id="{{ hometext.href }}">
+        <div class="tab-pane {% if hometext.href == 'Introduction' %} active{% endif %}" id="{{ hometext.href }}" role="tabpanel">
           <div class="copy-container">{{ hometext.render_markdown|safe }}</div>
         </div>
         {% endfor %}

@@ -5,9 +5,9 @@
     {% if request.user == evaluation.user %}
       {% with entity=evaluation.entity %}
         {% with panel=entity.panel %}
-          <div class="panel panel-default">
-            <div class="panel-heading">
-              <div class="panel-title">
+          <div class="card add-top-margin add-bottom-margin">
+            <div class="card-header">
+              <div class="card-title">
                 <a href="{{ panel.panel.get_absolute_url }}" class="link-inherit">{{ panel.panel.name }}</a>,
                 <a href="{{ entity.get_absolute_url }}" class="link-inherit">{{ entity.name }}</a>
               </div>

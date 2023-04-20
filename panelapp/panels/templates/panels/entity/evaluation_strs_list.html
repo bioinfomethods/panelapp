@@ -1,51 +1,51 @@
 {% load panel_helpers %}
 
-<div class="panel-heading">STRs in panel</div>
-<div class="btn-group btn-group-justified" role="group" data-module="gene-nav">
+<div class="card-header">STRs in panel</div>
+<div class="btn-group" role="group" data-module="gene-nav">
     {% if prev_str %}
         <a href="{% url 'panels:evaluation' panel.panel_id 'str' prev_str.name %}"
-           class="gene-nav-prev btn btn-default" title="{{ prev_str.name }}">
+           class="gene-nav-prev btn btn-outline-light-panelapp" title="{{ prev_str.name }}">
             <i class="fa fa-arrow-up add-right-margin"></i>Prev
         </a>
     {% else %}
-        <span class="gene-nav-prev btn btn-default disabled">
+        <span class="gene-nav-prev btn btn-outline-light-panelapp disabled">
             <i class="fa fa-arrow-up add-right-margin"></i>Prev
         </span>
     {% endif %}
     {% if next_str %}
         <a href="{% url 'panels:evaluation' panel.panel_id 'str' next_str.name %}"
-           class="gene-nav-next btn btn-default" title="{{ next_str.name }}">
+           class="gene-nav-next btn btn-outline-light-panelapp border-start" title="{{ next_str.name }}">
             Next<i class="fa fa-arrow-down add-left-margin"></i>
         </a>
     {% else %}
-        <span class="gene-nav-next btn btn-default disabled">
+        <span class="gene-nav-next btn btn-outline-light-panelapp border-start disabled">
             Next<i class="fa fa-arrow-down add-left-margin"></i>
         </span>
     {% endif %}
 </div>
-<ul class="list-group" data-module="gene-nav" id="gene-nav">
+<ul class="list-group border-bottom-0" data-module="gene-nav" id="gene-nav">
   {% for entry in panel_strs %}
     <li
-        class="list-group-item {% if entity == entry %}list-group-item-active{% endif %}"
-        {% if entity == entry %}id="gene-nav-active-item"{% endif %}
+        class="list-group-item list-group-item-action {% if entity.gene.gene_symbol == entry.gene.gene_symbol %}active fw-bold{% endif %} border-top-0 border-start-0 border-end-0"
+        {% if entity.gene.gene_symbol == entry.gene.gene_symbol %}id="gene-nav-active-item"{% endif %}
     >
       <a href="{% url 'panels:evaluation' panel.panel_id 'str' entry.name %}{% if entry.name in panel.current_genes_duplicates %}?pk={{ entry.pk }}{% endif %}">
       {% if request.user.pk in entry.evaluators %}
           <i
-              class="fa fa-check-circle {{ entry|gene_list_class }} add-right-margin gel-badge pull-left"
+              class="fa fa-check-circle {{ entry|gene_list_class }} add-right-margin gel-badge float-start"
               data-toggle="tooltip"
               title="You have reviewed"
           ></i>
       {% else %}
           <i
-              class="fa fa-circle gel-badge add-right-margin pull-left {{ entry|gene_list_class }}"
+              class="fa fa-circle gel-badge add-right-margin float-start {{ entry|gene_list_class }}"
               data-toggle="tooltip"
               title="{{ entry|gene_list_name }}"
           ></i>
       {% endif %}
       {{ entry.name }}
       <span
-          class="pull-right text-muted"
+          class="float-end text-muted"
           data-toggle="tooltip"
           data-placement="left"
           title="{{ entry.number_of_evaluations }} review{{entry.number_of_evaluations|pluralize}}"
@@ -57,8 +57,8 @@
 
 </ul>
 {% if request.user.is_authenticated and request.user.reviewer.is_verified %}
-    <ul class="list-group">
-        <li class="list-group-item" style="border-top: none">
+    <ul class="list-group border-top-0">
+        <li class="list-group-item list-group-item-action border-top-0 border-bottom-0 border-start-0 border-end-0">
             <a href="{% url 'panels:add_entity' panel.panel_id 'str' %}">
                 <i class="fa fa-plus add-right-margin"></i>Add a STR
             </a>

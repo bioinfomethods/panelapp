@@ -6,15 +6,15 @@
 
 {% block content %}
   {% if tag_filter %}
-    <ol class="breadcrumb">
-      <li><a href="?">Genes and Genomic Entities</a></li>
-      <li class="active">{{ tag_filter }}</li>
+    <ol class="breadcrumb add-top-margin">
+      <li class="breadcrumb-item"><a href="?">Genes and Genomic Entities</a></li>
+      <li class="breadcrumb-item active">{{ tag_filter }}</li>
     </ol>
   {% endif %}
 
   {% with entities|length as entities_length %}
 
-  <h1 class="add-bottom-margin">
+  <h1 class="add-bottom-margin add-top-margin">
     {% if tag_filter %}
       <div class="text-muted normal add-label-margin"><span id="entities-filter-count" class="text-muted"></span>{{ entities_length }} genes and genomic entities tagged</div>
       “{{ tag_filter}}”
@@ -25,26 +25,26 @@
     <div class="row">
       <div class="col-md-9">
         <div data-module="filterable-list">
-          <div class="panel panel-default">
-            <div class="panel-heading">
+          <div class="card">
+            <div class="card-header">
               Find a gene or genomic entity
             </div>
-            <div class="panel-body" data-module="filter-entities-type" data-count="{{ entities_length }}">
+            <div class="card-body" data-module="filter-entities-type" data-count="{{ entities_length }}">
               <form class="add-bottom-margin">
                 <label for="gene-filter">
-                  Gene or Genomic Entity Name
+                  <span class="fw-bold">Gene or Genomic Entity Name</span>
                   <br /><span class="text-muted normal">Enter a gene symbol, STR name, Region name, or the beginning of one, eg “CD” or “CD19”</span>
                 </label><br />
                 <div class="input-group">
                   <input id="gene-filter" type="text" autofocus class="form-control normal js-filter-list-input" placeholder="Filter genes and genomic entities">
-                  <span class="input-group-addon js-filter-list-count" data-singular="entity" data-plural="genes and genomic entities">
+                  <span class="input-group-text js-filter-list-count" data-singular="entity" data-plural="genes and genomic entities">
                     {{ entities_length }} genes and genomic entities
                   </span>
                 </div>
                 <div>
-                    Show <label for="show_genes"><input type="checkbox" id="show_genes" name="show_genes" checked /> Genes</label>
-                    <label for="show_strs"><input type="checkbox" id="show_strs" name="show_strs" checked /> STRS</label>
-                    <label for="show_regions"><input type="checkbox" id="show_regions" name="show_regions" checked /> Regions</label>
+                    Show <label class="fw-bold" for="show_genes"><input type="checkbox" id="show_genes" name="show_genes" checked /> Genes</label>
+                    <label class="fw-bold" for="show_strs"><input type="checkbox" id="show_strs" name="show_strs" checked /> STRS</label>
+                    <label class="fw-bold" for="show_regions"><input type="checkbox" id="show_regions" name="show_regions" checked /> Regions</label>
                 </div>
               </form>
               <hr />
@@ -52,7 +52,7 @@
                 
               {% for type, entity, gene_symbol in entities %}
                 {% if entity %}
-                  <li data-text="{{ entity }}" data-type="{{ type }}">
+                  <li class="list-inline-item" data-text="{{ entity }}" data-type="{{ type }}">
                       <a href="{% if gene_symbol %}{% url 'panels:entity_detail' gene_symbol %}{% else %}{% url 'panels:entity_detail' entity  %}{% endif %}{% if tag_filter %}?tag={{ tag_filter}}{% endif %}">
                           {{ entity }}
                       </a>
@@ -69,7 +69,7 @@
         <h3 class="remove-top-margin normal add-bottom-margin">Tagged</h3>
         <ul class="list-inline">
           {% for tag in tags %}
-              <li class="add-label-margin">
+              <li class="list-inline-item add-label-margin">
                 <a href="?tag={{ tag }}">{{ tag }}</a>
               </li>
           {% endfor %}

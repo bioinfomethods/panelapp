@@ -294,8 +294,7 @@ class DeleteEntityAjaxView(
     EntityMixin, GELReviewerRequiredMixin, BaseAjaxGeneMixin, AJAXMixin, View
 ):
     def get_template_names(self):
-        if self.is_gene():
-            return "panels/entities_list_table.html"
+        return "panels/entities_list_table.html"
 
     def process(self):
         if self.is_gene():

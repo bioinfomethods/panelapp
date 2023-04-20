@@ -1,58 +1,58 @@
 {% extends "default.html" %}
-{% load bootstrap3 %}
+{% load django_bootstrap5 %}
 
 {% block body %}
-<div class="container">
+<div class="container add-top-margin">
   <div class="row">
     <div class="col-md-6">
       <div class="add-bottom-margin" id="banner">
         <h2>{% block title %}{{ request.user }}{% endblock %}</h2>
       </div>
       <div id="user_info">
-        <div class="list-group">
-          <div class="list-group-item active">
-            <h4 class="list-group-item-heading">User Information</h4>
-          </div>
+        <ul class="list-group">
+          <li class="list-group-item bg-primary">
+            <h5 class="text-white">User Information</h5>
+          </li>
 
-          <div  class="list-group-item">
-            <h4 class="list-group-item-heading">Username</h4>
-            <p class="list-group-item-text">{{ request.user.username }}</p>
-          </div>
+          <li class="list-group-item">
+            <h5>Username</h5>
+            <p>{{ request.user.username }}</p>
+          </li>
 
-          <div  class="list-group-item">
-            <h4 class="list-group-item-heading">First Name</h4>
-            <p class="list-group-item-text">{{ request.user.first_name }}</p>
-          </div>
+          <li class="list-group-item">
+            <h5>First Name</h5>
+            <p>{{ request.user.first_name }}</p>
+          </li>
 
-          <div  class="list-group-item">
-            <h4 class="list-group-item-heading">Last Name</h4>
-            <p class="list-group-item-text">{{ request.user.last_name }}</p>
-          </div>
+          <li class="list-group-item">
+            <h5>Last Name</h5>
+            <p>{{ request.user.last_name }}</p>
+          </li>
 
-          <div  class="list-group-item">
-            <h4 class="list-group-item-heading">Affiliation</h4>
-            <p class="list-group-item-text">{{ request.user.reviewer.affiliation }}</p>
-          </div>
+          <li class="list-group-item">
+            <h5>Affiliation</h5>
+            <p>{{ request.user.reviewer.affiliation }}</p>
+          </li>
 
-          <div  class="list-group-item">
-            <h4 class="list-group-item-heading">Role</h4>
-            <p class="list-group-item-text">{{ request.user.reviewer.role }}</p>
-          </div>
+          <li class="list-group-item">
+            <h5>Role</h5>
+            <p>{{ request.user.reviewer.role }}</p>
+          </li>
 
-          <div  class="list-group-item">
-            <h4 class="list-group-item-heading">Group</h4>
-            <p class="list-group-item-text">{{ request.user.reviewer.group }}</p>
-          </div>
+          <li class="list-group-item">
+            <h5>Group</h5>
+            <p>{{ request.user.reviewer.group }}</p>
+          </li>
 
-          <div  class="list-group-item">
-            <h4 class="list-group-item-heading">Workplace</h4>
-            <p class="list-group-item-text">{{ request.user.reviewer.workplace }}</p>
-          </div>
-        </div>
+          <li class="list-group-item">
+            <h5>Workplace</h5>
+            <p>{{ request.user.reviewer.workplace }}</p>
+          </li>
+        </ul>
         {% if not use_cognito %}
-        <a href="{% url 'accounts:change_password' %}" class="btn btn-primary">Change password</a>
+        <a href="{% url 'accounts:change_password' %}" class="btn btn-primary add-top-margin">Change password</a>
         {% endif %}
-          <div>
+          <div class="add-top-margin">
               <h3>API Token</h3>
               <div>
                   <p>

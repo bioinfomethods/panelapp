@@ -1,0 +1,63 @@
+FROM node:20.2-slim as frontend
+
+RUN corepack enable
+
+COPY ./frontend /src/frontend
+COPY ./webpack.* package.json yarn.lock /src/
+
+RUN mkdir -p /build && yarn --cwd /src install --immutable && yarn --cwd /src build
+
+FROM python:3.8.17-alpine3.18 as base
+
+RUN mkdir -p /app/panelapp
+
+# Application (non-root) user
+RUN adduser -D -u 1000 -s /sbin/nologin  -g app app
+
+COPY --chown=app:app ./panelapp     /app/panelapp
+COPY --chown=app:app ./setup.py ./setup.cfg ./MANIFEST.in ./VERSION     /app/
+COPY --chown=app:app ./deploy/gunicorn_config.py  /app/
+
+COPY --chown=app:app --from=frontend /src/dist /app/dist
+
+# Python libraries get installed as root in /pythonlib (scripts are still installed in /usr/local/bin).
+# Ownership of all python modules have to be writable by the user running the application, to create __pycache__.
+# After installing we are removing all system dependencies not required at runtime, within the same Docker layer
+WORKDIR /app
+RUN apk add --no-cache postgresql-libs curl jpeg-dev zlib-dev && \
+    apk add --no-cache --virtual .build-deps gcc musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev && \
+    pip install --upgrade setuptools==67.8.0 && \
+    pip install . && \
+    pip install ddtrace==1.18.3 && \
+    apk --purge del .build-deps && \
+    chown -R app:app /usr/local/lib/python3.*
+
+ENV PYTHONPATH=/pythonlib
+ENV PATH="/pythonlib:${PATH}"
+ENV CELERY_BROKER_URL=sqs://
+
+# Gunicorn settings
+ENV GUNICORN_WORKERS=8
+ENV GUNICORN_TIMEOUT=300
+ENV GUNICORN_BACKLOG=4096
+ENV GUNICORN_BIND=0.0.0.0:8080
+ENV GUNICORN_LOG_LEVEL=INFO
+EXPOSE 8080
+
+FROM base as dev
+
+RUN pip install .[dev,tests] && pip install pytest-runner
+
+WORKDIR /app/panelapp
+
+FROM base as test
+
+COPY --chown=app:app ./frontend/tests/data.json /app/data.json
+
+WORKDIR /app/panelapp
+
+FROM base as prod
+
+WORKDIR /app/panelapp
+USER app:app
+ENTRYPOINT ["/bin/sh"]

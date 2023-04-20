@@ -1,19 +1,19 @@
-{% load bootstrap3 %}
+{% load django_bootstrap5 %}
 {% if request.user.is_authenticated and request.user.reviewer.is_verified %}
 {% include "panels/entity/evaluation_form.html" %}
 {% endif %}
 
-<div id="evaluations">
+<div id="evaluations" class="add-top-margin add-bottom-margin">
   <h3>{{ entity.evaluation.all|length }} review{{entity.evaluation.all|pluralize}}</h3>
 
   {% for ev in entity.evaluation.all %}
-    <div class="panel panel-default {% if request.user == ev.user %}panel-highlight{% endif %}">
+    <div class="card {% if request.user == ev.user %}card-highlight{% endif %}">
       {% if request.user == ev.user %}
-      <div class="panel-heading" id="your-review">
+      <div class="card-header" id="your-review">
         {% if request.user == ev.user %}
-          <a href="{% url "panels:delete_evaluation_by_user" panel.panel_id entity_type entity_name ev.pk %}" class="pull-right btn btn-default btn-xs" data-ajax="true" data-success="djangoAjaxHandler">Delete</a>
+          <a href="{% url "panels:delete_evaluation_by_user" panel.panel_id entity_type entity_name ev.pk %}" class="float-end btn btn-outline-light-panelapp btn-xs" data-ajax="true" data-success="djangoAjaxHandler">Delete</a>
         {% endif %}
-        <div class="panel-title">
+        <div class="card-title">
           Your review
         </div>
       </div>

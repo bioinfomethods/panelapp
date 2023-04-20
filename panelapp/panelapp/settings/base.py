@@ -94,7 +94,7 @@ DJANGO_APPS = [
 CUSTOM_APPS = [
     "markdownx",
     "markdown_deux",
-    "bootstrap3",
+    "django_bootstrap5",
     "django_object_actions",
     "mathfilters",
     "django_ajax",
@@ -282,6 +282,8 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 STATIC_ROOT = os.getenv("STATIC_ROOT", os.path.join(BASE_DIR, "_staticfiles"))
+
+STATICFILES_DIRS = [str(os.path.join(BASE_DIR, "dist"))]
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.getenv("MEDIA_ROOT", os.path.join(BASE_DIR, "_mediafiles"))
