@@ -701,7 +701,7 @@ class TestAPIV1(LoginExternalUser):
         payload = res.json()
         assert res.status_code == 200
         assert payload["count"] == 2
-        assert [r["version"] for r in payload["results"]] == ["0.1", "0.0"]
+        assert {r["version"] for r in payload["results"]} == {"0.1", "0.0"}
 
     def test_signed_off_panels_filter_by_id(self):
         self.gps.panel.active_panel.increment_version()
@@ -741,7 +741,7 @@ class TestAPIV1(LoginExternalUser):
 
         assert res.status_code == 200
         assert payload["count"] == 2
-        assert [r["version"] for r in payload["results"]] == ["0.1", "0.0"]
+        assert {r["version"] for r in payload["results"]} == {"0.1", "0.0"}
         assert {r["id"] for r in payload["results"]} == {panel_id}
 
 

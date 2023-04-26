@@ -21,9 +21,10 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+from io import StringIO
+
 from django.core.management import call_command
 from django.test import TestCase
-from django.utils.six import StringIO
 
 from panels.models import Gene
 from panels.tests.factories import GeneFactory

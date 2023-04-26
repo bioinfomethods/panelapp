@@ -34,6 +34,17 @@ This is required because [LocalStack](https://github.com/localstack/localstack),
 the Docker-Compose cluster as `localstack` but exposed to the host machine on localhost (port `4572` and `4576` for 
 S3 and SQS, respectively).
 
+### Virtualenv Apple M1 Homebrew
+
+These system dependencies are required to setup a virtualenv to use for development:
+
+```
+$ brew install postgresql@15
+$ brew install openssl@3
+$ export LDFLAGS="-L/opt/homebrew/opt/openssl@3/lib"
+$ export CPPFLAGS="-I/opt/homebrew/opt/openssl@3/include"
+```
+
 ## Dockerfiles
 
 _Web_ and _Worker_ have separate Dockerfiles: [`Dockerfile-web`](./Dockerfile-web) and [`Dockerfile-worker`](./Dockerfile-worker).

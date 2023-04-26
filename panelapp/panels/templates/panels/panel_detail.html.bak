@@ -1,5 +1,5 @@
 {% extends "default.html" %}
-{% load staticfiles %}
+{% load static %}
 {% block title %}{{ record.gene.gene_symbol }} ({{ panel.level4title.name }}){% endblock %}
 {% block header %}
 

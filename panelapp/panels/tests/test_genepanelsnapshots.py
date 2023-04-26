@@ -841,7 +841,7 @@ class GenePanelSnapshotTest(LoginGELUser):
         }
         res = self.client.post(url, data)
         assert res.status_code == 200
-        assert "Snapshot for version v11.11 doesn&#39;t exist" in res.content.decode(
+        assert "Snapshot for version v11.11 doesn&#x27;t exist" in res.content.decode(
             "utf-8"
         )
 

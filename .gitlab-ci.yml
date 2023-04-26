@@ -56,7 +56,7 @@ code_quality:
   artifacts:
     paths: [gl-code-quality-report.json]
   rules:
-    - if: '$CODE_QUALITY_DISABLED'
+    - if: "$CODE_QUALITY_DISABLED"
       when: never
     - if: $CI_MERGE_REQUEST_ID
 
@@ -120,7 +120,12 @@ image_build:
   tags:
     - "pool_name:panelapp_docker"
   services:
-    - docker:19.03.5-dind
+    - name: docker:19.03.5-dind
+      command:
+        [
+          "--registry-mirror",
+          "http://dockerhubcache.shared-services.aws.gel.ac:5002",
+        ]
   stage: image_build
   before_script:
     - apk add aws-cli
