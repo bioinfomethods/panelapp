@@ -13,4 +13,4 @@ ENV GUNICORN_LOG_LEVEL INFO
 
 WORKDIR /app/panelapp
 EXPOSE 8080
-ENTRYPOINT ["gunicorn","--config=file:/app/gunicorn_config.py","panelapp.wsgi:application"]
+ENTRYPOINT ["gunicorn", "--worker-tmp-dir=/dev/shm", "--config=file:/app/gunicorn_config.py", "panelapp.wsgi:application"]

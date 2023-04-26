@@ -20,6 +20,13 @@ stages:
   - plan
   - apply
 
+services:
+  - name: docker:20.10.7-dind
+    alias: docker
+    command:
+      - "--registry-mirror"
+      - "http://dockerhubcache.shared-services.aws.gel.ac:5002"
+
 # Common deploy functionality
 .deploy_default:
   image:
