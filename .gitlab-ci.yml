@@ -190,8 +190,8 @@ plan:
   script:
     - git clone --single-branch --branch main https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
     - cd $PANELAPP_TF_DIR
-    - terraform init -backend-config "./config/$env_name/panelapp-backend.conf"
-    - terraform plan -var-file="./config/$env_name/terraform.tfvars" -out=plan.tfplan -var image_tag=$version
+    - terraform init -backend-config "../../config/$env_name/panelapp-backend.conf"
+    - terraform plan -var-file="../../config/$env_name/terraform.tfvars" -out=plan.tfplan -var image_tag=$version
   rules:
     - if: $version =~ /^\d+\.\d+\.\d+(\w+)?$/
   artifacts:
