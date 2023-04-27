@@ -189,11 +189,9 @@ plan:
     - image_build
   script:
     - git clone --single-branch --branch main https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-    - git clone --single-branch --branch main https://$CONFIG_DEPLOY_TOKEN_USERNAME:$TF_CONFIG_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config-new.git
-    - export WORKING_DIR=$(pwd)
-    - cd $PANELAPP_TF_DIR 
-    - terraform init -backend-config "$WORKING_DIR/panelapp-config-new/$env_name/panelapp-backend.conf" 
-    - terraform plan -var-file="$WORKING_DIR/panelapp-config-new/$env_name/terraform.tfvars" -out=plan.tfplan -var image_tag=$version  
+    - cd $PANELAPP_TF_DIR
+    - terraform init -backend-config "./config/$env_name/panelapp-backend.conf"
+    - terraform plan -var-file="./config/$env_name/terraform.tfvars" -out=plan.tfplan -var image_tag=$version
   rules:
     - if: $version =~ /^\d+\.\d+\.\d+(\w+)?$/
   artifacts:
