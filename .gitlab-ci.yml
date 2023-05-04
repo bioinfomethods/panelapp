@@ -17,7 +17,7 @@ variables:
     value: "dev"
   version:
     description: "Version to deploy"
-    value: ""
+    value: "3.4.0a6"
 
 stages:
   - test
@@ -39,11 +39,7 @@ default:
     - python3 -m venv .venv
     - source .venv/bin/activate
     - pip install boto3==1.21.1
-    - aws sts get-caller-identity
-    - source scripts/assume_role.sh
-    - aws sts get-caller-identity
 
-   
 .tests:
   image: $DOCKER_PYTHON
   stage: test
@@ -165,8 +161,8 @@ plan:
   script:
     - git clone --single-branch --branch main https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
     - cd $PANELAPP_TF_DIR
-    - terraform init -backend-config "../../config/$env_name/panelapp-backend.conf"
-    - terraform plan -var-file="../../config/$env_name/terraform.tfvars" -var image_tag=$version -out=plan.tfplan
+    - terraform init -backend-config="../config/$env_name/panelapp-backend.conf"
+    - terraform plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag=$version -out=plan.tfplan
     - "printf '### Environment: %s\n### Version: %s\n' \"$env_name\" \"$version\""
   rules:
     - if: $version =~ /^\d+\.\d+\.\d+(\w+)?$/
@@ -191,9 +187,11 @@ apply:
     - cd $PANELAPP_TF_DIR 
     - terraform apply plan.tfplan
     - sleep 30
-    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-$env_name -panelapp
+    - cd  "$WORKING_DIR"
+    - source scripts/assume_role.sh
+    - python3 panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-$env_name -panelapp
     - sleep 30
-    - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-$env_name -panelapp
+    - python3 panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-$env_name -panelapp
   rules:
     - if: $version =~ /^\d+\.\d+\.\d+(\w+)?$/
       when: manual
