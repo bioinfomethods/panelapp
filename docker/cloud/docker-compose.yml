@@ -56,7 +56,7 @@ services:
     depends_on:
       - db
       - localstack
-    entrypoint: /app/run-gunicorn.sh
+    entrypoint: gunicorn --worker-tmp-dir=/dev/shm --config=file:/app/gunicorn_config.py panelapp.wsgi:application
     environment:
 #      - DATABASE_URL=postgres://panelapp:secret@db:5432/panelapp
       - DATABASE_USER=panelapp
@@ -96,7 +96,7 @@ services:
     ports: []
     depends_on:
       - db
-    entrypoint: /app/run-celery.sh
+    entrypoint: celery --app panelapp --quiet worker --task-events --concurrency 2 -Q celery,panelapp
     environment:
       # Same configuration as web (except Static file storage-related and ALLOWED_HOSTS)
 #      - DATABASE_URL=postgres://panelapp:secret@db:5432/panelapp
