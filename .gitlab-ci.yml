@@ -12,6 +12,7 @@ variables:
   AWS_DEFAULT_REGION: eu-west-2
   CI_DEBUG_TRACE: "false"
   AWS_ASSUME_ROLE: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/CIDeploypanelapp"
+  WORKFLOW_NAME: ''  # use default
   env_name:
     description: "Environment to target"
     value: "dev"

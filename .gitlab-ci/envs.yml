@@ -1,25 +1,35 @@
 workflow:
+  name: '$WORKFLOW_NAME'
   rules:
-    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
     # MRs always run on dev environment
-    - if: '$env_name == "dev"'
+    - if: $env_name == "dev" && $CI_PIPELINE_SOURCE != "web"
       variables:
         AWS_ACCOUNT_ID: "577192787797"
-    - if: '$env_name == "test"'
+    - if: $env_name == "dev" && $CI_PIPELINE_SOURCE == "web"
+      variables:
+        AWS_ACCOUNT_ID: "577192787797"
+        WORKFLOW_NAME: "Deployment [$env_name] $version"
+    - if: $env_name == "test" && $CI_PIPELINE_SOURCE == "web"
       variables:
         AWS_ACCOUNT_ID: "455662437776"
+        WORKFLOW_NAME: "Deployment [$env_name] $version"
     # UAT, E2E, PreProd and Prod deployments must be triggered manually and from a protected branch
-    - if: '$env_name == "uat" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"'
+    - if: $env_name == "uat" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"
       variables:
         AWS_ACCOUNT_ID: "400119055163"
+        WORKFLOW_NAME: "Deployment [$env_name] $version"
     # && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"
-    - if: '$env_name == "e2e"'
+    - if: $env_name == "e2e"
       variables:
         AWS_ACCOUNT_ID: "875605549679"
-    - if: '$env_name == "preprod" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"'
+        WORKFLOW_NAME: "Deployment [$env_name] $version"
+    - if: $env_name == "preprod" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"
       variables:
         AWS_ACCOUNT_ID: "960907853420"
-    - if: '$env_name == "prod" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"'
+        WORKFLOW_NAME: "Deployment [$env_name] $version"
+    - if: $env_name == "prod" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"
       variables:
         AWS_ACCOUNT_ID: "876663091628"
+        WORKFLOW_NAME: "Deployment [$env_name] $version"
