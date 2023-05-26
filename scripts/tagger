@@ -1,0 +1,697 @@
+#!/usr/bin/env python3
+"""\
+Tool to manage Docker image tags for ECR cleanup.
+
+# Requirements
+    * Python 3.8+
+    * boto3
+    * git
+
+Typical workflows:
+
+Building:
+
+    git_tag=$(scripts/tagger get-commit-tag)
+    if ! scripts/tagger --repository="$PACKAGE_NAME" tag-exists "$git_tag"; then
+        aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin "$REGISTRY"
+        docker build -t "$REGISTRY/$PACKAGE_NAME:$git_tag" --file ./Dockerfile .
+        docker push "$REGISTRY/$PACKAGE_NAME:$git_tag"
+        scripts/tagger --repository="$PACKAGE_NAME" add-env-tags --env=build --add-latest "$git_tag"
+    fi
+
+Add a version:
+
+    scripts/tagger validate-version "$VERSION"
+    scripts/tagger --repository="$PACKAGE_NAME" add-tag "$git_tag" "$VERSION"
+
+Add a non-standard/development version:
+
+    scripts/tagger --repository="$PACKAGE_NAME" add-tag --mutable "$git_tag" "$VERSION"
+
+Deploy to environment
+
+    # plan
+    scripts/tagger validate-version-tag $version
+    terraform plan -var version=$version -out=plan.tfplan
+    # apply
+    terraform apply plan.tfplan
+    scripts/tagger --repository=$REPOSITORY add-env-tags --env=$env --add-latest=3 $version
+
+"""
+
+import argparse
+import contextlib
+import dataclasses
+import datetime
+import enum
+import functools
+import os
+import re
+import subprocess
+import sys
+from operator import itemgetter
+from typing import List, Optional
+
+import boto3
+
+
+class Environments(str, enum.Enum):
+    BUILD = 'build'
+    DEV = 'dev'
+    TEST = 'test'
+    E2E = 'e2e'
+    UAT = 'uat'
+    PROD = 'prod'
+
+    def ord(self):
+        return list(Environments).index(self)
+
+
+class Commands(str, enum.Enum):
+    GET_TAGS = 'get-tags'
+    LIST_TAGS = 'list-tags'
+    CHECK_TAG = 'tag-exists'
+    ADD_ENV_TAG = 'add-env-tags'
+    ADD_TAG = 'add-tag'
+    NEW_COMMIT_TAG = 'get-commit-tag'
+    VALIDATE_VERSION = 'validate-version'
+    FREESTYLE_TAG = 'freestyle-tag'
+    SELF_TEST = 'self-tests'
+
+
+class MutabilityOpts(str, enum.Enum):
+    YES = 'yes'
+    NO = 'no'
+    AUTO = 'auto'
+
+
+@dataclasses.dataclass
+class Image:
+    pushed_at: datetime.datetime
+    tags: List[str]
+
+    @property
+    def id_tags(self):
+        return sorted([x for x in self.tags if Tagger.is_id_tag(x)])
+
+    @property
+    def versions(self):
+        return sorted(x for x in self.tags if Tagger.is_version_tag(x))
+
+    @property
+    def env_tags(self):
+        return sorted(x for x in self.tags if Tagger.is_env_tag(x))
+
+    @property
+    def latest_tags(self):
+        return sorted(x for x in self.tags if Tagger.is_rotating_tag(x))
+
+    @property
+    def other_tags(self):
+        return sorted(x for x in self.tags if not Tagger.is_special_tag(x))
+
+
+@functools.total_ordering
+class SemVers:
+    def __init__(self, version: str):
+        self.version = version
+        self.match = Tagger.RE_VERSION.search(version)
+        if not self.match:
+            raise ValueError("not a simplified semantic version")
+
+    @property
+    def major(self) -> int:
+        """
+        >>> SemVers('1.2.3').major
+        1
+        """
+        return int(self.match.group(1))
+
+    @property
+    def minor(self) -> int:
+        """
+        >>> SemVers('1.2.3').minor
+        2
+        """
+        return int(self.match.group(2))
+
+    @property
+    def patch(self) -> int:
+        """
+        >>> SemVers('1.2.3').patch
+        3
+        """
+        return int(self.match.group(3))
+
+    @property
+    def pre_release_type(self) -> Optional[str]:
+        """
+        >>> SemVers('1.2.3-alpha.4').pre_release_type
+        'alpha'
+        >>> SemVers('1.2.3').pre_release_type
+        """
+        return self.match.group(5)
+
+    @property
+    def pre_release_version(self) -> Optional[int]:
+        """
+        >>> SemVers('1.2.3-alpha.4').pre_release_version
+        4
+        >>> SemVers('1.2.3').pre_release_version
+        """
+        if (group := self.match.group(6)) is not None:
+            return int(group)
+
+    def __eq__(self, other):
+        """
+        Version equality
+
+        >>> SemVers('1.2.3') == SemVers('1.2.3')
+        True
+        >>> SemVers('1.2.3') == "1.2.3"
+        True
+        """
+        return self.version == other
+
+    def __lt__(self, other):
+        """
+        Semantic ordering of versions
+
+        >>> SemVers('1.3.2') <= SemVers('1.2.3')
+        False
+        >>> SemVers('1.2.3-rc.1') < SemVers('1.2.3')
+        True
+        >>> SemVers('1.2.3-alpha.4') < SemVers('1.2.3-beta.2')
+        True
+        """
+        if not isinstance(other, SemVers):
+            other = SemVers(other)
+            raise NotImplementedError(f'can not compare with object of type: {type(other)}')
+        max_type = 'zzzz'
+        max_version = 9999
+        left = (self.major, self.minor, self.patch,
+                self.pre_release_type or max_type,
+                self.pre_release_version or max_version)
+        right = (other.major, other.minor, other.patch,
+                 other.pre_release_type or max_type,
+                 other.pre_release_version or max_version)
+        return left < right
+
+    def __str__(self):
+        return self.version
+
+    def __repr__(self):
+        return f"SemVers({self.version!r})"
+
+
+class Tagger:
+    _client = None
+    args: argparse.Namespace
+
+    # Max number of rotating tags (per type):
+    MAX_ROTATING_TAGS = 10
+    # Time format used for env tags, like "prod-20230130-173000":
+    TIME_FORMAT = "%Y%m%d-%H%M%S"
+    # Tag used to identify commits, like "git-abc1234f:
+    RE_ID_TAG = re.compile(r'''^(
+            git-[a-f0-9]{8} |
+            ci-[0-9]+
+        )$''', re.VERBOSE)
+    # Simplified semantic versioning tag:
+    RE_VERSION = re.compile(r'''^
+        (0|[1-9][0-9]*) \. (0|[1-9][0-9]*) \. (0|[1-9][0-9]*)
+        ( - (alpha|beta|rc) \. ([1-9][0-9]*) )?
+        $''', re.VERBOSE)
+    # Environment specific tags (first deployment):
+    RE_ENV = re.compile(f"""^
+        ( {'|'.join(Environments)} ) - [0-9]{{8}} - [0-9]{{6}}
+        $""", re.VERBOSE)
+    # Rotating tags:
+    RE_ROTATING = re.compile(f"""^
+        latest- ({'|'.join(Environments)})
+        ( - [0-9]+ )?
+        $""", re.VERBOSE)
+    # Protected superset of git, ci, env, version, and rotating tags; everything else can be freely used
+    RE_RESTRICTED = re.compile(f"""^
+        (
+            git- |
+            ci- | 
+            ( {'|'.join(Environments)} ) - |
+            latest |
+            [0-9]
+        )
+        """, re.VERBOSE)
+
+    def __init__(self, argv: List[str]):
+        self.args = self.parse_args(argv)
+        self.debug(self.args)
+
+    @property
+    def client(self):
+        if self._client is None:
+            if self.args.assume_role:
+                client = boto3.client('sts')
+                response = client.assume_role(
+                    RoleArn=self.args.assume_role,
+                    RoleSessionName='tagger-session',
+                )
+                self.debug(f'assume_role: {response["AssumedRoleUser"]["Arn"]}')
+                new_session = boto3.Session(
+                    aws_access_key_id=response['Credentials']['AccessKeyId'],
+                    aws_secret_access_key=response['Credentials']['SecretAccessKey'],
+                    aws_session_token=response['Credentials']['SessionToken'],
+                )
+                self._client = new_session.client("ecr")
+            else:
+                self._client = boto3.client('ecr')
+        return self._client
+
+    def parse_args(self, argv: List[str]) -> argparse.Namespace:
+        def timestamp(t: str) -> str:
+            return datetime.datetime.strptime(t, self.TIME_FORMAT).strftime(self.TIME_FORMAT)
+
+        parser = argparse.ArgumentParser(description=__doc__.splitlines()[0],
+                                         epilog="Help for specific command: tagger COMMAND --help")
+        parser.add_argument('--repository', help='name of the repository to operate on', required=False)
+        parser.add_argument('--registry', help='id of the registry to operate on', required=False)
+        parser.add_argument('--assume-role', metavar='ROLE_ARN', help='assume role')
+        parser.add_argument('--debug', action='store_true', help='add debug output')
+        parser.add_argument('--verbose', action='store_true', help='verbose output')
+        subparsers = parser.add_subparsers(metavar='command', dest='command', required=True,
+                                           help='help with: tagger command --help')
+
+        parser_git = subparsers.add_parser(Commands.NEW_COMMIT_TAG.value, help='get a commit tag based on HEAD')
+        parser_git.set_defaults(func=self.cmd_git_tag)
+
+        parser_gt = subparsers.add_parser(Commands.GET_TAGS.value, help='get all tags of an image')
+        parser_gt.add_argument('image_tag', help='tag of image to look up')
+        parser_gt.set_defaults(func=self.cmd_get_tags)
+
+        parser_ct = subparsers.add_parser(Commands.CHECK_TAG.value,
+                                          help='check whether a tag exists (return code = 0) or not (return code = 1)')
+        parser_ct.add_argument('image_tag', help='tag of image to look up')
+        parser_ct.set_defaults(func=self.cmd_tag_exists)
+
+        parser_rt = subparsers.add_parser(Commands.FREESTYLE_TAG.value,
+                                          help='check whether a tag can be used freely (return code = 0) '
+                                               'or is restricted (return code = 1)')
+        parser_rt.add_argument('image_tag', help='tag of image to look up')
+        parser_rt.set_defaults(func=self.cmd_tag_is_freestyle)
+
+        parser_aet = subparsers.add_parser(Commands.ADD_ENV_TAG.value, help='add an environment tag')
+        parser_aet.add_argument('image_tag', help='tag of image to add the environment tag')
+        parser_aet.add_argument('--env', type=Environments, default='build', choices=[e.value for e in Environments],
+                                help='environment to use (default: "%(default)s")')
+        parser_aet.add_argument('--add-latest', metavar='NUMBER', nargs='?',
+                                type=int, default=0, const=1, choices=range(self.MAX_ROTATING_TAGS+1),
+                                help='add a "latest-<env>-0" tag and shift existing "latest" tags, i.e. '
+                                     '"latest-<env>-0" becomes "latest-<env>-1" and so on up to NUMBER tags in total. '
+                                     'If NUMBER is 1 (or omitted), add "latest-<env>" tag. '
+                                     'The default is to not add any "latest" tags')
+        parser_aet.add_argument('--timestamp', metavar='TIMESTAMP', type=timestamp,
+                                default=datetime.datetime.utcnow().strftime("%Y%m%d-%H%M%S"),
+                                help='use TIMESTAMP instead of "now"; for retro-fitting tags to an existing repository;'
+                                ' must be in the format "YYYYmmdd-HHMMSS"')
+        parser_aet.set_defaults(func=self.cmd_add_env_tag)
+
+        parser_vvt = subparsers.add_parser(Commands.VALIDATE_VERSION.value, help='validate a version')
+        parser_vvt.add_argument('version', help='version to validate')
+        parser_vvt.add_argument('--no-alpha', action='store_true', help='fail if version is alpha')
+        parser_vvt.add_argument('--no-beta', action='store_true', help='fail if version is beta')
+        parser_vvt.add_argument('--no-rc', action='store_true', help='fail if version is rc')
+        parser_vvt.set_defaults(func=self.cmd_validate_version)
+
+        parser_at = subparsers.add_parser(Commands.ADD_TAG.value, help='add an new tag')
+        parser_at.add_argument('image_tag', help='tag of image to add the new tag')
+        parser_at.add_argument('new_tag', help='tag to add')
+        parser_at.add_argument('--mutable', default='auto', choices=[o.value for o in MutabilityOpts],
+                               help='treat new_tag as mutable; version tags can not be mutable; default: %(default)s')
+        parser_at.set_defaults(func=self.cmd_add_tag)
+
+        parser_lt = subparsers.add_parser(Commands.LIST_TAGS.value, help='list all tags in a table')
+        parser_lt.set_defaults(func=self.cmd_list_tags)
+
+        parser_st = subparsers.add_parser(Commands.SELF_TEST.value, help='run the self test')
+        parser_st.add_argument('--verbose', action='store_true', default=False, help='verbose test output')
+        parser_st.set_defaults(func=self.cmd_selftest)
+
+        args = parser.parse_args(args=argv)
+
+        if not args.registry:
+            args.registry = os.environ.get('TAGGER_REGISTRY')
+        if not args.repository:
+            args.repository = os.environ.get('TAGGER_REPOSITORY')
+        if not args.assume_role:
+            args.assume_role = os.environ.get('TAGGER_ASSUME_ROLE')
+        if not args.debug:
+            args.debug = bool(os.environ.get('TAGGER_DEBUG'))
+
+        return args
+
+    def assume_role(self):
+        if not self.args.assume_role:
+            return
+
+    @staticmethod
+    def timestamp() -> str:
+        return datetime.datetime.utcnow().strftime("%Y%m%d-%H%M%S")
+
+    def debug(self, message):
+        if self.args.debug:
+            print(message, file=sys.stderr, flush=True)
+
+    @staticmethod
+    def cmd_git_tag() -> str:
+        """
+        Returns a git commit tag from the current git commit
+
+        >>> tag = Tagger.cmd_git_tag()
+        >>> Tagger.is_id_tag(tag)
+        True
+        """
+        child = subprocess.run(['git', 'rev-parse', '--short=8', 'HEAD'], stdout=subprocess.PIPE, check=True, text=True)
+        return f'git-{child.stdout.strip()}'
+
+    @classmethod
+    def is_version_tag(cls, tag: str) -> bool:
+        """
+        Returns whether tag is a simplified semantic versioning tag.
+
+        >>> Tagger.is_version_tag('2.0.3-alpha.4')
+        True
+        >>> Tagger.is_version_tag('2.0.3-a4')
+        False
+        >>> Tagger.is_version_tag('02.00.01')
+        False
+        >>> Tagger.is_version_tag('v1.2.3')
+        False
+        """
+        return bool(cls.RE_VERSION.search(tag))
+
+    @classmethod
+    def is_id_tag(cls, tag: str) -> bool:
+        """
+        Returns whether tag is a commit tag.
+
+        >>> Tagger.is_id_tag('git-abc123df')
+        True
+        >>> Tagger.is_id_tag('ci-123456789')
+        """
+        return bool(cls.RE_ID_TAG.search(tag))
+
+    @classmethod
+    def is_env_tag(cls, tag: str) -> bool:
+        return bool(cls.RE_ENV.search(tag))
+
+    @classmethod
+    def is_rotating_tag(cls, tag: str) -> bool:
+        """
+        Returns whether tag is a rotating tag.
+
+        >>> Tagger.is_rotating_tag('latest-build')
+        True
+        >>> Tagger.is_rotating_tag('latest-bob')
+        False
+        """
+        return bool(cls.RE_ROTATING.search(tag))
+
+    @classmethod
+    def is_special_tag(cls, tag: str) -> bool:
+        return (cls.is_id_tag(tag) or
+                cls.is_version_tag(tag) or
+                cls.is_env_tag(tag) or
+                cls.is_rotating_tag(tag))
+
+    @classmethod
+    def is_restricted_tag(cls, tag: str) -> bool:
+        """
+        Returns True if a tag "looks like" a special tag.
+
+        Only non-restricted tags are free for general use
+        (all special tags are automatic).
+
+        >>> Tagger.is_restricted_tag('latest-gossip')
+        True
+        >>> Tagger.is_restricted_tag('produce')
+        False
+        >>> Tagger.is_restricted_tag('dev-new_feature')
+        True
+        >>> Tagger.is_restricted_tag('development-new_feature')
+        False
+        >>> Tagger.is_restricted_tag('v1.2.3')
+        False
+        """
+        return bool(cls.RE_RESTRICTED.search(tag))
+
+    @classmethod
+    def sort_env_tags(cls, tags: List[str]) -> List[str]:
+        """
+        Sort env tags by env order
+
+        >>> Tagger.sort_env_tags(['prod-123', 'dev-234', 'build-345', 'uat-456'])
+        ['build-345', 'dev-234', 'uat-456', 'prod-123']
+        """
+        return sorted(tags, key=lambda x: (Environments(x.split('-')[0]).ord(), x))
+
+    @classmethod
+    def sort_rotating_tags(cls, tags: List[str]) -> List[str]:
+        """
+        Sort latest tags by env order
+
+        >>> Tagger.sort_rotating_tags(['latest-prod-1', 'latest-dev-2', 'latest-build', 'latest-uat-4'])
+        ['latest-build', 'latest-dev-2', 'latest-uat-4', 'latest-prod-1']
+        """
+        return sorted(tags, key=lambda x: (Environments(x.split('-')[1]).ord(), x))
+
+    @classmethod
+    def sort_version_tags(cls, tags: List[str]) -> List[str]:
+        return sorted(tags, key=SemVers, reverse=True)
+
+    def cmd_get_tags(self) -> List[str]:
+        return self._get_tags(self.args.image_tag)
+
+    def _get_tags(self, tag: str) -> List[str]:
+        try:
+            response = self.client.describe_images(
+                registryId=self.args.registry,
+                repositoryName=self.args.repository,
+                imageIds=[{'imageTag': tag}],
+            )
+            self.debug(f'get_tags: {response}')
+        except self.client.exceptions.ImageNotFoundException:
+            raise ValueError(f'Tag not found: {tag}')
+        return sorted(response['imageDetails'][0]['imageTags'])
+
+    def cmd_tag_exists(self) -> None:
+        sys.exit(0 if self._tag_exists(self.args.image_tag) else 1)
+
+    def _tag_exists(self, image_tag: str) -> bool:
+        try:
+            self._get_tags(image_tag)
+        except ValueError:
+            return False
+        else:
+            return True
+
+    def cmd_tag_is_freestyle(self) -> None:
+        sys.exit(0 if not self.is_restricted_tag(self.args.image_tag) else 1)
+
+    def cmd_add_tag(self) -> str:
+        if self.is_restricted_tag(self.args.new_tag):
+            # version tag
+            if not self.is_version_tag(self.args.new_tag):
+                raise ValueError(f'Tag is not a Sematic Version: {self.args.new_tag}')
+            if self.args.mutable == MutabilityOpts.YES:
+                raise ValueError(f'Version tag can not be mutable: {self.args.new_tag}')
+            mutable = False
+        else:
+            # free style
+            mutable = self.args.mutable in [MutabilityOpts.YES, MutabilityOpts.AUTO]
+        if not mutable and self._tag_exists(self.args.new_tag):
+            raise ValueError(f'Tag exists: {self.args.new_tag}')
+        return self._add_tag(self.args.image_tag, self.args.new_tag, mutable)
+
+    def _add_tag(self, image_tag: str, new_tag: str, switch_mutability=False) -> str:
+
+        try:
+            response = self.client.batch_get_image(
+                registryId=self.args.registry,
+                repositoryName=self.args.repository,
+                imageIds=[{'imageTag': image_tag}],
+                acceptedMediaTypes=['application/vnd.docker.distribution.manifest.v2+json'],
+            )
+            self.debug(response)
+            manifest = response['images'][0]['imageManifest']
+        except IndexError:
+            raise ValueError(f'Tag not found: {image_tag}')
+
+        if switch_mutability:
+            with self.immutability_turned_off():
+                response = self.client.put_image(
+                    registryId=self.args.registry,
+                    repositoryName=self.args.repository,
+                    imageManifest=manifest,
+                    imageTag=new_tag,
+                )
+                self.debug(response)
+        else:
+            response = self.client.put_image(
+                registryId=self.args.registry,
+                repositoryName=self.args.repository,
+                imageManifest=manifest,
+                imageTag=new_tag,
+            )
+            self.debug(response)
+        return new_tag
+
+    @contextlib.contextmanager
+    def immutability_turned_off(self):
+        response = self.client.put_image_tag_mutability(
+            registryId=self.args.registry,
+            repositoryName=self.args.repository,
+            imageTagMutability='MUTABLE',
+        )
+        self.debug(response)
+        yield
+        response = self.client.put_image_tag_mutability(
+            registryId=self.args.registry,
+            repositoryName=self.args.repository,
+            imageTagMutability='IMMUTABLE',
+        )
+        self.debug(response)
+
+    def cmd_add_env_tag(self) -> str:
+        new_tags = []
+
+        existing_tags = self.cmd_get_tags()
+        same_env = [tag for tag in existing_tags if tag.startswith(f'{self.args.env}-')]
+        if same_env:
+            new_tags.append(same_env[0])
+        else:
+            new_tag = f'{self.args.env}-{self.timestamp()}'
+            self._add_tag(self.args.image_tag, new_tag)
+            new_tags.append(new_tag)
+
+        if self.args.add_latest > 0:
+            if self.args.add_latest == 1:
+                latest_tags = [f'latest-{self.args.env}']
+                delete_tags = [f'latest-{self.args.env}-{n}' for n in range(self.MAX_ROTATING_TAGS)]
+            else:
+                latest_tags = [f'latest-{self.args.env}-{n}' for n in range(self.args.add_latest)]
+                delete_tags = ([f'latest-{self.args.env}'] +
+                               [f'latest-{self.args.env}-{n}'
+                                for n in range(self.args.add_latest, self.MAX_ROTATING_TAGS)])
+            if latest_tags[0] not in existing_tags:  # deploying the same image again?
+                with self.immutability_turned_off():
+                    self._shift_tags([self.args.image_tag] + latest_tags)
+                self._delete_tags(delete_tags)
+                new_tags.append(latest_tags[0])
+
+        return ' '.join(new_tags)
+
+    def _shift_tags(self, tags: List[str]):
+        """
+        Adds labels[i+1] to image labels[i]
+        """
+        if len(tags) < 2:
+            return
+        for i in range(len(tags) - 1, 0, -1):
+            old_owner = tags[i]
+            new_owner = tags[i - 1]
+            if self._tag_exists(new_owner):
+                try:
+                    self._add_tag(new_owner, old_owner)
+                except self.client.exceptions.ImageAlreadyExistsException as exc:
+                    # inconsistent state due to exception in a previous run,
+                    # like latest-0, latest-1 on the same image
+                    print(f"{exc.__class__.__name__}: {exc}", file=sys.stderr)
+
+    def _delete_tags(self, tags: List[str]):
+        response = self.client.batch_delete_image(
+            registryId=self.args.registry,
+            repositoryName=self.args.repository,
+            imageIds=[{"imageTag": tag} for tag in tags],
+        )
+        self.debug(response)
+
+    def cmd_validate_version(self):
+        try:
+            if not self.is_version_tag(self.args.version):
+                raise ValueError(f"not a valid simplified semantic version: {self.args.version}")
+            pre_release_type = SemVers(self.args.version).pre_release_type
+            if self.args.no_alpha and pre_release_type == 'alpha':
+                raise ValueError(f"alpha pre-release versions are not allowed: {self.args.version}")
+            if self.args.no_beta and pre_release_type == 'beta':
+                raise ValueError(f"beta pre-release versions are not allowed: {self.args.version}")
+            if self.args.no_rc and pre_release_type == 'rc':
+                raise ValueError(f"rc pre-release versions are not allowed: {self.args.version}")
+        except ValueError as exc:
+            print(exc, file=sys.stderr)
+            sys.exit(os.EX_DATAERR)
+
+    def cmd_list_tags(self) -> None:
+        response = self.client.describe_images(registryId=self.args.registry, repositoryName=self.args.repository)
+        images = sorted(
+            [Image(pushed_at=x['imagePushedAt'], tags=sorted(x['imageTags']))
+             for x in response['imageDetails']],
+            key=lambda x: x.pushed_at, reverse=True)
+
+        headers = ['Pushed', 'Versions', 'Commit', 'First deployed', 'Latest deployed', 'Others']
+        data = [[
+            image.pushed_at.strftime('%Y%m%d-%H%M%S'),
+            ' '.join(self.sort_version_tags(image.versions)),
+            ' '.join(image.id_tags),
+            ' '.join(self.sort_env_tags(image.env_tags)),
+            ' '.join(self.sort_rotating_tags(image.latest_tags)),
+            ' '.join(image.other_tags),
+        ] for image in images]
+        table = [headers] + data
+
+        if not self.args.verbose:
+            table = [itemgetter(1, 4)(x) for x in table]
+
+        self.print_table(table)
+
+    # noinspection StrFormat
+    @staticmethod
+    def print_table(data: List[List[str]]):
+        widths = [0] * len(data[0])
+        for c in range(len(widths)):
+            widths[c] = max(len(row[c]) for row in data)
+        row_format = ' | '.join([f"{{:<{widths[c]}}}" for c in range(len(widths))])
+
+        print(row_format.format(*data[0]))
+        print(row_format.format(*['=' * w for w in widths]).replace(' ', '='))
+        for row in data[1:]:
+            print(row_format.format(*row))
+
+    def cmd_selftest(self):
+        import doctest
+        doctest.testmod(exclude_empty=True, verbose=self.args.verbose)
+
+    def run(self):
+        if (result := self.args.func()) is not None:
+            print(result)
+
+
+def main():
+    tagger = Tagger(sys.argv[1:])
+    if tagger.args.debug:
+        tagger.run()
+        sys.exit(os.EX_OK)
+    try:
+        tagger.run()
+    except ValueError as exc:
+        print(f"{exc.__class__.__name__}: {exc}", file=sys.stderr)
+        sys.exit(os.EX_DATAERR)
+    except Exception as exc:
+        print(f"{exc.__class__.__name__}: {exc}", file=sys.stderr)
+        sys.exit(os.EX_SOFTWARE)
+    else:
+        sys.exit(os.EX_OK)
+
+
+if __name__ == '__main__':
+    main()
+    # import cProfile
+    # cProfile.run('main()', sort='cumtime')

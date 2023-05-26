@@ -13,15 +13,18 @@ variables:
   CI_DEBUG_TRACE: "false"
   AWS_ASSUME_ROLE: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/CIDeploypanelapp"
   WORKFLOW_NAME: ''  # use default
+  TAGGER_REGISTRY: $ECR_ACCOUNT
+  TAGGER_REPOSITORY: panelapp
+#  TAGGER_DEBUG: 'yes'
   env_name:
     description: "Environment to target"
     value: "dev"
   version:
     description: "Version to deploy"
     value: "3.4.0a9"
-  infra_branch:
-    value: main
-    description: "Infra branch to use (only change for infra development)"
+  infra_version:
+    description: "Infra version (tag or branch) to use"
+    value: 2.0.0-alpha.2
 
 stages:
   - test
@@ -39,25 +42,20 @@ default:
     name: $DOCKER_TERRAFORM
     entrypoint: ["/bin/sh", "-c"]
   before_script:
-    - apk --no-cache add --update python3 curl jq aws-cli
-    - python3 -m venv .venv
-    - source .venv/bin/activate
-    - pip install boto3==1.21.1
+    - apk --no-cache add --update python3 curl jq aws-cli py3-boto3
 
 .tests:
   image: $DOCKER_PYTHON
   stage: test
   rules:
-    - if: $CI_MERGE_REQUEST_ID
+    - if: $TEST
 
 code_quality:
   extends: .tests
   artifacts:
     paths: [gl-code-quality-report.json]
   rules:
-    - if: "$CODE_QUALITY_DISABLED"
-      when: never
-    - if: $CI_MERGE_REQUEST_ID
+    - if: $TEST
 
 # Code checks
 ## run unit and integration tests
@@ -87,9 +85,6 @@ code_test:
     - pip install pytest-runner
   script:
     - pytest --cov-report term --cov-report xml
-  rules:
-    - if: $NIGHTLY_TEST == "true" && $CI_PIPELINE_SOURCE == "schedule"
-    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
 
 ## Linting, formatting, etc
 import_sorting:
@@ -120,29 +115,21 @@ image_build:
         - "http://dockerhubcache.shared-services.aws.gel.ac:5002"
   stage: image_build
   before_script:
-    - apk add aws-cli
-    - apk add jq
+    - apk add aws-cli jq py3-boto3
     - source scripts/assume_role.sh
   script:
-    # installing py-setuptools to extract the name and version
-    - apk -U add py-setuptools make
-    - echo $CI_COMMIT_TAG > ./VERSION
-    - export PACKAGE_NAME=$(python3 setup.py --name)
-    - export PACKAGE_VERSION=$(python3 setup.py --version)
-    # Check whether the Package Version matches with the TAG version
-    #- (if [ PACKAGE_VERSION = $CI_COMMIT_TAG ]; then /bin/true; echo "TAG and file Version matches"; else echo "Error!! TAG NAME AND Version file did not Match";/bin/false; fi)
-    # Build the docker image
-    - docker build -t ${PACKAGE_NAME} --file ./docker/cloud/Dockerfile .
-    # login into ECR to push the images
-    - aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin "${ECR_REPOSITORY}"
-    # Tag the images with Version and push them to ECR
-    - docker tag ${PACKAGE_NAME} ${ECR_REPOSITORY}/${PACKAGE_NAME}:${PACKAGE_VERSION}
-    - docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}:${PACKAGE_VERSION}
-    # Tag images as latest and push them to ECR
-    #- docker tag ${PACKAGE_NAME} ${ECR_REPOSITORY}/${PACKAGE_NAME}:latest
-    #- docker push ${ECR_REPOSITORY}/${PACKAGE_NAME}:latest
+    - build_tag="ci-$CI_JOB_ID"
+    - '(scripts/tagger validate-version "$CI_COMMIT_TAG" && ! scripts/tagger tag-exists "$CI_COMMIT_TAG") || scripts/tagger freestyle-tag "$CI_COMMIT_TAG"'
+    - aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin "$ECR_REPOSITORY"
+    - echo "${CI_COMMIT_TAG}" > ./VERSION
+    - docker build -t "$ECR_REPOSITORY/$PACKAGE_NAME:$build_tag" --file ./docker/cloud/Dockerfile .
+    - docker push "$ECR_REPOSITORY/$PACKAGE_NAME:$build_tag"
+    - scripts/tagger add-env-tags --env=build --add-latest=1 "$build_tag"
+    - scripts/tagger add-tag "$build_tag" "$CI_COMMIT_TAG"
+  variables:
+    PACKAGE_NAME: panelapp
   rules:
-    - if: $CI_COMMIT_TAG =~ /\d+\.\d+\.\d+(\w+)?$/
+    - if: $CI_COMMIT_TAG != null
 
 # Deploy all the things
 plan:
@@ -153,13 +140,24 @@ plan:
   dependencies:
     - image_build
   script:
-    - git clone --single-branch --branch "$infra_branch" https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-    - cd $PANELAPP_TF_DIR
-    - terraform init -backend-config="../config/$env_name/panelapp-backend.conf"
-    - terraform plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag=$version -out=plan.tfplan
+    - printf '###\n### checking application version\n###\n'
+    - scripts/tagger tag-exists "$version"
+    - test "$env_name" != e2e || scripts/tagger validate-version "$version"
+    - test "$env_name" != uat || scripts/tagger validate-version --no-alpha --no-beta "$version"
+    - test "$env_name" != prod || scripts/tagger validate-version --no-alpha --no-beta --no-rc "$version"
+    - printf '###\n### checking infrastructure version\n###\n'
+    - test "$env_name" != e2e || scripts/tagger validate-version "$infra_version"
+    - test "$env_name" != uat || scripts/tagger validate-version --no-alpha --no-beta "$infra_version"
+    - test "$env_name" != prod || scripts/tagger validate-version --no-alpha --no-beta --no-rc "$infra_version"
+    - printf '###\n### terraform plan\n###\n'
+    - git clone --single-branch --branch "$infra_version" https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
+    - terraform -chdir=$PANELAPP_TF_DIR init -backend-config="../config/$env_name/panelapp-backend.conf"
+    - terraform -chdir=$PANELAPP_TF_DIR plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag="$version" -out=plan.tfplan
     - "printf '### Environment: %s\n### Version: %s\n' \"$env_name\" \"$version\""
+  variables:
+    TAGGER_ASSUME_ROLE: $AWS_ASSUME_ROLE
   rules:
-    - if: $version =~ /^\d+\.\d+\.\d+(\w+)?$/
+    - if: $CI_PIPELINE_SOURCE == "web"
   artifacts:
     paths:
       - $PANELAPP_TF_DIR/.terraform*
@@ -177,15 +175,16 @@ apply:
   dependencies:
     - plan
   script:
-    - export WORKING_DIR=$(pwd)
-    - cd $PANELAPP_TF_DIR 
-    - terraform apply plan.tfplan
+    - terraform -chdir=$PANELAPP_TF_DIR apply plan.tfplan
+    - scripts/tagger add-env-tags --env="$env_name" --add-latest=3 "$version"
+    - scripts/tagger --verbose list-tags
     - sleep 30
-    - cd  "$WORKING_DIR"
     - source scripts/assume_role.sh
     - python3 panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-$env_name -panelapp
     - sleep 30
     - python3 panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-$env_name -panelapp
+  variables:
+    TAGGER_ASSUME_ROLE: $AWS_ASSUME_ROLE
   rules:
-    - if: $version =~ /^\d+\.\d+\.\d+(\w+)?$/
+    - if: $CI_PIPELINE_SOURCE == "web"
       when: manual

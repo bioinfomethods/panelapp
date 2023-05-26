@@ -4,32 +4,36 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
     # MRs always run on dev environment
-    - if: $env_name == "dev" && $CI_PIPELINE_SOURCE != "web"
+    - if: $env_name == "dev" && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG == null
       variables:
         AWS_ACCOUNT_ID: "577192787797"
+        TEST: "yes"
+    - if: $env_name == "dev" && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG
+      variables:
+        AWS_ACCOUNT_ID: "577192787797"
+        version: $CI_COMMIT_TAG
     - if: $env_name == "dev" && $CI_PIPELINE_SOURCE == "web"
       variables:
         AWS_ACCOUNT_ID: "577192787797"
-        WORKFLOW_NAME: "Deployment [$env_name] $version"
+        WORKFLOW_NAME: "Deploying app: $version, infra: $infra_version -> $env_name"
     - if: $env_name == "test" && $CI_PIPELINE_SOURCE == "web"
       variables:
         AWS_ACCOUNT_ID: "455662437776"
-        WORKFLOW_NAME: "Deployment [$env_name] $version"
+        WORKFLOW_NAME: "Deploying app: $version, infra: $infra_version -> $env_name"
     # UAT, E2E, PreProd and Prod deployments must be triggered manually and from a protected branch
+    - if: $env_name == "e2e" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"
+      variables:
+        AWS_ACCOUNT_ID: "875605549679"
+        WORKFLOW_NAME: "Deploying app: $version, infra: $infra_version -> $env_name"
     - if: $env_name == "uat" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"
       variables:
         AWS_ACCOUNT_ID: "400119055163"
-        WORKFLOW_NAME: "Deployment [$env_name] $version"
-    # && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"
-    - if: $env_name == "e2e"
-      variables:
-        AWS_ACCOUNT_ID: "875605549679"
-        WORKFLOW_NAME: "Deployment [$env_name] $version"
+        WORKFLOW_NAME: "Deploying app: $version, infra: $infra_version -> $env_name"
     - if: $env_name == "preprod" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"
       variables:
         AWS_ACCOUNT_ID: "960907853420"
-        WORKFLOW_NAME: "Deployment [$env_name] $version"
+        WORKFLOW_NAME: "Deploying app: $version, infra: $infra_version -> $env_name"
     - if: $env_name == "prod" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"
       variables:
         AWS_ACCOUNT_ID: "876663091628"
-        WORKFLOW_NAME: "Deployment [$env_name] $version"
+        WORKFLOW_NAME: "Deploying app: $version, infra: $infra_version -> $env_name"
