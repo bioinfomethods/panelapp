@@ -157,7 +157,7 @@ plan:
   variables:
     TAGGER_ASSUME_ROLE: $AWS_ASSUME_ROLE
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null
   artifacts:
     paths:
       - $PANELAPP_TF_DIR/.terraform*
@@ -186,5 +186,5 @@ apply:
   variables:
     TAGGER_ASSUME_ROLE: $AWS_ASSUME_ROLE
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null
       when: manual
