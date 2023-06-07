@@ -5,37 +5,50 @@ Tool to manage Docker image tags for ECR cleanup.
 # Requirements
     * Python 3.8+
     * boto3
-    * git
 
 Typical workflows:
 
 Building:
 
-    git_tag=$(scripts/tagger get-commit-tag)
-    if ! scripts/tagger --repository="$PACKAGE_NAME" tag-exists "$git_tag"; then
+    Depending on whether the application version is hardcoded at (a) commit time, (b) build time, or (c) deployment.
+
+
+    (a)
+
+    build_tag="git-$CI_COMMIT_SHORT_SHA"
+    aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin "$REGISTRY"
+    docker build -t "$REGISTRY/$REPOSITORY:$build_tag" .
+    docker push "$REGISTRY/$REPOSITORY:$build_tag"
+    scripts/tagger add-env-tags --env=build --add-latest "$build_tag"
+    scripts/tagger add-tag "$build_tag" "$VERSION"
+
+    (b)
+
+    build_tag="ci-$CI_JOB_ID"
+    # rest same as (a)
+
+    (c)
+
+    build_tag="git-$CI_COMMIT_SHORT_SHA"
+    # lazy building
+    if ! scripts/tagger --repository="$REPOSITORY" tag-exists "$build_tag"; then
         aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin "$REGISTRY"
-        docker build -t "$REGISTRY/$PACKAGE_NAME:$git_tag" --file ./Dockerfile .
-        docker push "$REGISTRY/$PACKAGE_NAME:$git_tag"
-        scripts/tagger --repository="$PACKAGE_NAME" add-env-tags --env=build --add-latest "$git_tag"
+        docker build -t "$REGISTRY/$REPOSITORY:$build_tag" .
+        docker push "$REGISTRY/$REPOSITORY:$build_tag"
+        scripts/tagger add-env-tags --env=build --add-latest "$build_tag"
     fi
+    scripts/tagger add-tag "$build_tag" "$VERSION"
 
-Add a version:
 
-    scripts/tagger validate-version "$VERSION"
-    scripts/tagger --repository="$PACKAGE_NAME" add-tag "$git_tag" "$VERSION"
-
-Add a non-standard/development version:
-
-    scripts/tagger --repository="$PACKAGE_NAME" add-tag --mutable "$git_tag" "$VERSION"
 
 Deploy to environment
 
     # plan
-    scripts/tagger validate-version-tag $version
+    scripts/tagger validate-version-tag $VERSION
     terraform plan -var version=$version -out=plan.tfplan
     # apply
     terraform apply plan.tfplan
-    scripts/tagger --repository=$REPOSITORY add-env-tags --env=$env --add-latest=3 $version
+    scripts/tagger add-env-tags --env=$env --add-latest=3 "$VERSION"
 
 """
 
@@ -47,7 +60,6 @@ import enum
 import functools
 import os
 import re
-import subprocess
 import sys
 from operator import itemgetter
 from typing import (
@@ -76,7 +88,6 @@ class Commands(str, enum.Enum):
     CHECK_TAG = 'tag-exists'
     ADD_ENV_TAG = 'add-env-tags'
     ADD_TAG = 'add-tag'
-    NEW_COMMIT_TAG = 'get-commit-tag'
     VALIDATE_VERSION = 'validate-version'
     FREESTYLE_TAG = 'freestyle-tag'
     SELF_TEST = 'self-tests'
@@ -283,9 +294,6 @@ class Tagger:
         subparsers = parser.add_subparsers(metavar='command', dest='command', required=True,
                                            help='help with: tagger command --help')
 
-        parser_git = subparsers.add_parser(Commands.NEW_COMMIT_TAG.value, help='get a commit tag based on HEAD')
-        parser_git.set_defaults(func=self.cmd_git_tag)
-
         parser_gt = subparsers.add_parser(Commands.GET_TAGS.value, help='get all tags of an image')
         parser_gt.add_argument('image_tag', help='tag of image to look up')
         parser_gt.set_defaults(func=self.cmd_get_tags)
@@ -351,10 +359,6 @@ class Tagger:
 
         return args
 
-    def assume_role(self):
-        if not self.args.assume_role:
-            return
-
     @staticmethod
     def timestamp() -> str:
         return datetime.datetime.utcnow().strftime("%Y%m%d-%H%M%S")
@@ -363,17 +367,6 @@ class Tagger:
         if self.args.debug:
             print(message, file=sys.stderr, flush=True)
 
-    @staticmethod
-    def cmd_git_tag() -> str:
-        """
-        Returns a git commit tag from the current git commit
-
-        >>> tag = Tagger.cmd_git_tag()
-        >>> Tagger.is_id_tag(tag)
-        True
-        """
-        child = subprocess.run(['git', 'rev-parse', '--short=8', 'HEAD'], stdout=subprocess.PIPE, check=True, text=True)
-        return f'git-{child.stdout.strip()}'
 
     @classmethod
     def is_version_tag(cls, tag: str) -> bool:
