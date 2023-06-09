@@ -21,10 +21,10 @@ variables:
     value: "dev"
   version:
     description: "Version to deploy"
-    value: "3.4.0-alpha.12"
+    value: 3.4.0-alpha.12
   infra_version:
     description: "Infra version (tag or branch) to use"
-    value: 2.0.0-alpha.2
+    value: 2.0.0-alpha.4
 
 stages:
   - test
