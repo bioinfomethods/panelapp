@@ -3,7 +3,6 @@
 import os
 
 from setuptools import (
-    find_packages,
     setup,
 )
 
@@ -93,7 +92,7 @@ setup(
         "python-jose==3.3.0",
         "python-json-logger==2.0.4",
         "pytz==2022.7.1",
-        "requests==2.28.2",
+        "requests==2.31.0",
         "swagger-spec-validator==3.0.3",
     ],
 )

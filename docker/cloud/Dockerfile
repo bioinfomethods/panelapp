@@ -1,4 +1,4 @@
-FROM python:3.8-alpine3.17
+FROM python:3.8.17-alpine3.18
 
 RUN mkdir -p /app/panelapp
 
@@ -15,6 +15,7 @@ COPY --chown=app:app ./deploy/gunicorn_config.py  /app/
 WORKDIR /app
 RUN apk add --no-cache postgresql-libs curl jpeg-dev zlib-dev && \
     apk add --no-cache --virtual .build-deps gcc musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev && \
+    pip install --upgrade setuptools==67.8.0 && \
     pip install . && \
     apk --purge del .build-deps && \
     chown -R app:app /usr/local/lib/python3.*
