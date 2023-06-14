@@ -105,6 +105,29 @@ formatter:
   script:
     - black . --check
 
+trivy:
+  stage: test
+  image:
+    name: aquasec/trivy:0.42.1
+    entrypoint: [""]
+  script:
+    - trivy fs --exit-code 0 --cache-dir .trivycache/ --severity MEDIUM,HIGH,CRITICAL --ignore-unfixed --format template --template "@/contrib/junit.tpl" -o trivy.junit.xml .
+    - trivy fs --exit-code 1 --cache-dir .trivycache/ --severity CRITICAL --ignore-unfixed --no-progress .
+    - if [[ -s .trivyignore ]]; then echo ".trivyignore is not empty" ; cat .trivyignore ; exit 2 ; fi
+  allow_failure:
+    exit_codes:
+      - 2 # warn when .trivyignore exists and is not empty
+  rules:
+    - if: $TEST
+      allow_failure: true
+      when: never
+  artifacts:
+    when: always
+    reports:
+      junit: "trivy.junit.xml"
+    paths:
+      - "trivy.junit.xml"
+
 # Build docker image
 image_build:
   image: docker:stable
