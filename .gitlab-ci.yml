@@ -21,7 +21,7 @@ variables:
     value: "dev"
   version:
     description: "Version to deploy"
-    value: 3.4.0-alpha.12
+    value: 3.4.0-alpha.14
   infra_version:
     description: "Infra version (tag or branch) to use"
     value: 2.0.0-alpha.4
@@ -189,6 +189,42 @@ plan:
       - $PANELAPP_TF_DIR/templates/*
       - panelapp-infra/*.py
 
+scan:
+  stage: plan
+  dependencies:
+    - image_build
+  environment:
+    name: $env_name
+  image: 877059142592.dkr.ecr.eu-west-2.amazonaws.com/ce_infra_cicd:v1.0.6
+  before_script:
+    - apk add aws-cli jq py3-boto3
+    - source scripts/assume_role.sh
+  script:
+    - aws ecr describe-image-scan-findings --repository-name "$PACKAGE_NAME" --image-id imageTag="$version" | tee "inspector_findings_$version.json"
+    - count_findings () { jq ".imageScanFindings.findingSeverityCounts.$1 // 0" "inspector_findings_$version.json"; }
+    - |
+      if [ "$(count_findings CRITICAL)" -gt 0 ]; then
+        echo -e "\e[91mThe image "$PACKAGE_NAME" "$version" has $(count_findings CRITICAL) CRITICAL findings.\e[0m"
+        exit 101
+      elif [ "$(count_findings HIGH)" -gt 0 ]; then
+        echo -e "\e[93mThe image "$PACKAGE_NAME:$version" has $(count_findings HIGH) HIGH findings.\e[0m"
+        exit 102
+      else
+        echo -e "\e[92mAll good!\e[0m"
+      fi
+  variables:
+    PACKAGE_NAME: panelapp
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null
+  allow_failure:
+    exit_codes:
+      - 101
+      - 102
+  artifacts:
+    paths:
+      - inspector_findings_$version.json
+    when: on_failure
+
 apply:
   stage: apply
   extends:
@@ -197,6 +233,7 @@ apply:
     name: $env_name
   dependencies:
     - plan
+    - scan
   script:
     - terraform -chdir=$PANELAPP_TF_DIR apply plan.tfplan
     - scripts/tagger add-env-tags --env="$env_name" --add-latest=3 "$version"
