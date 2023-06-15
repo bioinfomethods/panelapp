@@ -18,13 +18,19 @@ variables:
 #  TAGGER_DEBUG: 'yes'
   env_name:
     description: "Environment to target"
-    value: "dev"
+    value: dev
+    options:
+      - dev
+      - test
+      - e2e
+      - uat
+      - prod
   version:
     description: "Version to deploy"
-    value: 3.4.0-alpha.14
+    value: 3.4.0-alpha.20
   infra_version:
     description: "Infra version (tag or branch) to use"
-    value: 2.0.0-alpha.4
+    value: 2.0.0-alpha.5
 
 stages:
   - test
@@ -240,9 +246,9 @@ apply:
     - scripts/tagger --verbose list-tags
     - sleep 30
     - source scripts/assume_role.sh
-    - python3 panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-$env_name -panelapp
+    - panelapp-infra/run-ecs-task.py panelapp-migrate-panelapp-$env_name panelapp-collectstatic-panelapp-$env_name
     - sleep 30
-    - python3 panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-$env_name -panelapp
+    - test "$env_name" = "prod" || panelapp-infra/run-ecs-task.py panelapp-datacleanup-$env_name
   variables:
     TAGGER_ASSUME_ROLE: $AWS_ASSUME_ROLE
   rules:
