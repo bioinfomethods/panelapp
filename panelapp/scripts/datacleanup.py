@@ -45,7 +45,7 @@ def main():
         all_users += 1
         if user.is_staff and user.is_active:
             continue
-        if user.username in ['TEST_Curator', 'TEST_Reviewer']:
+        if user.username in ["TEST_Curator", "TEST_Reviewer"]:
             continue
         passive_users += 1
         # user.username = f'user-{user.id}'
@@ -58,7 +58,12 @@ def main():
             passwords_disabled += 1
         user.save()
     print(f"Users passive/all: {passive_users}/{all_users}", file=sys.stderr)
-    print(f"Emails/passwords changed: {emails_changed}/{passwords_disabled}", file=sys.stderr, flush=True)
+    print(
+        f"Emails/passwords changed: {emails_changed}/{passwords_disabled}",
+        file=sys.stderr,
+        flush=True,
+    )
+
 
 # No "if __name__ == '__main__':" here as this script is piped to manage.py shell
 main()
