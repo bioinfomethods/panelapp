@@ -53,6 +53,12 @@ default:
 .tests:
   image: $DOCKER_PYTHON
   stage: test
+  services:
+    - name: $DOCKER_IN_DOCKER
+      command:
+        - "--registry-mirror"
+        - "http://dockerhubcache.shared-services.aws.gel.ac:5002"
+
   rules:
     - if: $TEST
 
