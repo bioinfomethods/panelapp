@@ -4,7 +4,8 @@ include:
 
 variables:
   DOCKER_TERRAFORM: hashicorp/terraform:1.4.6
-  DOCKER_PYTHON: python:3.8-alpine3.12
+  DOCKER_TERRAFORM_OLD: hashicorp/terraform:0.11.15
+  DOCKER_PYTHON: python:3.8.17-alpine3.18
   DOCKER_POSTGRES: postgres:14.4
   DOCKER_IN_DOCKER: docker:23.0.3-dind
   PANELAPP_TF_DIR: "panelapp-infra/terraform/panelapp/"
@@ -16,26 +17,36 @@ variables:
   ECR_REGISTRY: "${ECR_ACCOUNT_ID}.dkr.ecr.eu-west-2.amazonaws.com"
   ECR_ASSUME_ROLE: "arn:aws:iam::${ECR_ACCOUNT_ID}:role/CIDeploypanelapp"
   ECR_REPOSITORY: panelapp
-  WORKFLOW_NAME: ''  # use default
+  WORKFLOW_NAME: "Deploying app: $version, infra: $infra_version -> $deploy_name"
   TAGGER_REGISTRY: $ECR_ACCOUNT_ID
   TAGGER_REPOSITORY: $ECR_REPOSITORY
-  TAGGER_ENVIRONMENTS: "build,dev,test,e2e,uat,prod"
+  TAGGER_ENVIRONMENTS: "build,dev,dev_old,test,test_old,e2e,uat,uat_old,prod,prod_old"
 #  TAGGER_DEBUG: 'yes'
-  env_name:
-    description: "Environment to target"
+  deploy_name:
+    description: "Environment to deploy to"
     value: dev
     options:
       - dev
+      - dev_old
       - test
+      - test_old
       - e2e
       - uat
+      - uat_old
       - prod
+      - prod_old
+  env_name: $deploy_name
+  account_group: new
   version:
     description: "Version to deploy"
-    value: 3.4.0-alpha.20
-  infra_version:
+    value: 3.4.0-alpha.22
+  infra_version_new:
     description: "Infra version (tag or branch) to use"
-    value: 2.0.0-alpha.9
+    value: 2.0.0-alpha.10
+  infra_version_old:
+    description: "Infra version (tag or branch) to use"
+    value: 1.0.16-alpha.4
+  deploy_runner: pool_name:panelapp_docker
 
 stages:
   - test
@@ -47,13 +58,19 @@ default:
   tags:
     - pool_name:panelapp_docker
 
-# Common deploy functionality
-.deploy_default:
+.deploy:
   image:
     name: $DOCKER_TERRAFORM
     entrypoint: ["/bin/sh", "-c"]
+  tags:
+    - $deploy_runner
   before_script:
     - apk --no-cache add --update python3 curl jq aws-cli py3-boto3
+    - test "$account_group" = new || curl -sSf http://169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -o aws_creds
+    - test "$account_group" = new || export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' aws_creds)
+    - test "$account_group" = new || export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
+    - test "$account_group" = new || export AWS_SESSION_TOKEN=$(jq -r '.Token' aws_creds)
+    - test "$account_group" = new || export AWS_DEFAULT_REGION=$default_region
 
 .tests:
   image: $DOCKER_PYTHON
@@ -63,9 +80,16 @@ default:
       command:
         - "--registry-mirror"
         - "http://dockerhubcache.shared-services.aws.gel.ac:5002"
-
   rules:
     - if: $TEST
+
+.tag:
+  image: $DOCKER_IN_DOCKER
+  before_script:
+    - apk add aws-cli jq py3-boto3
+    - source scripts/assume_role.sh
+  variables:
+    AWS_ASSUME_ROLE: $ECR_ASSUME_ROLE
 
 code_quality:
   extends: .tests
@@ -147,7 +171,7 @@ trivy:
 
 # Build docker image
 image_build:
-  image: docker:stable
+  image: $DOCKER_IN_DOCKER
   services:
     - name: $DOCKER_IN_DOCKER
       command:
@@ -166,17 +190,16 @@ image_build:
     - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$build_tag"
     - scripts/tagger add-env-tags --env=build --add-latest=1 "$build_tag"
     - scripts/tagger add-tag "$build_tag" "$CI_COMMIT_TAG"
+  variables:
+    AWS_ASSUME_ROLE: $ECR_ASSUME_ROLE
   rules:
     - if: $CI_COMMIT_TAG != null
 
 # Deploy all the things
-plan:
+
+check_version:
   stage: plan
-  extends: .deploy_default
-  environment:
-    name: $env_name
-  dependencies:
-    - image_build
+  extends: .tag
   script:
     - printf '###\n### checking application version\n###\n'
     - scripts/tagger tag-exists "$version"
@@ -187,29 +210,15 @@ plan:
     - test "$env_name" != e2e || scripts/tagger validate-version "$infra_version"
     - test "$env_name" != uat || scripts/tagger validate-version --no-alpha --no-beta "$infra_version"
     - test "$env_name" != prod || scripts/tagger validate-version --no-alpha --no-beta --no-rc "$infra_version"
-    - printf '###\n### terraform plan\n###\n'
-    - git clone --single-branch --branch "$infra_version" https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-    - terraform -chdir=$PANELAPP_TF_DIR init -backend-config="../config/$env_name/panelapp-backend.conf"
-    - terraform -chdir=$PANELAPP_TF_DIR plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag="$version" -out=plan.tfplan
-    - "printf '### Environment: %s\n### Version: %s\n' \"$env_name\" \"$version\""
-  variables:
-    TAGGER_ASSUME_ROLE: $ECR_ASSUME_ROLE
   rules:
     - if: $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null
-  artifacts:
-    paths:
-      - $PANELAPP_TF_DIR/.terraform*
-      - $PANELAPP_TF_DIR/plan.*
-      - $PANELAPP_TF_DIR/*.zip
-      - $PANELAPP_TF_DIR/templates/*
-      - panelapp-infra/*.py
 
 scan:
   stage: plan
   dependencies:
     - image_build
   environment:
-    name: $env_name
+    name: $deploy_name
   image: 877059142592.dkr.ecr.eu-west-2.amazonaws.com/ce_infra_cicd:v1.0.6
   before_script:
     - apk add aws-cli jq py3-boto3
@@ -240,26 +249,58 @@ scan:
       - inspector_findings_$version.json
     when: on_failure
 
+plan:
+  stage: plan
+  extends: .deploy
+  environment:
+    name: $deploy_name
+  dependencies:
+    - image_build
+  script:
+    - printf '###\n### terraform plan\n###\n'
+    - git clone --single-branch --branch "$infra_version" https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
+    - cd "$PANELAPP_TF_DIR"
+    - terraform init -backend-config="../config/$env_name/panelapp-backend.conf"
+    - terraform plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag="$version" -out=plan.tfplan
+    - "printf '### Environment: %s\n### Version: %s\n' \"$deploy_name\" \"$version\""
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null
+  artifacts:
+    paths:
+      - $PANELAPP_TF_DIR/.terraform*
+      - $PANELAPP_TF_DIR/plan.*
+      - $PANELAPP_TF_DIR/*.zip
+      - $PANELAPP_TF_DIR/templates/*
+      - panelapp-infra/*.py
+
 apply:
   stage: apply
-  extends:
-    - .deploy_default
+  extends: .deploy
   environment:
-    name: $env_name
+    name: $deploy_name
   dependencies:
     - plan
     - scan
   script:
-    - terraform -chdir=$PANELAPP_TF_DIR apply plan.tfplan
-    - scripts/tagger add-env-tags --env="$env_name" --add-latest=3 "$version"
-    - scripts/tagger --verbose list-tags
-    - sleep 30
-    - source scripts/assume_role.sh
+    - cd "$PANELAPP_TF_DIR"
+    - terraform apply plan.tfplan
+    - cd -
+    - test "$account_group" = old || source scripts/assume_role.sh
+    - time aws ecs wait services-stable --cluster panelapp-cluster-$env_name --services panelapp-web-panelapp-$env_name panelapp-worker-panelapp-$env_name panelapp-worker-beat-panelapp-$env_name
     - panelapp-infra/run-ecs-task.py panelapp-migrate-panelapp-$env_name panelapp-collectstatic-panelapp-$env_name
     - sleep 30
     - test "$env_name" = "prod" || panelapp-infra/run-ecs-task.py panelapp-datacleanup-$env_name
-  variables:
-    TAGGER_ASSUME_ROLE: $ECR_ASSUME_ROLE
   rules:
     - if: $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null
       when: manual
+
+add_tags:
+  stage: apply
+  extends: .tag
+  needs:
+    - apply
+  script:
+    - scripts/tagger add-env-tags --env="$deploy_name" --add-latest=3 "$version"
+    - scripts/tagger --verbose list-tags
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null
