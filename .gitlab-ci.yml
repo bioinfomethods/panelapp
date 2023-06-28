@@ -19,6 +19,7 @@ variables:
   WORKFLOW_NAME: ''  # use default
   TAGGER_REGISTRY: $ECR_ACCOUNT_ID
   TAGGER_REPOSITORY: $ECR_REPOSITORY
+  TAGGER_ENVIRONMENTS: "build,dev,test,e2e,uat,prod"
 #  TAGGER_DEBUG: 'yes'
   env_name:
     description: "Environment to target"
