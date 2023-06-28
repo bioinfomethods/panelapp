@@ -34,7 +34,7 @@ variables:
     value: 3.4.0-alpha.20
   infra_version:
     description: "Infra version (tag or branch) to use"
-    value: 2.0.0-alpha.6
+    value: 2.0.0-alpha.9
 
 stages:
   - test

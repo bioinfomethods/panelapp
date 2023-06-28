@@ -97,17 +97,20 @@ STATIC_URL = os.getenv(
     f'https://{AWS_S3_STATICFILES_CUSTOM_DOMAIN}/{AWS_STATICFILES_LOCATION + ("/" if AWS_STATICFILES_LOCATION else "")}/',
 )
 
-# Files ACL. By default ('None') inherits bucket ACL.
+# Files ACL. By default, ('None') inherits bucket ACL.
 # Override to 'public-read' when using LocalStack
 AWS_STATICFILES_DEFAULT_ACL = os.getenv("AWS_DEFAULT_ACL", None)
 
 # Object parameters for static files.
-AWS_S3_STATICFILES_OBJECT_PARAMETERS = eval(
-    os.getenv(
-        "AWS_S3_OBJECT_PARAMETERS",
-        "{'CacheControl': 'max-age=86400', 'ServerSideEncryption': 'AES256'}",
+if os.getenv("PANELAPP_USE_AWS_S3_ENCRYPTION"):
+    AWS_S3_STATICFILES_OBJECT_PARAMETERS = eval(
+        os.getenv(
+            "AWS_S3_OBJECT_PARAMETERS",
+            "{'CacheControl': 'max-age=86400', 'ServerSideEncryption': 'AES256'}",
+        )
     )
-)
+else:
+    AWS_S3_STATICFILES_OBJECT_PARAMETERS = {"CacheControl": "max-age=86400"}
 
 # Media files
 
@@ -134,16 +137,19 @@ MEDIA_URL = os.getenv(
     f'https://{AWS_S3_MEDIAFILES_CUSTOM_DOMAIN}/{AWS_MEDIAFILES_LOCATION + ("/" if AWS_MEDIAFILES_LOCATION else "")}/',
 )
 
-# Files ACL. By default ('None') inherits bucket ACL. Override to 'public-read' for using LocalStack
+# Files ACL. By default, ('None') inherits bucket ACL. Override to 'public-read' for using LocalStack
 AWS_MEDIAFILES_DEFAULT_ACL = os.getenv("AWS_MEDIAFILES_DEFAULT_ACL", None)
 
 # Object parameters for media files.
-AWS_S3_MEDIAFILES_OBJECT_PARAMETERS = eval(
-    os.getenv(
-        "AWS_S3_OBJECT_PARAMETERS",
-        "{'CacheControl': 'max-age=86400', 'ServerSideEncryption': 'AES256'}",
+if os.getenv("PANELAPP_USE_AWS_S3_ENCRYPTION"):
+    AWS_S3_MEDIAFILES_OBJECT_PARAMETERS = eval(
+        os.getenv(
+            "AWS_S3_OBJECT_PARAMETERS",
+            "{'CacheControl': 'max-age=86400', 'ServerSideEncryption': 'AES256'}",
+        )
     )
-)
+else:
+    AWS_S3_MEDIAFILES_OBJECT_PARAMETERS = {}
 
 # (Optional) Use Cognito settings
 AWS_USE_COGNITO = os.getenv("AWS_USE_COGNITO", "false").lower() == "true"
