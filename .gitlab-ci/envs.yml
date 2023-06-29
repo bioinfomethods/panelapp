@@ -3,21 +3,11 @@ workflow:
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
-    # MRs always run on dev environment
+    # building and merging
     - if: $deploy_name == "dev" && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG == null
       variables:
         infra_version: $infra_version_new
         AWS_ACCOUNT_ID: "577192787797"
-        TEST: "yes"
-        WORKFLOW_NAME: ''  # use default
-    - if: $deploy_name == "dev_old" && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG == null
-      variables:
-        account_group: old
-        env_name: test
-        infra_version: $infra_version_old
-        DOCKER_TERRAFORM: $DOCKER_TERRAFORM_OLD
-        deploy_runner: "TF_panelapp_test"
-        AWS_ACCOUNT_ID: "234335217838"
         TEST: "yes"
         WORKFLOW_NAME: ''  # use default
     - if: $deploy_name == "dev" && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG
@@ -26,16 +16,7 @@ workflow:
         AWS_ACCOUNT_ID: "577192787797"
         version: $CI_COMMIT_TAG
         WORKFLOW_NAME: ''  # use default
-    - if: $deploy_name == "dev_old" && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG
-      variables:
-        account_group: old
-        env_name: test
-        infra_version: $infra_version_old
-        DOCKER_TERRAFORM: $DOCKER_TERRAFORM_OLD
-        deploy_runner: "TF_panelapp_test"
-        AWS_ACCOUNT_ID: "234335217838"
-        version: $CI_COMMIT_TAG
-        WORKFLOW_NAME: ''  # use default
+    # deployment
     - if: $deploy_name == "dev" && $CI_PIPELINE_SOURCE == "web"
       variables:
         infra_version: $infra_version_new

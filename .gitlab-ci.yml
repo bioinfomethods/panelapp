@@ -29,8 +29,9 @@ variables:
       - dev
       - dev_old
       - test
-      - test_old
       - e2e
+      - "--- regulated environments ---"
+      - test_old
       - uat
       - uat_old
       - prod
@@ -45,7 +46,7 @@ variables:
     value: 2.0.0-alpha.10
   infra_version_old:
     description: "Infra version (tag or branch) to use"
-    value: 1.0.16-alpha.4
+    value: 1.1.0-alpha.1
   deploy_runner: pool_name:panelapp_docker
 
 stages:
