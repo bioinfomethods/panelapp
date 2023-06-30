@@ -6,7 +6,7 @@ variables:
   DOCKER_TERRAFORM: hashicorp/terraform:1.4.6
   DOCKER_TERRAFORM_OLD: hashicorp/terraform:0.11.15
   DOCKER_PYTHON: python:3.8.17-alpine3.18
-  DOCKER_POSTGRES: postgres:14.4
+  DOCKER_POSTGRES: postgres:14.7
   DOCKER_IN_DOCKER: docker:23.0.3-dind
   PANELAPP_TF_DIR: "panelapp-infra/terraform/panelapp/"
   AWS_REGION: eu-west-2
@@ -43,10 +43,10 @@ variables:
     value: 3.4.0-alpha.22
   infra_version_new:
     description: "Infra version (tag or branch) to use"
-    value: 2.0.0-alpha.10
+    value: 2.0.0-alpha.11
   infra_version_old:
     description: "Infra version (tag or branch) to use"
-    value: 1.1.0-alpha.1
+    value: 1.1.0-alpha.2
   deploy_runner: pool_name:panelapp_docker
 
 stages:
@@ -202,12 +202,12 @@ check_version:
   stage: plan
   extends: .tag
   script:
-    - printf '###\n### checking application version\n###\n'
+    - "printf '###\n### checking application version: %s\n###\n' \"$version\""
     - scripts/tagger tag-exists "$version"
     - test "$env_name" != e2e || scripts/tagger validate-version "$version"
     - test "$env_name" != uat || scripts/tagger validate-version --no-alpha --no-beta "$version"
     - test "$env_name" != prod || scripts/tagger validate-version --no-alpha --no-beta --no-rc "$version"
-    - printf '###\n### checking infrastructure version\n###\n'
+    - "printf '###\n### checking infrastructure version: %s\n###\n' \"$infra_version\""
     - test "$env_name" != e2e || scripts/tagger validate-version "$infra_version"
     - test "$env_name" != uat || scripts/tagger validate-version --no-alpha --no-beta "$infra_version"
     - test "$env_name" != prod || scripts/tagger validate-version --no-alpha --no-beta --no-rc "$infra_version"
