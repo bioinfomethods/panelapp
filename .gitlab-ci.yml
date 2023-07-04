@@ -11,7 +11,6 @@ variables:
   PANELAPP_TF_DIR: "panelapp-infra/terraform/panelapp/"
   AWS_REGION: eu-west-2
   AWS_DEFAULT_REGION: eu-west-2
-  CI_DEBUG_TRACE: "false"
   AWS_ASSUME_ROLE: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/CIDeploypanelapp"
   ECR_ACCOUNT_ID: 577192787797
   ECR_REGISTRY: "${ECR_ACCOUNT_ID}.dkr.ecr.eu-west-2.amazonaws.com"
@@ -22,6 +21,8 @@ variables:
   TAGGER_REPOSITORY: $ECR_REPOSITORY
   TAGGER_ENVIRONMENTS: "build,dev,dev_old,test,test_old,e2e,uat,uat_old,prod,prod_old"
 #  TAGGER_DEBUG: 'yes'
+  CI_DEBUG_TRACE: "false"
+#  TF_LOG: DEBUG
   deploy_name:
     description: "Environment to deploy to"
     value: dev
@@ -30,7 +31,7 @@ variables:
       - dev_old
       - test
       - e2e
-      - "--- regulated environments ---"
+      - "### regulated environments"
       - test_old
       - uat
       - uat_old
@@ -43,10 +44,13 @@ variables:
     value: 3.4.0-alpha.22
   infra_version_new:
     description: "Infra version (tag or branch) to use"
-    value: 2.0.0-alpha.11
+    value: 2.0.0-alpha.12
   infra_version_old:
     description: "Infra version (tag or branch) to use"
-    value: 1.1.0-alpha.2
+    value: 1.1.0-alpha.3
+  snapshot_arn:
+    description: "ARN of snapshot to use for the database; DESTRUCTIVE action"
+    value: ""
   deploy_runner: pool_name:panelapp_docker
 
 stages:
@@ -262,16 +266,39 @@ plan:
     - git clone --single-branch --branch "$infra_version" https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
     - cd "$PANELAPP_TF_DIR"
     - terraform init -backend-config="../config/$env_name/panelapp-backend.conf"
-    - terraform plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag="$version" -out=plan.tfplan
-    - "printf '### Environment: %s\n### Version: %s\n' \"$deploy_name\" \"$version\""
+    - |
+      set -x
+      if [ -n "$snapshot_arn" ]; then
+        (
+          cd "$CI_PROJECT_DIR"
+          test "$account_group" = old || source scripts/assume_role.sh
+          aws rds describe-db-cluster-snapshots --filter="Name=db-cluster-snapshot-id,Values=$snapshot_arn" --query DBClusterSnapshots[].Status --output text | grep -q available || { echo "snapshot $snapshot_arn does not exists" >&2; exit 1; }
+        )
+        if [ "$account_group" = "old" ]; then
+          echo -e "\e[93mWARNING: terraform taint changes the state file.\e[0m"
+          terraform taint -module=aurora aws_rds_cluster.aurora_cluster || true
+          terraform plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag="$version" \
+            -var=restore_from_snapshot=true -var=snapshot_identifier=$snapshot_arn \
+            -out=plan.tfplan
+        else
+          terraform plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag="$version" \
+            -var=restore_from_snapshot=true -var=snapshot_identifier=$snapshot_arn \
+            -replace=module.aurora.aws_rds_cluster.aurora_cluster \
+            -out=plan.tfplan
+        fi
+      else
+        terraform plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag="$version" -out=plan.tfplan
+      fi
+      set +x
+    - "printf '### Environment:   %s\n### App version:   %s\n### Infra version: %s\n### Snapshot:      %s\n' \"$deploy_name\" \"$version\" \"$infra_version\" \"$snapshot_arn\""
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null
+    - if: ($CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null) && $snapshot_arn == null
+    - if: $CI_PIPELINE_SOURCE == "web" && $snapshot_arn != null && $account_group == "new"
+    - if: $CI_PIPELINE_SOURCE == "web" && $snapshot_arn != null && $account_group == "old"
+      when: manual
   artifacts:
     paths:
-      - $PANELAPP_TF_DIR/.terraform*
-      - $PANELAPP_TF_DIR/plan.*
-      - $PANELAPP_TF_DIR/*.zip
-      - $PANELAPP_TF_DIR/templates/*
+      - panelapp-infra/terraform/
       - panelapp-infra/*.py
 
 apply:
