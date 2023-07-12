@@ -292,9 +292,9 @@ plan:
       set +x
     - "printf '### Environment:   %s\n### App version:   %s\n### Infra version: %s\n### Snapshot:      %s\n' \"$deploy_name\" \"$version\" \"$infra_version\" \"$snapshot_arn\""
   rules:
-    - if: ($CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null) && $snapshot_arn == null
-    - if: $CI_PIPELINE_SOURCE == "web" && $snapshot_arn != null && $account_group == "new"
-    - if: $CI_PIPELINE_SOURCE == "web" && $snapshot_arn != null && $account_group == "old"
+    - if: ($CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null) && $snapshot_arn == ""
+    - if: $CI_PIPELINE_SOURCE == "web" && $snapshot_arn != "" && $account_group == "new"
+    - if: $CI_PIPELINE_SOURCE == "web" && $snapshot_arn != "" && $account_group == "old"
       when: manual
   artifacts:
     paths:
