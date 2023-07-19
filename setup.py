@@ -56,7 +56,7 @@ setup(
     },
     install_requires=[
         "Markdown==3.4.3",
-        "PyYAML==6.0",
+        "PyYAML==6.0.1",
         "boto3==1.26.60",
         "celery==5.2.7",
         "click==8.1.3",
