@@ -41,13 +41,13 @@ variables:
   account_group: new
   version:
     description: "Version to deploy"
-    value: 3.4.0-alpha.22
+    value: 3.4.0
   infra_version_new:
     description: "Infra version (tag or branch) to use"
-    value: 2.0.0-alpha.12
+    value: 2.0.0-alpha.13
   infra_version_old:
     description: "Infra version (tag or branch) to use"
-    value: 1.1.0-alpha.3
+    value: 1.1.0
   snapshot_arn:
     description: "ARN of snapshot to use for the database; DESTRUCTIVE action"
     value: ""
