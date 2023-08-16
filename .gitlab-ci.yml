@@ -34,17 +34,16 @@ variables:
       - "### regulated environments"
       - test_old
       - uat
-      - uat_old
       - prod
       - prod_old
   env_name: $deploy_name
   account_group: new
   version:
     description: "Version to deploy"
-    value: 3.4.0
+    value: 3.5.0
   infra_version_new:
     description: "Infra version (tag or branch) to use"
-    value: 2.0.0-alpha.13
+    value: 2.0.0-alpha.14
   infra_version_old:
     description: "Infra version (tag or branch) to use"
     value: 1.1.0
