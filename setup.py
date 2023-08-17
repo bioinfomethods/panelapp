@@ -42,7 +42,7 @@ setup(
             "black==22.3.0",
         ],
         "tests": [
-            "pytest==7.1.0",
+            "pytest==6.2.5",
             "pytest-cases==3.6.10",
             "pytest-django==4.5.2",
             "pytest-cov==3.0.0",
@@ -52,6 +52,7 @@ setup(
             "faker==13.3.2",
             "factory_boy==3.2.1",
             "responses==0.10.12",
+            "pytest-pythonpath==0.7.4",
         ],
     },
     install_requires=[
