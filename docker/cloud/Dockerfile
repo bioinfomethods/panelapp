@@ -17,6 +17,7 @@ RUN apk add --no-cache postgresql-libs curl jpeg-dev zlib-dev && \
     apk add --no-cache --virtual .build-deps gcc musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev && \
     pip install --upgrade setuptools==67.8.0 && \
     pip install . && \
+    pip install ddtrace==1.18.0 && \
     apk --purge del .build-deps && \
     chown -R app:app /usr/local/lib/python3.*
 
