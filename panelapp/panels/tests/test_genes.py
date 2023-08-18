@@ -21,6 +21,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+import csv
 import json
 import os
 from datetime import (
@@ -54,11 +55,14 @@ from panels.models import (
 from panels.models.import_tools import update_gene_collection
 from panels.tests.factories import (
     CommentFactory,
+    EvidenceFactory,
     GeneFactory,
     GenePanelEntrySnapshotFactory,
     GenePanelSnapshotFactory,
+    Level4TitleFactory,
     RegionFactory,
     STRFactory,
+    TagFactory,
 )
 
 fake = Factory.create()
@@ -113,6 +117,74 @@ class GeneTest(LoginGELUser):
 
         res = self.client.get(reverse_lazy("panels:download_genes"))
         self.assertEqual(res.status_code, 200)
+
+    def test_download_genes_multiple_ensembl_genes(self):
+        gps = GenePanelSnapshotFactory(level4title=Level4TitleFactory(name="Test"))
+        gene_core = GeneFactory(
+            gene_symbol="ABCA1",
+            gene_name="ABCA1",
+            ensembl_genes={
+                "GRch37": {
+                    "82": {
+                        "location": "9:107543283-107690518",
+                        "ensembl_id": "ENSG00000165029",
+                    },
+                    "107": {
+                        "location": "22:50961997-50964890",
+                        "ensembl_id": "ENSG00000284194",
+                    },
+                },
+                "GRch38": {
+                    "90": {
+                        "location": "9:104781002-104928237",
+                        "ensembl_id": "ENSG00000165029",
+                    },
+                    "107": {
+                        "location": "22:50523568-50526461",
+                        "ensembl_id": "ENSG00000284194",
+                    },
+                },
+            },
+        )
+        GenePanelEntrySnapshotFactory(
+            panel=gps,
+            gene_core=gene_core,
+            evidence=[EvidenceFactory(name="Other")],
+            tags=[TagFactory(name="test")],
+            phenotypes=["one", "two"],
+        )
+
+        res = self.client.get(reverse_lazy("panels:download_genes"))
+
+        assert res.status_code == 200
+
+        content = b"".join(res.streaming_content).decode("utf-8")
+
+        [row] = list(csv.DictReader(content.splitlines(), delimiter="\t"))
+
+        assert row == {
+            "Symbol": "ABCA1",
+            "Panel Id": str(gps.panel.id),
+            "Panel Name": "Test",
+            "Panel Version": "0.0",
+            "Panel Status": "INTERNAL",
+            "List": "grey",
+            "Sources": "Other",
+            "Mode of inheritance": "Unknown",
+            "Mode of pathogenicity": "Other",
+            "Tags": "test",
+            "HGNC": "",
+            "Biotype": "",
+            "Phenotypes": "one;two",
+            "EnsemblId(GRch37)": "ENSG00000165029",
+            "EnsemblId(GRch38)": "ENSG00000165029",
+            "GeneLocation((GRch37)": "9:107543283-107690518",
+            "GeneLocation((GRch38)": "9:104781002-104928237",
+            "Panel Types": "",
+            "Super Panel Id": "-",
+            "Super Panel Name": "-",
+            "Super Panel Version": "-",
+        }
 
     def test_list_genes(self):
         GenePanelEntrySnapshotFactory.create_batch(3)
