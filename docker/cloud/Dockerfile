@@ -14,12 +14,12 @@ COPY --chown=app:app ./deploy/gunicorn_config.py  /app/
 # After installing we are removing all system dependencies not required at runtime, within the same Docker layer
 WORKDIR /app
 RUN apk add --no-cache postgresql-libs curl jpeg-dev zlib-dev && \
-    apk add --no-cache --virtual .build-deps gcc musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev && \
-    pip install --upgrade setuptools==67.8.0 && \
-    pip install . && \
-    pip install ddtrace==1.18.0 && \
-    apk --purge del .build-deps && \
-    chown -R app:app /usr/local/lib/python3.*
+  apk add --no-cache --virtual .build-deps gcc musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev && \
+  pip install --upgrade setuptools==67.8.0 && \
+  pip install . && \
+  pip install ddtrace && \
+  apk --purge del .build-deps && \
+  chown -R app:app /usr/local/lib/python3.*
 
 ENV PYTHONPATH /pythonlib
 ENV PATH="/pythonlib:${PATH}"
