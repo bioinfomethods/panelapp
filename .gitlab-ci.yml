@@ -286,7 +286,7 @@ plan:
             -out=plan.tfplan
         fi
       else
-        terraform plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag="$version" -out=plan.tfplan
+        terraform plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag="$version" -var infra_tag="$infra_version" -out=plan.tfplan
       fi
       set +x
     - "printf '### Environment:   %s\n### App version:   %s\n### Infra version: %s\n### Snapshot:      %s\n' \"$deploy_name\" \"$version\" \"$infra_version\" \"$snapshot_arn\""
