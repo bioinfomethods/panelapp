@@ -276,11 +276,13 @@ plan:
         if [ "$account_group" = "old" ]; then
           echo -e "\e[93mWARNING: terraform taint changes the state file.\e[0m"
           terraform taint -module=aurora aws_rds_cluster.aurora_cluster || true
-          terraform plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag="$version" \
+          terraform plan -var-file="../config/$env_name/terraform.tfvars" \
+            -var image_tag="$version" -var infra_tag="$infra_version" \
             -var=restore_from_snapshot=true -var=snapshot_identifier=$snapshot_arn \
             -out=plan.tfplan
         else
-          terraform plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag="$version" \
+          terraform plan -var-file="../config/$env_name/terraform.tfvars" \
+            -var image_tag="$version" -var infra_tag="$infra_version" \
             -var=restore_from_snapshot=true -var=snapshot_identifier=$snapshot_arn \
             -replace=module.aurora.aws_rds_cluster.aurora_cluster \
             -out=plan.tfplan
