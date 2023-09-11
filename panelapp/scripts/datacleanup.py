@@ -23,6 +23,7 @@
 ##
 """
 Replace some users names (email addresses) and lock them out.
+Preserve TEST_Curator and TEST_Reviewer and fix permissions for TEST_Curator.
 
 NEVER use in prod environment.
 
@@ -31,12 +32,26 @@ Usage: cat datacleanup.py | python manage.py shell
 """
 import sys
 
-from django.contrib.auth import get_user_model
+from django.db import transaction
+
+from accounts.models import (
+    Reviewer,
+    User,
+)
 
 
-def main():
+def fix_test_users():
+    with transaction.atomic():
+        test_curator = User.objects.get(username="TEST_Curator")
+        test_curator_reviewer = Reviewer.objects.get(user=test_curator)
+        test_curator.is_staff = True
+        test_curator_reviewer.user_type = Reviewer.TYPES.GEL
+        test_curator.save()
+        test_curator_reviewer.save()
+
+
+def anonymise_emails():
     print("Disabling non-active/non-staff users", file=sys.stderr)
-    User = get_user_model()
     all_users = 0
     passive_users = 0
     emails_changed = 0
@@ -63,6 +78,11 @@ def main():
         file=sys.stderr,
         flush=True,
     )
+
+
+def main():
+    anonymise_emails()
+    fix_test_users()
 
 
 # No "if __name__ == '__main__':" here as this script is piped to manage.py shell
