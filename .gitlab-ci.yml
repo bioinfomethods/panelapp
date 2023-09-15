@@ -266,7 +266,6 @@ plan:
     - cd "$PANELAPP_TF_DIR"
     - terraform init -backend-config="../config/$env_name/panelapp-backend.conf"
     - |
-      set -x
       if [ -n "$snapshot_arn" ]; then
         (
           cd "$CI_PROJECT_DIR"
@@ -290,7 +289,6 @@ plan:
       else
         terraform plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag="$version" -var infra_tag="$infra_version" -out=plan.tfplan
       fi
-      set +x
     - "printf '### Environment:   %s\n### App version:   %s\n### Infra version: %s\n### Snapshot:      %s\n' \"$deploy_name\" \"$version\" \"$infra_version\" \"$snapshot_arn\""
   rules:
     - if: ($CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null) && $snapshot_arn == ""
@@ -311,6 +309,29 @@ apply:
     - plan
     - scan
   script:
+    - |
+      if [ -n "$snapshot_arn" ]; then
+        (
+          source "$CI_PROJECT_DIR/scripts/assume_role.sh"
+          cluster_name="aurora-$env_name"
+          cluster_status="$(aws rds describe-db-clusters --query "DBClusters[?DBClusterIdentifier == '$cluster_name'].Status" --output text)"
+          final_snapshot_id="$cluster_name-final-$(date -u +'%Y-%m-%d-%H-%M')"
+          if [ "$cluster_status" = "available" ]; then
+            echo "Create snapshot before delete: $final_snapshot_id"
+            aws rds create-db-cluster-snapshot --db-cluster-snapshot-identifier "$final_snapshot_id" --db-cluster-identifier "$cluster_name"
+            while true; do
+              status=$(aws rds describe-db-cluster-snapshots --query "DBClusterSnapshots[?DBClusterSnapshotIdentifier == '$final_snapshot_id'].Status" --output text)
+              aws rds describe-db-cluster-snapshots --query "DBClusterSnapshots[?DBClusterSnapshotIdentifier == '$final_snapshot_id'].[@.DBClusterSnapshotIdentifier, @.Status]"
+              if [ "$status" = "available" ]; then
+                break
+              fi
+              sleep 15
+            done
+          else
+            echo "Can not create snapshot: cluster is not available"
+          fi
+        )
+      fi
     - cd "$PANELAPP_TF_DIR"
     - terraform apply plan.tfplan
     - cd -
