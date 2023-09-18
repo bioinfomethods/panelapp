@@ -40,7 +40,7 @@ variables:
   account_group: new
   version:
     description: "Version to deploy"
-    value: 3.6.0-alpha.3
+    value: 3.6.0-alpha.4
   infra_version_new:
     description: "Infra version (tag or branch) to use"
     value: 2.0.0-alpha.27
