@@ -312,7 +312,7 @@ apply:
     - |
       if [ -n "$snapshot_arn" ]; then
         (
-          source "$CI_PROJECT_DIR/scripts/assume_role.sh"
+          test "$account_group" = "old" || source "$CI_PROJECT_DIR/scripts/assume_role.sh"
           cluster_name="aurora-$env_name"
           cluster_status="$(aws rds describe-db-clusters --query "DBClusters[?DBClusterIdentifier == '$cluster_name'].Status" --output text)"
           final_snapshot_id="$cluster_name-final-$(date -u +'%Y-%m-%d-%H-%M')"
