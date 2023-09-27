@@ -43,7 +43,7 @@ variables:
     value: 3.6.0-alpha.5
   infra_version_new:
     description: "Infra version (tag or branch) to use"
-    value: 2.0.0-alpha.30
+    value: 2.0.0-alpha.31
   infra_version_old:
     description: "Infra version (tag or branch) to use"
     value: 1.2.0-alpha.2
