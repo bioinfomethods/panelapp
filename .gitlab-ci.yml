@@ -8,6 +8,7 @@ variables:
   DOCKER_PYTHON: python:3.8.17-alpine3.18
   DOCKER_POSTGRES: postgres:14.7
   DOCKER_IN_DOCKER: docker:23.0.3-dind
+  FF_GITLAB_REGISTRY_HELPER_IMAGE: 1
   PANELAPP_TF_DIR: "panelapp-infra/terraform/panelapp/"
   AWS_REGION: eu-west-2
   AWS_DEFAULT_REGION: eu-west-2
