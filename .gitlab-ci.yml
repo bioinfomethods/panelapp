@@ -84,7 +84,7 @@ default:
     - name: $DOCKER_IN_DOCKER
       command:
         - "--registry-mirror"
-        - "http://dockerhubcache.shared-services.aws.gel.ac:5002"
+        - "https://docker.artifactory.aws.gel.ac"
   rules:
     - if: $TEST
 
