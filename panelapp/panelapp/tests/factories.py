@@ -24,7 +24,7 @@ class FileFactory(factory.django.DjangoModelFactory):
         model = File
 
     file: files.File
-    title: str = factory.Faker
+    title: str
 
 
 class ImageFactory(factory.django.DjangoModelFactory):

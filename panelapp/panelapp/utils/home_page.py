@@ -88,7 +88,7 @@ class ImageAsset:
     name: str
     state: AssetState
 
-    @safe
+    @safe(exceptions=(requests.HTTPError,))
     def upload(self, url: str) -> List[ImageDomainEvent]:
         if not isinstance(self.state, Missing):
             return []
@@ -107,7 +107,7 @@ class FileAsset:
     name: str
     state: AssetState
 
-    @safe
+    @safe(exceptions=(requests.HTTPError,))
     def upload(self, url: str) -> List[FileDomainEvent]:
         if not isinstance(self.state, Missing):
             return []
