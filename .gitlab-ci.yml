@@ -47,7 +47,7 @@ variables:
     value: 2.0.0-rc.2
   infra_version_old:
     description: "Infra version (tag or branch) to use"
-    value: 1.2.0-alpha.2
+    value: "1.2.0"
   snapshot_arn:
     description: "ARN of snapshot to use for the database; DESTRUCTIVE action"
     value: ""
