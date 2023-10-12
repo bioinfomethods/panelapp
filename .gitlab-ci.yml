@@ -322,7 +322,7 @@ apply:
             aws rds create-db-cluster-snapshot --db-cluster-snapshot-identifier "$final_snapshot_id" --db-cluster-identifier "$cluster_name"
             while true; do
               status=$(aws rds describe-db-cluster-snapshots --query "DBClusterSnapshots[?DBClusterSnapshotIdentifier == '$final_snapshot_id'].Status" --output text)
-              aws rds describe-db-cluster-snapshots --query "DBClusterSnapshots[?DBClusterSnapshotIdentifier == '$final_snapshot_id'].[@.DBClusterSnapshotIdentifier, @.Status]"
+              aws rds describe-db-cluster-snapshots --query "DBClusterSnapshots[?DBClusterSnapshotIdentifier == '$final_snapshot_id'].[@.DBClusterSnapshotIdentifier, @.Status]" --output text
               if [ "$status" = "available" ]; then
                 break
               fi
