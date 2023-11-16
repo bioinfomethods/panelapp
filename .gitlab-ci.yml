@@ -1,5 +1,5 @@
 include:
-  - local: '.gitlab-ci/envs.yml'
+  - local: ".gitlab-ci/envs.yml"
   - template: Code-Quality.gitlab-ci.yml
 
 variables:
@@ -21,9 +21,9 @@ variables:
   TAGGER_REGISTRY: $ECR_ACCOUNT_ID
   TAGGER_REPOSITORY: $ECR_REPOSITORY
   TAGGER_ENVIRONMENTS: "build,dev,dev_old,test,test_old,e2e,uat,uat_old,prod,prod_old"
-#  TAGGER_DEBUG: 'yes'
+  #  TAGGER_DEBUG: 'yes'
   CI_DEBUG_TRACE: "false"
-#  TF_LOG: DEBUG
+  #  TF_LOG: DEBUG
   deploy_name:
     description: "Environment to deploy to"
     value: dev
@@ -181,7 +181,7 @@ image_build:
     - name: $DOCKER_IN_DOCKER
       command:
         - "--registry-mirror"
-        - "http://dockerhubcache.shared-services.aws.gel.ac:5002"
+        - "https://docker.artifactory.aws.gel.ac"
   stage: image_build
   before_script:
     - apk add aws-cli jq py3-boto3
