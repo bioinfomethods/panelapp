@@ -4,7 +4,6 @@ include:
 
 variables:
   DOCKER_TERRAFORM: hashicorp/terraform:1.4.6
-  DOCKER_TERRAFORM_OLD: hashicorp/terraform:0.11.15
   DOCKER_PYTHON: python:3.8.17-alpine3.18
   DOCKER_POSTGRES: postgres:14.7
   DOCKER_IN_DOCKER: docker:23.0.3-dind
@@ -17,41 +16,32 @@ variables:
   ECR_REGISTRY: "${ECR_ACCOUNT_ID}.dkr.ecr.eu-west-2.amazonaws.com"
   ECR_ASSUME_ROLE: "arn:aws:iam::${ECR_ACCOUNT_ID}:role/CIDeploypanelapp"
   ECR_REPOSITORY: panelapp
-  WORKFLOW_NAME: "Deploying app: $version, infra: $infra_version -> $deploy_name"
+  WORKFLOW_NAME: "Deploying app: $version, infra: $infra_version -> $env_name"
   TAGGER_REGISTRY: $ECR_ACCOUNT_ID
   TAGGER_REPOSITORY: $ECR_REPOSITORY
-  TAGGER_ENVIRONMENTS: "build,dev,dev_old,test,test_old,e2e,uat,uat_old,prod,prod_old"
+  TAGGER_ENVIRONMENTS: "build,dev,test,e2e,uat,prod"
   #  TAGGER_DEBUG: 'yes'
   CI_DEBUG_TRACE: "false"
   #  TF_LOG: DEBUG
-  deploy_name:
+  env_name:
     description: "Environment to deploy to"
     value: dev
     options:
       - dev
-      - dev_old
       - test
       - e2e
       - "### regulated environments"
-      - test_old
       - uat
       - prod
-      - prod_old
-  env_name: $deploy_name
-  account_group: new
   version:
     description: "Version to deploy"
     value: 3.6.0
-  infra_version_new:
+  infra_version:
     description: "Infra version (tag or branch) to use"
     value: 2.0.0
-  infra_version_old:
-    description: "Infra version (tag or branch) to use"
-    value: 1.2.0
   snapshot_arn:
     description: "ARN of snapshot to use for the database; DESTRUCTIVE action"
     value: ""
-  deploy_runner: pool_name:panelapp_docker
 
 stages:
   - test
@@ -67,15 +57,8 @@ default:
   image:
     name: $DOCKER_TERRAFORM
     entrypoint: ["/bin/sh", "-c"]
-  tags:
-    - $deploy_runner
   before_script:
     - apk --no-cache add --update python3 curl jq aws-cli py3-boto3
-    - test "$account_group" = new || curl -sSf http://169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -o aws_creds
-    - test "$account_group" = new || export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' aws_creds)
-    - test "$account_group" = new || export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
-    - test "$account_group" = new || export AWS_SESSION_TOKEN=$(jq -r '.Token' aws_creds)
-    - test "$account_group" = new || export AWS_DEFAULT_REGION=$default_region
 
 .tests:
   image: $DOCKER_PYTHON
@@ -223,7 +206,7 @@ scan:
   dependencies:
     - image_build
   environment:
-    name: $deploy_name
+    name: $env_name
   image: 877059142592.dkr.ecr.eu-west-2.amazonaws.com/ce_infra_cicd:v1.0.6
   before_script:
     - apk add aws-cli jq py3-boto3
@@ -258,7 +241,7 @@ plan:
   stage: plan
   extends: .deploy
   environment:
-    name: $deploy_name
+    name: $env_name
   dependencies:
     - image_build
   script:
@@ -270,32 +253,21 @@ plan:
       if [ -n "$snapshot_arn" ]; then
         (
           cd "$CI_PROJECT_DIR"
-          test "$account_group" = old || source scripts/assume_role.sh
+          source scripts/assume_role.sh
           aws rds describe-db-cluster-snapshots --filter="Name=db-cluster-snapshot-id,Values=$snapshot_arn" --query DBClusterSnapshots[].Status --output text | grep -q available || { echo "snapshot $snapshot_arn does not exists" >&2; exit 1; }
         )
-        if [ "$account_group" = "old" ]; then
-          echo -e "\e[93mWARNING: terraform taint changes the state file.\e[0m"
-          terraform taint -module=aurora aws_rds_cluster.aurora_cluster || true
-          terraform plan -var-file="../config/$env_name/terraform.tfvars" \
-            -var image_tag="$version" -var infra_tag="$infra_version" \
-            -var=restore_from_snapshot=true -var=snapshot_identifier=$snapshot_arn \
-            -out=plan.tfplan
-        else
-          terraform plan -var-file="../config/$env_name/terraform.tfvars" \
-            -var image_tag="$version" -var infra_tag="$infra_version" \
-            -var=restore_from_snapshot=true -var=snapshot_identifier=$snapshot_arn \
-            -replace=module.aurora.aws_rds_cluster.aurora_cluster \
-            -out=plan.tfplan
-        fi
+        terraform plan -var-file="../config/$env_name/terraform.tfvars" \
+          -var image_tag="$version" -var infra_tag="$infra_version" \
+          -var=restore_from_snapshot=true -var=snapshot_identifier=$snapshot_arn \
+          -replace=module.aurora.aws_rds_cluster.aurora_cluster \
+          -out=plan.tfplan
       else
         terraform plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag="$version" -var infra_tag="$infra_version" -out=plan.tfplan
       fi
-    - "printf '### Environment:   %s\n### App version:   %s\n### Infra version: %s\n### Snapshot:      %s\n' \"$deploy_name\" \"$version\" \"$infra_version\" \"$snapshot_arn\""
+    - "printf '### Environment:   %s\n### App version:   %s\n### Infra version: %s\n### Snapshot:      %s\n' \"$env_name\" \"$version\" \"$infra_version\" \"$snapshot_arn\""
   rules:
-    - if: ($CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null) && $snapshot_arn == ""
-    - if: $CI_PIPELINE_SOURCE == "web" && $snapshot_arn != "" && $account_group == "new"
-    - if: $CI_PIPELINE_SOURCE == "web" && $snapshot_arn != "" && $account_group == "old"
-      when: manual
+    - if: $CI_COMMIT_TAG != null && $snapshot_arn == ""
+    - if: $CI_PIPELINE_SOURCE == "web"
   artifacts:
     paths:
       - panelapp-infra/terraform/
@@ -305,7 +277,7 @@ apply:
   stage: apply
   extends: .deploy
   environment:
-    name: $deploy_name
+    name: $env_name
   dependencies:
     - plan
     - scan
@@ -313,7 +285,7 @@ apply:
     - |
       if [ -n "$snapshot_arn" ]; then
         (
-          test "$account_group" = "old" || source "$CI_PROJECT_DIR/scripts/assume_role.sh"
+          source "$CI_PROJECT_DIR/scripts/assume_role.sh"
           cluster_name="aurora-$env_name"
           cluster_status="$(aws rds describe-db-clusters --query "DBClusters[?DBClusterIdentifier == '$cluster_name'].Status" --output text)"
           final_snapshot_id="$cluster_name-final-$(date -u +'%Y-%m-%d-%H-%M')"
@@ -336,7 +308,7 @@ apply:
     - cd "$PANELAPP_TF_DIR"
     - terraform apply plan.tfplan
     - cd -
-    - test "$account_group" = old || source scripts/assume_role.sh
+    - source scripts/assume_role.sh
     - time aws ecs wait services-stable --cluster panelapp-cluster-$env_name --services panelapp-web-panelapp-$env_name panelapp-worker-panelapp-$env_name panelapp-worker-beat-panelapp-$env_name
     - panelapp-infra/run-ecs-task.py panelapp-migrate-panelapp-$env_name panelapp-collectstatic-panelapp-$env_name
     - sleep 30
@@ -351,7 +323,7 @@ add_tags:
   needs:
     - apply
   script:
-    - scripts/tagger add-env-tags --env="$deploy_name" --add-latest=3 "$version"
+    - scripts/tagger add-env-tags --env="$env_name" --add-latest=3 "$version"
     - scripts/tagger --verbose list-tags
   rules:
     - if: $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null
