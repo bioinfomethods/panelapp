@@ -113,16 +113,16 @@
                   </a>
                   {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
                       {% if entry.panel.is_approved %}
-                          <a type="url" data-ajax="true" data-success="djangoAjaxHandler" href="{% url 'panels:reject_panel' entry.panel.id %}" class="btn btn-outline-light-panelapp btn-sm {% if not entry.panel.is_approved %} disabled {% endif %}" title="Reject panel">
+                          <a type="url" data-ajax="true" data-success="djangoAjaxHandler" data-testid="reject-panel-{{ entry.pk }}" href="{% url 'panels:reject_panel' entry.panel.id %}" class="btn btn-outline-light-panelapp btn-sm {% if not entry.panel.is_approved %} disabled {% endif %}" title="Reject panel">
                             <i class="fa fa-thumbs-down"></i> Reject
                           </a>
                       {% else %}
-                          <a type="url" data-ajax="true" data-success="djangoAjaxHandler" href="{% url 'panels:approve_panel' entry.panel.id %}" class="btn btn-outline-light-panelapp btn-sm" title="Approve panel">
+                          <a type="url" data-ajax="true" data-success="djangoAjaxHandler" data-testid="approve-panel-{{ entry.pk }}" href="{% url 'panels:approve_panel' entry.panel.id %}" class="btn btn-outline-light-panelapp btn-sm" title="Approve panel">
                               <i class="fa fa-thumbs-up"></i> Approve
                           </a>
                       {% endif %}
 
-                      <a type="url" href="{% url 'panels:delete_panel' entry.panel.id %}" class="btn btn-outline-light-panelapp btn-sm d-none delete_{{ entry.pk }}" data-ajax="true" data-success="djangoAjaxHandler" title="Delete panel">
+                      <a type="url" href="{% url 'panels:delete_panel' entry.panel.id %}" class="btn btn-outline-light-panelapp btn-sm d-none delete_{{ entry.pk }}" data-ajax="true" data-success="djangoAjaxHandler" data-testid="delete-panel-{{ entry.pk }}" title="Delete panel">
                         <i class="fa fa-trash"></i>
                       </a>
                       <a href="#lock_{{ entry.pk }}" class="lock_{{ entry.pk }} btn btn-outline-light-panelapp btn-sm d-none" data-module="showhide" data-show="a.btn.unlock_{{ entry.pk }}" data-hide="a.btn.lock_{{ entry.pk }}, a.btn.delete_{{ entry.pk }}" data-testid="lock-panel-{{ entry.pk }}" title="Lock panel"> <i class="fa fa-lock fa-lg"></i></a>

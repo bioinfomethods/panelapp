@@ -90,6 +90,7 @@ responses = "^0.25.0"
 pytest-pythonpath = "^0.7.4"
 pytest-runner = "^6.0.1"
 setuptools = "^69.2.0"
+freezegun = "^1.4.0"
 
 
 [tool.poetry.group.dev.dependencies]

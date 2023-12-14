@@ -9,24 +9,6 @@ test.describe(() => {
   });
 });
 
-test("panels anonymous", async ({ page }) => {
-  await page.goto("/panels");
-  await expect(page).toHaveScreenshot("panels-anonymous.png", {
-    fullPage: true,
-  });
-});
-
-test.describe(() => {
-  test.use({ storageState: "playwright/.auth/admin.json" });
-
-  test("panels curator", async ({ page }) => {
-    await page.goto("/panels");
-    await expect(page).toHaveScreenshot("panels-curator.png", {
-      fullPage: true,
-    });
-  });
-});
-
 test.describe(() => {
   test.use({ storageState: "playwright/.auth/admin.json" });
 
@@ -40,7 +22,6 @@ test.describe(() => {
 
 test("panel gene review", async ({ page }) => {
   await page.goto("/panels/2/gene/BRCA1/");
-  // TODO: use getByTestId: https://playwright.dev/docs/locators#locate-by-test-id
   let review = page.getByText(
     "(Other) Green List (high evidence) TestingOverSeveralLinesSources: Radboud Unive"
   );
