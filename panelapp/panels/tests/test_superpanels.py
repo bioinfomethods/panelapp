@@ -29,6 +29,7 @@ from datetime import (
 from random import randint
 
 import pytest
+from django.apps import apps
 from django.urls import reverse_lazy
 from faker import Factory
 from freezegun import freeze_time
@@ -45,10 +46,12 @@ from panels.models import (
     GenePanelEntrySnapshot,
     GenePanelSnapshot,
 )
+from panels.models.genepanelsnapshot import fix_super_panel_entities
 from panels.tests.factories import (
     CommentFactory,
     GeneFactory,
     GenePanelEntrySnapshotFactory,
+    GenePanelFactory,
     GenePanelSnapshotFactory,
     TagFactory,
 )
@@ -1169,7 +1172,6 @@ class Cases_KMDS_1185:
 
 @parametrize_with_cases(["panel_id", "entity_name", "expected"], cases=Cases_KMDS_1185)
 @pytest.mark.django_db(transaction=True, reset_sequences=True)
-@pytest.mark.xfail(reason="KMDS-1185: reported bug", strict=True, raises=AssertionError)
 def test_kmds_1185(client, panel_id: int, entity_name: str, expected):
     """Super panels only contain component panel entities"""
     actual = {
@@ -1191,3 +1193,187 @@ def test_kmds_1185(client, panel_id: int, entity_name: str, expected):
     }
 
     assert actual == expected
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_fix_super_panel_entities(client, curator_user):
+    client.login(username=curator_user.username, password="pass")
+
+    GeneFactory(gene_symbol="BRCA1", gene_name="BRCA1")
+
+    panel1 = GenePanelFactory(
+        status=GenePanel.STATUS.public,
+        old_pk="",
+    )
+
+    panel1_snapshot_v01 = GenePanelSnapshotFactory(
+        panel=panel1,
+        major_version=0,
+        minor_version=1,
+        level4title__name="Test Panel 1",
+        level4title__level3title="",
+        level4title__level2title="",
+        panel__status=GenePanel.STATUS.public,
+        panel__old_pk="",
+        old_panels=[],
+    )
+    panel1_snapshot_v01.add_gene(
+        curator_user,
+        "BRCA1",
+        {
+            "gene": None,
+            "chromosome": "1",
+            "position_37": [12345, 12346],
+            "position_38": [12345, 123456],
+            "sources": [],
+            "phenotypes": [],
+            "publications": [],
+            "moi": "Unknown",
+            "mode_of_pathogenicity": "",
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            "current_diagnostic": False,
+        },
+        increment_version=False,
+    )
+    panel1_snapshot_v01.add_str(
+        curator_user,
+        "AR_CAG",
+        {
+            "gene": None,
+            "chromosome": "1",
+            "position_37": [12345, 12346],
+            "position_38": [12345, 123456],
+            "normal_repeats": 34,
+            "pathogenic_repeats": 40,
+            "repeated_sequence": "CAG",
+            "sources": [],
+            "phenotypes": [],
+            "publications": [],
+            "moi": "Unknown",
+            "mode_of_pathogenicity": "",
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            "current_diagnostic": False,
+        },
+        increment_version=False,
+    )
+    panel1_snapshot_v01.add_region(
+        curator_user,
+        "REGION",
+        {
+            "gene": None,
+            "position_37": [12345, 12346],
+            "position_38": [12345, 123456],
+            "verbose_name": "REGION",
+            "chromosome": "1",
+            "haploinsufficiency_score": "20",
+            "triplosensitivity_score": "",
+            "required_overlap_percentage": 20,
+            "sources": [],
+            "phenotypes": [],
+            "publications": [],
+            "moi": "Unknown",
+            "mode_of_pathogenicity": "",
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Complete,
+            "current_diagnostic": False,
+        },
+        increment_version=False,
+    )
+
+    panel1_snapshot_v02 = GenePanelSnapshotFactory(
+        panel=panel1,
+        major_version=0,
+        minor_version=2,
+        level4title__name="Test Panel 1",
+        level4title__level3title="",
+        level4title__level2title="",
+        panel__status=GenePanel.STATUS.public,
+        panel__old_pk="",
+        old_panels=[],
+    )
+    panel1_snapshot_v02.add_gene(
+        curator_user,
+        "BRCA1",
+        {
+            "gene": None,
+            "chromosome": "1",
+            "position_37": [12345, 12346],
+            "position_38": [12345, 123456],
+            "sources": [],
+            "phenotypes": [],
+            "publications": [],
+            "moi": "Unknown",
+            "mode_of_pathogenicity": "",
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            "current_diagnostic": False,
+        },
+        increment_version=False,
+    )
+    panel1_snapshot_v02.add_str(
+        curator_user,
+        "AR_CAG",
+        {
+            "gene": None,
+            "chromosome": "1",
+            "position_37": [12345, 12346],
+            "position_38": [12345, 123456],
+            "normal_repeats": 34,
+            "pathogenic_repeats": 40,
+            "repeated_sequence": "CAG",
+            "sources": [],
+            "phenotypes": [],
+            "publications": [],
+            "moi": "Unknown",
+            "mode_of_pathogenicity": "",
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            "current_diagnostic": False,
+        },
+        increment_version=False,
+    )
+    panel1_snapshot_v02.add_region(
+        curator_user,
+        "REGION",
+        {
+            "gene": None,
+            "position_37": [12345, 12346],
+            "position_38": [12345, 123456],
+            "verbose_name": "REGION",
+            "chromosome": "1",
+            "haploinsufficiency_score": "20",
+            "triplosensitivity_score": "",
+            "required_overlap_percentage": 20,
+            "sources": [],
+            "phenotypes": [],
+            "publications": [],
+            "moi": "Unknown",
+            "mode_of_pathogenicity": "",
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Complete,
+            "current_diagnostic": False,
+        },
+        increment_version=False,
+    )
+
+    panel2_snapshot_v01 = GenePanelSnapshotFactory(
+        major_version=0,
+        minor_version=1,
+        level4title__name="Test Panel 2",
+        level4title__level3title="",
+        level4title__level2title="",
+        panel__status=GenePanel.STATUS.public,
+        panel__old_pk="",
+        old_panels=[],
+    )
+
+    panel1_snapshot_v02.child_panels.set([panel2_snapshot_v01])
+
+    fix_super_panel_entities(apps)
+
+    panel1_snapshot_v01.refresh_from_db()
+    assert len(panel1_snapshot_v01.genepanelentrysnapshot_set.all()) == 1
+    assert len(panel1_snapshot_v01.region_set.all()) == 1
+    assert len(panel1_snapshot_v01.str_set.all()) == 1
+
+    panel1_snapshot_v02.refresh_from_db()
+
+    assert len(panel1_snapshot_v02.genepanelentrysnapshot_set.all()) == 0
+    assert len(panel1_snapshot_v02.region_set.all()) == 0
+    assert len(panel1_snapshot_v02.str_set.all()) == 0

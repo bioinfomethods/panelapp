@@ -90,8 +90,6 @@ test.describe(() => {
 });
 
 test.describe(() => {
-  // KMDS-1185: known bug
-  test.fail();
   test.use({ storageState: "playwright/.auth/admin.json" });
 
   test("Super panels only contain component panel entities", async ({

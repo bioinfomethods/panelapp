@@ -624,7 +624,12 @@ class GenePanelSnapshot(TimeStampedModel):
 
             self.save()
 
-            if not self.is_super_panel:
+            # Super panels do not have their own entities
+            if self.is_super_panel:
+                self.genepanelentrysnapshot_set.all().delete()
+                self.region_set.all().delete()
+                self.str_set.all().delete()
+            else:
                 if major:
                     email_panel_promoted.delay(self.panel.pk)
 
@@ -3378,3 +3383,18 @@ class GenePanelSnapshot(TimeStampedModel):
             }
 
         Activity.log(user=user, panel_snapshot=self, text=text, extra_info=extra_info)
+
+
+def fix_super_panel_entities(apps):
+    GenePanelSnapshot = apps.get_model("panels", "GenePanelSnapshot")
+
+    qs = GenePanelSnapshot.objects.get_queryset()
+
+    super_panel_snapshots = qs.annotate(
+        child_panels_count=Count("child_panels")
+    ).exclude(child_panels_count=0)
+
+    for snapshot in super_panel_snapshots:
+        snapshot.genepanelentrysnapshot_set.all().delete()
+        snapshot.region_set.all().delete()
+        snapshot.str_set.all().delete()
