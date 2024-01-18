@@ -36,10 +36,10 @@ variables:
       - prod
   version:
     description: "Version to deploy"
-    value: 3.7.0
+    value: 3.8.0
   infra_version:
     description: "Infra version (tag or branch) to use"
-    value: 2.2.0-alpha.1
+    value: 2.2.0
   snapshot_arn:
     description: "ARN of snapshot to use for the database; DESTRUCTIVE action"
     value: ""
