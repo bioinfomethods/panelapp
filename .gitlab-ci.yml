@@ -4,7 +4,8 @@ include:
 
 variables:
   DOCKER_TERRAFORM: hashicorp/terraform:1.4.6
-  DOCKER_PYTHON: python:3.8.17-alpine3.18
+  DOCKER_PYTHON: python:3.8.18-alpine3.19
+  DOCKER_NODE: node:20.11.0-alpine3.19
   DOCKER_POSTGRES: postgres:14.7
   DOCKER_IN_DOCKER: docker:23.0.3-dind
   FF_GITLAB_REGISTRY_HELPER_IMAGE: 1
@@ -131,7 +132,7 @@ ui_test_image_build:
     - source scripts/assume_role.sh
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
-    - docker build -f ./docker/Dockerfile -t "$UI_TEST_IMAGE_TAG" --target test .
+    - docker build -f ./docker/Dockerfile -t "$UI_TEST_IMAGE_TAG" --target test --build-arg node_base="${DOCKER_NODE}" --build-arg python_base="${DOCKER_PYTHON}" .
     - docker push "$UI_TEST_IMAGE_TAG"
   rules:
     - if: $TEST
@@ -244,7 +245,7 @@ image_build:
     - '(scripts/tagger validate-version "$CI_COMMIT_TAG" && ! scripts/tagger tag-exists "$CI_COMMIT_TAG") || scripts/tagger freestyle-tag "$CI_COMMIT_TAG"'
     - aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin "$ECR_REGISTRY"
     - if scripts/tagger validate-version "$CI_COMMIT_TAG"; then echo "${CI_COMMIT_TAG}" > ./VERSION; fi
-    - docker build -f ./docker/Dockerfile -t "$ECR_REGISTRY/$ECR_REPOSITORY:$build_tag" --target prod .
+    - docker build -f ./docker/Dockerfile -t "$ECR_REGISTRY/$ECR_REPOSITORY:$build_tag" --target prod --build-arg node_base="${DOCKER_NODE}" --build-arg python_base="${DOCKER_PYTHON}" .
     - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$build_tag"
     - scripts/tagger add-env-tags --env=build --add-latest=1 "$build_tag"
     - scripts/tagger add-tag "$build_tag" "$CI_COMMIT_TAG"

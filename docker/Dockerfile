@@ -1,4 +1,8 @@
-FROM node:20.2-slim as frontend
+ARG python_base=python:3.8.18-alpine3.19
+ARG node_base=node:20.11.0-alpine3.19
+
+
+FROM ${node_base} as frontend
 
 RUN corepack enable
 
@@ -7,7 +11,7 @@ COPY ./webpack.* package.json yarn.lock /src/
 
 RUN mkdir -p /build && yarn --cwd /src install --immutable && yarn --cwd /src build
 
-FROM python:3.8.17-alpine3.18 as base
+FROM ${python_base} as base
 
 RUN mkdir -p /app/panelapp
 
@@ -24,11 +28,13 @@ COPY --chown=app:app --from=frontend /src/dist /app/dist
 # Ownership of all python modules have to be writable by the user running the application, to create __pycache__.
 # After installing we are removing all system dependencies not required at runtime, within the same Docker layer
 WORKDIR /app
-RUN apk add --no-cache postgresql-libs curl jpeg-dev zlib-dev && \
+RUN apk upgrade --no-cache && \
+    apk add --no-cache postgresql-libs curl jpeg-dev zlib-dev && \
     apk add --no-cache --virtual .build-deps gcc musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev && \
     pip install --upgrade setuptools==67.8.0 && \
     pip install . && \
     pip install ddtrace==1.18.3 && \
+    pip uninstall -y ecdsa && \
     apk --purge del .build-deps && \
     chown -R app:app /usr/local/lib/python3.*
 

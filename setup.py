@@ -78,7 +78,7 @@ setup(
         "django-object-actions==4.1.0",
         "django-qurl-templatetag==0.0.14",
         "django-storages==1.13.2",
-        "django==3.2.23",
+        "django==3.2.24",
         "djangoajax==3.3",
         "djangorestframework-jsonapi==6.0.0",
         "djangorestframework==3.14.0",
