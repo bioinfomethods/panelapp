@@ -4,7 +4,7 @@ Panel App is a crowd-sourced repository of information about various gene panels
 
 ## Application overview
 
-Panel App is a project based on Django Framework (v2.1).
+Panel App is a project based on Django Framework.
 It uses PostgreSQL as database, AWS SQS as message queue backend and AWS S3 for file storage.
 
 Python version: 3.8
@@ -16,7 +16,7 @@ Python dependencies are installed via `setup.py`.
 > Using RabbitMQ and the local file system is still possible with the Django settings `./panelapp/panelapp/settings/on-prem.py`,
 > but backward compatibility is not fully guaranteed.
 
-All environment are dockerised.
+All environments are dockerised.
 
 We make a distinction between local development environments and cloud environments, as they use different Dockerfiles and Django settings.
 
@@ -54,7 +54,7 @@ Docker Compose stack includes:
 - A PostgreSQL instance
 - [LocalStack](https://github.com/localstack/localstack), mocking S3 and SQS.
 
-The application source code fis mounted from the local machine as volumes into the running containers.
+The application source code is mounted from the local machine as volumes into the running containers.
 Any change to the code will be immediately reflected.
 
 > If you start the docker-compose cluster directly, without the Makefile, you need to set `TMPDIR` env variable.
@@ -64,7 +64,7 @@ Any change to the code will be immediately reflected.
 
 Software requirements:
 
-- Docker: tested with Docker v.18.09.2 on Mac
+- Docker: tested with Docker 18.09.2 on Mac
 - AWS CLI: tested with aws-cli/1.16.156 Python/2.7.16 botocore/1.12.146
 
 Local setup requirements:
