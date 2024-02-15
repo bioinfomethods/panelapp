@@ -1,13 +1,17 @@
 include:
   - local: ".gitlab-ci/envs.yml"
-  - template: Code-Quality.gitlab-ci.yml
 
 variables:
   DOCKER_TERRAFORM: hashicorp/terraform:1.4.6
   DOCKER_PYTHON: python:3.8.18-alpine3.19
   DOCKER_NODE: node:20.11.0-alpine3.19
   DOCKER_POSTGRES: postgres:14.7
-  DOCKER_IN_DOCKER: docker:23.0.3-dind
+  DOCKER_IN_DOCKER: docker:24.0.1-dind
+  DOCKER_DRIVER: overlay2
+  DOCKER_HOST: tcp://docker:2376/
+  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  DOCKER_TLS_VERIFY: 1
   FF_GITLAB_REGISTRY_HELPER_IMAGE: 1
   PANELAPP_TF_DIR: "panelapp-infra/terraform/panelapp/"
   AWS_REGION: eu-west-2
@@ -52,6 +56,13 @@ stages:
   - plan
   - apply
 
+services:
+  - name: $DOCKER_IN_DOCKER
+    alias: docker
+    command:
+      - "--registry-mirror"
+      - "https://docker.artifactory.aws.gel.ac"
+
 default:
   tags:
     - pool_name:panelapp_docker
@@ -66,11 +77,6 @@ default:
 .tests:
   image: $DOCKER_PYTHON
   stage: test
-  services:
-    - name: $DOCKER_IN_DOCKER
-      command:
-        - "--registry-mirror"
-        - "https://docker.artifactory.aws.gel.ac"
   rules:
     - if: $TEST
 
@@ -81,13 +87,6 @@ default:
     - source scripts/assume_role.sh
   variables:
     AWS_ASSUME_ROLE: $ECR_ASSUME_ROLE
-
-code_quality:
-  extends: .tests
-  artifacts:
-    paths: [gl-code-quality-report.json]
-  rules:
-    - if: $TEST
 
 # Code checks
 ## run unit and integration tests
@@ -121,11 +120,6 @@ code_test:
 # Build docker image for UI testing purposes
 ui_test_image_build:
   image: $DOCKER_IN_DOCKER
-  services:
-    - name: $DOCKER_IN_DOCKER
-      command:
-        - "--registry-mirror"
-        - "https://docker.artifactory.aws.gel.ac"
   stage: test_build
   before_script:
     - apk add aws-cli jq py3-boto3
@@ -151,6 +145,7 @@ ui_test:
     # Alternative? Use docker-compose inline for all services + testing
     # https://forum.gitlab.com/t/run-project-with-docker-compose/35975
     # - name: $DOCKER_IN_DOCKER
+    #   alias: docker
     #   command:
     #     - "--registry-mirror"
     #     - "https://docker.artifactory.aws.gel.ac"
@@ -231,11 +226,6 @@ trivy:
 # Build docker image
 image_build:
   image: $DOCKER_IN_DOCKER
-  services:
-    - name: $DOCKER_IN_DOCKER
-      command:
-        - "--registry-mirror"
-        - "https://docker.artifactory.aws.gel.ac"
   stage: image_build
   before_script:
     - apk add aws-cli jq py3-boto3
