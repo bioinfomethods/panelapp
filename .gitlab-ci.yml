@@ -2,7 +2,6 @@ include:
   - local: ".gitlab-ci/envs.yml"
 
 variables:
-  DOCKER_TERRAFORM: hashicorp/terraform:1.4.6
   DOCKER_PYTHON: python:3.8.18-alpine3.19
   DOCKER_NODE: node:20.11.0-alpine3.19
   DOCKER_POSTGRES: postgres:14.7
@@ -16,12 +15,12 @@ variables:
   PANELAPP_TF_DIR: "panelapp-infra/terraform/panelapp/"
   AWS_REGION: eu-west-2
   AWS_DEFAULT_REGION: eu-west-2
+  AWS_ACCOUNT_ID: "577192787797"
   AWS_ASSUME_ROLE: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/CIDeploypanelapp"
   ECR_ACCOUNT_ID: 577192787797
   ECR_REGISTRY: "${ECR_ACCOUNT_ID}.dkr.ecr.eu-west-2.amazonaws.com"
   ECR_ASSUME_ROLE: "arn:aws:iam::${ECR_ACCOUNT_ID}:role/CIDeploypanelapp"
   ECR_REPOSITORY: panelapp
-  WORKFLOW_NAME: "Deploying app: $version, infra: $infra_version -> $env_name"
   TAGGER_REGISTRY: $ECR_ACCOUNT_ID
   TAGGER_REPOSITORY: $ECR_REPOSITORY
   TAGGER_ENVIRONMENTS: "build,dev,test,e2e,uat,prod"
@@ -29,32 +28,16 @@ variables:
   CI_DEBUG_TRACE: "false"
   #  TF_LOG: DEBUG
   UI_TEST_IMAGE_TAG: "$CI_REGISTRY_IMAGE/ui-test:$CI_COMMIT_SHORT_SHA"
-  env_name:
-    description: "Environment to deploy to"
-    value: dev
-    options:
-      - dev
-      - test
-      - e2e
-      - "### regulated environments"
-      - uat
-      - prod
+  env_name: dev
   version:
     description: "Version to deploy"
     value: 3.9.0
-  infra_version:
-    description: "Infra version (tag or branch) to use"
-    value: 2.4.0
-  snapshot_arn:
-    description: "ARN of snapshot to use for the database; DESTRUCTIVE action"
-    value: ""
 
 stages:
   - test_build
   - test
   - image_build
-  - plan
-  - apply
+  - tag
 
 services:
   - name: $DOCKER_IN_DOCKER
@@ -67,18 +50,9 @@ default:
   tags:
     - pool_name:panelapp_docker
 
-.deploy:
-  image:
-    name: $DOCKER_TERRAFORM
-    entrypoint: ["/bin/sh", "-c"]
-  before_script:
-    - apk --no-cache add --update python3 curl jq aws-cli py3-boto3
-
 .tests:
   image: $DOCKER_PYTHON
   stage: test
-  rules:
-    - if: $TEST
 
 .tag:
   image: $DOCKER_IN_DOCKER
@@ -88,10 +62,17 @@ default:
   variables:
     AWS_ASSUME_ROLE: $ECR_ASSUME_ROLE
 
+debug:
+  stage: test
+  needs: []
+  script:
+    - env -u CI_JOB_JWT_V1 -u CI_JOB_JWT_V2 -u gel_gitlab_runner_key | sort
+
 # Code checks
 ## run unit and integration tests
 code_test:
   extends: .tests
+  needs: []
   coverage: /^TOTAL.+?(\d+\%)$/
   artifacts:
     reports:
@@ -128,8 +109,6 @@ ui_test_image_build:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
     - docker build -f ./docker/Dockerfile -t "$UI_TEST_IMAGE_TAG" --target test --build-arg node_base="${DOCKER_NODE}" --build-arg python_base="${DOCKER_PYTHON}" .
     - docker push "$UI_TEST_IMAGE_TAG"
-  rules:
-    - if: $TEST
 
 ui_test:
   image: mcr.microsoft.com/playwright:v1.40.0-jammy
@@ -178,12 +157,11 @@ ui_test:
     - yarn set version 3.6.3
     - yarn install
     - yarn playwright test
-  rules:
-    - if: $TEST
 
 ## Linting, formatting, etc
 import_sorting:
   extends: .tests
+  needs: []
   before_script:
     - python -m venv .venv
     - source .venv/bin/activate
@@ -193,6 +171,7 @@ import_sorting:
 
 formatter:
   extends: .tests
+  needs: []
   before_script:
     - python -m venv .venv
     - source .venv/bin/activate
@@ -202,6 +181,7 @@ formatter:
 
 trivy:
   stage: test
+  needs: []
   image:
     name: aquasec/trivy:0.42.1
     entrypoint: [""]
@@ -231,40 +211,19 @@ image_build:
     - apk add aws-cli jq py3-boto3
     - source scripts/assume_role.sh
   script:
-    - build_tag="ci-$CI_JOB_ID"
-    - '(scripts/tagger validate-version "$CI_COMMIT_TAG" && ! scripts/tagger tag-exists "$CI_COMMIT_TAG") || scripts/tagger freestyle-tag "$CI_COMMIT_TAG"'
     - aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin "$ECR_REGISTRY"
-    - if scripts/tagger validate-version "$CI_COMMIT_TAG"; then echo "${CI_COMMIT_TAG}" > ./VERSION; fi
-    - docker build -f ./docker/Dockerfile -t "$ECR_REGISTRY/$ECR_REPOSITORY:$build_tag" --target prod --build-arg node_base="${DOCKER_NODE}" --build-arg python_base="${DOCKER_PYTHON}" .
-    - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$build_tag"
-    - scripts/tagger add-env-tags --env=build --add-latest=1 "$build_tag"
-    - scripts/tagger add-tag "$build_tag" "$CI_COMMIT_TAG"
+    - docker build -f ./docker/Dockerfile -t "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG" --target prod --build-arg node_base="${DOCKER_NODE}" --build-arg python_base="${DOCKER_PYTHON}" .
+    - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG"
+    - scripts/tagger add-env-tags --env=build --add-latest=1 "$BUILD_TAG"
   variables:
     AWS_ASSUME_ROLE: $ECR_ASSUME_ROLE
+    BUILD_TAG: "ci-$CI_PIPELINE_ID"
   rules:
-    - if: $CI_COMMIT_TAG != null
-
-# Deploy all the things
-
-check_version:
-  stage: plan
-  extends: .tag
-  script:
-    - "printf '###\n### checking application version: %s\n###\n' \"$version\""
-    - scripts/tagger tag-exists "$version"
-    - test "$env_name" != e2e || scripts/tagger validate-version "$version"
-    - test "$env_name" != uat || scripts/tagger validate-version --no-alpha --no-beta "$version"
-    - test "$env_name" != prod || scripts/tagger validate-version --no-alpha --no-beta --no-rc "$version"
-    - "printf '###\n### checking infrastructure version: %s\n###\n' \"$infra_version\""
-    - test "$env_name" != e2e || scripts/tagger validate-version "$infra_version"
-    - test "$env_name" != uat || scripts/tagger validate-version --no-alpha --no-beta "$infra_version"
-    - test "$env_name" != prod || scripts/tagger validate-version --no-alpha --no-beta --no-rc "$infra_version"
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null
+    - if: $CI_PIPELINE_SOURCE == "push"
 
 scan:
-  stage: plan
-  dependencies:
+  stage: image_build
+  needs:
     - image_build
   environment:
     name: $env_name
@@ -273,118 +232,39 @@ scan:
     - apk add aws-cli jq py3-boto3
     - source scripts/assume_role.sh
   script:
-    - aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageTag="$version" | tee "inspector_findings_$version.json"
-    - count_findings () { jq ".imageScanFindings.findingSeverityCounts.$1 // 0" "inspector_findings_$version.json"; }
+    - aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageTag="$BUILD_TAG" | tee "inspector_findings_$BUILD_TAG.json"
+    - count_findings () { jq ".imageScanFindings.findingSeverityCounts.$1 // 0" "inspector_findings_$BUILD_TAG.json"; }
     - |
+      set -e
       if [ "$(count_findings CRITICAL)" -gt 0 ]; then
-        echo -e "\e[91mThe image "$ECR_REPOSITORY:$version" has $(count_findings CRITICAL) CRITICAL findings.\e[0m"
+        echo -e "\e[91mThe image "$ECR_REPOSITORY:$BUILD_TAG" has $(count_findings CRITICAL) CRITICAL findings.\e[0m"
         exit 101
       elif [ "$(count_findings HIGH)" -gt 0 ]; then
-        echo -e "\e[93mThe image "$ECR_REPOSITORY:$version" has $(count_findings HIGH) HIGH findings.\e[0m"
+        echo -e "\e[93mThe image "$ECR_REPOSITORY:$BUILD_TAG" has $(count_findings HIGH) HIGH findings.\e[0m"
         exit 102
       else
         echo -e "\e[92mAll good!\e[0m"
       fi
   variables:
     AWS_ASSUME_ROLE: $ECR_ASSUME_ROLE
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null
+    BUILD_TAG: "ci-$CI_PIPELINE_ID"
   allow_failure:
     exit_codes:
       - 101
       - 102
   artifacts:
     paths:
-      - inspector_findings_$version.json
+      - inspector_findings_$BUILD_TAG.json
     when: on_failure
 
-plan:
-  stage: plan
-  extends: .deploy
-  environment:
-    name: $env_name
-  dependencies:
-    - image_build
-  script:
-    - printf '###\n### terraform plan\n###\n'
-    - git clone --single-branch --branch "$infra_version" https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-    - cd "$PANELAPP_TF_DIR"
-    - terraform init -backend-config="../config/$env_name/panelapp-backend.conf"
-    - |
-      if [ -n "$snapshot_arn" ]; then
-        (
-          cd "$CI_PROJECT_DIR"
-          source scripts/assume_role.sh
-          aws rds describe-db-cluster-snapshots --filter="Name=db-cluster-snapshot-id,Values=$snapshot_arn" --query DBClusterSnapshots[].Status --output text | grep -q available || { echo "snapshot $snapshot_arn does not exists" >&2; exit 1; }
-        )
-        terraform plan -var-file="../config/$env_name/terraform.tfvars" \
-          -var image_tag="$version" -var infra_tag="$infra_version" \
-          -var=restore_from_snapshot=true -var=snapshot_identifier=$snapshot_arn \
-          -replace=module.aurora.aws_rds_cluster.aurora_cluster \
-          -out=plan.tfplan
-      else
-        terraform plan -var-file="../config/$env_name/terraform.tfvars" -var image_tag="$version" -var infra_tag="$infra_version" -out=plan.tfplan
-      fi
-    - "printf '### Environment:   %s\n### App version:   %s\n### Infra version: %s\n### Snapshot:      %s\n' \"$env_name\" \"$version\" \"$infra_version\" \"$snapshot_arn\""
-  rules:
-    - if: $CI_COMMIT_TAG != null && $snapshot_arn == ""
-    - if: $CI_PIPELINE_SOURCE == "web"
-  artifacts:
-    paths:
-      - panelapp-infra/terraform/
-      - panelapp-infra/*.py
-
-apply:
-  stage: apply
-  extends: .deploy
-  environment:
-    name: $env_name
-  dependencies:
-    - plan
-    - scan
-  script:
-    - |
-      if [ -n "$snapshot_arn" ]; then
-        (
-          source "$CI_PROJECT_DIR/scripts/assume_role.sh"
-          cluster_name="aurora-$env_name"
-          cluster_status="$(aws rds describe-db-clusters --query "DBClusters[?DBClusterIdentifier == '$cluster_name'].Status" --output text)"
-          final_snapshot_id="$cluster_name-final-$(date -u +'%Y-%m-%d-%H-%M')"
-          if [ "$cluster_status" = "available" ]; then
-            echo "Create snapshot before delete: $final_snapshot_id"
-            aws rds create-db-cluster-snapshot --db-cluster-snapshot-identifier "$final_snapshot_id" --db-cluster-identifier "$cluster_name"
-            while true; do
-              status=$(aws rds describe-db-cluster-snapshots --query "DBClusterSnapshots[?DBClusterSnapshotIdentifier == '$final_snapshot_id'].Status" --output text)
-              aws rds describe-db-cluster-snapshots --query "DBClusterSnapshots[?DBClusterSnapshotIdentifier == '$final_snapshot_id'].[@.DBClusterSnapshotIdentifier, @.Status]" --output text
-              if [ "$status" = "available" ]; then
-                break
-              fi
-              sleep 15
-            done
-          else
-            echo "Can not create snapshot: cluster is not available"
-          fi
-        )
-      fi
-    - cd "$PANELAPP_TF_DIR"
-    - terraform apply plan.tfplan
-    - cd -
-    - source scripts/assume_role.sh
-    - time aws ecs wait services-stable --cluster panelapp-cluster-$env_name --services panelapp-web-panelapp-$env_name panelapp-worker-panelapp-$env_name panelapp-worker-beat-panelapp-$env_name
-    - panelapp-infra/run-ecs-task.py panelapp-migrate-panelapp-$env_name panelapp-collectstatic-panelapp-$env_name
-    - sleep 30
-    - test "$env_name" = "prod" || panelapp-infra/run-ecs-task.py panelapp-datacleanup-$env_name
-  rules:
-    - if: $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null
-      when: manual
-
 add_tags:
-  stage: apply
+  stage: tag
   extends: .tag
-  needs:
-    - apply
   script:
-    - scripts/tagger add-env-tags --env="$env_name" --add-latest=3 "$version"
+    - '(scripts/tagger validate-version "$IMAGE_TAG" && ! scripts/tagger tag-exists "$IMAGE_TAG") || scripts/tagger freestyle-tag "$IMAGE_TAG"'
+    - scripts/tagger add-tag "$BUILD_TAG" "$IMAGE_TAG"
     - scripts/tagger --verbose list-tags
+  variables:
+    BUILD_TAG: "ci-$CI_PIPELINE_ID"
   rules:
-    - if: $CI_PIPELINE_SOURCE == "web" || $CI_COMMIT_TAG != null
+    - if: $CI_PIPELINE_SOURCE == "push" && $IMAGE_TAG != null

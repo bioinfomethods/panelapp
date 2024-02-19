@@ -1,33 +1,15 @@
+variables:
+  WORKFLOW_NAME: "" # use default
+
 workflow:
   name: "$WORKFLOW_NAME"
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
       when: never
-    # building and merging
-    - if: $env_name == "dev" && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG == null
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG == null
+    - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG
       variables:
-        AWS_ACCOUNT_ID: "577192787797"
-        TEST: "yes"
-        WORKFLOW_NAME: "" # use default
-    - if: $env_name == "dev" && $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG
-      variables:
-        AWS_ACCOUNT_ID: "577192787797"
-        version: $CI_COMMIT_TAG
-        WORKFLOW_NAME: "" # use default
-    # deployment
-    - if: $env_name == "dev" && $CI_PIPELINE_SOURCE == "web"
-      variables:
-        AWS_ACCOUNT_ID: "577192787797"
-    - if: $env_name == "test" && $CI_PIPELINE_SOURCE == "web"
-      variables:
-        AWS_ACCOUNT_ID: "455662437776"
-    # E2E, UAT, and Prod deployments must be triggered manually and from a protected branch
-    - if: $env_name == "e2e" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"
-      variables:
-        AWS_ACCOUNT_ID: "875605549679"
-    - if: $env_name == "uat" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"
-      variables:
-        AWS_ACCOUNT_ID: "400119055163"
-    - if: $env_name == "prod" && $CI_PIPELINE_SOURCE == "web" && $CI_COMMIT_REF_PROTECTED == "true"
-      variables:
-        AWS_ACCOUNT_ID: "876663091628"
+        WORKFLOW_NAME: "Building app: $IMAGE_TAG"
+        IMAGE_TAG: $CI_COMMIT_TAG
+    - if: $CI_PIPELINE_SOURCE == "web"
+      when: never
