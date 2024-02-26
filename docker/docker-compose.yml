@@ -13,7 +13,7 @@ services:
       BASE_URL: http://web:8000
 
   localstack:
-    image: localstack/localstack:2.2.0
+    image: localstack/localstack:3.1.0
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
@@ -28,7 +28,7 @@ services:
       - PERSISTENCE=1
 #      - DATA_DIR=${DATA_DIR- }
     volumes:
-      - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
+      - "${TMPDIR:-/tmp/localstack}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
 
   db:
@@ -121,7 +121,7 @@ services:
       - USE_SQS=TRUE
       - CELERY_BROKER_URL=sqs://@localstack:4566
 #      - CELERY_BROKER_URL=amqp://rabbitmq/panelapp
-    command: celery --app panelapp worker --task-events --concurrency 1 --loglevel INFO -Q celery,panelapp
+    command: celery --app panelapp worker --task-events --concurrency 1 --loglevel INFO
 
   beat:
     build:

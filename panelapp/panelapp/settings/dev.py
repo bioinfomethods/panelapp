@@ -61,6 +61,17 @@ EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 CELERY_TASK_ALWAYS_EAGER = True
 CELERY_TASK_PUBLISH_RETRY_POLICY = {"max_retries": 3}
-BROKER_TRANSPORT_OPTIONS = {"socket_timeout": 5}
 CELERY_EAGER_PROPAGATES_EXCEPTIONS = True
-CELERY_BROKER = "pyamqp://localhost:5672/"
+
+AWS_REGION = os.getenv("AWS_REGION", "eu-west-2")
+
+USE_SQS = os.getenv("USE_SQS") == "TRUE"
+
+if USE_SQS:  # Use SQS as message broker
+    CELERY_TASK_ALWAYS_EAGER = False
+    CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "sqs://@localstack:4566")
+    BROKER_TRANSPORT_OPTIONS = {
+        "region": AWS_REGION,  # FIXME Is Kombo/Boto3 ignoring the region and always using us-east-1?
+        "polling_interval": 1,  # seconds
+        "visibility_timeout": 360,  # seconds
+    }
