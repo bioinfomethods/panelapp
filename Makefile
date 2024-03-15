@@ -27,10 +27,10 @@ endif
 export TMPDIR := $(TMPDIR)
 
 ui-test: up mock-aws collectstatic ## Run UI tests
-	$(DOCKERCOMPOSE) run --rm playwright yarn playwright test
+	$(DOCKERCOMPOSE) run --rm playwright npx playwright test
 
 update-snapshots: up mock-aws collectstatic ## Update playwright snapshots
-	$(DOCKERCOMPOSE) run --rm playwright yarn playwright test --update-snapshots
+	$(DOCKERCOMPOSE) run --rm playwright npx playwright test --update-snapshots
 
 clean: ## Remove build directory
 	rm -rf $(BUILDDIR)

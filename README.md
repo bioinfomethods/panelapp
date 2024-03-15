@@ -369,13 +369,13 @@ make ui-test
 Tests can be run using [the CLI](https://playwright.dev/docs/running-tests#command-line) directly on a development machine:
 
 ```
-yarn playwright test
+npx playwright test
 ```
 
 They can also be run (among other things) using [the GUI](https://playwright.dev/docs/running-tests#run-tests-in-ui-mode):
 
 ```
-yarn playwright test --ui
+npx playwright test --ui
 ```
 
 #### Creating a test
@@ -383,7 +383,7 @@ yarn playwright test --ui
 Tests can be written from scratch or they can be partially generated using [codegen](https://playwright.dev/docs/codegen-intro#running-codegen):
 
 ```
-yarn playwright codegen localhost:8080
+npx playwright codegen localhost:8080
 ```
 
 This will launch a GUI where interactions will be recorded in a generated test function.

@@ -115,15 +115,9 @@ temp_dump_data
 .pytest_cache
 .idea
 
-# yarn
-# https://yarnpkg.com/getting-started/qa#which-files-should-be-gitignored
+# npm
 .pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/sdks
-!.yarn/versions
+node_modules
 
 # playwright
 /playwright/.auth

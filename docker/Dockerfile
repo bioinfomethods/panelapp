@@ -4,12 +4,12 @@ ARG node_base=node:20.11.1-alpine3.19
 
 FROM ${node_base} as frontend_build
 
-RUN corepack enable
-
 COPY ./frontend /src/frontend
-COPY ./webpack.* package.json yarn.lock /src/
+COPY ./webpack.* package.json package-lock.json /src/
 
-RUN mkdir -p /build && yarn --cwd /src install --immutable && yarn --cwd /src build
+RUN npm install -g npm@10.5.0
+
+RUN cd /src && npm ci && npm run build
 
 FROM ${python_base} as backend_build_prod
 

@@ -158,10 +158,8 @@ ui_test:
     BASE_URL: http://panelapp:8080
     ALLOWED_HOSTS: panelapp
   script:
-    - corepack enable
-    - yarn set version 3.6.3
-    - yarn install
-    - yarn playwright test
+    - npm ci
+    - npx playwright test
 
 ## Linting, formatting, etc
 import_sorting:

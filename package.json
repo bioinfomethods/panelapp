@@ -1,13 +1,12 @@
 {
   "name": "panelapp",
   "private": true,
-  "packageManager": "yarn@3.6.3",
   "scripts": {
     "build": "webpack --config webpack.prod.js",
     "watch": "webpack watch --config webpack.dev.js"
   },
   "devDependencies": {
-    "@playwright/test": "1.40.0",
+    "@playwright/test": "^1.40.0",
     "autoprefixer": "^10.4.16",
     "css-loader": "^6.8.1",
     "mini-css-extract-plugin": "^2.7.6",
@@ -33,6 +32,6 @@
   },
   "volta": {
     "node": "20.10.0",
-    "yarn": "3.6.3"
+    "npm": "10.5.0"
   }
 }
