@@ -1,5 +1,5 @@
 ARG python_base=python:3.11.8-alpine3.19
-ARG node_base=node:20.11.0-alpine3.19
+ARG node_base=node:20.11.1-alpine3.19
 
 
 FROM ${node_base} as frontend_build
