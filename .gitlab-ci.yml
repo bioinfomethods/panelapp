@@ -79,6 +79,7 @@ code_test:
       coverage_report:
         coverage_format: cobertura
         path: coverage.xml
+      junit: report.xml
   services:
     - name: $DOCKER_POSTGRES
       alias: db-postgres
@@ -96,7 +97,7 @@ code_test:
     - pip install .[tests]
     - pip install pytest-runner
   script:
-    - pytest --cov-report term --cov-report xml
+    - pytest --cov-report term --cov-report xml --junitxml=report.xml
 
 # Build docker image for UI testing purposes
 ui_test_image_build:
