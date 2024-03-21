@@ -422,3 +422,11 @@ To make a change to this data:
 6. Copy the exported `data.json` over the existing one at `./frontend/tests/data.json`
 7. Update the visual test snapshots using `make update-snapshots`
 8. Commit the changes to the repository
+
+## Deployment
+
+### Enable relative static resource URLs
+
+The `AWS_STATICFILES_USE_RELATIVE_URL` environment variable in tandem with `AWS_S3_STATICFILES_CUSTOM_DOMAIN` controls whether PanelApp uses relative paths for static resources instead of fully-qualified URLs, e.g. `/static/app.css` instead of `https://example.com/static/app.css`.
+
+Set `AWS_STATICFILES_USE_RELATIVE_URL` to `TRUE` and `AWS_S3_STATICFILES_CUSTOM_DOMAIN` to any non-empty value to enable this behaviour.

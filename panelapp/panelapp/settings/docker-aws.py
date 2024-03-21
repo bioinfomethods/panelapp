@@ -89,6 +89,13 @@ AWS_STATICFILES_LOCATION = os.getenv("AWS_STATICFILES_LOCATION", "static")
 # Keep the default (`None`) when directly serving files from the bucket (including with LocalStack)
 AWS_S3_STATICFILES_CUSTOM_DOMAIN = os.getenv("AWS_S3_STATICFILES_CUSTOM_DOMAIN", None)
 
+# Use in tandem with AWS_S3_STATICFILES_CUSTOM_DOMAIN
+# to indicate that static files should be served from
+# a relative URL when using the S3 storage backend.
+AWS_STATICFILES_USE_RELATIVE_URL = (
+    os.getenv("AWS_STATICFILES_USE_RELATIVE_URL", "FALSE") == "TRUE"
+)
+
 # URL of the static files in the S3 bucket. Includes the path defined by AWS_STATICFILES_LOCATION
 # and must end with slash.
 # Override to 'http://localstack:4572/static-bucket/static/' for using LocalStack

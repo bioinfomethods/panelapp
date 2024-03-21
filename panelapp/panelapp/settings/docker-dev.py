@@ -87,6 +87,13 @@ if USE_S3:  # Static and Media files on S3
     #   AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
     AWS_S3_STATICFILES_CUSTOM_DOMAIN = None
 
+    # Use in tandem with AWS_S3_STATICFILES_CUSTOM_DOMAIN
+    # to indicate that static files should be served from
+    # a relative URL when using the S3 storage backend.
+    AWS_STATICFILES_USE_RELATIVE_URL = (
+        os.getenv("AWS_STATICFILES_USE_RELATIVE_URL", "FALSE") == "TRUE"
+    )
+
     # URL static files are served from
     #   STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
     STATIC_URL = f'http://localstack:4566/{AWS_S3_STATICFILES_BUCKET_NAME}/{AWS_STATICFILES_LOCATION + ("/" if AWS_STATICFILES_LOCATION else "")}'  # noqa

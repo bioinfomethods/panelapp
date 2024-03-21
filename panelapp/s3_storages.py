@@ -31,6 +31,7 @@ Custom S3 Storage for static and media file
 # See https://www.caktusgroup.com/blog/2014/11/10/Using-Amazon-S3-to-store-your-Django-sites-static-and-media-files/
 
 import logging
+from urllib.parse import urlparse
 
 from django.conf import settings
 from storages.backends.s3boto3 import S3Boto3Storage
@@ -47,6 +48,13 @@ class StaticStorage(S3Boto3Storage):
     default_acl = settings.AWS_STATICFILES_DEFAULT_ACL
     querystring_auth = False  # We assume static files are public
     logger.debug("Static Files bucket: {}, Location: {}".format(bucket_name, location))
+
+    def url(self, *args, **kwargs):
+        url = super().url(*args, **kwargs)
+        if settings.AWS_STATICFILES_USE_RELATIVE_URL:
+            parts = urlparse(url)
+            return "".join(parts[2:])
+        return url
 
 
 class MediaStorage(S3Boto3Storage):
