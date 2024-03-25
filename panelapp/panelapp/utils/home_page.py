@@ -35,8 +35,8 @@ from mistletoe.markdown_renderer import (
 from returns.result import (
     Failure,
     Result,
+    ResultE,
     Success,
-    safe,
 )
 from serde import serde
 
@@ -88,18 +88,20 @@ class ImageAsset:
     name: str
     state: AssetState
 
-    @safe(exceptions=(requests.HTTPError,))
-    def upload(self, url: str) -> List[ImageDomainEvent]:
+    def upload(self, url: str) -> ResultE[List[ImageDomainEvent]]:
         if not isinstance(self.state, Missing):
-            return []
+            return Success([])
 
         src = requests.get(url)
-        src.raise_for_status()
+        try:
+            src.raise_for_status()
+        except requests.HTTPError as e:
+            return Failure(e)
 
         image = Image(image=ContentFile(src.content, name=self.name))
         image.save()
 
-        return [ImageDomainEvent(pk=image.pk, event=Created(self.name))]
+        return Success([ImageDomainEvent(pk=image.pk, event=Created(self.name))])
 
 
 @dataclass(frozen=True)
@@ -107,18 +109,20 @@ class FileAsset:
     name: str
     state: AssetState
 
-    @safe(exceptions=(requests.HTTPError,))
-    def upload(self, url: str) -> List[FileDomainEvent]:
+    def upload(self, url: str) -> ResultE[List[FileDomainEvent]]:
         if not isinstance(self.state, Missing):
-            return []
+            return Success([])
 
         src = requests.get(url)
-        src.raise_for_status()
+        try:
+            src.raise_for_status()
+        except requests.HTTPError as e:
+            return Failure(e)
 
         file = File(file=ContentFile(src.content, name=self.name))
         file.save()
 
-        return [FileDomainEvent(pk=file.pk, event=Created(self.name))]
+        return Success([FileDomainEvent(pk=file.pk, event=Created(self.name))])
 
 
 Asset = Union[FileAsset, ImageAsset]
