@@ -2,12 +2,9 @@
 Manage home pages
 """
 
-import argparse
 import difflib
 import json
 import logging
-import os
-import sys
 from dataclasses import dataclass
 from typing import (
     Dict,
@@ -28,7 +25,6 @@ logging.getLogger("markdown_it").setLevel(logging.ERROR)
 logging.getLogger("serde").setLevel(logging.ERROR)
 logging.getLogger("urllib3").setLevel(logging.ERROR)
 
-sys.path.insert(0, os.path.abspath(os.path.curdir))
 django.setup()
 
 from panelapp.models import HomeText

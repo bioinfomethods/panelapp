@@ -2,7 +2,7 @@ ARG python_base=python:3.11.8-alpine3.19
 ARG node_base=node:20.11.0-alpine3.19
 
 
-FROM ${node_base} as frontend
+FROM ${node_base} as frontend_build
 
 RUN corepack enable
 
@@ -11,35 +11,42 @@ COPY ./webpack.* package.json yarn.lock /src/
 
 RUN mkdir -p /build && yarn --cwd /src install --immutable && yarn --cwd /src build
 
-FROM ${python_base} as base
+FROM ${python_base} as backend_build_prod
 
-RUN mkdir -p /app/panelapp
+ENV POETRY_VERSION=1.8.2
 
-# Application (non-root) user
-RUN adduser -D -u 1000 -s /sbin/nologin  -g app app
+WORKDIR /src
 
-COPY --chown=app:app ./panelapp     /app/panelapp
-COPY --chown=app:app ./setup.py ./setup.cfg ./MANIFEST.in ./VERSION     /app/
-COPY --chown=app:app ./deploy/gunicorn_config.py  /app/
-
-COPY --chown=app:app --from=frontend /src/dist /app/dist
-
-# Python libraries get installed as root in /pythonlib (scripts are still installed in /usr/local/bin).
-# Ownership of all python modules have to be writable by the user running the application, to create __pycache__.
-# After installing we are removing all system dependencies not required at runtime, within the same Docker layer
-WORKDIR /app
 RUN apk upgrade --no-cache && \
     apk add --no-cache postgresql-libs curl jpeg-dev zlib-dev && \
-    apk add --no-cache --virtual .build-deps gcc musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev && \
-    pip install --upgrade setuptools==67.8.0 && \
-    pip install . && \
-    pip install ddtrace==1.18.3 && \
-    pip uninstall -y ecdsa && \
-    apk --purge del .build-deps && \
-    chown -R app:app /usr/local/lib/python3.*
+    apk add --no-cache musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev && \
+    python3 -m venv /src/.poetry && \
+    /src/.poetry/bin/pip install -U pip setuptools && \
+    /src/.poetry/bin/pip install poetry=="$POETRY_VERSION" && \
+    /src/.poetry/bin/poetry self add poetry-plugin-bundle
 
-ENV PYTHONPATH=/pythonlib
-ENV PATH="/pythonlib:${PATH}"
+COPY ./pyproject.toml ./poetry.lock ./README.md ./VERSION /src/
+COPY ./panelapp /src/panelapp
+
+RUN /src/.poetry/bin/poetry bundle venv --only main,deploy /venv && \
+    # Resolve https://nvd.nist.gov/vuln/detail/CVE-2024-23342
+    # https://github.com/python-poetry/poetry/issues/5330#issuecomment-1907083739
+    /venv/bin/pip uninstall -y ecdsa
+
+FROM ${python_base} as base
+
+WORKDIR /app
+
+# Application (non-root) user
+RUN adduser -D -u 1000 -s /sbin/nologin  -g app app && \
+    chown app:app /app
+
+RUN apk upgrade --no-cache && \
+    apk add --no-cache postgresql-libs curl jpeg-dev zlib-dev
+
+COPY --chown=app:app ./deploy/gunicorn_config.py /app/
+COPY --chown=app:app --from=frontend_build /src/dist /app/dist
+
 ENV CELERY_BROKER_URL=sqs://
 
 # Gunicorn settings
@@ -50,20 +57,27 @@ ENV GUNICORN_BIND=0.0.0.0:8080
 ENV GUNICORN_LOG_LEVEL=INFO
 EXPOSE 8080
 
+# virtualenv
+ENV VIRTUAL_ENV=/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+ENV STATICFILES_DIRS=/app/dist
+
+USER app:app
+
+FROM backend_build_prod as backend_build_dev
+
+RUN /src/.poetry/bin/poetry bundle venv --with deploy /venv
+
 FROM base as dev
 
-RUN pip install .[dev,tests] && pip install pytest-runner
-
-WORKDIR /app/panelapp
+COPY --chown=app:app --from=backend_build_dev /venv /venv
 
 FROM base as test
 
+COPY --chown=app:app --from=backend_build_prod /venv /venv
 COPY --chown=app:app ./frontend/tests/data.json /app/data.json
-
-WORKDIR /app/panelapp
 
 FROM base as prod
 
-WORKDIR /app/panelapp
-USER app:app
-ENTRYPOINT ["/bin/sh"]
+COPY --chown=app:app --from=backend_build_prod /venv /venv

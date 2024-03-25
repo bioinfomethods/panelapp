@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 ##
 ## Copyright (c) 2016-2019 Genomics England Ltd.
 ##
@@ -27,12 +29,15 @@ Preserve TEST_Curator and TEST_Reviewer and fix permissions for TEST_Curator.
 
 NEVER use in prod environment.
 
-Usage: cat datacleanup.py | python manage.py shell
+Usage: datacleanup.py
 
 """
 import sys
 
+import django
 from django.db import transaction
+
+django.setup()
 
 from accounts.models import (
     Reviewer,
@@ -85,5 +90,5 @@ def main():
     fix_test_users()
 
 
-# No "if __name__ == '__main__':" here as this script is piped to manage.py shell
-main()
+if __name__ == "__main__":
+    main()

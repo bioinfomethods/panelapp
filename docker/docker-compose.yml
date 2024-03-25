@@ -86,7 +86,7 @@ services:
       - USE_SQS=TRUE
       - CELERY_BROKER_URL=sqs://@localstack:4566
 #      - CELERY_BROKER_URL=amqp://rabbitmq/panelapp
-    command: python manage.py runserver_plus
+    command: manage runserver_plus
 
   worker:
     build:

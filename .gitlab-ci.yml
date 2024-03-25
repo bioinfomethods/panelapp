@@ -13,6 +13,8 @@ variables:
   DOCKER_TLS_VERIFY: 1
   FF_GITLAB_REGISTRY_HELPER_IMAGE: 1
   PANELAPP_TF_DIR: "panelapp-infra/terraform/panelapp/"
+  POETRY_VERSION: "1.8.2"
+  POETRY_VENV: /tmp/poetry
   AWS_REGION: eu-west-2
   AWS_DEFAULT_REGION: eu-west-2
   AWS_ACCOUNT_ID: "577192787797"
@@ -92,10 +94,12 @@ code_test:
     DJANGO_LOG_LEVEL: INFO
   before_script:
     - apk add --no-cache postgresql-libs git curl jpeg-dev zlib-dev gcc musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev
-    - python -m venv .venv
+    - python3 -m venv "$POETRY_VENV"
+    - $POETRY_VENV/bin/pip install -U pip setuptools
+    - $POETRY_VENV/bin/pip install poetry=="$POETRY_VERSION"
+    - $POETRY_VENV/bin/poetry self add poetry-plugin-bundle
+    - $POETRY_VENV/bin/poetry bundle venv --only main,test ./.venv
     - source .venv/bin/activate
-    - pip install .[tests]
-    - pip install pytest-runner
   script:
     - pytest --cov-report term --cov-report xml --junitxml=report.xml
 
@@ -136,7 +140,7 @@ ui_test:
       command:
         - /bin/sh
         - "-c"
-        - "python manage.py migrate && python manage.py loaddata /app/data.json && python manage.py runserver 0.0.0.0:8080"
+        - "manage migrate && manage loaddata /app/data.json && manage runserver 0.0.0.0:8080"
   variables:
     # Allows inter-service communication: https://stackoverflow.com/questions/48041101/gitlab-ci-cross-service-communication
     FF_NETWORK_PER_BUILD: 1
@@ -164,9 +168,12 @@ import_sorting:
   extends: .tests
   needs: []
   before_script:
-    - python -m venv .venv
+    - python3 -m venv "$POETRY_VENV"
+    - $POETRY_VENV/bin/pip install -U pip setuptools
+    - $POETRY_VENV/bin/pip install poetry=="$POETRY_VERSION"
+    - $POETRY_VENV/bin/poetry self add poetry-plugin-bundle
+    - $POETRY_VENV/bin/poetry bundle venv --only dev ./.venv
     - source .venv/bin/activate
-    - pip install isort==5.0.5
   script:
     - isort . -c
 
@@ -174,9 +181,12 @@ formatter:
   extends: .tests
   needs: []
   before_script:
-    - python -m venv .venv
+    - python3 -m venv "$POETRY_VENV"
+    - $POETRY_VENV/bin/pip install -U pip setuptools
+    - $POETRY_VENV/bin/pip install poetry=="$POETRY_VERSION"
+    - $POETRY_VENV/bin/poetry self add poetry-plugin-bundle
+    - $POETRY_VENV/bin/poetry bundle venv --only dev ./.venv
     - source .venv/bin/activate
-    - pip install black==22.3.0
   script:
     - black . --check
 

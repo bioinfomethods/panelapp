@@ -156,9 +156,11 @@ DATABASE_PORT = os.getenv("DATABASE_PORT", "5324")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "panelapp")
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    f"postgres://{DATABASE_USER}:{urllib.parse.quote(DATABASE_PASSWORD,safe='')}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
-    if DATABASE_USER and DATABASE_PASSWORD and DATABASE_HOST
-    else None,
+    (
+        f"postgres://{DATABASE_USER}:{urllib.parse.quote(DATABASE_PASSWORD,safe='')}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
+        if DATABASE_USER and DATABASE_PASSWORD and DATABASE_HOST
+        else None
+    ),
 )
 DATABASES = {
     "default": dj_database_url.parse(
@@ -283,7 +285,7 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.getenv("STATIC_ROOT", os.path.join(BASE_DIR, "_staticfiles"))
 
-STATICFILES_DIRS = [str(os.path.join(BASE_DIR, "dist"))]
+STATICFILES_DIRS = [os.getenv("STATICFILES_DIRS", str(os.path.join(BASE_DIR, "dist")))]
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.getenv("MEDIA_ROOT", os.path.join(BASE_DIR, "_mediafiles"))
