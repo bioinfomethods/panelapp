@@ -25,7 +25,7 @@ RUN apk upgrade --no-cache && \
     /src/.poetry/bin/pip install poetry=="$POETRY_VERSION" && \
     /src/.poetry/bin/poetry self add poetry-plugin-bundle
 
-COPY ./pyproject.toml ./poetry.lock ./README.md ./VERSION /src/
+COPY ./pyproject.toml ./poetry.lock ./README.md /src/
 COPY ./panelapp /src/panelapp
 
 RUN /src/.poetry/bin/poetry bundle venv --only main,deploy /venv && \

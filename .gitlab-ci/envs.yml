@@ -9,7 +9,7 @@ workflow:
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG == null
     - if: $CI_PIPELINE_SOURCE == "push" && $CI_COMMIT_TAG
       variables:
-        WORKFLOW_NAME: "Building app: $IMAGE_TAG"
-        IMAGE_TAG: $CI_COMMIT_TAG
+        WORKFLOW_NAME: "Building app: $APP_VERSION"
+        APP_VERSION: $CI_COMMIT_TAG
     - if: $CI_PIPELINE_SOURCE == "web"
       when: never

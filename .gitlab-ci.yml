@@ -30,10 +30,8 @@ variables:
   CI_DEBUG_TRACE: "false"
   #  TF_LOG: DEBUG
   UI_TEST_IMAGE_TAG: "$CI_REGISTRY_IMAGE/ui-test:$CI_COMMIT_SHORT_SHA"
+  APP_VERSION: "0.0.0"
   env_name: dev
-  version:
-    description: "Version to deploy"
-    value: 3.9.0
 
 stages:
   - test_build
@@ -221,6 +219,7 @@ image_build:
     - source scripts/assume_role.sh
   script:
     - aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+    - if scripts/tagger validate-version "$APP_VERSION"; then sed -i -e "s/^version =.*/version = \"${APP_VERSION}\"/" ./pyproject.toml; fi
     - docker build -f ./docker/Dockerfile -t "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG" --target prod --build-arg node_base="${DOCKER_NODE}" --build-arg python_base="${DOCKER_PYTHON}" .
     - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG"
     - scripts/tagger add-env-tags --env=build --add-latest=1 "$BUILD_TAG"
@@ -270,10 +269,10 @@ add_tags:
   stage: tag
   extends: .tag
   script:
-    - '(scripts/tagger validate-version "$IMAGE_TAG" && ! scripts/tagger tag-exists "$IMAGE_TAG") || scripts/tagger freestyle-tag "$IMAGE_TAG"'
-    - scripts/tagger add-tag "$BUILD_TAG" "$IMAGE_TAG"
+    - '(scripts/tagger validate-version "$APP_VERSION" && ! scripts/tagger tag-exists "$APP_VERSION") || scripts/tagger freestyle-tag "$APP_VERSION"'
+    - scripts/tagger add-tag "$BUILD_TAG" "$APP_VERSION"
     - scripts/tagger --verbose list-tags
   variables:
     BUILD_TAG: "ci-$CI_PIPELINE_ID"
   rules:
-    - if: $CI_PIPELINE_SOURCE == "push" && $IMAGE_TAG != null
+    - if: $CI_PIPELINE_SOURCE == "push" && $APP_VERSION != "0.0.0"
