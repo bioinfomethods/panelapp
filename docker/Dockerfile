@@ -75,7 +75,7 @@ COPY --chown=app:app --from=backend_build_dev /venv /venv
 
 FROM base as test
 
-COPY --chown=app:app --from=backend_build_prod /venv /venv
+COPY --chown=app:app --from=backend_build_dev /venv /venv
 COPY --chown=app:app ./frontend/tests/data.json /app/data.json
 
 FROM base as prod
