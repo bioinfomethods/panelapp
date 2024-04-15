@@ -24,12 +24,12 @@
 import csv
 from datetime import datetime
 
-from django.conf import settings
 from django.contrib import messages
 from django.core.exceptions import ValidationError
 from django.db.models import (
-    Count,
+    F,
     Q,
+    Subquery,
 )
 from django.http import (
     HttpResponse,
@@ -74,6 +74,7 @@ from panels.models import (
     GenePanelSnapshot,
     ProcessingRunCode,
 )
+from panels.models.genepanelsnapshot import GenePanelSnapshotQuerySet
 
 from .entities import EchoWriter
 
@@ -85,22 +86,40 @@ class PanelsIndexView(ListView):
     objects = []
 
     def get_queryset(self, *args, **kwargs):
-        if self.request.user.is_authenticated and self.request.user.reviewer.is_GEL():
-            if self.request.GET.get("gene"):
-                self.objects = GenePanelSnapshot.objects.get_gene_panels(
-                    self.request.GET.get("gene"), all=True, internal=True
-                )
-            else:
-                self.objects = GenePanelSnapshot.objects.get_active_annotated(
-                    all=True, internal=True
-                )
-        else:
-            if self.request.GET.get("gene"):
-                self.objects = GenePanelSnapshot.objects.get_gene_panels(
-                    self.request.GET.get("gene")
-                )
-            else:
-                self.objects = GenePanelSnapshot.objects.get_active_annotated()
+        qs: GenePanelSnapshotQuerySet = GenePanelSnapshot.objects.get_queryset()
+        qs = (
+            qs.latest()
+            .annotate(
+                signed_off_date=F("panel__signed_off__signed_off_date"),
+                signed_off_major_version=F("panel__signed_off__major_version"),
+                signed_off_minor_version=F("panel__signed_off__minor_version"),
+            )
+            .prefetch_related(
+                "panel",
+                "panel__types",
+                "child_panels",
+                "level4title",
+            )
+            .order_by(
+                "level4title__name",
+                "-major_version",
+                "-minor_version",
+                "-modified",
+                "-pk",
+            )
+        )
+        qs = qs.annotate_panels(qs)
+
+        if self.request.GET.get("gene"):
+            gene_symbol = self.request.GET.get("gene")
+            qs = qs.filter(genepanelentrysnapshot__gene__gene_symbol=gene_symbol)
+
+        if not (
+            self.request.user.is_authenticated and self.request.user.reviewer.is_GEL()
+        ):
+            qs = qs.external()
+
+        self.objects = qs
         return self.panels
 
     @cached_property
@@ -365,12 +384,16 @@ class ActivityListView(ListView):
         ctx["filter_active"] = True if self.request.GET else False
         form_kwargs = {
             "panels": self.available_panels(),
-            "versions": self.available_panel_versions()
-            if self.request.GET.get("panel")
-            else None,
-            "entities": self.available_panel_entities()
-            if self.request.GET.get("version") or self.request.GET.get("entity")
-            else None,
+            "versions": (
+                self.available_panel_versions()
+                if self.request.GET.get("panel")
+                else None
+            ),
+            "entities": (
+                self.available_panel_entities()
+                if self.request.GET.get("version") or self.request.GET.get("entity")
+                else None
+            ),
         }
         ctx["filter_form"] = ActivityFilterForm(
             self.request.GET if self.request.GET else None, **form_kwargs
@@ -451,9 +474,11 @@ class DownloadAllPanels(GELReviewerRequiredMixin, View):
             )
             reviewers = panel.contributors
             contributors = [
-                "{} {} ({})".format(user.first_name, user.last_name, user.email)
-                if user.first_name
-                else user.username
+                (
+                    "{} {} ({})".format(user.first_name, user.last_name, user.email)
+                    if user.first_name
+                    else user.username
+                )
                 for user in reviewers
             ]
 
@@ -473,9 +498,11 @@ class DownloadAllPanels(GELReviewerRequiredMixin, View):
                 panel.panel.status.upper(),
                 ";".join(panel.old_panels),
                 ";".join(panel.panel.types.values_list("name", flat=True)),
-                "v{}.{} on {}".format(*panel.signed_off)
-                if panel.panel.signed_off
-                else "",
+                (
+                    "v{}.{} on {}".format(*panel.signed_off)
+                    if panel.panel.signed_off
+                    else ""
+                ),
             )
 
     def get(self, request, *args, **kwargs):

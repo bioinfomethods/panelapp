@@ -69,11 +69,20 @@ from .trackrecord import TrackRecord
 LOGGER = logging.getLogger(__name__)
 
 
-class GenePanelSnapshotManager(models.Manager):
+class GenePanelSnapshotQuerySet(models.query.QuerySet):
+    def latest(self) -> "GenePanelSnapshotQuerySet":
+        return self.filter(pk__in=Subquery(self.get_latest_ids()))
+
+    def external(self) -> "GenePanelSnapshotQuerySet":
+        return self.filter(
+            Q(panel__status=GenePanel.STATUS.public)
+            | Q(panel__status=GenePanel.STATUS.promoted)
+        )
+
     def get_latest_ids(self, deleted=False, exclude_superpanels=False):
         """Get latest versions for GenePanelsSnapshots"""
 
-        qs = super().get_queryset()
+        qs = self
         if not deleted:
             qs = qs.exclude(panel__status=GenePanel.STATUS.deleted)
 
@@ -105,7 +114,7 @@ class GenePanelSnapshotManager(models.Manager):
                 If we want to include `internal` panels in the list
         """
 
-        qs = super().get_queryset()
+        qs = self
 
         if not all:
             qs = qs.filter(
@@ -186,7 +195,7 @@ class GenePanelSnapshotManager(models.Manager):
         )
 
     def get_panel_version(self, name, version):
-        qs = super().get_queryset()
+        qs = self
 
         major_version, minor_version = version.split(".")
 
@@ -348,7 +357,7 @@ class GenePanelSnapshot(TimeStampedModel):
         get_latest_by = "created"
         ordering = ["-major_version", "-minor_version"]
 
-    objects = GenePanelSnapshotManager()
+    objects = GenePanelSnapshotQuerySet.as_manager()
 
     level4title = models.ForeignKey(Level4Title, on_delete=models.CASCADE)
     panel = models.ForeignKey(GenePanel, on_delete=models.CASCADE)

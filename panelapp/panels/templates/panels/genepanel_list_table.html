@@ -83,7 +83,7 @@
                 {%  endif %}
                 {% if entry.panel.signed_off_id %}
                     <strong>
-                    Latest signed off version: {% signed_off_version panel_id=entry.panel_id major_version=entry.signed_off.0 minor_version=entry.signed_off.1 %} ({{ entry.signed_off.2 }})
+                    Latest signed off version: {% signed_off_version panel_id=entry.panel_id major_version=entry.signed_off_major_version minor_version=entry.signed_off_minor_version %} ({{ entry.signed_off_date }})
                     </strong>
                 {% endif %}
               </td>
