@@ -23,7 +23,6 @@
 ##
 import csv
 
-from django.contrib.postgres.fields import JSONField
 from django.db import models
 from django.http import HttpResponse
 
@@ -44,7 +43,7 @@ class HistoricalSnapshot(models.Model):
     minor_version = models.IntegerField(default=0, db_index=True)
     reason = models.TextField(null=True)
     schema_version = models.CharField(max_length=100)  # JSON schema version
-    data = JSONField()
+    data = models.JSONField()
     signed_off_date = models.DateField(blank=True, null=True)
 
     def __str__(self):
@@ -116,17 +115,23 @@ class HistoricalSnapshot(models.Model):
                     data.get("panel", {}).get("disease_sub_group", ""),
                     data.get("panel", {}).get("disease_group", ""),
                     gene.get("mode_of_inheritance", ""),
-                    ";".join(map(remove_non_ascii, gene["phenotypes"]))
-                    if gene.get("phenotypes")
-                    else "",
-                    ";".join(map(remove_non_ascii, gene["gene_data"]["omim_gene"]))
-                    if gene.get("gene_data").get("omim_gene")
-                    else "",
+                    (
+                        ";".join(map(remove_non_ascii, gene["phenotypes"]))
+                        if gene.get("phenotypes")
+                        else ""
+                    ),
+                    (
+                        ";".join(map(remove_non_ascii, gene["gene_data"]["omim_gene"]))
+                        if gene.get("gene_data").get("omim_gene")
+                        else ""
+                    ),
                     "",
                     "",
-                    ";".join(map(remove_non_ascii, gene["publications"]))
-                    if gene.get("publications")
-                    else "",
+                    (
+                        ";".join(map(remove_non_ascii, gene["publications"]))
+                        if gene.get("publications")
+                        else ""
+                    ),
                     "",
                     "",
                     gene.get("confidence_level", ""),
@@ -134,20 +139,24 @@ class HistoricalSnapshot(models.Model):
                     "{}.{}".format(self.major_version, self.minor_version),
                     "",
                     gene.get("mode_of_pathogenicity", ""),
-                    gene.get("gene_data", {})
-                    .get("ensembl_genes", {})
-                    .get("GRch38", {})
-                    .get("90", {})
-                    .get("ensembl_id", "")
-                    if gene.get("gene_data") is not None
-                    else "",
-                    gene.get("gene_data", {})
-                    .get("ensembl_genes", {})
-                    .get("GRch37", {})
-                    .get("82", {})
-                    .get("ensembl_id", "")
-                    if gene.get("gene_data") is not None
-                    else "",
+                    (
+                        gene.get("gene_data", {})
+                        .get("ensembl_genes", {})
+                        .get("GRch38", {})
+                        .get("90", {})
+                        .get("ensembl_id", "")
+                        if gene.get("gene_data") is not None
+                        else ""
+                    ),
+                    (
+                        gene.get("gene_data", {})
+                        .get("ensembl_genes", {})
+                        .get("GRch37", {})
+                        .get("82", {})
+                        .get("ensembl_id", "")
+                        if gene.get("gene_data") is not None
+                        else ""
+                    ),
                     gene.get("gene_data", {}).get("hgnc_id", ""),
                     "",
                     "",
@@ -170,29 +179,39 @@ class HistoricalSnapshot(models.Model):
                 (
                     str.get("entity_name", ""),
                     str.get("entity_type", ""),
-                    str["gene_data"].get("gene_symbol", "")
-                    if str.get("gene_data")
-                    else "",
-                    ";".join([ev for ev in str["evidence"] if ev])
-                    if str.get("evidence")
-                    else "",
+                    (
+                        str["gene_data"].get("gene_symbol", "")
+                        if str.get("gene_data")
+                        else ""
+                    ),
+                    (
+                        ";".join([ev for ev in str["evidence"] if ev])
+                        if str.get("evidence")
+                        else ""
+                    ),
                     panel_name,
                     data.get("panel", {}).get("disease_sub_group", ""),
                     data.get("panel", {}).get("disease_group", ""),
                     str.get("mode_of_inheritance", ""),
-                    ";".join(map(remove_non_ascii, str["phenotypes"]))
-                    if str.get("phenotypes")
-                    else "",
-                    ";".join(
-                        map(remove_non_ascii, str["gene_data"].get("omim_gene", ""))
-                    )
-                    if str.get("gene_data")
-                    else "",
+                    (
+                        ";".join(map(remove_non_ascii, str["phenotypes"]))
+                        if str.get("phenotypes")
+                        else ""
+                    ),
+                    (
+                        ";".join(
+                            map(remove_non_ascii, str["gene_data"].get("omim_gene", ""))
+                        )
+                        if str.get("gene_data")
+                        else ""
+                    ),
                     "",
                     "",
-                    ";".join(map(remove_non_ascii, str["publications"]))
-                    if str.get("publications")
-                    else "",
+                    (
+                        ";".join(map(remove_non_ascii, str["publications"]))
+                        if str.get("publications")
+                        else ""
+                    ),
                     "",
                     "",
                     str.get("confidence_level", ""),
@@ -200,34 +219,46 @@ class HistoricalSnapshot(models.Model):
                     "{}.{}".format(self.major_version, self.minor_version),
                     "",
                     "",
-                    str.get("gene_data", {})
-                    .get("ensembl_genes", {})
-                    .get("GRch38", {})
-                    .get("90", {})
-                    .get("ensembl_id", "")
-                    if str.get("gene_data") is not None
-                    else "",
-                    str.get("gene_data", {})
-                    .get("ensembl_genes", {})
-                    .get("GRch37", {})
-                    .get("82", {})
-                    .get("ensembl_id", "")
-                    if str.get("gene_data") is not None
-                    else "",
+                    (
+                        str.get("gene_data", {})
+                        .get("ensembl_genes", {})
+                        .get("GRch38", {})
+                        .get("90", {})
+                        .get("ensembl_id", "")
+                        if str.get("gene_data") is not None
+                        else ""
+                    ),
+                    (
+                        str.get("gene_data", {})
+                        .get("ensembl_genes", {})
+                        .get("GRch37", {})
+                        .get("82", {})
+                        .get("ensembl_id", "")
+                        if str.get("gene_data") is not None
+                        else ""
+                    ),
                     str.get("gene_data", {}).get("hgnc_id", ""),
                     str.get("chromosome", ""),
-                    str["grch37_coordinates"][0]
-                    if str.get("grch37_coordinates")
-                    else "",
-                    str["grch37_coordinates"][1]
-                    if str.get("grch37_coordinates")
-                    else "",
-                    str["grch38_coordinates"][0]
-                    if str.get("grch38_coordinates")
-                    else "",
-                    str["grch38_coordinates"][1]
-                    if str.get("grch38_coordinates")
-                    else "",
+                    (
+                        str["grch37_coordinates"][0]
+                        if str.get("grch37_coordinates")
+                        else ""
+                    ),
+                    (
+                        str["grch37_coordinates"][1]
+                        if str.get("grch37_coordinates")
+                        else ""
+                    ),
+                    (
+                        str["grch38_coordinates"][0]
+                        if str.get("grch38_coordinates")
+                        else ""
+                    ),
+                    (
+                        str["grch38_coordinates"][1]
+                        if str.get("grch38_coordinates")
+                        else ""
+                    ),
                     str.get("repeated_sequence", ""),
                     str.get("normal_repeats", ""),
                     str.get("pathogenic_repeats", ""),
@@ -244,27 +275,37 @@ class HistoricalSnapshot(models.Model):
                 (
                     region.get("entity_name", ""),
                     region.get("entity_type", ""),
-                    region["gene_data"].get("gene_symbol", "")
-                    if region.get("gene_data")
-                    else "",
-                    ";".join([ev for ev in region["evidence"] if ev])
-                    if region.get("evidence")
-                    else "",
+                    (
+                        region["gene_data"].get("gene_symbol", "")
+                        if region.get("gene_data")
+                        else ""
+                    ),
+                    (
+                        ";".join([ev for ev in region["evidence"] if ev])
+                        if region.get("evidence")
+                        else ""
+                    ),
                     panel_name,
                     data.get("panel", {}).get("disease_sub_group", ""),
                     data.get("panel", {}).get("disease_group", ""),
                     region.get("mode_of_inheritance", ""),
-                    ";".join(map(remove_non_ascii, region["phenotypes"]))
-                    if region.get("phenotypes")
-                    else "",
-                    region["gene_data"].get("omim_gene", "")
-                    if region.get("gene_data") is not None
-                    else "",
+                    (
+                        ";".join(map(remove_non_ascii, region["phenotypes"]))
+                        if region.get("phenotypes")
+                        else ""
+                    ),
+                    (
+                        region["gene_data"].get("omim_gene", "")
+                        if region.get("gene_data") is not None
+                        else ""
+                    ),
                     "",
                     "",
-                    ";".join(map(remove_non_ascii, region["publications"]))
-                    if region.get("publications")
-                    else "",
+                    (
+                        ";".join(map(remove_non_ascii, region["publications"]))
+                        if region.get("publications")
+                        else ""
+                    ),
                     "",
                     "",
                     region.get("confidence_level", ""),
@@ -272,36 +313,50 @@ class HistoricalSnapshot(models.Model):
                     "{}.{}".format(self.major_version, self.minor_version),
                     "",
                     "",
-                    region.get("gene_data", {})
-                    .get("ensembl_genes", {})
-                    .get("GRch38", {})
-                    .get("90", {})
-                    .get("ensembl_id", "")
-                    if region.get("gene_data") is not None
-                    else "",
-                    region.get("gene_data", {})
-                    .get("ensembl_genes", {})
-                    .get("GRch37", {})
-                    .get("82", {})
-                    .get("ensembl_id", "")
-                    if region.get("gene_data") is not None
-                    else "",
-                    region.get("gene_data", {}).get("hgnc_id", "")
-                    if region.get("gene_data") is not None
-                    else "",
+                    (
+                        region.get("gene_data", {})
+                        .get("ensembl_genes", {})
+                        .get("GRch38", {})
+                        .get("90", {})
+                        .get("ensembl_id", "")
+                        if region.get("gene_data") is not None
+                        else ""
+                    ),
+                    (
+                        region.get("gene_data", {})
+                        .get("ensembl_genes", {})
+                        .get("GRch37", {})
+                        .get("82", {})
+                        .get("ensembl_id", "")
+                        if region.get("gene_data") is not None
+                        else ""
+                    ),
+                    (
+                        region.get("gene_data", {}).get("hgnc_id", "")
+                        if region.get("gene_data") is not None
+                        else ""
+                    ),
                     region.get("chromosome", ""),
-                    region["grch37_coordinates"][0]
-                    if region.get("grch37_coordinates")
-                    else "",
-                    region["grch37_coordinates"][1]
-                    if region.get("grch37_coordinates")
-                    else "",
-                    region["grch38_coordinates"][0]
-                    if region.get("grch38_coordinates")
-                    else "",
-                    region["grch38_coordinates"][1]
-                    if region.get("grch38_coordinates")
-                    else "",
+                    (
+                        region["grch37_coordinates"][0]
+                        if region.get("grch37_coordinates")
+                        else ""
+                    ),
+                    (
+                        region["grch37_coordinates"][1]
+                        if region.get("grch37_coordinates")
+                        else ""
+                    ),
+                    (
+                        region["grch38_coordinates"][0]
+                        if region.get("grch38_coordinates")
+                        else ""
+                    ),
+                    (
+                        region["grch38_coordinates"][1]
+                        if region.get("grch38_coordinates")
+                        else ""
+                    ),
                     "",
                     "",
                     "",
@@ -389,9 +444,9 @@ class HistoricalSnapshot(models.Model):
                     "RepeatedSequence": str["repeated_sequence"],
                     "NormalRepeats": str["normal_repeats"],
                     "PathogenicRepeats": str["pathogenic_repeats"],
-                    "GeneSymbol": str["gene_data"]["gene_symbol"]
-                    if str["gene_data"]
-                    else None,
+                    "GeneSymbol": (
+                        str["gene_data"]["gene_symbol"] if str["gene_data"] else None
+                    ),
                     "EnsembleGeneIds": self.ensemble(str),
                     "ModeOfInheritance": make_null(
                         convert_moi(str["mode_of_inheritance"])
@@ -417,9 +472,11 @@ class HistoricalSnapshot(models.Model):
                     "HaploinsufficiencyScore": region["haploinsufficiency_score"],
                     "TriplosensitivityScore": region["triplosensitivity_score"],
                     "RequiredOverlapPercentage": region["required_overlap_percentage"],
-                    "GeneSymbol": region["gene_data"]["gene_symbol"]
-                    if region["gene_data"]
-                    else None,
+                    "GeneSymbol": (
+                        region["gene_data"]["gene_symbol"]
+                        if region["gene_data"]
+                        else None
+                    ),
                     "EnsembleGeneIds": self.ensemble(region),
                     "ModeOfInheritance": make_null(
                         convert_moi(region["mode_of_inheritance"])

@@ -21,15 +21,11 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-import itertools
 import logging
 from copy import deepcopy
 
 from django.contrib.postgres.aggregates import ArrayAgg
-from django.contrib.postgres.fields import (
-    ArrayField,
-    JSONField,
-)
+from django.contrib.postgres.fields import ArrayField
 from django.core.cache import cache
 from django.db import (
     models,
@@ -39,6 +35,7 @@ from django.db.models import (
     Case,
     CharField,
     Count,
+    JSONField,
     Q,
     Subquery,
 )

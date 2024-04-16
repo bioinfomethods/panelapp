@@ -31,12 +31,12 @@ Author: Oleg Gerasimenko
 from django.contrib.postgres.fields import (
     ArrayField,
     IntegerRangeField,
-    JSONField,
 )
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import (
     Count,
+    JSONField,
     Subquery,
 )
 from django.db.models import Value as V
@@ -238,9 +238,11 @@ class STR(AbstractEntity, TimeStampedModel):
         return {
             "name": self.name,
             "chromosome": self.chromosome,
-            "position_37": (self.position_37.lower, self.position_37.upper)
-            if self.position_37
-            else None,
+            "position_37": (
+                (self.position_37.lower, self.position_37.upper)
+                if self.position_37
+                else None
+            ),
             "position_38": (self.position_38.lower, self.position_38.upper),
             "repeated_sequence": self.repeated_sequence,
             "normal_repeats": self.normal_repeats,

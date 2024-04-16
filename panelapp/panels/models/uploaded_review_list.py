@@ -29,7 +29,7 @@ from django.db import (
     models,
     transaction,
 )
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from model_utils.models import TimeStampedModel
 
 from accounts.models import User
@@ -210,7 +210,7 @@ class UploadedReviewsList(TimeStampedModel):
         """
         with self.reviews.open(mode="rb") as file:
             try:
-                textfile_content = force_text(
+                textfile_content = force_str(
                     file.read(), encoding="utf-8", errors="ignore"
                 )
                 reader = csv.reader(textfile_content.splitlines(), delimiter="\t")

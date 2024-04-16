@@ -76,7 +76,7 @@ class Evaluation(TimeStampedModel):
         max_length=255,
     )
     current_diagnostic = models.BooleanField(default=False, blank=True)
-    clinically_relevant = models.NullBooleanField(
+    clinically_relevant = models.BooleanField(
         default=False,
         blank=True,
         null=True,

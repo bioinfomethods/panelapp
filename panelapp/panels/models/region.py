@@ -31,13 +31,13 @@ Author: Oleg Gerasimenko
 from django.contrib.postgres.fields import (
     ArrayField,
     IntegerRangeField,
-    JSONField,
 )
 from django.core import validators
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
 from django.db.models import (
     Count,
+    JSONField,
     Subquery,
 )
 from django.db.models import Value as V

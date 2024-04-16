@@ -21,20 +21,12 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.contrib.postgres.fields import (
-    ArrayField,
-    IntegerRangeField,
-    JSONField,
-)
+from django.contrib.postgres.fields import ArrayField
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
-from django.db.models import (
-    Count,
-    Subquery,
-)
+from django.db.models import Subquery
 from django.db.models import Value as V
 from django.urls import reverse
-from model_utils import Choices
 from model_utils.models import TimeStampedModel
 
 from .comment import Comment
@@ -138,7 +130,7 @@ class GenePanelEntrySnapshot(AbstractEntity, TimeStampedModel):
         ]
 
     panel = models.ForeignKey(GenePanelSnapshot, on_delete=models.CASCADE)
-    gene = JSONField(encoder=DjangoJSONEncoder)  # copy data from Gene.dict_tr
+    gene = models.JSONField(encoder=DjangoJSONEncoder)  # copy data from Gene.dict_tr
     gene_core = models.ForeignKey(
         Gene, on_delete=models.PROTECT
     )  # reference to the original Gene

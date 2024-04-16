@@ -33,7 +33,7 @@ from django.db import (
     models,
     transaction,
 )
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from model_utils.models import TimeStampedModel
 from psycopg2.extras import NumericRange
 
@@ -205,7 +205,7 @@ class UploadedPanelList(TimeStampedModel):
             # When file is stored in S3 we need to read the file returned by FieldFile.open(), then force it into text
             # and split the content into lines
             try:
-                textfile_content = force_text(
+                textfile_content = force_str(
                     file.read(), encoding="utf-8", errors="ignore"
                 )
                 reader = csv.reader(textfile_content.splitlines(), delimiter="\t")
@@ -381,15 +381,17 @@ class EntityRow(AbstractRow):
         self.data["name"] = self.data["entity_name"]
 
         self.data["sources"] = [
-            source.title()
-            if source.lower()
-            in {
-                "expert review green",
-                "expert review amber",
-                "expert review red",
-                "expert review removed",
-            }
-            else source
+            (
+                source.title()
+                if source.lower()
+                in {
+                    "expert review green",
+                    "expert review amber",
+                    "expert review red",
+                    "expert review removed",
+                }
+                else source
+            )
             for source in self.data.get("sources")
         ]
 

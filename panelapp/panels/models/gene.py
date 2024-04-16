@@ -23,10 +23,7 @@
 ##
 from datetime import datetime
 
-from django.contrib.postgres.fields import (
-    ArrayField,
-    JSONField,
-)
+from django.contrib.postgres.fields import ArrayField
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -34,7 +31,7 @@ from django.db import models
 class Gene(models.Model):
     gene_symbol = models.CharField(max_length=255, primary_key=True, db_index=True)
     gene_name = models.CharField(max_length=255, null=True)
-    ensembl_genes = JSONField()
+    ensembl_genes = models.JSONField()
     omim_gene = ArrayField(models.CharField(max_length=255), null=True)
     alias = ArrayField(models.CharField(max_length=255), null=True)
     biotype = models.CharField(max_length=255, null=True)
