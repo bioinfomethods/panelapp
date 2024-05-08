@@ -1,5 +1,6 @@
 {% load static %}
 {% load banner %}
+{% load render_bundle from webpack_loader %}
 
 <!DOCTYPE html>
 <html class="no-js">
@@ -8,8 +9,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <script>(function(d){d.className=d.className.replace(/^no-js\b/,'js');}(document.documentElement));</script>
-    <link rel="stylesheet" href="{% static "app.css" %}" >
-    <script src="{% static "app.js" %}"></script>
+    {% render_bundle 'main' 'css' %}
+    {% render_bundle 'main' 'js' %}
     {% block header %}{% endblock %}
     <title>{% block title %}PanelApp{% endblock %}</title>
   </head>

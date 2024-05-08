@@ -104,6 +104,7 @@ CUSTOM_APPS = [
     "drf_yasg",
     "qurl_templatetag",
     "django_filters",
+    "webpack_loader",
 ]
 
 PROJECT_APPS = ["panelapp", "accounts", "panels", "webservices", "v1rewrites", "api"]
@@ -289,6 +290,20 @@ STATICFILES_DIRS = [os.getenv("STATICFILES_DIRS", str(os.path.join(BASE_DIR, "di
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.getenv("MEDIA_ROOT", os.path.join(BASE_DIR, "_mediafiles"))
+
+# django-webpack-loader
+# https://pypi.org/project/django-webpack-loader/
+WEBPACK_LOADER = {
+    "DEFAULT": {
+        "BUNDLE_DIR_NAME": ".",
+        "CACHE": not DEBUG,
+        "STATS_FILE": os.getenv(
+            "WEBPACK_LOADER_STATS_FILE", os.path.join(BASE_DIR, "webpack-stats.json")
+        ),
+        "POLL_INTERVAL": 0.1,
+        "IGNORE": [r".+\.hot-update.js", r".+\.map"],
+    }
+}
 
 # Random
 MESSAGE_TAGS = {

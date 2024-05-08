@@ -1,4 +1,5 @@
 import pytest
+from django.conf import settings
 
 from accounts.models import Reviewer
 from accounts.tests.factories import UserFactory
@@ -19,3 +20,9 @@ def reviewer_user():
 @pytest.fixture
 def external_user():
     return UserFactory(username="external_user")
+
+
+def pytest_configure():
+    settings.WEBPACK_LOADER["DEFAULT"][
+        "LOADER_CLASS"
+    ] = "webpack_loader.loaders.FakeWebpackLoader"

@@ -1,6 +1,7 @@
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 const path = require("path");
 const webpack = require("webpack");
+const BundleTracker = require("webpack-bundle-tracker");
 
 module.exports = {
   entry: "./frontend/panel_app.js",
@@ -8,15 +9,17 @@ module.exports = {
     filename: "app.js",
     path: path.resolve(__dirname, "dist"),
     clean: true,
+    filename: "[contenthash].js",
   },
   plugins: [
     new MiniCssExtractPlugin({
-      filename: "app.css",
+      filename: "[contenthash].css",
     }),
     new webpack.ProvidePlugin({
       $: "jquery/src/jquery",
       jQuery: "jquery/src/jquery",
     }),
+    new BundleTracker({ path: __dirname, filename: "webpack-stats.json" }),
   ],
   module: {
     rules: [

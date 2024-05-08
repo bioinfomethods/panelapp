@@ -45,6 +45,7 @@ RUN apk upgrade --no-cache && \
     apk add --no-cache postgresql-libs curl jpeg-dev zlib-dev
 
 COPY --chown=app:app ./deploy/gunicorn_config.py /app/
+COPY --chown=app:app --from=frontend_build /src/webpack-stats.json /app/
 COPY --chown=app:app --from=frontend_build /src/dist /app/dist
 
 ENV CELERY_BROKER_URL=sqs://
@@ -62,6 +63,7 @@ ENV VIRTUAL_ENV=/venv
 ENV PATH="$VIRTUAL_ENV/bin:$PATH"
 
 ENV STATICFILES_DIRS=/app/dist
+ENV WEBPACK_LOADER_STATS_FILE=/app/webpack-stats.json
 
 USER app:app
 

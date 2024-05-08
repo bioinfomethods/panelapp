@@ -119,6 +119,9 @@ temp_dump_data
 .pnp.*
 node_modules
 
+# webpack
+webpack-stats.json
+
 # playwright
 /playwright/.auth
 /playwright-report/
