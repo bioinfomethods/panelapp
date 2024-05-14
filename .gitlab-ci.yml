@@ -235,10 +235,18 @@ scan:
     - image_build
   environment:
     name: $env_name
-  image: 877059142592.dkr.ecr.eu-west-2.amazonaws.com/ce_infra_cicd:v1.0.6
+  image: $DOCKER_IN_DOCKER
   before_script:
     - apk add aws-cli jq py3-boto3
-    - source scripts/assume_role.sh
+    - |
+      export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" \
+        $(aws sts assume-role \
+          --role-arn "${AWS_ASSUME_ROLE}" \
+          --role-session-name "gitlab-ci-${CI_PROJECT_NAME}-${CI_PIPELINE_IID}" \
+          --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" \
+          --output text
+        )
+      )
   script:
     - aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageTag="$BUILD_TAG" | tee "inspector_findings_$BUILD_TAG.json"
     - count_findings () { jq ".imageScanFindings.findingSeverityCounts.$1 // 0" "inspector_findings_$BUILD_TAG.json"; }
