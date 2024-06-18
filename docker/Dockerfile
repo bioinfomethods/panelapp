@@ -1,5 +1,5 @@
-ARG python_base=python:3.11.8-alpine3.19
-ARG node_base=node:20.11.1-alpine3.19
+ARG python_base=python:3.11.9-alpine3.19
+ARG node_base=node:20.14.0-alpine3.19
 
 
 FROM ${node_base} as frontend_build
@@ -7,13 +7,11 @@ FROM ${node_base} as frontend_build
 COPY ./frontend /src/frontend
 COPY ./webpack.* package.json package-lock.json /src/
 
-RUN npm install -g npm@10.5.0
-
 RUN cd /src && npm ci && npm run build
 
 FROM ${python_base} as backend_build_prod
 
-ENV POETRY_VERSION=1.8.2
+ENV POETRY_VERSION=1.8.3
 
 WORKDIR /src
 
