@@ -17,7 +17,7 @@ services:
       - DATA_DIR=/tmp/localstack/data
 #      - DATA_DIR=${DATA_DIR- }
     volumes:
-      - "${TMPDIR:-/tmp/localstack}:/tmp/localstack"
+      - "${TMPDIR:-/tmp/localstack}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
 
   db:
