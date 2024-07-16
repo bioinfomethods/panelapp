@@ -116,3 +116,4 @@ temp_dump_data
 .idea
 
 pgdata
+.terraform.lock.hcl
