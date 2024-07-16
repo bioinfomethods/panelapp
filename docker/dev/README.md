@@ -13,7 +13,7 @@ Docker Compose stack includes:
 * A PostgreSQL instance
 * [LocalStack](https://github.com/localstack/localstack), mocking S3 and SQS.
  
-The application source code fis mounted from the local machine as volumes into the running containers.
+The application source code is mounted from the local machine as volumes into the running containers.
 Any change to the code will be immediately reflected.
 
 > If you start the docker-compose cluster directly, without the Makefile, you need to set `TMPDIR` env variable. 
