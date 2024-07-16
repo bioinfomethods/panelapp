@@ -27,6 +27,9 @@ services:
       - POSTGRES_PASSWORD=secret
       - POSTGRES_USER=panelapp
       - POSTGRES_DB=panelapp
+      - PGDATA=/var/lib/postgresql/data
+    volumes:
+      - "./pgdata/data:/var/lib/postgresql/data"
 
   web:
     build:
