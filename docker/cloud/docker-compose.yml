@@ -45,7 +45,11 @@ services:
     build:
       context: ../../
       dockerfile: ./docker/cloud/Dockerfile-web
-    image: panelapp_web_prod
+      platforms:
+        - linux/amd64
+        - linux/arm64
+      tags:
+        - latest
     restart: on-failure
     volumes:
       - ../../panelapp:/app/panelapp
@@ -86,7 +90,11 @@ services:
     build:
       context: ../../
       dockerfile: ./docker/cloud/Dockerfile-worker
-    image: panelapp_worker_prod
+      platforms:
+        - linux/amd64
+        - linux/arm64
+      tags:
+        - latest
     restart: on-failure
     volumes:
       - ../../panelapp:/app/panelapp
