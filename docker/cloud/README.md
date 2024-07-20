@@ -2,7 +2,7 @@
 
 This directory contains Dockerfiles for AWS environments.
 
-All cloud environments are intended to be as identical as possible, using thesame Docker images and Django settings, except for environment-specific parameters.
+All cloud environments are intended to be as identical as possible, using the same Docker images and Django settings, except for environment-specific parameters.
 
 ## Dockerfiles
 
