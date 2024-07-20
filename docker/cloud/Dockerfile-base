@@ -1,5 +1,5 @@
 # Base image for both Web and Worker images
-FROM python:3.6.8-alpine3.9
+FROM python:3.9-alpine3.20
 
 RUN mkdir -p /app/panelapp
 

@@ -28,45 +28,49 @@ clean: ## Remove build directory
 
 build: clean ## Build Docker Images
 	cd ../.. ; docker build --tag panelapp-base --file ./docker/cloud/Dockerfile-base . ; cd docker/cloud
-	docker-compose build
+	docker compose build
+
+buildmulti: clean ## Build Docker Images
+	cd ../.. ; docker buildx build --platform linux/amd64,linux/arm64 --tag panelapp-base --file ./docker/cloud/Dockerfile-base . ; cd docker/cloud
+	docker compose build
 
 up: ## Run cluster
-	docker-compose up -d
+	docker compose up -d
 
 migrate: ## Create db schema, apply db migration (migrate command)
-	docker-compose exec web python manage.py migrate
+	docker compose exec web python manage.py migrate
 
 loaddata: export AWS_ACCESS_KEY_ID := dummy-key
 loaddata: export AWS_SECRET_ACCESS_KEY := dummy-secret
 loaddata: ## Load genes files into db (loaddata command)
 	aws --endpoint-url=http://localhost:4572 s3 cp ../../deploy/genes.json.gz s3://media-bucket/genes.json.gz
-	docker-compose exec web /bin/sh -c "python -c \"import boto3,botocore;boto3.resource('s3',use_ssl=False, endpoint_url='http://localstack:4572').Bucket('media-bucket').download_file('genes.json.gz', '/var/tmp/genes.json.gz')\"; python manage.py loaddata --verbosity 3 /var/tmp/genes.json; rm /var/tmp/genes.json.gz"
+	docker compose exec web /bin/sh -c "python -c \"import boto3,botocore;boto3.resource('s3',use_ssl=False, endpoint_url='http://localstack:4572').Bucket('media-bucket').download_file('genes.json.gz', '/var/tmp/genes.json.gz')\"; python manage.py loaddata --verbosity 3 /var/tmp/genes.json; rm /var/tmp/genes.json.gz"
 	aws --endpoint-url=http://localhost:4572 s3 rm s3://media-bucket/genes.json.gz
 
 
 collectstatic: ## Deploy static files (collectstatic command)
-	docker-compose exec web python manage.py collectstatic --noinput
+	docker compose exec web python manage.py collectstatic --noinput
 
 createsuperuser: ## Create superuser (username: 'admin', pwd: 'changeme', email: `admin@local`)
-	docker-compose exec web /bin/sh -c "echo \"from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@local', 'changeme')\" | python manage.py shell"
+	docker compose exec web /bin/sh -c "echo \"from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@local', 'changeme')\" | python manage.py shell"
 
 command: ## Run a generic command, passed as additional argument(s)
-	docker-compose exec web python manage.py $(COMMAND_ARGS)
+	docker compose exec web python manage.py $(COMMAND_ARGS)
 
 stop: ## Stop cluster, without destroying it
-	docker-compose stop
+	docker compose stop
 
 start: ## Restart a stopped cluster
-	docker-compose start
+	docker compose start
 
 down: ## Destroy cluster
-	docker-compose down
+	docker compose down
 
 tests: ## Run tests
-	docker-compose exec web bash -c 'cd /app ; pytest'
+	docker compose exec web bash -c 'cd /app ; pytest'
 
 logs: ## Tail all logs
-	docker-compose logs -f
+	docker compose logs -f
 
 mock-aws: export AWS_DEFAULT_REGION := eu-west-2
 mock-aws: export AWS_ACCESS_KEY_ID := dummy-key
