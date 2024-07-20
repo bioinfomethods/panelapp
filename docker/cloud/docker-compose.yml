@@ -42,6 +42,7 @@ services:
       - AUTH=admin:secret
 
   web:
+    image: "${PANELAPP_CONTAINER_REGISTRY:-accountId.dkr.ecr.region.amazonaws.com}/panelapp_web_${PANELAPP_ENV_NAME}:${PANELAPP_IMAGE_TAG:-latest}"
     build:
       context: ../../
       dockerfile: ./docker/cloud/Dockerfile-web
@@ -87,6 +88,7 @@ services:
       - EMAIL_PORT=1025
 
   worker:
+    image: "${PANELAPP_CONTAINER_REGISTRY:-accountId.dkr.ecr.region.amazonaws.com}/panelapp_worker_${PANELAPP_ENV_NAME}:${PANELAPP_IMAGE_TAG:-latest}"
     build:
       context: ../../
       dockerfile: ./docker/cloud/Dockerfile-worker
