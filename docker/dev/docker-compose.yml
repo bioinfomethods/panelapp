@@ -111,3 +111,11 @@ services:
 #    image: rabbitmq
 #    environment:
 #      - RABBITMQ_DEFAULT_VHOST=panelapp
+
+  schemaspy:
+    profiles:
+      - "docs"
+    image: schemaspy/schemaspy
+    volumes:
+      - './schemaspy.properties:/schemaspy.properties'
+      - './schemaspy:/output'

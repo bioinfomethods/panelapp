@@ -51,6 +51,9 @@ createsuperuser: ## Create superuser (username: 'admin', pwd: 'changeme', email:
 	@echo "Creating superuser credentials: admin/changeme"
 	@docker compose exec web /bin/sh -c "echo \"from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@local', 'changeme')\" | python manage.py shell"
 
+schemaspy: ## Run schemaspy
+	docker compose --profile docs run schemaspy
+
 command: ## Run a generic command, passed as additional argument(s)
 	docker compose exec web python manage.py $(COMMAND_ARGS)
 
@@ -107,5 +110,5 @@ endef
 .mock-sqs-queue: ## Create mock SQS queue for Celery
 	$(call create-sqs-queue-if-not-exists,panelapp)
 
-.PHONY:	clean .copy_sources .mock-s3-static .mock-s3-media .mock-sqs-queue up down migrate loaddata collectstatic stop start mock-aws createsuperuser command tests logs clear-s3
+.PHONY:	clean .copy_sources .mock-s3-static .mock-s3-media .mock-sqs-queue up down migrate loaddata collectstatic stop start mock-aws createsuperuser command tests logs clear-s3 schemaspy
 .DEFAULT_GOAL:=help
