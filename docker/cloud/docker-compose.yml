@@ -26,7 +26,7 @@ services:
       - "/var/run/docker.sock:/var/run/docker.sock"
 
   db:
-    image: postgres:9.6.9
+    image: postgres:13
     environment:
       - POSTGRES_PASSWORD=secret
       - POSTGRES_USER=panelapp
