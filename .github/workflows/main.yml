@@ -134,14 +134,12 @@ jobs:
           echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
           docker build -t "${PACKAGE_NAME}-base" --file ./docker/cloud/Dockerfile-base .
-          docker build -t "${PACKAGE_NAME}-web" --file ./docker/cloud/Dockerfile-web .
-          docker build -t "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_ACTION_REF_NAME_SLUG" .
+          docker build -t "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_ACTION_REF_NAME_SLUG" --file ./docker/cloud/Dockerfile-web .
           docker tag "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_SHA_SHORT"
           docker push "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_ACTION_REF_NAME_SLUG"
           docker push "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_SHA_SHORT"
           echo "web_image=$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_ACTION_REF_NAME_SLUG" >> $GITHUB_OUTPUT
-          docker build -t "${PACKAGE_NAME}-worker" --file ./docker/cloud/Dockerfile-worker .
-          docker build -t "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_ACTION_REF_NAME_SLUG" .
+          docker build -t "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_ACTION_REF_NAME_SLUG" --file ./docker/cloud/Dockerfile-worker .
           docker tag "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_SHA_SHORT"
           docker push "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_ACTION_REF_NAME_SLUG"
           docker push "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_SHA_SHORT"
