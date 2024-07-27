@@ -30,6 +30,7 @@ jobs:
       env_name: ${{ steps.init_env.outputs.env_name }}
 
   tests:
+    needs: init
     environment: ${{ jobs.init.outputs.env_name }}
     runs-on: ubuntu-latest
     strategy:
@@ -81,6 +82,7 @@ jobs:
         run: pytest
 
   build:
+    needs: init
     environment: ${{ jobs.init.outputs.env_name }}
     runs-on: ubuntu-latest
 
