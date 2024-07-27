@@ -124,23 +124,31 @@ jobs:
         uses: aws-actions/amazon-ecr-login@v2
 
       - name: Build, tag, and push image to Amazon ECR
-        id: build-image
+        id: build_image
+        shell: bash
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           export PACKAGE_NAME=$(python setup.py --name)
+          export WEB_REPO_NAME="${PACKAGE_NAME}_web_${{needs.init.outputs.env_name}}"
+          export WORKER_REPO_NAME="${PACKAGE_NAME}_web_${{needs.init.outputs.env_name}}"
           echo "AWS_REGION=$AWS_REGION"
-          echo "PACKAGE_NAME=$PACKAGE_NAME"
+          echo "PACKAGE_NAME=$PACKAGE_NAME, WEB_REPO_NAME=$WEB_REPO_NAME, WORKER_REPO_NAME=$WORKER_REPO_NAME"
           echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
+
           docker build -t "${PACKAGE_NAME}-base" --file ./docker/cloud/Dockerfile-base .
-          docker build -t "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_ACTION_REF_NAME_SLUG" --file ./docker/cloud/Dockerfile-web .
-          docker tag "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_SHA_SHORT"
-          docker push "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_ACTION_REF_NAME_SLUG"
-          docker push "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_SHA_SHORT"
-          echo "web_image=$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_ACTION_REF_NAME_SLUG" >> $GITHUB_OUTPUT
-          docker build -t "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_ACTION_REF_NAME_SLUG" --file ./docker/cloud/Dockerfile-worker .
-          docker tag "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_SHA_SHORT"
-          docker push "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_ACTION_REF_NAME_SLUG"
-          docker push "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_SHA_SHORT"
-          echo "worker_image=$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_ACTION_REF_NAME_SLUG" >> $GITHUB_OUTPUT
+          docker build -t "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" --file ./docker/cloud/Dockerfile-web .
+          docker tag "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_SHA_SHORT"
+          docker push "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG"
+          docker push "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_SHA_SHORT"
+          echo "web_image=$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" >> "$GITHUB_OUTPUT"
+
+          docker build -t "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" --file ./docker/cloud/Dockerfile-worker .
+          docker tag "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_SHA_SHORT"
+          docker push "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG"
+          docker push "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_SHA_SHORT"
+          echo "worker_image=$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" >> "$GITHUB_OUTPUT"
+    outputs:
+      web_image: ${{ steps.build_image.outputs.web_image }}
+      worker_image: ${{ steps.build_image.outputs.worker_image }}
