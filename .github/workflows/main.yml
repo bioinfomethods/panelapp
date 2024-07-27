@@ -93,7 +93,7 @@ jobs:
 
   build:
     needs: init
-    environment: ${{ needs.jobs.init.outputs.env_name }}
+    environment: ${{ needs.init.outputs.env_name }}
     runs-on: ubuntu-latest
 
     steps:
@@ -106,7 +106,7 @@ jobs:
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
           echo "region=${{ vars.AWS_REGION }}"
           echo "ENV_NAME=$ENV_NAME"
-          echo "ENV_NAME=${{ needs.jobs.init.outputs.ENV_NAME }}"
+          echo "ENV_NAME=${{ needs.init.outputs.ENV_NAME }}"
 
       - name: Checkout
         uses: actions/checkout@v4
