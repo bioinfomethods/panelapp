@@ -7,6 +7,10 @@ on:
       - roo
       - develop
 
+permissions:
+  id-token: write
+  contents: read
+
 jobs:
   init:
     name: "init"
@@ -115,9 +119,10 @@ jobs:
         with:
           unset-current-credentials: true
           aws-region: ${{ vars.AWS_REGION }}
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          role-to-assume: arn:aws:iam::487143049215:role/github-oidc-provider-aws
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -138,6 +143,7 @@ jobs:
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
 
           docker build -t "${PACKAGE_NAME}-base" --file ./docker/cloud/Dockerfile-base .
+
           docker build -t "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" --file ./docker/cloud/Dockerfile-web .
           docker tag "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_SHA_SHORT"
           docker push "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG"
