@@ -93,7 +93,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ env.AWS_REGION }}
+          aws-region: ap-southeast-2
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
@@ -107,6 +107,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
           export PACKAGE_NAME=$(python setup.py --name)
+          echo "AWS_REGION=$AWS_REGION"
           echo "PACKAGE_NAME=$PACKAGE_NAME"
           echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
