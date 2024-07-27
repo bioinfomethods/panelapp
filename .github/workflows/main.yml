@@ -11,13 +11,11 @@ jobs:
   init:
     runs-on: ubuntu-latest
     steps:
-      - name: GitHub Environment Variables Action
-        uses: FranzDiebold/github-env-vars-action@v2.8.0
-
       - id: init_env
         shell: bash
+        uses: FranzDiebold/github-env-vars-action@v2.8.0
         run: |
-          echo "$CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
+          echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
           if [ "$CI_ACTION_REF_NAME_SLUG" == "main" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "master" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "roo" ]; then
             echo "env_name=prod" >> "$GITHUB_OUTPUT"
@@ -26,6 +24,8 @@ jobs:
           else
             echo "env_name=test" >> "$GITHUB_OUTPUT"
           fi
+          echo "env_name=$env_name"
+          echo "GITHUB_OUTPUT=$GITHUB_OUTPUT"
 
       - name: Log outputs
         run: |
@@ -89,7 +89,7 @@ jobs:
 
   build:
     needs: init
-    environment: ${{ needs.jobs.init.outputs.ENV_NAME }}
+    environment: ${{ needs.jobs.init.outputs.env_name }}
     runs-on: ubuntu-latest
 
     steps:
