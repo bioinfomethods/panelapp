@@ -8,7 +8,29 @@ on:
       - develop
 
 jobs:
+  init:
+    runs-on: ubuntu-latest
+    steps:
+      - name: GitHub Environment Variables Action
+        uses: FranzDiebold/github-env-vars-action@v2.8.0
+
+      - name: Init env
+        id: init_env
+        run: |
+          echo "$CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
+          echo "CI_SHA_SHORT=$CI_SHA_SHORT"
+          if [ "$CI_ACTION_REF_NAME_SLUG" == "main" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "master" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "roo" ]; then
+            echo "env_name=prod" >> $GITHUB_OUTPUT
+          elif [ "$CI_ACTION_REF_NAME_SLUG" == "develop" ]; then
+            echo "env_name=stage" >> $GITHUB_OUTPUT
+          else
+            echo "env_name=test" >> $GITHUB_OUTPUT
+          fi
+    outputs:
+      env_name: ${{ steps.init_env.outputs.env_name }}
+
   tests:
+    environment: ${{ jobs.init.outputs.env_name }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -35,6 +57,9 @@ jobs:
       DJANGO_SETTINGS_MODULE: panelapp.settings.test
       DJANGO_LOG_LEVEL: INFO
     steps:
+      - name: GitHub Environment Variables Action
+        uses: FranzDiebold/github-env-vars-action@v2.8.0
+
       - name: Checkout code
         uses: actions/checkout@v2
 
@@ -45,6 +70,8 @@ jobs:
 
       - name: Install dependencies
         run: |
+          echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
+          echo "CI_SHA_SHORT=$CI_SHA_SHORT"
           sudo apt-get install -y libpq-dev gcc python3-dev
           pip install pip==23.3.2
           pip install .[dev,tests]
@@ -52,3 +79,45 @@ jobs:
 
       - name: Run tests
         run: pytest
+
+  build:
+    environment: ${{ jobs.init.outputs.env_name }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@0e613a0980cbf65ed5b322eb7a1e075d28913a83
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@62f4f872db3836360b72999f4b87f1ff13310f3a
+
+      - name: Build, tag, and push image to Amazon ECR
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          export PACKAGE_NAME=$(python setup.py --name)
+          echo "PACKAGE_NAME=$PACKAGE_NAME"
+          echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
+          echo "CI_SHA_SHORT=$CI_SHA_SHORT"
+          docker build -t "${PACKAGE_NAME}-base" --file ./docker/cloud/Dockerfile-base .
+          docker build -t "${PACKAGE_NAME}-web" --file ./docker/cloud/Dockerfile-web .
+          docker build -t "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_ACTION_REF_NAME_SLUG" .
+          docker tag "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_SHA_SHORT"
+          docker push "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_ACTION_REF_NAME_SLUG"
+          docker push "$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_SHA_SHORT"
+          echo "web_image=$ECR_REGISTRY/${PACKAGE_NAME}-web:$CI_ACTION_REF_NAME_SLUG" >> $GITHUB_OUTPUT
+          docker build -t "${PACKAGE_NAME}-worker" --file ./docker/cloud/Dockerfile-worker .
+          docker build -t "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_ACTION_REF_NAME_SLUG" .
+          docker tag "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_SHA_SHORT"
+          docker push "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_ACTION_REF_NAME_SLUG"
+          docker push "$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_SHA_SHORT"
+          echo "worker_image=$ECR_REGISTRY/${PACKAGE_NAME}-worker:$CI_ACTION_REF_NAME_SLUG" >> $GITHUB_OUTPUT
