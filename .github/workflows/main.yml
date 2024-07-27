@@ -31,7 +31,7 @@ jobs:
 
   tests:
     needs: init
-    environment: ${{ jobs.init.outputs.env_name }}
+    environment: ${{ needs.jobs.init.outputs.env_name }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -83,7 +83,7 @@ jobs:
 
   build:
     needs: init
-    environment: ${{ jobs.init.outputs.env_name }}
+    environment: ${{ needs.jobs.init.outputs.env_name }}
     runs-on: ubuntu-latest
 
     steps:
