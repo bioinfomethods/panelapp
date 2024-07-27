@@ -21,14 +21,14 @@ jobs:
           echo "$CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
           if [ "$CI_ACTION_REF_NAME_SLUG" == "main" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "master" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "roo" ]; then
-            echo "ENV_NAME=prod" >> "$GITHUB_ENV"
-            echo "ENV_NAME=prod" >> "$GITHUB_OUTPUT"
+            echo "ENV_NAME=prod" >> "$env:GITHUB_ENV"
+            echo "ENV_NAME=prod" >> "$env:GITHUB_OUTPUT"
           elif [ "$CI_ACTION_REF_NAME_SLUG" == "develop" ]; then
-            echo "ENV_NAME=stage" >> "$GITHUB_ENV"
-            echo "ENV_NAME=stage" >> "$GITHUB_OUTPUT"
+            echo "ENV_NAME=stage" >> "$env:GITHUB_ENV"
+            echo "ENV_NAME=stage" >> "$env:GITHUB_OUTPUT"
           else
-            echo "ENV_NAME=test" >> "$GITHUB_ENV"
-            echo "ENV_NAME=test" >> "$GITHUB_OUTPUT"
+            echo "ENV_NAME=test" >> "$env:GITHUB_ENV"
+            echo "ENV_NAME=test" >> "$env:GITHUB_OUTPUT"
           fi
 
       - name: Log outputs
