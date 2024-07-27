@@ -37,13 +37,13 @@ jobs:
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
           echo "region=${{ vars.AWS_REGION }}"
           echo "ENV_NAME=$ENV_NAME"
-          echo "ENV_NAME=${{ steps.init.outputs.env_name }}"
+          echo "ENV_NAME=${{ steps.init.outputs.ENV_NAME }}"
     outputs:
-      env_name: ${{ steps.init_env.outputs.env_name }}
+      ENV_NAME: ${{ steps.init_env.outputs.ENV_NAME }}
 
   tests:
     needs: init
-    environment: ${{ needs.jobs.init.outputs.env_name }}
+    environment: ${{ needs.jobs.init.outputs.ENV_NAME }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -95,7 +95,7 @@ jobs:
 
   build:
     needs: init
-    environment: ${{ needs.jobs.init.outputs.env_name }}
+    environment: ${{ needs.jobs.init.outputs.ENV_NAME }}
     runs-on: ubuntu-latest
 
     steps:
@@ -105,7 +105,7 @@ jobs:
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
           echo "region=${{ vars.AWS_REGION }}"
           echo "ENV_NAME=$ENV_NAME"
-          echo "ENV_NAME=${{ needs.jobs.init.outputs.env_name }}"
+          echo "ENV_NAME=${{ needs.jobs.init.outputs.ENV_NAME }}"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -113,7 +113,7 @@ jobs:
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-region: ${{ secrets.AWS_REGION }}
+          aws-region: ${{ vars.AWS_REGION }}
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
