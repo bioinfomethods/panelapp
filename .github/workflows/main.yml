@@ -149,6 +149,7 @@ jobs:
           if [ "${{ needs.init.outputs.env_name }}" != "prod" ]; then
             echo "Tagging latest web image for non-prod environment"
             docker tag "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$WEB_REPO_NAME:latest"
+            docker push "$ECR_REGISTRY/$WEB_REPO_NAME:latest"
           fi
           docker push "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG"
           docker push "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_SHA_SHORT"
@@ -159,6 +160,7 @@ jobs:
           if [ "${{ needs.init.outputs.env_name }}" != "prod" ]; then
             echo "Tagging latest worker image for non-prod environment"
             docker tag "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$WORKER_REPO_NAME:latest"
+            docker push "$ECR_REGISTRY/$WORKER_REPO_NAME:latest"
           fi
           docker push "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG"
           docker push "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_SHA_SHORT"
