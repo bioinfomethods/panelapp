@@ -141,7 +141,7 @@ jobs:
           export PACKAGE_NAME=$(python setup.py --name)
           export BASE_REPO_NAME="${PACKAGE_NAME}_base_${{needs.init.outputs.env_name}}"
           export WEB_REPO_NAME="${PACKAGE_NAME}_web_${{needs.init.outputs.env_name}}"
-          export WORKER_REPO_NAME="${PACKAGE_NAME}_web_${{needs.init.outputs.env_name}}"
+          export WORKER_REPO_NAME="${PACKAGE_NAME}_worker_${{needs.init.outputs.env_name}}"
           echo "AWS_REGION=$AWS_REGION"
           echo "PACKAGE_NAME=$PACKAGE_NAME, BASE_REPO_NAME=$BASE_REPO_NAME, WEB_REPO_NAME=$WEB_REPO_NAME, WORKER_REPO_NAME=$WORKER_REPO_NAME"
           echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
