@@ -35,6 +35,10 @@ clean: ## Remove build directory
 build: clean ## Build Docker Images
 	docker compose build
 
+buildmulti: clean ## Build Docker Images for Linux and Mac
+	cd ../.. ; docker buildx build --platform linux/amd64,linux/arm64 --tag panelapp-base --file ./docker/dev/Dockerfile-base . ; cd docker/dev
+	docker compose build
+
 up: ## Run cluster
 	docker compose up -d
 

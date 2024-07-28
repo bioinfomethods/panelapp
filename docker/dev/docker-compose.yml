@@ -35,6 +35,9 @@ services:
     build:
       context: ../../
       dockerfile: ./docker/dev/Dockerfile-web
+      platforms:
+        - linux/amd64
+        - linux/arm64
     image: panelapp_web_dev
     restart: on-failure
     volumes:
@@ -76,6 +79,9 @@ services:
     build:
       context: ../../
       dockerfile: ./docker/dev/Dockerfile-worker
+      platforms:
+        - linux/amd64
+        - linux/arm64
     image: panelapp_worker_dev
     restart: on-failure
     volumes:
