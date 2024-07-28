@@ -44,6 +44,7 @@ BASE_DIR = os.path.dirname(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
+ENV_NAME = os.getenv("ENV_NAME", "dev")
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.11/howto/deployment/checklist/
@@ -133,6 +134,7 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "panelapp.context_processors.use_cognito",
+                "panelapp.context_processors.env_name",
             ]
         },
     }
