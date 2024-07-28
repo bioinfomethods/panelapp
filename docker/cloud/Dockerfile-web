@@ -1,5 +1,5 @@
-# FIXME fully qualify the base image, including a tag
-FROM panelapp-base
+ARG BASE_IMAGE=panelapp-base
+FROM $BASE_IMAGE
 
 COPY --chown=app:app ./deploy/gunicorn_config.py  /app/
 
