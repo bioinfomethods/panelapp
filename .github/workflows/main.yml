@@ -213,17 +213,15 @@ jobs:
       - name: Create backend.conf file
         run: |
           cat <<EOF > infra/terraform/panelapp/backend.conf
-          bucket = "${{ secrets.TF_STATE_BUCKET }}"
-          region = "${{ secrets.AWS_REGION }}"
+          bucket = "${{ env.TF_STATE_BUCKET }}"
+          region = "${{ env.AWS_REGION }}"
           encrypt = true
-          dynamodb_table = "${{ secrets.TF_STATE_DYNAMODB_TABLE }}"
-          key = "${{ secrets.TF_STATE_KEY }}"
+          dynamodb_table = "${{ env.TF_STATE_DYNAMODB_TABLE }}"
+          key = "${{ env.TF_STATE_KEY }}"
           EOF
 
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
-        with:
-          workspace: terraform
 
       - name: Terraform Initialize
         env:
