@@ -62,7 +62,7 @@ setup(
         "Markdown==2.6.11",
         "django-object-actions==0.10.0",
         "django-mathfilters==0.4.0",
-        "celery==4.2.1",
+        "celery==4.4.7",
         "more-itertools==4.2.0",
         "requests==2.22.0",
         "uwsgi==2.0.26",
