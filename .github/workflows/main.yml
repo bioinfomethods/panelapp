@@ -182,3 +182,111 @@ jobs:
       base_image: ${{ steps.build_image.outputs.base_image }}
       web_image: ${{ steps.build_image.outputs.web_image }}
       worker_image: ${{ steps.build_image.outputs.worker_image }}
+
+  deploy:
+    environment: ${{ needs.init.outputs.env_name }}
+    runs-on: ubuntu-latest
+
+    steps:
+#      - name: Log inputs
+#        run: |
+#          echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
+#          echo "CI_SHA_SHORT=$CI_SHA_SHORT"
+#          echo "region=${{ vars.AWS_REGION }}"
+#          echo "env_name=${{ needs.init.outputs.env_name }}"
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: 'recursive'
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          unset-current-credentials: true
+          aws-region: ${{ vars.AWS_REGION }}
+#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          role-to-assume: arn:aws:iam::487143049215:role/github-oidc-provider-aws
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          workspace: terraform
+
+      - name: Terraform Initialize
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_account_id: ${{ env.ACCOUNT_ID }}
+          TF_VAR_admin_email: ${{ env.ADMIN_EMAIL }}
+          TF_VAR_admin_url: ${{ env.ADMIN_URL }}
+          TF_VAR_cdn_alias: ${{ env.CDN_ALIAS }}
+          TF_VAR_create_cloudfront: ${{ env.CREATE_CLOUDFRONT }}
+          TF_VAR_default_email: ${{ env.DEFAULT_EMAIL }}
+          TF_VAR_panelapp_email: ${{ env.PANELAPP_EMAIL }}
+          TF_VAR_public_dns_zone: ${{ env.PUBLIC_DNS_ZONE }}
+          TF_VAR_public_dns_zone_name: ${{ env.PUBLIC_DNS_ZONE_NAME }}
+          TF_VAR_smtp_server: ${{ env.SMTP_SERVER }}
+          TF_VAR_terraform_infra_state_s3_bucket: ${{ env.TERRAFORM_INFRA_STATE_S3_BUCKET }}
+          TF_VAR_terraform_shared_state_s3_bucket: ${{ env.TERRAFORM_SHARED_STATE_S3_BUCKET }}
+        run: |
+          cd infra/terraform/panelapp
+          terraform init
+
+      - name: Terraform Validate
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_account_id: ${{ env.ACCOUNT_ID }}
+          TF_VAR_admin_email: ${{ env.ADMIN_EMAIL }}
+          TF_VAR_admin_url: ${{ env.ADMIN_URL }}
+          TF_VAR_cdn_alias: ${{ env.CDN_ALIAS }}
+          TF_VAR_create_cloudfront: ${{ env.CREATE_CLOUDFRONT }}
+          TF_VAR_default_email: ${{ env.DEFAULT_EMAIL }}
+          TF_VAR_panelapp_email: ${{ env.PANELAPP_EMAIL }}
+          TF_VAR_public_dns_zone: ${{ env.PUBLIC_DNS_ZONE }}
+          TF_VAR_public_dns_zone_name: ${{ env.PUBLIC_DNS_ZONE_NAME }}
+          TF_VAR_smtp_server: ${{ env.SMTP_SERVER }}
+          TF_VAR_terraform_infra_state_s3_bucket: ${{ env.TERRAFORM_INFRA_STATE_S3_BUCKET }}
+          TF_VAR_terraform_shared_state_s3_bucket: ${{ env.TERRAFORM_SHARED_STATE_S3_BUCKET }}
+        run: |
+          cd infra/terraform/panelapp
+          terraform validate -no-color
+
+      - name: Terraform Plan
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_region: ${{ secrets.AWS_REGION }}
+          TF_VAR_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          TF_VAR_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          TF_VAR_account_id: ${{ env.ACCOUNT_ID }}
+          TF_VAR_admin_email: ${{ env.ADMIN_EMAIL }}
+          TF_VAR_admin_url: ${{ env.ADMIN_URL }}
+          TF_VAR_cdn_alias: ${{ env.CDN_ALIAS }}
+          TF_VAR_create_cloudfront: ${{ env.CREATE_CLOUDFRONT }}
+          TF_VAR_default_email: ${{ env.DEFAULT_EMAIL }}
+          TF_VAR_panelapp_email: ${{ env.PANELAPP_EMAIL }}
+          TF_VAR_public_dns_zone: ${{ env.PUBLIC_DNS_ZONE }}
+          TF_VAR_public_dns_zone_name: ${{ env.PUBLIC_DNS_ZONE_NAME }}
+          TF_VAR_smtp_server: ${{ env.SMTP_SERVER }}
+          TF_VAR_terraform_infra_state_s3_bucket: ${{ env.TERRAFORM_INFRA_STATE_S3_BUCKET }}
+          TF_VAR_terraform_shared_state_s3_bucket: ${{ env.TERRAFORM_SHARED_STATE_S3_BUCKET }}
+          TF_VAR_image_tag: test
+        run: |
+          cd infra/terraform/panelapp
+          terraform plan -no-color -target=aws_ecs_task_definition.panelapp_web --target=aws_ecs_task_definition.panelapp_worker
+
+#      - name: Terraform Apply
+#        env:
+#          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#        run: terraform apply -auto-approve
