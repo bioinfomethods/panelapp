@@ -270,7 +270,7 @@ jobs:
           cd infra/terraform/panelapp
           terraform validate -no-color
 
-      - name: Terraform Plan
+      - name: Deploy web
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -291,8 +291,10 @@ jobs:
           TF_VAR_terraform_shared_state_s3_bucket: ${{ env.TERRAFORM_SHARED_STATE_S3_BUCKET }}
           TF_VAR_image_tag: test
         run: |
-          cd infra/terraform/panelapp
-          terraform plan -no-color -target=aws_ecs_task_definition.panelapp_web --target=aws_ecs_task_definition.panelapp_worker
+          python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-stage -panelapp
+
+#          cd infra/terraform/panelapp
+#          terraform plan -no-color -target=aws_ecs_task_definition.panelapp_web --target=aws_ecs_task_definition.panelapp_worker
 
 #      - name: Terraform Apply
 #        env:
