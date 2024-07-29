@@ -210,6 +210,16 @@ jobs:
 #          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           role-to-assume: arn:aws:iam::487143049215:role/github-oidc-provider-aws
 
+      - name: Create backend.conf file
+        run: |
+          cat <<EOF > infra/terraform/panelapp/backend.conf
+          bucket = "${{ secrets.TF_STATE_BUCKET }}"
+          region = "${{ secrets.AWS_REGION }}"
+          encrypt = true
+          dynamodb_table = "${{ secrets.TF_STATE_DYNAMODB_TABLE }}"
+          key = "${{ secrets.TF_STATE_KEY }}"
+          EOF
+
       - name: Set up Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -236,7 +246,7 @@ jobs:
           TF_VAR_terraform_shared_state_s3_bucket: ${{ env.TERRAFORM_SHARED_STATE_S3_BUCKET }}
         run: |
           cd infra/terraform/panelapp
-          terraform init
+          terraform init -backend-config=backend.conf
 
       - name: Terraform Validate
         env:
