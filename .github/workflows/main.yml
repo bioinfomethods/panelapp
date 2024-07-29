@@ -184,6 +184,7 @@ jobs:
       worker_image: ${{ steps.build_image.outputs.worker_image }}
 
   deploy:
+    needs: init
     environment: ${{ needs.init.outputs.env_name }}
     runs-on: ubuntu-latest
 
