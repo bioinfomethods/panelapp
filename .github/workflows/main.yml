@@ -214,11 +214,11 @@ jobs:
       - name: Create backend.conf file
         run: |
           cat <<EOF > infra/terraform/panelapp/backend.conf
-          bucket = "${{ env.TF_STATE_BUCKET }}"
-          region = "${{ env.AWS_REGION }}"
+          bucket = "${{ vars.TF_STATE_BUCKET }}"
+          region = "${{ vars.AWS_REGION }}"
           encrypt = true
-          dynamodb_table = "${{ env.TF_STATE_DYNAMODB_TABLE }}"
-          key = "${{ env.TF_STATE_KEY }}"
+          dynamodb_table = "${{ vars.TF_STATE_DYNAMODB_TABLE }}"
+          key = "${{ vars.TF_STATE_KEY }}"
           EOF
 
       - name: Set up Terraform
