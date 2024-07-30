@@ -189,12 +189,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-#      - name: Log inputs
-#        run: |
-#          echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
-#          echo "CI_SHA_SHORT=$CI_SHA_SHORT"
-#          echo "region=${{ vars.AWS_REGION }}"
-#          echo "env_name=${{ needs.init.outputs.env_name }}"
+      - name: GitHub Environment Variables Action
+        uses: FranzDiebold/github-env-vars-action@v2.8.0
+
+      - name: Log inputs
+        run: |
+          echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
+          echo "CI_SHA_SHORT=$CI_SHA_SHORT"
+          echo "region=${{ vars.AWS_REGION }}"
+          echo "env_name=${{ needs.init.outputs.env_name }}"
 
       - name: Checkout
         uses: actions/checkout@v4
@@ -206,9 +209,6 @@ jobs:
         with:
           unset-current-credentials: true
           aws-region: ${{ vars.AWS_REGION }}
-#          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           role-to-assume: arn:aws:iam::487143049215:role/github-oidc-provider-aws
 
       - name: Create backend.conf file
@@ -226,8 +226,6 @@ jobs:
 
       - name: Terraform Initialize
         env:
-#          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           TF_VAR_region: ${{ secrets.AWS_REGION }}
           TF_VAR_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           TF_VAR_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -249,8 +247,6 @@ jobs:
 
       - name: Terraform Validate
         env:
-#          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           TF_VAR_region: ${{ secrets.AWS_REGION }}
           TF_VAR_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           TF_VAR_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -272,8 +268,6 @@ jobs:
 
       - name: Deploy web
         env:
-#          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           TF_VAR_region: ${{ secrets.AWS_REGION }}
           TF_VAR_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           TF_VAR_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -291,7 +285,11 @@ jobs:
           TF_VAR_terraform_shared_state_s3_bucket: ${{ env.TERRAFORM_SHARED_STATE_S3_BUCKET }}
           TF_VAR_image_tag: test
         run: |
-          python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-stage -panelapp
+          terraform apply -auto-approve -var image_tag=$CI_SHA_SHORT
+          sleep 30
+          python3 infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-stage -panelapp
+          sleep 30
+          python3 infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-stage -panelapp
 
 #          cd infra/terraform/panelapp
 #          terraform plan -no-color -target=aws_ecs_task_definition.panelapp_web --target=aws_ecs_task_definition.panelapp_worker
