@@ -186,7 +186,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       TF_VAR_env_name: ${{ needs.init.outputs.env_name }}
-      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_region: ${{ vars.AWS_REGION }}
       TF_VAR_account_id: ${{ vars.ACCOUNT_ID }}
       TF_VAR_admin_email: ${{ vars.ADMIN_EMAIL }}
       TF_VAR_admin_url: ${{ vars.ADMIN_URL }}
