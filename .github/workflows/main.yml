@@ -284,7 +284,7 @@ jobs:
         run: |
           export WORKING_DIR=$(pwd)
           cd infra/terraform/panelapp
-          terraform plan -auto-approve -var image_tag=$CI_SHA_SHORT -target=aws_ecs_service.panelapp_web -target=aws_ecs_task_definition.panelapp_web -target=aws_ecs_service.panelapp_worker -target=aws_ecs_task_definition.panelapp_worker
+          terraform plan -var image_tag=$CI_SHA_SHORT -target=aws_ecs_service.panelapp_web -target=aws_ecs_task_definition.panelapp_web -target=aws_ecs_service.panelapp_worker -target=aws_ecs_task_definition.panelapp_worker
           cd $WORKING_DIR
           sleep 30
           python3 infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-stage -panelapp
