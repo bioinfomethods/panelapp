@@ -184,6 +184,21 @@ jobs:
     needs: [init, build]
     environment: ${{ needs.init.outputs.env_name }}
     runs-on: ubuntu-latest
+    env:
+      TF_VAR_env_name: ${{ needs.init.outputs.env_name }}
+      TF_VAR_region: ${{ secrets.AWS_REGION }}
+      TF_VAR_account_id: ${{ vars.ACCOUNT_ID }}
+      TF_VAR_admin_email: ${{ vars.ADMIN_EMAIL }}
+      TF_VAR_admin_url: ${{ vars.ADMIN_URL }}
+      TF_VAR_cdn_alias: ${{ vars.CDN_ALIAS }}
+      TF_VAR_create_cloudfront: ${{ vars.CREATE_CLOUDFRONT }}
+      TF_VAR_default_email: ${{ vars.DEFAULT_EMAIL }}
+      TF_VAR_panelapp_email: ${{ vars.PANELAPP_EMAIL }}
+      TF_VAR_public_dns_zone: ${{ vars.PUBLIC_DNS_ZONE }}
+      TF_VAR_public_dns_zone_name: ${{ vars.PUBLIC_DNS_ZONE_NAME }}
+      TF_VAR_smtp_server: ${{ vars.SMTP_SERVER }}
+      TF_VAR_terraform_infra_state_s3_bucket: ${{ vars.TERRAFORM_INFRA_STATE_S3_BUCKET }}
+      TF_VAR_terraform_shared_state_s3_bucket: ${{ vars.TERRAFORM_SHARED_STATE_S3_BUCKET }}
 
     steps:
       - name: GitHub Environment Variables Action
@@ -222,69 +237,22 @@ jobs:
         uses: hashicorp/setup-terraform@v3
 
       - name: Terraform Initialize
-        env:
-          TF_VAR_region: ${{ secrets.AWS_REGION }}
-          TF_VAR_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          TF_VAR_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          TF_VAR_account_id: ${{ vars.ACCOUNT_ID }}
-          TF_VAR_admin_email: ${{ vars.ADMIN_EMAIL }}
-          TF_VAR_admin_url: ${{ vars.ADMIN_URL }}
-          TF_VAR_cdn_alias: ${{ vars.CDN_ALIAS }}
-          TF_VAR_create_cloudfront: ${{ vars.CREATE_CLOUDFRONT }}
-          TF_VAR_default_email: ${{ vars.DEFAULT_EMAIL }}
-          TF_VAR_panelapp_email: ${{ vars.PANELAPP_EMAIL }}
-          TF_VAR_public_dns_zone: ${{ vars.PUBLIC_DNS_ZONE }}
-          TF_VAR_public_dns_zone_name: ${{ vars.PUBLIC_DNS_ZONE_NAME }}
-          TF_VAR_smtp_server: ${{ vars.SMTP_SERVER }}
-          TF_VAR_terraform_infra_state_s3_bucket: ${{ vars.TERRAFORM_INFRA_STATE_S3_BUCKET }}
-          TF_VAR_terraform_shared_state_s3_bucket: ${{ vars.TERRAFORM_SHARED_STATE_S3_BUCKET }}
         run: |
           cd infra/terraform/panelapp
           terraform init -backend-config=backend.conf
 
       - name: Terraform Validate
-        env:
-          TF_VAR_region: ${{ secrets.AWS_REGION }}
-          TF_VAR_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          TF_VAR_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          TF_VAR_account_id: ${{ vars.ACCOUNT_ID }}
-          TF_VAR_admin_email: ${{ vars.ADMIN_EMAIL }}
-          TF_VAR_admin_url: ${{ vars.ADMIN_URL }}
-          TF_VAR_cdn_alias: ${{ vars.CDN_ALIAS }}
-          TF_VAR_create_cloudfront: ${{ vars.CREATE_CLOUDFRONT }}
-          TF_VAR_default_email: ${{ vars.DEFAULT_EMAIL }}
-          TF_VAR_panelapp_email: ${{ vars.PANELAPP_EMAIL }}
-          TF_VAR_public_dns_zone: ${{ vars.PUBLIC_DNS_ZONE }}
-          TF_VAR_public_dns_zone_name: ${{ vars.PUBLIC_DNS_ZONE_NAME }}
-          TF_VAR_smtp_server: ${{ vars.SMTP_SERVER }}
-          TF_VAR_terraform_infra_state_s3_bucket: ${{ vars.TERRAFORM_INFRA_STATE_S3_BUCKET }}
-          TF_VAR_terraform_shared_state_s3_bucket: ${{ vars.TERRAFORM_SHARED_STATE_S3_BUCKET }}
         run: |
           cd infra/terraform/panelapp
           terraform validate -no-color
 
       - name: Deploy web
         env:
-          TF_VAR_region: ${{ secrets.AWS_REGION }}
-          TF_VAR_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          TF_VAR_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          TF_VAR_account_id: ${{ vars.ACCOUNT_ID }}
-          TF_VAR_admin_email: ${{ vars.ADMIN_EMAIL }}
-          TF_VAR_admin_url: ${{ vars.ADMIN_URL }}
-          TF_VAR_cdn_alias: ${{ vars.CDN_ALIAS }}
-          TF_VAR_create_cloudfront: ${{ vars.CREATE_CLOUDFRONT }}
-          TF_VAR_default_email: ${{ vars.DEFAULT_EMAIL }}
-          TF_VAR_panelapp_email: ${{ vars.PANELAPP_EMAIL }}
-          TF_VAR_public_dns_zone: ${{ vars.PUBLIC_DNS_ZONE }}
-          TF_VAR_public_dns_zone_name: ${{ vars.PUBLIC_DNS_ZONE_NAME }}
-          TF_VAR_smtp_server: ${{ vars.SMTP_SERVER }}
-          TF_VAR_terraform_infra_state_s3_bucket: ${{ vars.TERRAFORM_INFRA_STATE_S3_BUCKET }}
-          TF_VAR_terraform_shared_state_s3_bucket: ${{ vars.TERRAFORM_SHARED_STATE_S3_BUCKET }}
-          TF_VAR_image_tag: test
+          TF_VAR_image_tag: $CI_SHA_SHORT
         run: |
           export WORKING_DIR=$(pwd)
           cd infra/terraform/panelapp
-          terraform plan -var image_tag=$CI_SHA_SHORT -target=aws_ecs_service.panelapp_web -target=aws_ecs_task_definition.panelapp_web -target=aws_ecs_service.panelapp_worker -target=aws_ecs_task_definition.panelapp_worker
+          terraform plan -target=aws_ecs_service.panelapp_web -target=aws_ecs_task_definition.panelapp_web -target=aws_ecs_service.panelapp_worker -target=aws_ecs_task_definition.panelapp_worker
           cd $WORKING_DIR
           sleep 30
           python3 infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-stage -panelapp
