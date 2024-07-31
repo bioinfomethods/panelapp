@@ -248,10 +248,9 @@ jobs:
           terraform validate -no-color
 
       - name: Deploy web
-        env:
-          TF_VAR_image_tag: $CI_SHA_SHORT
         run: |
           export WORKING_DIR=$(pwd)
+          export TF_VAR_image_tag="$CI_SHA_SHORT"
           cd infra/terraform/panelapp
           terraform apply -auto-approve -target=aws_ecs_service.panelapp_web -target=aws_ecs_task_definition.panelapp_web -target=aws_ecs_service.panelapp_worker -target=aws_ecs_task_definition.panelapp_worker
           cd $WORKING_DIR
