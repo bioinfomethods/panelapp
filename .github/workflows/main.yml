@@ -254,6 +254,7 @@ jobs:
           cd infra/terraform/panelapp
           terraform apply -auto-approve -target=aws_ecs_service.panelapp_web -target=aws_ecs_task_definition.panelapp_web -target=aws_ecs_service.panelapp_worker -target=aws_ecs_task_definition.panelapp_worker
           cd $WORKING_DIR
+          pip install boto3 argparse
           sleep 30
           python3 infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-stage -panelapp
           sleep 30
