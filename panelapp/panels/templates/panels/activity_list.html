@@ -11,6 +11,7 @@
   </h1>
 
   <form class="form activity-filter add-bottom-margin{% if not filter_active %} d-none{% endif %}">
+    {% csrf_token %}
     <h4>Filter</h4>
     {% bootstrap_form filter_form %}
     <div>
@@ -32,7 +33,7 @@
       </tr>
       <tr class="if-no-js-hide table-header-secondary">
         <td colspan="100">
-          <form>
+          <div>
             <label for="gene-filter" class="rm">Filter activities</label>
             <div class="input-group">
               <input id="gene-filter" type="text" class="form-control normal js-filter-table-input" placeholder="Filter activities">
@@ -40,7 +41,7 @@
                 {{ activities|length }} actions
               </span>
             </div>
-          </form>
+          </div>
         </td>
       </tr>
     </thead>
