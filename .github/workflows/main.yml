@@ -189,6 +189,7 @@ jobs:
       TF_VAR_default_tags: '{"Stack": "panelapp", "Env": "${{ needs.init.outputs.env_name }}"}'
       TF_VAR_region: ${{ vars.AWS_REGION }}
       TF_VAR_account_id: ${{ vars.ACCOUNT_ID }}
+      TF_VAR_trusted_account: ${{ vars.ACCOUNT_ID }}
       TF_VAR_admin_email: ${{ vars.ADMIN_EMAIL }}
       TF_VAR_admin_url: ${{ vars.ADMIN_URL }}
       TF_VAR_cdn_alias: ${{ vars.CDN_ALIAS }}
