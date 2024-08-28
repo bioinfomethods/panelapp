@@ -2,14 +2,14 @@ ARG python_base=python:3.11.9-alpine3.19
 ARG node_base=node:20.14.0-alpine3.19
 
 
-FROM ${node_base} as frontend_build
+FROM ${node_base} AS frontend_build
 
 COPY ./frontend /src/frontend
 COPY ./webpack.* package.json package-lock.json /src/
 
 RUN cd /src && npm ci && npm run build
 
-FROM ${python_base} as backend_build_prod
+FROM ${python_base} AS backend_build_prod
 
 ENV POETRY_VERSION=1.8.3
 
@@ -31,7 +31,7 @@ RUN /src/.poetry/bin/poetry bundle venv --only main,deploy /venv && \
     # https://github.com/python-poetry/poetry/issues/5330#issuecomment-1907083739
     /venv/bin/pip uninstall -y ecdsa
 
-FROM ${python_base} as base
+FROM ${python_base} AS base
 
 WORKDIR /app
 
@@ -65,19 +65,19 @@ ENV WEBPACK_LOADER_STATS_FILE=/app/webpack-stats.json
 
 USER app:app
 
-FROM backend_build_prod as backend_build_dev
+FROM backend_build_prod AS backend_build_dev
 
 RUN /src/.poetry/bin/poetry bundle venv --with deploy /venv
 
-FROM base as dev
+FROM base AS dev
 
 COPY --chown=app:app --from=backend_build_dev /venv /venv
 
-FROM base as test
+FROM base AS test
 
 COPY --chown=app:app --from=backend_build_dev /venv /venv
 COPY --chown=app:app ./frontend/tests/data.json /app/data.json
 
-FROM base as prod
+FROM base AS prod
 
 COPY --chown=app:app --from=backend_build_prod /venv /venv
