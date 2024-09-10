@@ -6,6 +6,7 @@ on:
       - main
       - roo
       - develop
+      - stage
 
 permissions:
   id-token: write
