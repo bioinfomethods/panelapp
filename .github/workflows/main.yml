@@ -27,6 +27,8 @@ jobs:
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
           if [ "$CI_ACTION_REF_NAME_SLUG" == "main" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "master" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "roo" ]; then
             echo "env_name=prod" >> "$GITHUB_OUTPUT"
+          elif [ "$CI_ACTION_REF_NAME_SLUG" == "stage" ]; then
+            echo "env_name=stage" >> "$GITHUB_OUTPUT"
           elif [ "$CI_ACTION_REF_NAME_SLUG" == "develop" ]; then
             echo "env_name=test" >> "$GITHUB_OUTPUT"
           else
@@ -124,7 +126,7 @@ jobs:
         with:
           unset-current-credentials: true
           aws-region: ${{ vars.AWS_REGION }}
-          role-to-assume: arn:aws:iam::487143049215:role/github-oidc-provider-aws
+          role-to-assume: arn:aws:iam:${{ vars.ACCOUNT_ID }}:role/github-oidc-provider-aws
 
       - name: Login to Amazon ECR
         id: login-ecr
