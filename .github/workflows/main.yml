@@ -126,7 +126,7 @@ jobs:
         with:
           unset-current-credentials: true
           aws-region: ${{ vars.AWS_REGION }}
-          role-to-assume: arn:aws:iam:${{ vars.ACCOUNT_ID }}:role/github-oidc-provider-aws
+          role-to-assume: arn:aws:iam::${{ vars.ACCOUNT_ID }}:role/github-oidc-provider-aws
 
       - name: Login to Amazon ECR
         id: login-ecr
