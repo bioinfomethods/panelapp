@@ -5,6 +5,7 @@ variables:
   DOCKER_PYTHON: python:3.11.9-alpine3.19
   DOCKER_NODE: node:20.14.0-alpine3.19
   DOCKER_POSTGRES: postgres:14.7
+  DOCKER_PLAYWRIGHT: mcr.microsoft.com/playwright:v1.46.1-jammy
   DOCKER_IN_DOCKER: docker:24.0.1-dind
   DOCKER_DRIVER: overlay2
   DOCKER_HOST: tcp://docker:2376/
@@ -114,7 +115,7 @@ ui_test_image_build:
     - docker push "$UI_TEST_IMAGE_TAG"
 
 ui_test:
-  image: mcr.microsoft.com/playwright:v1.40.0-jammy
+  image: $DOCKER_PLAYWRIGHT
   stage: test
   dependencies:
     - ui_test_image_build
