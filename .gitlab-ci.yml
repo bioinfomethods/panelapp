@@ -30,7 +30,7 @@ variables:
   #  TAGGER_DEBUG: 'yes'
   CI_DEBUG_TRACE: "false"
   #  TF_LOG: DEBUG
-  UI_TEST_IMAGE_TAG: "$CI_REGISTRY_IMAGE/ui-test:$CI_COMMIT_SHORT_SHA"
+  E2E_TEST_IMAGE_TAG: "$CI_REGISTRY_IMAGE/e2e-test:$CI_COMMIT_SHORT_SHA"
   APP_VERSION: "0.0.0"
   env_name: dev
 
@@ -102,8 +102,8 @@ code_test:
   script:
     - pytest --cov-report term --cov-report xml --junitxml=report.xml
 
-# Build docker image for UI testing purposes
-ui_test_image_build:
+# Build docker image for end-to-end testing purposes
+e2e_test_image_build:
   image: $DOCKER_IN_DOCKER
   stage: test_build
   before_script:
@@ -111,31 +111,34 @@ ui_test_image_build:
     - source scripts/assume_role.sh
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
-    - docker build -f ./docker/Dockerfile -t "$UI_TEST_IMAGE_TAG" --target test --build-arg node_base="${DOCKER_NODE}" --build-arg python_base="${DOCKER_PYTHON}" .
-    - docker push "$UI_TEST_IMAGE_TAG"
+    - docker build -f ./docker/Dockerfile -t "$E2E_TEST_IMAGE_TAG" --target test --build-arg node_base="${DOCKER_NODE}" --build-arg python_base="${DOCKER_PYTHON}" .
+    - docker push "$E2E_TEST_IMAGE_TAG"
 
-ui_test:
+.e2e_test:
   image: $DOCKER_PLAYWRIGHT
   stage: test
   dependencies:
-    - ui_test_image_build
+    - e2e_test_image_build
   artifacts:
     paths:
       - test-results/
       - playwright-report/
     when: always
   services:
-    # Alternative? Use docker-compose inline for all services + testing
-    # https://forum.gitlab.com/t/run-project-with-docker-compose/35975
-    # - name: $DOCKER_IN_DOCKER
-    #   alias: docker
-    #   command:
-    #     - "--registry-mirror"
-    #     - "https://docker.artifactory.aws.gel.ac"
     - name: $DOCKER_POSTGRES
       alias: db-postgres
-    - name: $UI_TEST_IMAGE_TAG
+      variables:
+        POSTGRES_DB: panelapp
+        POSTGRES_USER: panelapp
+        POSTGRES_PASSWORD: secret
+    - name: $E2E_TEST_IMAGE_TAG
       alias: panelapp
+      variables:
+        PYTHONUNBUFFERED: "1"
+        DJANGO_LOG_LEVEL: DEBUG
+        DJANGO_SETTINGS_MODULE: panelapp.settings.test
+        DATABASE_URL: postgres://panelapp:secret@db-postgres:5432/panelapp
+        ALLOWED_HOSTS: panelapp
       command:
         - /bin/sh
         - "-c"
@@ -143,22 +146,19 @@ ui_test:
   variables:
     # Allows inter-service communication: https://stackoverflow.com/questions/48041101/gitlab-ci-cross-service-communication
     FF_NETWORK_PER_BUILD: 1
-    # Variables for services defined here
-    # Service-specific env config is only available from Gitlab runner version 14.5, we use version 13.9.0
-    # postgres
-    POSTGRES_DB: panelapp
-    POSTGRES_USER: panelapp
-    POSTGRES_PASSWORD: secret
-    # panelapp
-    PYTHONUNBUFFERED: "1"
-    DJANGO_LOG_LEVEL: DEBUG
-    DJANGO_SETTINGS_MODULE: panelapp.settings.test
-    DATABASE_URL: postgres://panelapp:secret@db-postgres:5432/panelapp
     BASE_URL: http://panelapp:8080
-    ALLOWED_HOSTS: panelapp
-  script:
+  before_script:
     - npm ci
-    - npx playwright test
+
+e2e_test_functional:
+  extends: .e2e_test
+  script:
+    - npx playwright test tests/functional/
+
+e2e_test_visual:
+  extends: .e2e_test
+  script:
+    - npx playwright test tests/visual/
 
 ## Linting, formatting, etc
 import_sorting:

@@ -7,7 +7,7 @@ BUILDDIR := .build
 DISTDIR := dist
 APPDIR :=  panelapp
 SOURCEDIR := ../..
-DOCKERCOMPOSE := docker-compose -f ./docker/docker-compose.yml
+DOCKERCOMPOSE := docker compose -f ./docker/docker-compose.yml
 
 # If the first argument is "command"...
 ifeq (command,$(firstword $(MAKECMDGOALS)))
@@ -26,11 +26,14 @@ ifeq ($(OS),Darwin)
 endif
 export TMPDIR := $(TMPDIR)
 
-ui-test: up mock-aws collectstatic ## Run UI tests
-	$(DOCKERCOMPOSE) run --rm playwright npx playwright test
+e2e-test-functional: up mock-aws collectstatic ## Run e2e functional tests
+	$(DOCKERCOMPOSE) run --rm playwright npx playwright test tests/functional/
+
+e2e-test-visual: up mock-aws collectstatic ## Run e2e visual tests
+	$(DOCKERCOMPOSE) run --rm playwright npx playwright test tests/visual/
 
 update-snapshots: up mock-aws collectstatic ## Update playwright snapshots
-	$(DOCKERCOMPOSE) run --rm playwright npx playwright test --update-snapshots
+	$(DOCKERCOMPOSE) run --rm playwright npx playwright test tests/visual/ --update-snapshots
 
 clean: ## Remove build directory
 	rm -rf $(BUILDDIR)
@@ -43,24 +46,24 @@ up: ## Run cluster
 	$(DOCKERCOMPOSE) up -d
 
 migrate: ## Create db schema, apply db migration (migrate command)
-	$(DOCKERCOMPOSE) exec web python manage.py migrate
+	$(DOCKERCOMPOSE) exec web manage migrate
 
 loaddata: export AWS_ACCESS_KEY_ID := dummy-key
 loaddata: export AWS_SECRET_ACCESS_KEY := dummy-secret
 loaddata: ## Load genes files into db (loaddata command)
 	aws --endpoint-url=http://localhost:4566 s3 cp ../../deploy/genes.json.gz s3://media-bucket/genes.json.gz
-	$(DOCKERCOMPOSE) exec web /bin/sh -c "python -c \"import boto3,botocore;boto3.resource('s3',use_ssl=False, endpoint_url='http://localstack:4566').Bucket('media-bucket').download_file('genes.json.gz', '/var/tmp/genes.json.gz')\"; python manage.py loaddata --verbosity 3 /var/tmp/genes.json; rm /var/tmp/genes.json.gz"
+	$(DOCKERCOMPOSE) exec web /bin/sh -c "python -c \"import boto3,botocore;boto3.resource('s3',use_ssl=False, endpoint_url='http://localstack:4566').Bucket('media-bucket').download_file('genes.json.gz', '/var/tmp/genes.json.gz')\"; manage loaddata --verbosity 3 /var/tmp/genes.json; rm /var/tmp/genes.json.gz"
 	aws --endpoint-url=http://localhost:4566 s3 rm s3://media-bucket/genes.json.gz
 
 
 collectstatic: ## Deploy static files (collectstatic command)
-	$(DOCKERCOMPOSE) exec web python manage.py collectstatic --noinput
+	$(DOCKERCOMPOSE) exec web manage collectstatic --noinput
 
 createsuperuser: ## Create superuser (username: 'admin', pwd: 'changeme', email: `admin@local`)
-	$(DOCKERCOMPOSE) exec web /bin/sh -c "echo \"from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@local', 'changeme')\" | python manage.py shell"
+	$(DOCKERCOMPOSE) exec web /bin/sh -c "echo \"from django.contrib.auth import get_user_model; User = get_user_model(); User.objects.create_superuser('admin', 'admin@local', 'changeme')\" | manage shell"
 
 command: ## Run a generic command, passed as additional argument(s)
-	$(DOCKERCOMPOSE) exec web python manage.py $(COMMAND_ARGS)
+	$(DOCKERCOMPOSE) exec web manage $(COMMAND_ARGS)
 
 stop: ## Stop cluster, without destroying it
 	$(DOCKERCOMPOSE) stop

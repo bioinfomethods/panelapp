@@ -329,18 +329,17 @@ It might be handy installing [AWScli-local](https://github.com/localstack/awscli
 It is a wrapper around AWS cli for interacting with LocalStack (it helps with not `--endpoint-url` and providing dummy
 credentials on every request).
 
-### Frontend tests
+### End-to-end tests
 
 #### Playwright
 
-Frontend testing makes use of the [Playwright](https://playwright.dev/) framework.
+End-to-end testing makes use of the [Playwright](https://playwright.dev/) framework.
 
 ##### Updating Playwright
 
 The version of Playwright in the following locations must be kept in sync:
 
 - `package.json`
-- `playwright/Dockerfile`
 - `.gitlab-ci.yml`
 
 #### Running tests
@@ -360,10 +359,18 @@ Before running this command please ensure the image for this is built:
 docker-compose build playwright
 ```
 
-Now run the command:
+Execute the functional tests:
 
 ```
-make ui-test
+make e2e-test-functional
+```
+
+NOTE: the functional tests modify state which will cause the visual tests to fail.
+
+Execute the visual tests:
+
+```
+make e2e-test-visual
 ```
 
 Tests can be run using [the CLI](https://playwright.dev/docs/running-tests#command-line) directly on a development machine:
@@ -403,7 +410,9 @@ If a visual change has occurred and it is necessary for this change to be includ
 that differ must be updated to accommodate this:
 
 ```
+
 make update-snapshots
+
 ```
 
 The updated snapshots can then be committed alongside the code changes that cause the visual changes.
@@ -430,3 +439,7 @@ To make a change to this data:
 The `AWS_STATICFILES_USE_RELATIVE_URL` environment variable in tandem with `AWS_S3_STATICFILES_CUSTOM_DOMAIN` controls whether PanelApp uses relative paths for static resources instead of fully-qualified URLs, e.g. `/static/app.css` instead of `https://example.com/static/app.css`.
 
 Set `AWS_STATICFILES_USE_RELATIVE_URL` to `TRUE` and `AWS_S3_STATICFILES_CUSTOM_DOMAIN` to any non-empty value to enable this behaviour.
+
+```
+
+```
