@@ -11,6 +11,8 @@ services:
     working_dir: /work/
     environment:
       BASE_URL: http://web:8000
+      TEST_Curator: changeme
+      TEST_Reviewer: changeme
 
   localstack:
     image: localstack/localstack:3.1.0

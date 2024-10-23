@@ -155,6 +155,12 @@ e2e_test_functional:
   script:
     - npx playwright test tests/functional/
 
+e2e_test_bdd:
+  extends: .e2e_test
+  script:
+    - npx bddgen -c playwright-bdd.config.ts
+    - npx playwright test -c playwright-bdd.config.ts
+
 e2e_test_visual:
   extends: .e2e_test
   script:

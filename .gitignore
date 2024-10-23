@@ -126,3 +126,6 @@ webpack-stats.json
 /playwright/.auth
 /playwright-report/
 /test-results/
+
+# playwright-bdd
+.features-gen/

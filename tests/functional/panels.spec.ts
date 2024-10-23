@@ -1,6 +1,4 @@
 import { expect, test } from "@playwright/test";
-import { CreatePanelPage } from "../pages/create-panel";
-import { PanelsPage } from "../pages/panels";
 
 test.describe(() => {
   test.use({ storageState: "playwright/.auth/admin.json" });
@@ -68,82 +66,5 @@ test.describe(() => {
         "Mode of pathogenicity Exceptions to loss of function It’s assumed that loss-of-"
       );
     await expect(dialog).toBeVisible();
-  });
-});
-
-test.describe(() => {
-  test.use({ storageState: "playwright/.auth/admin.json" });
-
-  test("Super panels only contain component panel entities", async ({
-    page,
-  }) => {
-    const panels = new PanelsPage(page);
-    await panels.goto();
-    const componentPanel = await panels.findPanel("Test Component Panel 01");
-    if (componentPanel !== null) {
-      await panels.unlockPanel(componentPanel.id);
-      await panels.deletePanel(componentPanel.id);
-    }
-    const superPanel = await panels.findPanel("Test Super Panel 01");
-    if (superPanel !== null) {
-      // Page requires refresh to unlock/delete another panel
-      await page.reload();
-      await panels.unlockPanel(superPanel.id);
-      await panels.deletePanel(superPanel.id);
-    }
-    const createPanel = new CreatePanelPage(page);
-
-    await createPanel.goto();
-    const superPanelPage = await createPanel.createPanel({
-      level4: "Test Super Panel 01",
-      description: "Test super panel",
-      childPanels: [],
-      status: "public",
-    });
-    const superPanelAddGene = await superPanelPage.addGene();
-    await superPanelAddGene.addGene({
-      symbol: "AAAS",
-      source: "Other",
-      modeOfInheritance: "BIALLELIC, autosomal or pseudoautosomal",
-    });
-
-    await createPanel.goto();
-    const componentPanelPage = await createPanel.createPanel({
-      level4: "Test Component Panel 01",
-      description: "Test component panel",
-      childPanels: [],
-      status: "public",
-    });
-    const componentPanelAddGene = await componentPanelPage.addGene();
-    await componentPanelAddGene.addGene({
-      symbol: "AAAS",
-      source: "Other",
-      modeOfInheritance: "Unknown",
-    });
-
-    await superPanelPage.goto();
-    const superPanelForm = await superPanelPage.editPanel();
-    await superPanelForm.addChildPanel("Test Component Panel 01");
-    await superPanelPage.savePanel();
-
-    // Assert
-
-    await superPanelPage.goto();
-
-    await expect(page.getByRole("cell", { name: "Unknown" })).toBeVisible();
-    await expect(
-      page.getByRole("cell", {
-        name: "BIALLELIC, autosomal or pseudoautosomal",
-      })
-    ).toBeHidden();
-
-    await page.goto("/panels/entities/AAAS");
-
-    await expect(
-      page.getByRole("cell", { name: "Red AAAS in Test Component Panel 01" })
-    ).toBeVisible();
-    await expect(
-      page.getByRole("cell", { name: "Red AAAS in Test Super Panel 01" })
-    ).toBeHidden();
   });
 });

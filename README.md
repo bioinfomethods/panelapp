@@ -432,6 +432,30 @@ To make a change to this data:
 7. Update the visual test snapshots using `make update-snapshots`
 8. Commit the changes to the repository
 
+#### Gherkin (BDD) Tests
+
+Acceptance tests are written using the [gherkin language](https://cucumber.io/docs/gherkin/).
+
+These are located under `tests/features` and also use the `playwright` framework, integrated using the [playwright-bdd library](https://vitalets.github.io/playwright-bdd/).
+
+Execute BDD tests using `docker`:
+
+```
+make e2e-test-bdd
+```
+
+Execute BDD tests directly:
+
+```
+npx bddgen -c playwright-bdd.config.ts && npx playwright test -c playwright-bdd.config.ts
+```
+
+While developing tests you can have the BDD tests kept up-to-date using:
+
+```
+npm run watch:bdd
+```
+
 ## Deployment
 
 ### Enable relative static resource URLs

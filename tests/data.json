@@ -1612,6 +1612,70 @@
     }
   },
   {
+    "model": "accounts.user",
+    "pk": 2,
+    "fields": {
+      "password": "pbkdf2_sha256$260000$W2NHUpzs803H57FHQvxlzo$O8fopXZiTEVKEqsnPFtH/EeekHdsYVQhk31YHTXJrkA=",
+      "last_login": "2023-11-16T12:59:08.637Z",
+      "is_superuser": true,
+      "username": "TEST_Curator",
+      "first_name": "Curator",
+      "last_name": "Test",
+      "email": "testcurator@domain.invalid",
+      "is_staff": true,
+      "is_active": true,
+      "date_joined": "2023-10-05T13:13:08.197Z",
+      "created": "2023-10-05T13:13:08.197Z",
+      "modified": "2023-11-16T12:59:08.638Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "accounts.reviewer",
+    "pk": 2,
+    "fields": {
+      "user": 2,
+      "user_type": "GEL",
+      "affiliation": "Other",
+      "workplace": "Other",
+      "role": "Other",
+      "group": "Other"
+    }
+  },
+  {
+    "model": "accounts.user",
+    "pk": 3,
+    "fields": {
+      "password": "pbkdf2_sha256$260000$W2NHUpzs803H57FHQvxlzo$O8fopXZiTEVKEqsnPFtH/EeekHdsYVQhk31YHTXJrkA=",
+      "last_login": "2023-11-16T12:59:08.637Z",
+      "is_superuser": false,
+      "username": "TEST_Reviewer",
+      "first_name": "Reviewer",
+      "last_name": "Test",
+      "email": "testreviewer@domain.invalid",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2023-10-05T13:13:08.197Z",
+      "created": "2023-10-05T13:13:08.197Z",
+      "modified": "2023-11-16T12:59:08.638Z",
+      "groups": [],
+      "user_permissions": []
+    }
+  },
+  {
+    "model": "accounts.reviewer",
+    "pk": 3,
+    "fields": {
+      "user": 3,
+      "user_type": "REVIEWER",
+      "affiliation": "Other",
+      "workplace": "Other",
+      "role": "Other",
+      "group": "Other"
+    }
+  },
+  {
     "model": "panels.paneltype",
     "pk": 1,
     "fields": {
@@ -1720,9 +1784,7 @@
       "name": "Test Panel 01",
       "status": "internal",
       "signed_off": null,
-      "types": [
-        3
-      ]
+      "types": [3]
     }
   },
   {
@@ -1735,9 +1797,7 @@
       "name": "Test Panel 02",
       "status": "public",
       "signed_off": null,
-      "types": [
-        1
-      ]
+      "types": [1]
     }
   },
   {
@@ -2449,9 +2509,7 @@
       "version": "0.2",
       "original_panel": "",
       "last_updated": "2023-11-16T10:13:35.050Z",
-      "comments": [
-        2
-      ]
+      "comments": [2]
     }
   },
   {
@@ -2471,9 +2529,7 @@
       "version": "0.4",
       "original_panel": "",
       "last_updated": null,
-      "comments": [
-        4
-      ]
+      "comments": [4]
     }
   },
   {
@@ -2493,9 +2549,7 @@
       "version": "0.6",
       "original_panel": "",
       "last_updated": null,
-      "comments": [
-        6
-      ]
+      "comments": [6]
     }
   },
   {
@@ -2515,10 +2569,7 @@
       "version": "0.8",
       "original_panel": "",
       "last_updated": null,
-      "comments": [
-        9,
-        8
-      ]
+      "comments": [9, 8]
     }
   },
   {
@@ -2538,9 +2589,7 @@
       "version": "0.10",
       "original_panel": "",
       "last_updated": null,
-      "comments": [
-        11
-      ]
+      "comments": [11]
     }
   },
   {
@@ -2560,9 +2609,7 @@
       "version": "0.1",
       "original_panel": "",
       "last_updated": null,
-      "comments": [
-        13
-      ]
+      "comments": [13]
     }
   },
   {
@@ -3395,14 +3442,10 @@
       "old_panels": "[]",
       "stats": {
         "str_reviewers": [],
-        "gene_reviewers": [
-          1
-        ],
+        "gene_reviewers": [1],
         "number_of_strs": 0,
         "number_of_genes": 1,
-        "entity_reviewers": [
-          1
-        ],
+        "entity_reviewers": [1],
         "region_reviewers": [],
         "number_of_regions": 0,
         "number_of_entities": 1,
@@ -3437,14 +3480,10 @@
       "old_panels": "[]",
       "stats": {
         "str_reviewers": [],
-        "gene_reviewers": [
-          1
-        ],
+        "gene_reviewers": [1],
         "number_of_strs": 0,
         "number_of_genes": 5,
-        "entity_reviewers": [
-          1
-        ],
+        "entity_reviewers": [1],
         "region_reviewers": [],
         "number_of_regions": 0,
         "number_of_entities": 5,
@@ -3473,18 +3512,11 @@
       "modified": "2023-11-16T11:44:27.673Z",
       "panel": 2,
       "gene": {
-        "alias": [
-          "RNF53",
-          "BRCC1",
-          "PPP1R53",
-          "FANCS"
-        ],
+        "alias": ["RNF53", "BRCC1", "PPP1R53", "FANCS"],
         "biotype": "protein_coding",
         "hgnc_id": "HGNC:1100",
         "gene_name": "BRCA1, DNA repair associated",
-        "omim_gene": [
-          "113705"
-        ],
+        "omim_gene": ["113705"],
         "alias_name": [
           "BRCA1/BRCA2-containing complex, subunit 1",
           "protein phosphatase 1, regulatory subunit 53",
@@ -3519,23 +3551,11 @@
       "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments",
       "saved_gel_status": 3,
       "transcript": "[]",
-      "evidence": [
-        2,
-        1
-      ],
-      "evaluation": [
-        1
-      ],
-      "track": [
-        2,
-        1
-      ],
-      "tags": [
-        1
-      ],
-      "comments": [
-        1
-      ]
+      "evidence": [2, 1],
+      "evaluation": [1],
+      "track": [2, 1],
+      "tags": [1],
+      "comments": [1]
     }
   },
   {
@@ -3550,14 +3570,8 @@
         "biotype": "protein_coding",
         "hgnc_id": "HGNC:13666",
         "gene_name": "aladin WD repeat nucleoporin",
-        "omim_gene": [
-          "605378"
-        ],
-        "alias_name": [
-          "aladin",
-          "Allgrove, triple-A",
-          "adracalin"
-        ],
+        "omim_gene": ["605378"],
+        "alias_name": ["aladin", "Allgrove, triple-A", "adracalin"],
         "gene_symbol": "AAAS",
         "hgnc_symbol": "AAAS",
         "hgnc_release": "2017-11-03",
@@ -3587,23 +3601,11 @@
       "mode_of_pathogenicity": "Other",
       "saved_gel_status": 3,
       "transcript": "[]",
-      "evidence": [
-        4,
-        3
-      ],
-      "evaluation": [
-        2
-      ],
-      "track": [
-        4,
-        3
-      ],
-      "tags": [
-        2
-      ],
-      "comments": [
-        3
-      ]
+      "evidence": [4, 3],
+      "evaluation": [2],
+      "track": [4, 3],
+      "tags": [2],
+      "comments": [3]
     }
   },
   {
@@ -3614,9 +3616,7 @@
       "modified": "2023-11-16T11:46:04.986Z",
       "panel": 2,
       "gene": {
-        "alias": [
-          "LOC645811"
-        ],
+        "alias": ["LOC645811"],
         "biotype": "protein_coding",
         "hgnc_id": "HGNC:34454",
         "gene_name": "coiled-coil domain containing 154",
@@ -3651,23 +3651,11 @@
       "mode_of_pathogenicity": null,
       "saved_gel_status": 2,
       "transcript": "[]",
-      "evidence": [
-        6,
-        5
-      ],
-      "evaluation": [
-        3
-      ],
-      "track": [
-        6,
-        5
-      ],
-      "tags": [
-        3
-      ],
-      "comments": [
-        5
-      ]
+      "evidence": [6, 5],
+      "evaluation": [3],
+      "track": [6, 5],
+      "tags": [3],
+      "comments": [5]
     }
   },
   {
@@ -3678,9 +3666,7 @@
       "modified": "2023-11-16T11:48:15.181Z",
       "panel": 2,
       "gene": {
-        "alias": [
-          "DEFB-15"
-        ],
+        "alias": ["DEFB-15"],
         "biotype": "protein_coding",
         "hgnc_id": "HGNC:18096",
         "gene_name": "defensin beta 115",
@@ -3715,21 +3701,11 @@
       "mode_of_pathogenicity": null,
       "saved_gel_status": 3,
       "transcript": "[]",
-      "evidence": [
-        8,
-        7
-      ],
-      "evaluation": [
-        4
-      ],
-      "track": [
-        8,
-        7
-      ],
+      "evidence": [8, 7],
+      "evaluation": [4],
+      "track": [8, 7],
       "tags": [],
-      "comments": [
-        7
-      ]
+      "comments": [7]
     }
   },
   {
@@ -3740,16 +3716,11 @@
       "modified": "2023-11-16T11:48:58.070Z",
       "panel": 2,
       "gene": {
-        "alias": [
-          "eIF3-p110",
-          "eIF3c"
-        ],
+        "alias": ["eIF3-p110", "eIF3c"],
         "biotype": "protein_coding",
         "hgnc_id": "HGNC:3279",
         "gene_name": "eukaryotic translation initiation factor 3 subunit C",
-        "omim_gene": [
-          "603916"
-        ],
+        "omim_gene": ["603916"],
         "alias_name": null,
         "gene_symbol": "EIF3C",
         "hgnc_symbol": "EIF3C",
@@ -3780,21 +3751,11 @@
       "mode_of_pathogenicity": null,
       "saved_gel_status": 2,
       "transcript": "[]",
-      "evidence": [
-        10,
-        9
-      ],
-      "evaluation": [
-        5
-      ],
-      "track": [
-        10,
-        9
-      ],
+      "evidence": [10, 9],
+      "evaluation": [5],
+      "track": [10, 9],
       "tags": [],
-      "comments": [
-        10
-      ]
+      "comments": [10]
     }
   },
   {
@@ -3809,14 +3770,8 @@
         "biotype": "protein_coding",
         "hgnc_id": "HGNC:13666",
         "gene_name": "aladin WD repeat nucleoporin",
-        "omim_gene": [
-          "605378"
-        ],
-        "alias_name": [
-          "aladin",
-          "Allgrove, triple-A",
-          "adracalin"
-        ],
+        "omim_gene": ["605378"],
+        "alias_name": ["aladin", "Allgrove, triple-A", "adracalin"],
         "gene_symbol": "AAAS",
         "hgnc_symbol": "AAAS",
         "hgnc_release": "2017-11-03",
@@ -3846,23 +3801,11 @@
       "mode_of_pathogenicity": null,
       "saved_gel_status": 2,
       "transcript": "[]",
-      "evidence": [
-        12,
-        11
-      ],
-      "evaluation": [
-        6
-      ],
-      "track": [
-        12,
-        11
-      ],
-      "tags": [
-        4
-      ],
-      "comments": [
-        12
-      ]
+      "evidence": [12, 11],
+      "evaluation": [6],
+      "track": [12, 11],
+      "tags": [4],
+      "comments": [12]
     }
   },
   {
@@ -3952,25 +3895,14 @@
         "strs": [],
         "genes": [
           {
-            "tags": [
-              "test01"
-            ],
-            "evidence": [
-              "Radboud University Medical Center, Nijmegen"
-            ],
+            "tags": ["test01"],
+            "evidence": ["Radboud University Medical Center, Nijmegen"],
             "gene_data": {
-              "alias": [
-                "RNF53",
-                "BRCC1",
-                "PPP1R53",
-                "FANCS"
-              ],
+              "alias": ["RNF53", "BRCC1", "PPP1R53", "FANCS"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:1100",
               "gene_name": "BRCA1, DNA repair associated",
-              "omim_gene": [
-                "113705"
-              ],
+              "omim_gene": ["113705"],
               "alias_name": [
                 "BRCA1/BRCA2-containing complex, subunit 1",
                 "protein phosphatase 1, regulatory subunit 53",
@@ -4000,9 +3932,7 @@
             "transcript": [],
             "entity_name": "BRCA1",
             "entity_type": "gene",
-            "publications": [
-              "1234"
-            ],
+            "publications": ["1234"],
             "confidence_level": "1",
             "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
             "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
@@ -4047,26 +3977,17 @@
         "strs": [],
         "genes": [
           {
-            "tags": [
-              "test01"
-            ],
+            "tags": ["test01"],
             "evidence": [
               "Expert Review Green",
               "Radboud University Medical Center, Nijmegen"
             ],
             "gene_data": {
-              "alias": [
-                "RNF53",
-                "BRCC1",
-                "PPP1R53",
-                "FANCS"
-              ],
+              "alias": ["RNF53", "BRCC1", "PPP1R53", "FANCS"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:1100",
               "gene_name": "BRCA1, DNA repair associated",
-              "omim_gene": [
-                "113705"
-              ],
+              "omim_gene": ["113705"],
               "alias_name": [
                 "BRCA1/BRCA2-containing complex, subunit 1",
                 "protein phosphatase 1, regulatory subunit 53",
@@ -4096,9 +4017,7 @@
             "transcript": [],
             "entity_name": "BRCA1",
             "entity_type": "gene",
-            "publications": [
-              "1234"
-            ],
+            "publications": ["1234"],
             "confidence_level": "3",
             "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
             "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
@@ -4143,26 +4062,17 @@
         "strs": [],
         "genes": [
           {
-            "tags": [
-              "test01"
-            ],
+            "tags": ["test01"],
             "evidence": [
               "Expert Review Green",
               "Radboud University Medical Center, Nijmegen"
             ],
             "gene_data": {
-              "alias": [
-                "RNF53",
-                "BRCC1",
-                "PPP1R53",
-                "FANCS"
-              ],
+              "alias": ["RNF53", "BRCC1", "PPP1R53", "FANCS"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:1100",
               "gene_name": "BRCA1, DNA repair associated",
-              "omim_gene": [
-                "113705"
-              ],
+              "omim_gene": ["113705"],
               "alias_name": [
                 "BRCA1/BRCA2-containing complex, subunit 1",
                 "protein phosphatase 1, regulatory subunit 53",
@@ -4192,33 +4102,21 @@
             "transcript": [],
             "entity_name": "BRCA1",
             "entity_type": "gene",
-            "publications": [
-              "1234"
-            ],
+            "publications": ["1234"],
             "confidence_level": "3",
             "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
             "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
           },
           {
-            "tags": [
-              "test02"
-            ],
-            "evidence": [
-              "Other"
-            ],
+            "tags": ["test02"],
+            "evidence": ["Other"],
             "gene_data": {
               "alias": [],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:13666",
               "gene_name": "aladin WD repeat nucleoporin",
-              "omim_gene": [
-                "605378"
-              ],
-              "alias_name": [
-                "aladin",
-                "Allgrove, triple-A",
-                "adracalin"
-              ],
+              "omim_gene": ["605378"],
+              "alias_name": ["aladin", "Allgrove, triple-A", "adracalin"],
               "gene_symbol": "AAAS",
               "hgnc_symbol": "AAAS",
               "hgnc_release": "2017-11-03",
@@ -4288,26 +4186,15 @@
         "strs": [],
         "genes": [
           {
-            "tags": [
-              "test02"
-            ],
-            "evidence": [
-              "Expert Review Green",
-              "Other"
-            ],
+            "tags": ["test02"],
+            "evidence": ["Expert Review Green", "Other"],
             "gene_data": {
               "alias": [],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:13666",
               "gene_name": "aladin WD repeat nucleoporin",
-              "omim_gene": [
-                "605378"
-              ],
-              "alias_name": [
-                "aladin",
-                "Allgrove, triple-A",
-                "adracalin"
-              ],
+              "omim_gene": ["605378"],
+              "alias_name": ["aladin", "Allgrove, triple-A", "adracalin"],
               "gene_symbol": "AAAS",
               "hgnc_symbol": "AAAS",
               "hgnc_release": "2017-11-03",
@@ -4338,26 +4225,17 @@
             "mode_of_pathogenicity": "Other"
           },
           {
-            "tags": [
-              "test01"
-            ],
+            "tags": ["test01"],
             "evidence": [
               "Expert Review Green",
               "Radboud University Medical Center, Nijmegen"
             ],
             "gene_data": {
-              "alias": [
-                "RNF53",
-                "BRCC1",
-                "PPP1R53",
-                "FANCS"
-              ],
+              "alias": ["RNF53", "BRCC1", "PPP1R53", "FANCS"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:1100",
               "gene_name": "BRCA1, DNA repair associated",
-              "omim_gene": [
-                "113705"
-              ],
+              "omim_gene": ["113705"],
               "alias_name": [
                 "BRCA1/BRCA2-containing complex, subunit 1",
                 "protein phosphatase 1, regulatory subunit 53",
@@ -4387,9 +4265,7 @@
             "transcript": [],
             "entity_name": "BRCA1",
             "entity_type": "gene",
-            "publications": [
-              "1234"
-            ],
+            "publications": ["1234"],
             "confidence_level": "3",
             "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
             "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
@@ -4434,26 +4310,15 @@
         "strs": [],
         "genes": [
           {
-            "tags": [
-              "test02"
-            ],
-            "evidence": [
-              "Expert Review Green",
-              "Other"
-            ],
+            "tags": ["test02"],
+            "evidence": ["Expert Review Green", "Other"],
             "gene_data": {
               "alias": [],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:13666",
               "gene_name": "aladin WD repeat nucleoporin",
-              "omim_gene": [
-                "605378"
-              ],
-              "alias_name": [
-                "aladin",
-                "Allgrove, triple-A",
-                "adracalin"
-              ],
+              "omim_gene": ["605378"],
+              "alias_name": ["aladin", "Allgrove, triple-A", "adracalin"],
               "gene_symbol": "AAAS",
               "hgnc_symbol": "AAAS",
               "hgnc_release": "2017-11-03",
@@ -4484,26 +4349,17 @@
             "mode_of_pathogenicity": "Other"
           },
           {
-            "tags": [
-              "test01"
-            ],
+            "tags": ["test01"],
             "evidence": [
               "Expert Review Green",
               "Radboud University Medical Center, Nijmegen"
             ],
             "gene_data": {
-              "alias": [
-                "RNF53",
-                "BRCC1",
-                "PPP1R53",
-                "FANCS"
-              ],
+              "alias": ["RNF53", "BRCC1", "PPP1R53", "FANCS"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:1100",
               "gene_name": "BRCA1, DNA repair associated",
-              "omim_gene": [
-                "113705"
-              ],
+              "omim_gene": ["113705"],
               "alias_name": [
                 "BRCA1/BRCA2-containing complex, subunit 1",
                 "protein phosphatase 1, regulatory subunit 53",
@@ -4533,24 +4389,16 @@
             "transcript": [],
             "entity_name": "BRCA1",
             "entity_type": "gene",
-            "publications": [
-              "1234"
-            ],
+            "publications": ["1234"],
             "confidence_level": "3",
             "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
             "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
           },
           {
-            "tags": [
-              "test03"
-            ],
-            "evidence": [
-              "Other"
-            ],
+            "tags": ["test03"],
+            "evidence": ["Other"],
             "gene_data": {
-              "alias": [
-                "LOC645811"
-              ],
+              "alias": ["LOC645811"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:34454",
               "gene_name": "coiled-coil domain containing 154",
@@ -4625,26 +4473,15 @@
         "strs": [],
         "genes": [
           {
-            "tags": [
-              "test02"
-            ],
-            "evidence": [
-              "Expert Review Green",
-              "Other"
-            ],
+            "tags": ["test02"],
+            "evidence": ["Expert Review Green", "Other"],
             "gene_data": {
               "alias": [],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:13666",
               "gene_name": "aladin WD repeat nucleoporin",
-              "omim_gene": [
-                "605378"
-              ],
-              "alias_name": [
-                "aladin",
-                "Allgrove, triple-A",
-                "adracalin"
-              ],
+              "omim_gene": ["605378"],
+              "alias_name": ["aladin", "Allgrove, triple-A", "adracalin"],
               "gene_symbol": "AAAS",
               "hgnc_symbol": "AAAS",
               "hgnc_release": "2017-11-03",
@@ -4675,26 +4512,17 @@
             "mode_of_pathogenicity": "Other"
           },
           {
-            "tags": [
-              "test01"
-            ],
+            "tags": ["test01"],
             "evidence": [
               "Expert Review Green",
               "Radboud University Medical Center, Nijmegen"
             ],
             "gene_data": {
-              "alias": [
-                "RNF53",
-                "BRCC1",
-                "PPP1R53",
-                "FANCS"
-              ],
+              "alias": ["RNF53", "BRCC1", "PPP1R53", "FANCS"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:1100",
               "gene_name": "BRCA1, DNA repair associated",
-              "omim_gene": [
-                "113705"
-              ],
+              "omim_gene": ["113705"],
               "alias_name": [
                 "BRCA1/BRCA2-containing complex, subunit 1",
                 "protein phosphatase 1, regulatory subunit 53",
@@ -4724,25 +4552,16 @@
             "transcript": [],
             "entity_name": "BRCA1",
             "entity_type": "gene",
-            "publications": [
-              "1234"
-            ],
+            "publications": ["1234"],
             "confidence_level": "3",
             "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
             "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
           },
           {
-            "tags": [
-              "test03"
-            ],
-            "evidence": [
-              "Expert Review Amber",
-              "Other"
-            ],
+            "tags": ["test03"],
+            "evidence": ["Expert Review Amber", "Other"],
             "gene_data": {
-              "alias": [
-                "LOC645811"
-              ],
+              "alias": ["LOC645811"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:34454",
               "gene_name": "coiled-coil domain containing 154",
@@ -4817,26 +4636,15 @@
         "strs": [],
         "genes": [
           {
-            "tags": [
-              "test02"
-            ],
-            "evidence": [
-              "Expert Review Green",
-              "Other"
-            ],
+            "tags": ["test02"],
+            "evidence": ["Expert Review Green", "Other"],
             "gene_data": {
               "alias": [],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:13666",
               "gene_name": "aladin WD repeat nucleoporin",
-              "omim_gene": [
-                "605378"
-              ],
-              "alias_name": [
-                "aladin",
-                "Allgrove, triple-A",
-                "adracalin"
-              ],
+              "omim_gene": ["605378"],
+              "alias_name": ["aladin", "Allgrove, triple-A", "adracalin"],
               "gene_symbol": "AAAS",
               "hgnc_symbol": "AAAS",
               "hgnc_release": "2017-11-03",
@@ -4867,26 +4675,17 @@
             "mode_of_pathogenicity": "Other"
           },
           {
-            "tags": [
-              "test01"
-            ],
+            "tags": ["test01"],
             "evidence": [
               "Expert Review Green",
               "Radboud University Medical Center, Nijmegen"
             ],
             "gene_data": {
-              "alias": [
-                "RNF53",
-                "BRCC1",
-                "PPP1R53",
-                "FANCS"
-              ],
+              "alias": ["RNF53", "BRCC1", "PPP1R53", "FANCS"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:1100",
               "gene_name": "BRCA1, DNA repair associated",
-              "omim_gene": [
-                "113705"
-              ],
+              "omim_gene": ["113705"],
               "alias_name": [
                 "BRCA1/BRCA2-containing complex, subunit 1",
                 "protein phosphatase 1, regulatory subunit 53",
@@ -4916,25 +4715,16 @@
             "transcript": [],
             "entity_name": "BRCA1",
             "entity_type": "gene",
-            "publications": [
-              "1234"
-            ],
+            "publications": ["1234"],
             "confidence_level": "3",
             "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
             "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
           },
           {
-            "tags": [
-              "test03"
-            ],
-            "evidence": [
-              "Expert Review Amber",
-              "Other"
-            ],
+            "tags": ["test03"],
+            "evidence": ["Expert Review Amber", "Other"],
             "gene_data": {
-              "alias": [
-                "LOC645811"
-              ],
+              "alias": ["LOC645811"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:34454",
               "gene_name": "coiled-coil domain containing 154",
@@ -4971,13 +4761,9 @@
           },
           {
             "tags": [],
-            "evidence": [
-              "UKGTN"
-            ],
+            "evidence": ["UKGTN"],
             "gene_data": {
-              "alias": [
-                "DEFB-15"
-              ],
+              "alias": ["DEFB-15"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:18096",
               "gene_name": "defensin beta 115",
@@ -5052,26 +4838,15 @@
         "strs": [],
         "genes": [
           {
-            "tags": [
-              "test02"
-            ],
-            "evidence": [
-              "Expert Review Green",
-              "Other"
-            ],
+            "tags": ["test02"],
+            "evidence": ["Expert Review Green", "Other"],
             "gene_data": {
               "alias": [],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:13666",
               "gene_name": "aladin WD repeat nucleoporin",
-              "omim_gene": [
-                "605378"
-              ],
-              "alias_name": [
-                "aladin",
-                "Allgrove, triple-A",
-                "adracalin"
-              ],
+              "omim_gene": ["605378"],
+              "alias_name": ["aladin", "Allgrove, triple-A", "adracalin"],
               "gene_symbol": "AAAS",
               "hgnc_symbol": "AAAS",
               "hgnc_release": "2017-11-03",
@@ -5102,26 +4877,17 @@
             "mode_of_pathogenicity": "Other"
           },
           {
-            "tags": [
-              "test01"
-            ],
+            "tags": ["test01"],
             "evidence": [
               "Expert Review Green",
               "Radboud University Medical Center, Nijmegen"
             ],
             "gene_data": {
-              "alias": [
-                "RNF53",
-                "BRCC1",
-                "PPP1R53",
-                "FANCS"
-              ],
+              "alias": ["RNF53", "BRCC1", "PPP1R53", "FANCS"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:1100",
               "gene_name": "BRCA1, DNA repair associated",
-              "omim_gene": [
-                "113705"
-              ],
+              "omim_gene": ["113705"],
               "alias_name": [
                 "BRCA1/BRCA2-containing complex, subunit 1",
                 "protein phosphatase 1, regulatory subunit 53",
@@ -5151,23 +4917,16 @@
             "transcript": [],
             "entity_name": "BRCA1",
             "entity_type": "gene",
-            "publications": [
-              "1234"
-            ],
+            "publications": ["1234"],
             "confidence_level": "3",
             "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
             "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
           },
           {
             "tags": [],
-            "evidence": [
-              "Expert Review Green",
-              "UKGTN"
-            ],
+            "evidence": ["Expert Review Green", "UKGTN"],
             "gene_data": {
-              "alias": [
-                "DEFB-15"
-              ],
+              "alias": ["DEFB-15"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:18096",
               "gene_name": "defensin beta 115",
@@ -5203,17 +4962,10 @@
             "mode_of_pathogenicity": null
           },
           {
-            "tags": [
-              "test03"
-            ],
-            "evidence": [
-              "Expert Review Amber",
-              "Other"
-            ],
+            "tags": ["test03"],
+            "evidence": ["Expert Review Amber", "Other"],
             "gene_data": {
-              "alias": [
-                "LOC645811"
-              ],
+              "alias": ["LOC645811"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:34454",
               "gene_name": "coiled-coil domain containing 154",
@@ -5288,26 +5040,15 @@
         "strs": [],
         "genes": [
           {
-            "tags": [
-              "test02"
-            ],
-            "evidence": [
-              "Expert Review Green",
-              "Other"
-            ],
+            "tags": ["test02"],
+            "evidence": ["Expert Review Green", "Other"],
             "gene_data": {
               "alias": [],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:13666",
               "gene_name": "aladin WD repeat nucleoporin",
-              "omim_gene": [
-                "605378"
-              ],
-              "alias_name": [
-                "aladin",
-                "Allgrove, triple-A",
-                "adracalin"
-              ],
+              "omim_gene": ["605378"],
+              "alias_name": ["aladin", "Allgrove, triple-A", "adracalin"],
               "gene_symbol": "AAAS",
               "hgnc_symbol": "AAAS",
               "hgnc_release": "2017-11-03",
@@ -5338,26 +5079,17 @@
             "mode_of_pathogenicity": "Other"
           },
           {
-            "tags": [
-              "test01"
-            ],
+            "tags": ["test01"],
             "evidence": [
               "Expert Review Green",
               "Radboud University Medical Center, Nijmegen"
             ],
             "gene_data": {
-              "alias": [
-                "RNF53",
-                "BRCC1",
-                "PPP1R53",
-                "FANCS"
-              ],
+              "alias": ["RNF53", "BRCC1", "PPP1R53", "FANCS"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:1100",
               "gene_name": "BRCA1, DNA repair associated",
-              "omim_gene": [
-                "113705"
-              ],
+              "omim_gene": ["113705"],
               "alias_name": [
                 "BRCA1/BRCA2-containing complex, subunit 1",
                 "protein phosphatase 1, regulatory subunit 53",
@@ -5387,23 +5119,16 @@
             "transcript": [],
             "entity_name": "BRCA1",
             "entity_type": "gene",
-            "publications": [
-              "1234"
-            ],
+            "publications": ["1234"],
             "confidence_level": "3",
             "mode_of_inheritance": "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
             "mode_of_pathogenicity": "Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments"
           },
           {
             "tags": [],
-            "evidence": [
-              "Expert Review Green",
-              "UKGTN"
-            ],
+            "evidence": ["Expert Review Green", "UKGTN"],
             "gene_data": {
-              "alias": [
-                "DEFB-15"
-              ],
+              "alias": ["DEFB-15"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:18096",
               "gene_name": "defensin beta 115",
@@ -5439,17 +5164,10 @@
             "mode_of_pathogenicity": null
           },
           {
-            "tags": [
-              "test03"
-            ],
-            "evidence": [
-              "Expert Review Amber",
-              "Other"
-            ],
+            "tags": ["test03"],
+            "evidence": ["Expert Review Amber", "Other"],
             "gene_data": {
-              "alias": [
-                "LOC645811"
-              ],
+              "alias": ["LOC645811"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:34454",
               "gene_name": "coiled-coil domain containing 154",
@@ -5486,20 +5204,13 @@
           },
           {
             "tags": [],
-            "evidence": [
-              "Other"
-            ],
+            "evidence": ["Other"],
             "gene_data": {
-              "alias": [
-                "eIF3-p110",
-                "eIF3c"
-              ],
+              "alias": ["eIF3-p110", "eIF3c"],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:3279",
               "gene_name": "eukaryotic translation initiation factor 3 subunit C",
-              "omim_gene": [
-                "603916"
-              ],
+              "omim_gene": ["603916"],
               "alias_name": null,
               "gene_symbol": "EIF3C",
               "hgnc_symbol": "EIF3C",
@@ -5604,25 +5315,15 @@
         "strs": [],
         "genes": [
           {
-            "tags": [
-              "test04"
-            ],
-            "evidence": [
-              "Emory Genetics Laboratory"
-            ],
+            "tags": ["test04"],
+            "evidence": ["Emory Genetics Laboratory"],
             "gene_data": {
               "alias": [],
               "biotype": "protein_coding",
               "hgnc_id": "HGNC:13666",
               "gene_name": "aladin WD repeat nucleoporin",
-              "omim_gene": [
-                "605378"
-              ],
-              "alias_name": [
-                "aladin",
-                "Allgrove, triple-A",
-                "adracalin"
-              ],
+              "omim_gene": ["605378"],
+              "alias_name": ["aladin", "Allgrove, triple-A", "adracalin"],
               "gene_symbol": "AAAS",
               "hgnc_symbol": "AAAS",
               "hgnc_release": "2017-11-03",
