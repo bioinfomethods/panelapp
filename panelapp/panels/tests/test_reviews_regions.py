@@ -24,6 +24,7 @@
 import os
 from random import randint
 
+import pytest
 from django.urls import reverse_lazy
 from django.utils import timezone
 from faker import Factory
@@ -646,3 +647,117 @@ class RegionReviewTest(LoginGELUser):
         )
         r = self.client.get(url)
         self.assertEqual(r.status_code, 200)
+
+
+@pytest.mark.xfail(reason="Known issue: PANELAPP-2052")
+@pytest.mark.django_db
+def test_delete_other_user_comment(client, curator_user, other_curator_user):
+    gene = GeneFactory()
+    gps = GenePanelSnapshotFactory()
+    region = RegionFactory(panel=gps, gene_core=gene, evaluation=[])
+
+    client.login(username=curator_user.username, password="pass")
+
+    client.post(
+        reverse_lazy(
+            "panels:review_entity",
+            kwargs={
+                "pk": region.panel.panel.pk,
+                "entity_type": "region",
+                "entity_name": region.name,
+            },
+        ),
+        {
+            "rating": Evaluation.RATINGS.AMBER,
+            "current_diagnostic": True,
+            "comments": "testing",
+            "moi": list(Evaluation.MODES_OF_INHERITANCE)[1][0],
+            "mode_of_pathogenicity": list(Evaluation.MODES_OF_PATHOGENICITY)[1][0],
+        },
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    region = GenePanel.objects.get(pk=region.panel.panel.pk).active_panel.get_region(
+        region.name
+    )
+    evaluation = region.evaluation.get(user=curator_user)
+
+    client.login(username=other_curator_user.username, password="pass")
+
+    res = client.get(
+        reverse_lazy(
+            "panels:delete_comment_by_user",
+            kwargs={
+                "pk": region.panel.panel.pk,
+                "entity_type": "region",
+                "entity_name": region.name,
+                "comment_pk": evaluation.comments.first().pk,
+            },
+        ),
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    assert res.json() == {
+        "status": 500,
+        "statusText": "INTERNAL SERVER ERROR",
+        "content": "An error occured while processing an AJAX request.",
+    }
+
+    assert region.evaluation.get().comments.count() == 1
+
+
+@pytest.mark.xfail(reason="Known issue: PANELAPP-2052")
+@pytest.mark.django_db
+def test_delete_other_user_review(client, curator_user, other_curator_user):
+    gene = GeneFactory()
+    gps = GenePanelSnapshotFactory()
+    region = RegionFactory(panel=gps, gene_core=gene, evaluation=[])
+
+    client.login(username=curator_user.username, password="pass")
+
+    client.post(
+        reverse_lazy(
+            "panels:review_entity",
+            kwargs={
+                "pk": region.panel.panel.pk,
+                "entity_type": "region",
+                "entity_name": region.name,
+            },
+        ),
+        {
+            "rating": Evaluation.RATINGS.AMBER,
+            "current_diagnostic": True,
+            "comments": "testing",
+            "moi": list(Evaluation.MODES_OF_INHERITANCE)[1][0],
+            "mode_of_pathogenicity": list(Evaluation.MODES_OF_PATHOGENICITY)[1][0],
+        },
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    region = GenePanel.objects.get(pk=region.panel.panel.pk).active_panel.get_region(
+        region.name
+    )
+    evaluation = region.evaluation.get(user=curator_user)
+
+    client.login(username=other_curator_user.username, password="pass")
+
+    res = client.get(
+        reverse_lazy(
+            "panels:delete_evaluation_by_user",
+            kwargs={
+                "pk": region.panel.panel.pk,
+                "entity_type": "region",
+                "entity_name": region.name,
+                "evaluation_pk": evaluation.pk,
+            },
+        ),
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    assert res.json() == {
+        "status": 500,
+        "statusText": "INTERNAL SERVER ERROR",
+        "content": "An error occured while processing an AJAX request.",
+    }
+
+    assert region.evaluation.count() == 1

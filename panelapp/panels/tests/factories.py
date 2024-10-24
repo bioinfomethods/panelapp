@@ -170,7 +170,7 @@ class GenePanelEntrySnapshotFactory(factory.django.DjangoModelFactory):
         if not create:
             return
 
-        if not evaluations:
+        if evaluations is None:
             evaluations = EvaluationFactory.create_batch(4)
 
         for evaluation in evaluations:
@@ -245,7 +245,7 @@ class STRFactory(factory.django.DjangoModelFactory):
         if not create:
             return
 
-        if not evaluations:
+        if evaluations is None:
             evaluations = EvaluationFactory.create_batch(4)
 
         for evaluation in evaluations:
@@ -317,7 +317,7 @@ class RegionFactory(factory.django.DjangoModelFactory):
         if not create:
             return
 
-        if not evaluations:
+        if evaluations is None:
             evaluations = EvaluationFactory.create_batch(4)
 
         for evaluation in evaluations:

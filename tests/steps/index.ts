@@ -422,3 +422,101 @@ Then(
     ).not.toBeVisible();
   }
 );
+
+Then(
+  "I cannot delete the gene review",
+  async ({ panels, page, accounts }, data: DataTable) => {
+    const geneReview = panels.geneReviews.get(
+      data.hashes()[0]["Gene Review ID"]
+    );
+    if (!geneReview) {
+      throw Error("Gene Review not found");
+    }
+    const panelGene = panels.panelGenes.get(geneReview.panelGeneTestId);
+    if (!panelGene) {
+      throw Error("Panel Gene not found");
+    }
+    const panel = panels.panels.get(panelGene.panelTestId);
+    if (!panel) {
+      throw Error("Panel not found");
+    }
+
+    await page.goto(`/panels/${panel.id}/gene/${panelGene.symbol}/`);
+
+    await expect
+      .soft(page.getByRole("link", { name: "Delete", exact: true }))
+      .not.toBeVisible();
+
+    // Bypass the interface and try to delete the review directly
+    await page.request.get(
+      `/panels/${panel.id}/gene/${panelGene.symbol}/delete_evaluation/${geneReview.id}/`,
+      {
+        headers: { "x-requested-with": "XMLHttpRequest" },
+      }
+    );
+
+    await page.reload();
+
+    const account = accounts.get(geneReview.createdBy);
+    if (!account) {
+      throw Error("Account not found");
+    }
+
+    await expect
+      .soft(
+        page
+          .locator("#evaluations div")
+          .filter({ hasText: `${account.firstName} ${account.lastName}` })
+          .first()
+      )
+      .toBeVisible();
+  }
+);
+
+Then(
+  "I cannot delete the gene review comment",
+  async ({ panels, page }, data: DataTable) => {
+    const geneReviewComment = panels.geneReviewComments.get(
+      data.hashes()[0]["Gene Review Comment ID"]
+    );
+    if (!geneReviewComment) {
+      throw Error("Gene Review Comment not found");
+    }
+    const geneReview = panels.geneReviews.get(geneReviewComment.reviewTestId);
+    if (!geneReview) {
+      throw Error("Gene Review not found");
+    }
+    const panelGene = panels.panelGenes.get(geneReview.panelGeneTestId);
+    if (!panelGene) {
+      throw Error("Panel Gene not found");
+    }
+    const panel = panels.panels.get(panelGene.panelTestId);
+    if (!panel) {
+      throw Error("Panel not found");
+    }
+
+    await page.goto(`/panels/${panel.id}/gene/${panelGene.symbol}/`);
+
+    await expect
+      .soft(
+        page
+          .locator(`#comment_${geneReviewComment.id}`)
+          .getByRole("link", { name: "Delete comment" })
+      )
+      .not.toBeVisible();
+
+    // Bypass the interface and try to delete the comment directly
+    await page.request.get(
+      `/panels/${panel.id}/gene/${panelGene.symbol}/delete_comment/${geneReviewComment.id}/`,
+      {
+        headers: { "x-requested-with": "XMLHttpRequest" },
+      }
+    );
+
+    await page.reload();
+
+    await expect
+      .soft(page.getByText(`${geneReviewComment.content} Created:`))
+      .toBeVisible();
+  }
+);

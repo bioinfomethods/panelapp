@@ -24,6 +24,7 @@
 import os
 from random import randint
 
+import pytest
 from django.urls import reverse_lazy
 from django.utils import timezone
 from faker import Factory
@@ -788,3 +789,113 @@ class GeneReviewTest(LoginGELUser):
 
         ap = GenePanel.objects.get(name="Panel One").active_panel
         assert ap.get_gene(gene.gene_symbol).evaluation.count() == 0
+
+
+@pytest.mark.xfail(reason="Known issue: PANELAPP-2052")
+@pytest.mark.django_db
+def test_delete_other_user_comment(client, curator_user, other_curator_user):
+    gpes = GenePanelEntrySnapshotFactory(evaluation=[])
+
+    client.login(username=curator_user.username, password="pass")
+
+    client.post(
+        reverse_lazy(
+            "panels:review_entity",
+            kwargs={
+                "pk": gpes.panel.panel.pk,
+                "entity_type": "gene",
+                "entity_name": gpes.gene.get("gene_symbol"),
+            },
+        ),
+        {
+            "rating": Evaluation.RATINGS.AMBER,
+            "current_diagnostic": True,
+            "comments": "testing",
+            "moi": list(Evaluation.MODES_OF_INHERITANCE)[1][0],
+            "mode_of_pathogenicity": list(Evaluation.MODES_OF_PATHOGENICITY)[1][0],
+        },
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
+        gpes.gene.get("gene_symbol")
+    )
+    evaluation = gene.evaluation.get(user=curator_user)
+
+    client.login(username=other_curator_user.username, password="pass")
+
+    res = client.get(
+        reverse_lazy(
+            "panels:delete_comment_by_user",
+            kwargs={
+                "pk": gpes.panel.panel.pk,
+                "entity_type": "gene",
+                "entity_name": gpes.gene.get("gene_symbol"),
+                "comment_pk": evaluation.comments.first().pk,
+            },
+        ),
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    assert res.json() == {
+        "status": 500,
+        "statusText": "INTERNAL SERVER ERROR",
+        "content": "An error occured while processing an AJAX request.",
+    }
+
+    assert gene.evaluation.get().comments.count() == 1
+
+
+@pytest.mark.xfail(reason="Known issue: PANELAPP-2052")
+@pytest.mark.django_db
+def test_delete_other_user_review(client, curator_user, other_curator_user):
+    gpes = GenePanelEntrySnapshotFactory(evaluation=[])
+
+    client.login(username=curator_user.username, password="pass")
+
+    client.post(
+        reverse_lazy(
+            "panels:review_entity",
+            kwargs={
+                "pk": gpes.panel.panel.pk,
+                "entity_type": "gene",
+                "entity_name": gpes.gene.get("gene_symbol"),
+            },
+        ),
+        {
+            "rating": Evaluation.RATINGS.AMBER,
+            "current_diagnostic": True,
+            "comments": "testing",
+            "moi": list(Evaluation.MODES_OF_INHERITANCE)[1][0],
+            "mode_of_pathogenicity": list(Evaluation.MODES_OF_PATHOGENICITY)[1][0],
+        },
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
+        gpes.gene.get("gene_symbol")
+    )
+    evaluation = gene.evaluation.get(user=curator_user)
+
+    client.login(username=other_curator_user.username, password="pass")
+
+    res = client.get(
+        reverse_lazy(
+            "panels:delete_evaluation_by_user",
+            kwargs={
+                "pk": gpes.panel.panel.pk,
+                "entity_type": "gene",
+                "entity_name": gpes.gene.get("gene_symbol"),
+                "evaluation_pk": evaluation.pk,
+            },
+        ),
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    assert res.json() == {
+        "status": 500,
+        "statusText": "INTERNAL SERVER ERROR",
+        "content": "An error occured while processing an AJAX request.",
+    }
+
+    assert gene.evaluation.count() == 1

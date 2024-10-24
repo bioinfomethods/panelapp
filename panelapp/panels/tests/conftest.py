@@ -11,6 +11,11 @@ def curator_user():
 
 
 @pytest.fixture
+def other_curator_user():
+    return UserFactory(username="other_curator", reviewer__user_type=Reviewer.TYPES.GEL)
+
+
+@pytest.fixture
 def reviewer_user():
     return UserFactory(
         username="verified_user", reviewer__user_type=Reviewer.TYPES.REVIEWER

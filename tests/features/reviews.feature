@@ -67,3 +67,34 @@ Feature: Review genomic entities
       | username      |
       | TEST_Reviewer |
       | TEST_Curator  |
+
+  @fail
+  Scenario Outline: Cannot delete another user's review
+    Given there are gene reviews
+      | ID | Panel Gene ID | Rating                     | User      |
+      | 1  | 1             | Green List (high evidence) | <creator> |
+    When I log in as "<deleter>"
+    Then I cannot delete the gene review
+      | Gene Review ID |
+      | 1              |
+    Examples:
+      | creator       | deleter       |
+      | TEST_Curator  | TEST_Reviewer |
+      | TEST_Reviewer | TEST_Curator  |
+
+  @fail
+  Scenario Outline: Cannot delete another user's comment
+    And there are gene reviews
+      | ID | Panel Gene ID | Rating                     | User      |
+      | 1  | 1             | Green List (high evidence) | <creator> |
+    And there are gene review comments
+      | ID | Gene Review ID | Content    | User      |
+      | 1  | 1              | My comment | <creator> |
+    When I log in as "<deleter>"
+    Then I cannot delete the gene review comment
+      | Gene Review Comment ID |
+      | 1                      |
+    Examples:
+      | creator       | deleter       |
+      | TEST_Curator  | TEST_Reviewer |
+      | TEST_Reviewer | TEST_Curator  |
