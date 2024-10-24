@@ -649,7 +649,6 @@ class RegionReviewTest(LoginGELUser):
         self.assertEqual(r.status_code, 200)
 
 
-@pytest.mark.xfail(reason="Known issue: PANELAPP-2052")
 @pytest.mark.django_db
 def test_delete_other_user_comment(client, curator_user, other_curator_user):
     gene = GeneFactory()
@@ -706,7 +705,6 @@ def test_delete_other_user_comment(client, curator_user, other_curator_user):
     assert region.evaluation.get().comments.count() == 1
 
 
-@pytest.mark.xfail(reason="Known issue: PANELAPP-2052")
 @pytest.mark.django_db
 def test_delete_other_user_review(client, curator_user, other_curator_user):
     gene = GeneFactory()

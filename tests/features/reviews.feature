@@ -68,7 +68,6 @@ Feature: Review genomic entities
       | TEST_Reviewer |
       | TEST_Curator  |
 
-  @fail
   Scenario Outline: Cannot delete another user's review
     Given there are gene reviews
       | ID | Panel Gene ID | Rating                     | User      |
@@ -82,7 +81,6 @@ Feature: Review genomic entities
       | TEST_Curator  | TEST_Reviewer |
       | TEST_Reviewer | TEST_Curator  |
 
-  @fail
   Scenario Outline: Cannot delete another user's comment
     And there are gene reviews
       | ID | Panel Gene ID | Rating                     | User      |

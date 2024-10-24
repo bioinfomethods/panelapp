@@ -791,7 +791,6 @@ class GeneReviewTest(LoginGELUser):
         assert ap.get_gene(gene.gene_symbol).evaluation.count() == 0
 
 
-@pytest.mark.xfail(reason="Known issue: PANELAPP-2052")
 @pytest.mark.django_db
 def test_delete_other_user_comment(client, curator_user, other_curator_user):
     gpes = GenePanelEntrySnapshotFactory(evaluation=[])
@@ -846,7 +845,6 @@ def test_delete_other_user_comment(client, curator_user, other_curator_user):
     assert gene.evaluation.get().comments.count() == 1
 
 
-@pytest.mark.xfail(reason="Known issue: PANELAPP-2052")
 @pytest.mark.django_db
 def test_delete_other_user_review(client, curator_user, other_curator_user):
     gpes = GenePanelEntrySnapshotFactory(evaluation=[])

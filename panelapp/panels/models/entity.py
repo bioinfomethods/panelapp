@@ -30,6 +30,7 @@ Author: Oleg Gerasimenko
 from copy import deepcopy
 from typing import List
 
+from django.core.exceptions import PermissionDenied
 from django.db.models import (
     Count,
     Manager,
@@ -243,13 +244,23 @@ class AbstractEntity:
         self.panel.add_activity(user, "Added comment: {}".format(comment.comment), self)
 
     def delete_evaluation(self, evaluation_pk, user=None):
-        self.evaluation.get(pk=evaluation_pk).delete()
+        evaluation = self.evaluation.get(pk=evaluation_pk)
+        if user and user != evaluation.user:
+            raise PermissionDenied
+
+        evaluation.delete()
+
         if user:
             self.panel.add_activity(user, "Deleted their review", self)
 
     def delete_comment(self, comment_pk, user=None):
         evaluation = self.evaluation.get(comments=comment_pk)
-        evaluation.comments.get(pk=comment_pk).delete()
+        comment = evaluation.comments.get(pk=comment_pk)
+        if user and user != comment.user:
+            raise PermissionDenied
+
+        comment.delete()
+
         if user:
             self.panel.add_activity(user, "Deleted their comment", self)
 
