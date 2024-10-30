@@ -35,6 +35,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 
 import os
 import urllib.parse
+from datetime import timedelta
 
 import dj_database_url
 from celery.schedules import crontab
@@ -304,6 +305,13 @@ WEBPACK_LOADER = {
         "IGNORE": [r".+\.hot-update.js", r".+\.map"],
     }
 }
+
+# Session
+
+# https://docs.djangoproject.com/en/dev/ref/settings/#session-cookie-age
+SESSION_COOKIE_AGE = int(
+    os.getenv("SESSION_COOKIE_AGE", timedelta(weeks=2).total_seconds())
+)
 
 # Random
 MESSAGE_TAGS = {
