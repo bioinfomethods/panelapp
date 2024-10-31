@@ -139,7 +139,7 @@
 {% endblock %}
 
 {% block js %}
-<script>
+<script nonce="{{CSP_NONCE}}">
     window.GeneTags = [{% for tag in entity.tags.all %}{% if tag %}'{{ tag }}'{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}];
 </script>
 {% endblock %}

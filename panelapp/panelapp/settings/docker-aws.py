@@ -25,6 +25,8 @@
 # Profile used for dockerised deployment on AWS (as opposed to local dockerised environment, for development)
 # It uses S3 buckets for static and media files and SQS as Celery backend.
 
+from panelapp.content_security_policy import aws as csp_aws
+
 from .base import *  # noqa
 
 # General AWS Settings
@@ -101,7 +103,7 @@ AWS_STATICFILES_USE_RELATIVE_URL = (
 # Override to 'http://localstack:4572/static-bucket/static/' for using LocalStack
 STATIC_URL = os.getenv(
     "STATIC_URL",
-    f'https://{AWS_S3_STATICFILES_CUSTOM_DOMAIN}/{AWS_STATICFILES_LOCATION + ("/" if AWS_STATICFILES_LOCATION else "")}/',
+    f'https://{AWS_S3_STATICFILES_CUSTOM_DOMAIN}/{AWS_STATICFILES_LOCATION + ("/" if AWS_STATICFILES_LOCATION else "")}',
 )
 
 # Files ACL. By default, ('None') inherits bucket ACL.
@@ -141,7 +143,7 @@ AWS_S3_MEDIAFILES_CUSTOM_DOMAIN = os.getenv("AWS_S3_MEDIAFILES_CUSTOM_DOMAIN", N
 # Override to 'http://localstack:4572/media-bucket/uploads/' with LocalStack
 MEDIA_URL = os.getenv(
     "MEDIA_URL",
-    f'https://{AWS_S3_MEDIAFILES_CUSTOM_DOMAIN}/{AWS_MEDIAFILES_LOCATION + ("/" if AWS_MEDIAFILES_LOCATION else "")}/',
+    f'https://{AWS_S3_MEDIAFILES_CUSTOM_DOMAIN}/{AWS_MEDIAFILES_LOCATION + ("/" if AWS_MEDIAFILES_LOCATION else "")}',
 )
 
 # Files ACL. By default, ('None') inherits bucket ACL. Override to 'public-read' for using LocalStack
@@ -157,6 +159,8 @@ if os.getenv("PANELAPP_USE_AWS_S3_ENCRYPTION"):
     )
 else:
     AWS_S3_MEDIAFILES_OBJECT_PARAMETERS = {}
+
+CONTENT_SECURITY_POLICY = csp_aws(STATIC_URL, MEDIA_URL)
 
 # (Optional) Use Cognito settings
 AWS_USE_COGNITO = os.getenv("AWS_USE_COGNITO", "false").lower() == "true"

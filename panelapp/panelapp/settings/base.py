@@ -42,6 +42,7 @@ from celery.schedules import crontab
 from django.contrib.messages import constants as message_constants
 
 import panelapp
+from panelapp.content_security_policy import default as csp_default
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(
@@ -106,6 +107,7 @@ CUSTOM_APPS = [
     "qurl_templatetag",
     "django_filters",
     "webpack_loader",
+    "csp",
 ]
 
 PROJECT_APPS = ["panelapp", "accounts", "panels", "webservices", "v1rewrites", "api"]
@@ -122,6 +124,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "csp.middleware.CSPMiddleware",
 ]
 
 ROOT_URLCONF = "panelapp.urls"
@@ -138,7 +141,8 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "panelapp.context_processors.use_cognito",
-            ]
+                "csp.context_processors.nonce",
+            ],
         },
     }
 ]
@@ -409,3 +413,6 @@ HEALTH_CHECKS = os.getenv("HEALTH_CHECKS", "database,sqs,email").split(",")
 SIGNEDOFF_CACHE_TTL = os.getenv("SIGNEDOFF_CACHE_TTL", 60 * 15)
 
 BANNER = os.getenv("PANELAPP_BANNER", "").strip()
+
+# https://django-csp.readthedocs.io/en/latest/index.html
+CONTENT_SECURITY_POLICY = csp_default()

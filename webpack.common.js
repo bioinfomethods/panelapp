@@ -29,6 +29,16 @@ module.exports = {
   },
   module: {
     rules: [
+      // https://getbootstrap.com/docs/5.3/getting-started/webpack/#extracting-svg-files
+      // Necessary to have a Content Security Policy without wildcards due to embedded svgs
+      {
+        mimetype: "image/svg+xml",
+        scheme: "data",
+        type: "asset/resource",
+        generator: {
+          filename: "icon/[contenthash].svg",
+        },
+      },
       {
         test: /\.scss$/,
         use: [

@@ -482,6 +482,16 @@ Set `AWS_STATICFILES_USE_RELATIVE_URL` to `TRUE` and `AWS_S3_STATICFILES_CUSTOM_
 
 ```
 
+### Content Security Policy
+
+A [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) is used for security reasons:
+
+`Content-Security-Policy: default-src 'self' nonce-$nonce; form-action 'self'; frame-ancestors 'self'`
+
+Where `$nonce` is a [nonce](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/nonce) generated uniquely by the server for each request and attached to `style` and `script` tags in the returned markup to enable them to function.
+
+If AWS deployment is enabled then the security policy has the `default-src` directive extended by the STATIC_URL and the MEDIA_URL settings to allow static and media resources to be loaded from those locations.
+
 # Troubleshooting
 
 ## Error: Couldn't find a Program

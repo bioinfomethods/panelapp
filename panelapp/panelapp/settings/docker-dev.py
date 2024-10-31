@@ -26,6 +26,8 @@
 
 import socket  # Needed to display django debug toolbar from docker container
 
+from panelapp.content_security_policy import aws as csp_aws
+
 from .base import *  # noqa
 
 DEBUG = True
@@ -127,6 +129,8 @@ else:  # Static and Media files on local file system
 
     MEDIA_URL = "/media/"
     MEDIA_ROOT = os.getenv("MEDIA_ROOT")
+
+CONTENT_SECURITY_POLICY = csp_aws(STATIC_URL, MEDIA_URL)
 
 ##########
 # Celery
