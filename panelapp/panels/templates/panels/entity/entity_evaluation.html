@@ -17,7 +17,7 @@
   {% endif %}
 
   {% for comment in ev.comments.all %}
-    <blockquote class="add-top-margin add-bottom-margin blockquote border-start border-5 ps-3 py-2" id="comment_{{ comment.pk }}" style="--bs-border-color: rgb(221, 221, 221);">
+    <blockquote class="add-top-margin add-bottom-margin blockquote border-start border-5 ps-3 py-2" id="comment_{{ comment.pk }}">
       {{ comment.comment|linebreaksbr|urlize }}
       <h6 class="add-top-margin">Created: {{ comment.created|date:'DATETIME_FORMAT' }} {% if comment.last_updated %}| Last Modified: {{ comment.last_updated|date:'DATETIME_FORMAT' }} {% endif %}</h6>
       {% if comment.version %}<h6>Panel Version: {{ comment.version }}</h6>{% endif %}

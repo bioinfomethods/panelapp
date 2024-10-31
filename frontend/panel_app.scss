@@ -235,6 +235,7 @@ $navbar-dark-hover-color: #FFFF;
 
 $list-group-active-bg: rgb(238, 238, 238);
 $list-group-border-radius: 0;
+$list-group-border-color: rgb(222, 226, 230);
 
 $font-family-base: 'Helvetica Neue',Helvetica,Arial,sans-serif;
 
@@ -295,6 +296,44 @@ $utilities: map-merge(
   )
 );
 
+$utilities: map-merge(
+  $utilities,
+  (
+    "width": map-merge(
+      map-get($utilities, "width"),
+      (
+        values: map-merge(
+          map-get(map-get($utilities, "width"), "values"),
+          (
+            8: 8%,
+            10: 10%,
+            12: 12%,
+            14: 14%,
+            16: 16%,
+            18: 18%,
+            36: 36%,
+            40: 40%,
+            43: 43%,
+            46: 46%,
+            60: 60%
+          ),
+        ),
+      ),
+    ),
+    "font-size": map-merge(
+      map-get($utilities, "font-size"),
+      (
+        values: map-merge(
+          map-get(map-get($utilities, "font-size"), "values"),
+          (
+            7: $font-size-base * 0.875
+          ),
+        ),
+      ),
+    ),
+  )
+);
+
 @import "~bootstrap/scss/utilities/api";
 @import "~bootstrap/scss/bootstrap";
 
@@ -304,6 +343,60 @@ $utilities: map-merge(
 
 .nav-panelapp:hover {
     border: 1px solid;
+}
+
+nav.navbar {
+    min-height: 64.4px;
+}
+
+.nav-tabs-home {
+    --bs-nav-tabs-border-width: 0px;
+}
+
+ul.nav-tabs {
+    border-color: rgb(222, 226, 230);
+}
+
+ul.nav-tabs a.nav-link:hover, ul.nav-tabs a.nav-link.active {
+    border-top-color: rgb(222, 226, 230);
+    border-left-color: rgb(222, 226, 230);
+    border-right-color: rgb(222, 226, 230);
+    border-bottom-color: transparent;
+    color: rgb(73, 80, 87);
+}
+
+.bg-panelapp-light {
+    background-color: #eaf1f1;
+}
+
+.bg-review {
+    background-color: #fcf8e3 !important;
+}
+
+legend.border-bottom, div.border-bottom {
+    --bs-border-color: rgb(221, 221, 221);
+}
+
+ul li.border {
+    --bs-border-color: rgb(221, 221, 221);
+}
+
+blockquote.border-start {
+    --bs-border-color: rgb(221, 221, 221);
+}
+
+.text-nhs-blue {
+    color: #005eb8;
+}
+
+.js-filter-table-count, .js-filter-list-count {
+    background-color: rgb(233, 236, 239);
+}
+
+select.select2-hidden-accessible + span {
+    // !important is necessary here in order to override
+    // select2's use of inline "style: auto;" on the span
+    width: 100% !important;
 }
 
 // Must import this after bootstrap imports

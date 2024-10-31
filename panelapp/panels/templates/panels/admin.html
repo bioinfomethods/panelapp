@@ -1,13 +1,13 @@
 {% extends "default.html" %}
 
 {% block content %}
-  <div class="page-header add-top-margin border-bottom" id="banner" style="--bs-border-color: rgb(221, 221, 221);">
+  <div class="page-header add-top-margin border-bottom" id="banner">
     <h1>{% block title %}Import Genes{% endblock %}</h1>
   </div>
   <div class="card card-body bg-light add-top-margin">
     <form class="form-horizontal" action="{% url "panels:upload_genes" %}" method="post" enctype="multipart/form-data">{% csrf_token %}
       <fieldset>
-        <legend class="border-bottom" style="--bs-border-color: rgb(221, 221, 221);">Upload Gene tool</legend>
+        <legend class="border-bottom">Upload Gene tool</legend>
         {% for field in gene_form %}
           <div class="form-group">
             {% if field.errors %}
@@ -38,13 +38,13 @@
     </form>
   </div>
 
-  <div class="page-header add-top-margin border-bottom" style="--bs-border-color: rgb(221, 221, 221);">
+  <div class="page-header add-top-margin border-bottom">
     <h1>Import Gene Panel</h1>
   </div>
   <div class="card card-body bg-light add-top-margin">
     <form class="form-horizontal" action="{% url "panels:upload_panels" %}" method="post" enctype="multipart/form-data">{% csrf_token %}
       <fieldset>
-        <legend class="border-bottom" style="--bs-border-color: rgb(221, 221, 221);">Upload Panel Tool</legend>
+        <legend class="border-bottom">Upload Panel Tool</legend>
         {% for field in panel_form %}
           <div class="form-group">
 
@@ -75,13 +75,13 @@
       </fieldset>
     </form>
   </div>
-  <div class="page-header add-top-margin border-bottom" style="--bs-border-color: rgb(221, 221, 221);">
+  <div class="page-header add-top-margin border-bottom">
     <h1>Import Reviews</h1>
   </div>
   <div class="card card-body bg-light add-top-margin add-bottom-margin">
     <form class="form-horizontal" action="{% url "panels:upload_reviews" %}" method="post" enctype="multipart/form-data">{% csrf_token %}
       <fieldset>
-        <legend class="border-bottom" style="--bs-border-color: rgb(221, 221, 221);">Upload Reviews Tool</legend>
+        <legend class="border-bottom">Upload Reviews Tool</legend>
 
         {% for field in review_form %}
           <div class="form-group">

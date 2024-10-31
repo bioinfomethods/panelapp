@@ -61,16 +61,9 @@
                   <p>
                       To use the token add 'Authorization' header with 'Token :your token:' value.
                   </p>
-                  <a href="#display-token" id="display_token">Display token</a>
-                  <div id="auth_token" style="display:none;"><pre>Authorization: Token {{ user.auth_token }}</pre></div>
+                  <a href="#display-token" id="display_token"  data-module="showhide" data-show="#auth_token">Display token</a>
+                  <div id="auth_token" class="d-none"><pre>Authorization: Token {{ user.auth_token }}</pre></div>
               </div>
-              <script>
-                  $('#display_token').on('click', function(e) {
-                      e.preventDefault();
-                      $('#auth_token').show();
-                      $('#display_token').hide();
-                  });
-              </script>
           </div>
       </div>
     </div>

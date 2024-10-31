@@ -101,7 +101,6 @@ class PanelForm(forms.ModelForm):
             url="autocomplete-simple-panels-public",
             attrs={
                 "data-minimum-input-length": 3,
-                "style": "width: 100%;",
             },
         ),
     )
@@ -114,7 +113,6 @@ class PanelForm(forms.ModelForm):
             url="autocomplete-simple-panel-types",
             attrs={
                 "data-minimum-input-length": 1,
-                "style": "width: 100%;",
             },
         ),
     )

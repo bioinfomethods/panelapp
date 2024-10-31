@@ -82,7 +82,6 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
             attrs={
                 "data-minimum-input-length": 1,
                 "data-theme": "bootstrap-5",
-                "style": "width: 100%;",
                 "data-testid": "gene-symbol",
             },
         ),
@@ -96,7 +95,6 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
         widget=Select2Multiple(
             url="autocomplete-source",
             attrs={
-                "style": "width: 100%;",
                 "data-testid": "source",
             },
         ),
@@ -106,7 +104,6 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
         required=False,
         widget=ModelSelect2Multiple(
             url="autocomplete-tags",
-            attrs={"style": "width: 100%;"},
         ),
     )
 
@@ -140,7 +137,6 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
         required=False,
         widget=ModelSelect2Multiple(
             url="autocomplete-simple-panels-all",
-            attrs={"style": "width: 100%;"},
         ),
     )
 

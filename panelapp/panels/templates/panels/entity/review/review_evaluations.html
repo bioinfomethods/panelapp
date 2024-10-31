@@ -1,5 +1,5 @@
 {% for comment in entity.get_review_comments %}
-  <blockquote class="add-top-margin add-bottom-margin blockquote border-start border-5 ps-3 py-2" style="--bs-border-color: rgb(221, 221, 221);">
+  <blockquote class="add-top-margin add-bottom-margin blockquote border-start border-5 ps-3 py-2">
     {{ comment.comment }}
     <h6 class="add-top-margin">{{ comment.user.get_reviewer_name }}, {{ comment.created|date }}</h6>
     {% if request.user == comment.user and panel and entity %}

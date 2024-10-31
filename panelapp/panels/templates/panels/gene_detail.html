@@ -32,8 +32,7 @@
         <thead>
           <tr class="table-header">
             <th
-              class="js-sortable-header sorted-column sorted-asc"
-              style="width: 40%"
+              class="js-sortable-header sorted-column sorted-asc w-40"
               data-sort-key="panel"
               data-sort-type="name"
             >
@@ -41,8 +40,7 @@
               <i class="fa fa-arrow-down"></i>
               <i class="fa fa-arrow-up"></i>
             </th>
-            <th class="js-sortable-header"
-              style="width: 10%"
+            <th class="js-sortable-header w-10"
               data-sort-key="reviews"
               data-sort-type="number"
             >
@@ -50,8 +48,7 @@
               <i class="fa fa-arrow-down"></i>
               <i class="fa fa-arrow-up"></i>
             </th>
-            <th class="js-sortable-header"
-              style="width: 14%"
+            <th class="js-sortable-header w-14"
               data-sort-key="moi"
               data-sort-type="name"
             >
@@ -59,7 +56,7 @@
               <i class="fa fa-arrow-down"></i>
               <i class="fa fa-arrow-up"></i>
             </th>
-            <th style="width: 36%">Details</th>
+            <th class="w-36">Details</th>
           </tr>
             <tr class="if-no-js-hide table-header-secondary">
               <td colspan="100">
@@ -87,15 +84,15 @@
               >
                 <td>
                   <h5 class="remove-top-margin" title="Level 4 title">
-                    <span style="font-size: 16px" class="gel-banner {{ entry|gene_list_class }}" title="{{ entry|gene_list_name }}">
+                    <span class="fs-6 gel-banner {{ entry|gene_list_class }}" title="{{ entry|gene_list_name }}">
                       {{ entry|gene_list_short_name }}
                     </span>
                     {% if entry.is_str %}
-                      <a href="{% url 'panels:evaluation' entry.panel.panel.id 'str' entry.name %}" class="link-inherit gel-text {{ entry|gene_list_class }} js-open-on-submit">{{ entry.name }}</a> <span class="gel-banner gel-added" style="font-size:16px;">STR</span> in <a href="{% url 'panels:detail' entry.panel.panel.id %}" class="js-open-on-submit">
+                      <a href="{% url 'panels:evaluation' entry.panel.panel.id 'str' entry.name %}" class="link-inherit gel-text {{ entry|gene_list_class }} js-open-on-submit">{{ entry.name }}</a> <span class="gel-banner gel-added fs-6">STR</span> in <a href="{% url 'panels:detail' entry.panel.panel.id %}" class="js-open-on-submit">
                         {{ entry.panel.level4title.name }}
                       </a>
                     {% elif entry.is_region %}
-                      <a href="{% url 'panels:evaluation' entry.panel.panel.id 'region' entry.name %}" class="link-inherit gel-text {{ entry|gene_list_class }} js-open-on-submit">{{ entry.name }}</a> <span class="gel-banner gel-added" style="font-size:16px;">Region</span> in <a href="{% url 'panels:detail' entry.panel.panel.id %}" class="js-open-on-submit">
+                      <a href="{% url 'panels:evaluation' entry.panel.panel.id 'region' entry.name %}" class="link-inherit gel-text {{ entry|gene_list_class }} js-open-on-submit">{{ entry.name }}</a> <span class="gel-banner gel-added fs-6">Region</span> in <a href="{% url 'panels:detail' entry.panel.panel.id %}" class="js-open-on-submit">
                         {{ entry.panel.level4title.name }}
                       </a>
                     {% else %}
@@ -143,7 +140,7 @@
                     Not set
                   {% endif %}
                 </td>
-                <td>
+                <td class="fs-7">
                   {% if entry.evidence %}
                     <h6 class="add-label-margin remove-top-margin">Sources</h6>
                     <ul>
@@ -167,7 +164,7 @@
                     <h6 class="add-label-margin">Tags</h6>
                     <ul class="list-inline tag-list">
                       {% for tag in entry.tags.all %}
-                        <li class="list-inline-item border rounded border-1 px-1" style="--bs-border-color: rgb(221, 221, 221);">{{ tag }}</li>
+                        <li class="list-inline-item border rounded border-1 px-1 fs-7">{{ tag }}</li>
                       {% endfor %}
                     </ul>
                   {% endif %}

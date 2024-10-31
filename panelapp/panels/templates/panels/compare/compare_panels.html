@@ -11,7 +11,7 @@
   </ol>
 
   <h1>
-    <p class="text-muted normal add-label-margin" style="font-size: 18px">Comparing panels</p>
+    <p class="text-muted normal add-label-margin fs-5">Comparing panels</p>
     {% block title %}“{{ panel_1.level4title.name }}” and “{{ panel_2.level4title.name }}”{% endblock %}
   </h1>
 
@@ -44,7 +44,7 @@
             <td class="text-end">
               {% if gene.1 %}
                 <h4 class="remove-top-margin remove-bottom-margin">
-                  <span style="font-size: 16px" class="gel-banner {{ gene.1|gene_list_class }}" title="{{ gene.1|gene_list_name }}">
+                  <span class="fs-6 gel-banner {{ gene.1|gene_list_class }}" title="{{ gene.1|gene_list_name }}">
                     {{ gene.1|gene_list_short_name }}
                   </span> <a href="{% url 'panels:evaluation' gene.1.panel.panel_id 'gene' gene.0 %}" class="link-inherit gel-text {{ gene.1|gene_list_class }} js-open-on-submit">{{ gene.0 }}</a>
                 </h4>
@@ -59,7 +59,7 @@
             <td>
               {% if gene.2 %}
                 <h4 class="remove-top-margin remove-bottom-margin">
-                  <a href="{% url 'panels:evaluation' gene.2.panel.panel_id 'gene' gene.0 %}" class="link-inherit gel-text {{ gene.2|gene_list_class }} js-open-on-submit">{{ gene.0 }}</a> <span style="font-size: 12px" class="gel-banner {{ gene.2|gene_list_class }}" title="{{ gene.2|gene_list_name }}">
+                  <a href="{% url 'panels:evaluation' gene.2.panel.panel_id 'gene' gene.0 %}" class="link-inherit gel-text {{ gene.2|gene_list_class }} js-open-on-submit">{{ gene.0 }}</a> <span class="fs-6 gel-banner {{ gene.2|gene_list_class }}" title="{{ gene.2|gene_list_name }}">
                     {{ gene.2|gene_list_short_name }}
                   </span>
                 </h4>

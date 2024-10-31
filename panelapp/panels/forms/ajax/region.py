@@ -43,7 +43,6 @@ class UpdateRegionTagsForm(forms.ModelForm):
         queryset=Tag.objects.all(),
         widget=ModelSelect2Multiple(
             url="autocomplete-tags",
-            attrs={"style": "width: 100%;"},
         ),
         required=False,
     )

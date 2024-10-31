@@ -3,13 +3,13 @@
 
 {% block body %}
 <div class="container add-top-margin">
-    <div class="page-header border-bottom" id="banner" style="--bs-border-color: rgb(221, 221, 221);">
+    <div class="page-header border-bottom" id="banner">
       <h1>{% block title %}Panel Creation{% endblock %}</h1>
     </div>
 
     <div class="card card-body bg-light add-top-margin">
       <form class="" action="{% if object %}{% url "panels:update" object.panel.pk %}{% else %}{% url "panels:create" %}{% endif %}" method="post">{% csrf_token %}
-        <legend class="border-bottom add-bottom-margin" style="--bs-border-color: rgb(221, 221, 221);">Panel Creation Tool</legend>
+        <legend class="border-bottom add-bottom-margin">Panel Creation Tool</legend>
         {% bootstrap_form form %}
 
         <div>

@@ -86,7 +86,6 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
             attrs={
                 "data-minimum-input-length": 1,
                 "data-theme": "bootstrap-5",
-                "style": "width: 100%;",
             },
         ),
     )
@@ -101,7 +100,6 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
         required=False,
         widget=Select2Multiple(
             url="autocomplete-source",
-            attrs={"style": "width: 100%;"},
         ),
     )
     tags = forms.ModelMultipleChoiceField(
@@ -109,7 +107,6 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
         required=False,
         widget=ModelSelect2Multiple(
             url="autocomplete-tags",
-            attrs={"style": "width: 100%;"},
         ),
     )
 
@@ -142,7 +139,6 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
         required=False,
         widget=ModelSelect2Multiple(
             url="autocomplete-simple-panels-all",
-            attrs={"style": "width: 100%;"},
         ),
     )
 

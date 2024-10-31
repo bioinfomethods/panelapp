@@ -2,17 +2,15 @@
 
 <thead>
     <tr class="table-header">
-        <th class="js-sortable-header sorted-column sorted-desc"
+        <th class="js-sortable-header sorted-column sorted-desc w-8"
             data-sort-key="list-index"
             data-sort-type="number"
-            style="width: 8%"
         >
             List
             <i class="fa fa-arrow-down"></i>
             <i class="fa fa-arrow-up"></i>
         </th>
-        <th class="js-sortable-header"
-            style="width: 12%"
+        <th class="js-sortable-header w-12"
             data-sort-key="entity-name"
             data-sort-type="name"
         >
@@ -20,8 +18,7 @@
             <i class="fa fa-arrow-down"></i>
             <i class="fa fa-arrow-up"></i>
         </th>
-        <th class="js-sortable-header"
-            style="width: 16%"
+        <th class="js-sortable-header w-16"
             data-sort-key="reviews"
             data-sort-type="number"
         >
@@ -29,8 +26,7 @@
             <i class="fa fa-arrow-down"></i>
             <i class="fa fa-arrow-up"></i>
         </th>
-        <th class="js-sortable-header"
-            style="width: 18%"
+        <th class="js-sortable-header w-18"
             data-sort-key="moi"
             data-sort-type="name"
         >
@@ -38,7 +34,7 @@
             <i class="fa fa-arrow-down"></i>
             <i class="fa fa-arrow-up"></i>
         </th>
-        <th style="width: 46%">Details</th>
+        <th class="w-46">Details</th>
     </tr>
     <tr class="if-no-js-hide table-header-secondary">
         <td colspan="100">
@@ -164,7 +160,7 @@
       Not set
     {% endif %}
 </td>
-<td style="font-size: 14px">
+<td class="fs-7">
 
     {% if entry.entity_evidences %}
       <h6 class="add-label-margin remove-top-margin">Sources</h6>
@@ -196,7 +192,7 @@
         <ul class="list-inline tag-list">
             {% for tag in entry.entity_tags %}
                 {% if tag %}
-                <li class="list-inline-item border rounded border-1 px-1" style="--bs-border-color: rgb(221, 221, 221);">{{ tag }}</li>
+                <li class="list-inline-item border rounded border-1 px-1 fs-7">{{ tag }}</li>
                 {% endif %}
             {% endfor %}
         </ul>
