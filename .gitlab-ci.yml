@@ -4,7 +4,7 @@ include:
 variables:
   DOCKER_PYTHON: python:3.11.9-alpine3.19
   DOCKER_NODE: node:20.14.0-alpine3.19
-  DOCKER_POSTGRES: postgres:14.7
+  DOCKER_POSTGRES: docker.artifactory.aws.gel.ac/library/postgres:14.7
   DOCKER_PLAYWRIGHT: mcr.microsoft.com/playwright:v1.46.1-jammy
   DOCKER_IN_DOCKER: docker:24.0.1-dind
   DOCKER_DRIVER: overlay2
