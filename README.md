@@ -467,3 +467,28 @@ Set `AWS_STATICFILES_USE_RELATIVE_URL` to `TRUE` and `AWS_S3_STATICFILES_CUSTOM_
 ```
 
 ```
+
+# Troubleshooting
+
+## Error: Couldn't find a Program
+
+When running component tests (`npm run test-ct`) the error `Couldn't find a Program` is encountered.
+
+The issue is due to duplication in `node_module` due to transitive shared dependencies such as `babel`.
+
+The solution is to run `npm dedupe`.
+
+Relevant links:
+
+- https://github.com/babel/babel/discussions/13742
+- https://docs.npmjs.com/cli/v10/commands/npm-dedupe
+
+## RollupError: Could not resolve "..." from "playwright/index.ts"
+
+When running component tests this error might be encountered during development.
+
+This is due to `playwright/.cache` which stores cached paths to source files such as `../../frontend/components/Navbar.ts`.
+
+If the location of the source file is changed this will be come out of sync.
+
+The solution is to `rm playwright/.cache` which will prompt playwright to update this at the next run.

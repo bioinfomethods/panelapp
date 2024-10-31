@@ -5,9 +5,20 @@ volumes:
 
 services:
   playwright:
-    image: mcr.microsoft.com/playwright:v1.46.1-jammy
+    image: mcr.microsoft.com/playwright:v1.47.0-jammy
     volumes:
-      - ..:/work/
+      - ../tests/:/work/tests/
+      - ../frontend/:/work/frontend/
+      - ../package.json:/work/package.json
+      - ../package-lock.json:/work/package-lock.json
+      - ../tsconfig.json:/work/tsconfig.json
+      - ../playwright.config.ts:/work/playwright.config.ts
+      - ../playwright-ct.config.ts:/work/playwright-ct.config.ts
+      - ../playwright/index.html:/work/playwright/index.html
+      - ../playwright/index.ts:/work/playwright/index.ts
+      - ../webpack.common.js:/work/webpack.common.js
+      - ../webpack.prod.js:/work/webpack.prod.js
+
     working_dir: /work/
     environment:
       BASE_URL: http://web:8000

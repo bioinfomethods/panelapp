@@ -27,16 +27,22 @@ endif
 export TMPDIR := $(TMPDIR)
 
 e2e-test-functional: up mock-aws collectstatic ## Run e2e functional tests
-	$(DOCKERCOMPOSE) run --rm playwright npx playwright test tests/functional/
+	$(DOCKERCOMPOSE) run --rm playwright /bin/sh -c "npm ci && npm run build && npx wait-on http://web:8000 && npx playwright test tests/functional/"
 
 e2e-test-bdd: up mock-aws collectstatic ## Run e2e bdd tests
 	$(DOCKERCOMPOSE) run --rm playwright /bin/sh -c "npm ci && npx bddgen -c playwright-bdd.config.ts && npx playwright test -c playwright-bdd.config.ts"
 
 e2e-test-visual: up mock-aws collectstatic ## Run e2e visual tests
-	$(DOCKERCOMPOSE) run --rm playwright npx playwright test tests/visual/
+	$(DOCKERCOMPOSE) run --rm playwright /bin/sh -c "npm ci && npm run build && npx wait-on http://web:8000 && npx playwright test tests/visual/"
 
-update-snapshots: up mock-aws collectstatic ## Update playwright snapshots
-	$(DOCKERCOMPOSE) run --rm playwright npx playwright test tests/visual/ --update-snapshots
+update-snapshots: up mock-aws collectstatic ## Update e2e snapshots
+	$(DOCKERCOMPOSE) run --rm playwright /bin/sh -c "npm ci && npm run build && npx wait-on http://web:8000 && npx playwright test tests/visual/ --update-snapshots"
+
+test-component: ## Run UI component tests
+	$(DOCKERCOMPOSE) run --rm playwright /bin/sh -c "npm ci && npm run test-ct"
+
+update-component-snapshots: ## Update component snapshots
+	$(DOCKERCOMPOSE) run --rm playwright /bin/sh -c "npm ci && npx playwright test -c playwright-ct.config.ts --update-snapshots"
 
 clean: ## Remove build directory
 	rm -rf $(BUILDDIR)

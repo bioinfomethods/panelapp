@@ -1,7 +1,7 @@
 {% load panel_helpers %}
 
-<thead>
-    <tr class="table-header">
+<thead class="table-light">
+    <tr>
         <th class="js-sortable-header sorted-column sorted-desc w-8"
             data-sort-key="list-index"
             data-sort-type="number"
@@ -36,7 +36,7 @@
         </th>
         <th class="w-46">Details</th>
     </tr>
-    <tr class="if-no-js-hide table-header-secondary">
+    <tr class="if-no-js-hide">
         <td colspan="100">
             <div>
                 <label for="gene-filter" class="rm">Filter Entities</label>
@@ -59,9 +59,11 @@
     data-reviews="{{ entry.number_of_evaluations }}"
 >
 <td class="text-right">
-    <span class="gel-banner gel-banner-block {{ entry.gene_list_class }}" title="{{ entry.gene_list_name }}">
-        {{ entry.gene_list_short_name }}{% if entry.ready and request.user.is_authenticated and request.user.reviewer.is_GEL %}<br /><span class="gene-cell-ready">Ready</span>{% endif %}
-    </span>
+    <x-rating-badge
+      rating="{{ entry.entity_color_name }}"
+      {% if entry.ready and request.user.is_authenticated and request.user.reviewer.is_GEL %}ready{% endif %}
+      block
+    ></x-rating-badge>
     {% if not entry.ready and request.user.is_authenticated and request.user.reviewer.is_GEL %}
         <span class="rm">Not ready</span>
     {% endif %}
@@ -202,8 +204,8 @@
 {% endfor %}
 </tbody>
 {% if not panel.is_super_panel and request.user.is_authenticated and request.user.reviewer.is_verified %}
-<tfoot>
-    <tr class="table-header">
+<tfoot class="table-light">
+    <tr>
         <td colspan="100">
             <a href="{% url 'panels:add_entity' panel.panel_id 'gene' %}" class="btn btn-outline-light-panelapp btn-large">
                 <i class="fa fa-plus add-right-margin"></i> Add a Gene to this panel

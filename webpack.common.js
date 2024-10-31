@@ -4,7 +4,7 @@ const webpack = require("webpack");
 const BundleTracker = require("webpack-bundle-tracker");
 
 module.exports = {
-  entry: "./frontend/panel_app.js",
+  entry: "./frontend/panel_app.ts",
   output: {
     filename: "app.js",
     path: path.resolve(__dirname, "dist"),
@@ -21,6 +21,12 @@ module.exports = {
     }),
     new BundleTracker({ path: __dirname, filename: "webpack-stats.json" }),
   ],
+  resolve: {
+    extensions: [".tsx", ".ts", ".js"],
+    alias: {
+      "@": path.resolve("./frontend"),
+    },
+  },
   module: {
     rules: [
       {
@@ -51,6 +57,11 @@ module.exports = {
       {
         test: /\.(woff|woff2|eot|ttf|otf)$/i,
         type: "asset/resource",
+      },
+      {
+        test: /\.tsx?$/,
+        use: "ts-loader",
+        exclude: "/node_modules/",
       },
     ],
   },

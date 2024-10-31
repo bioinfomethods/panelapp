@@ -227,7 +227,7 @@ th.sorted-asc .fa-arrow-down {
 /* GEL branding
    ========================================================================== */
 
-@import "~bootstrap/scss/functions";
+@import "~bootstrap/scss/_functions";
 
 $primary: #007C83;
 $navbar-dark-color: #FFFF;
@@ -281,6 +281,13 @@ $breadcrumb-active-color: rgb(179, 179, 179);
 @import "~bootstrap/scss/maps";
 @import "~bootstrap/scss/mixins";
 @import "~bootstrap/scss/utilities";
+
+$table-variants: map-merge(
+  $table-variants,
+  (
+    "light": #eee
+  )
+);
 
 $utilities: map-merge(
   $utilities,
@@ -349,10 +356,6 @@ nav.navbar {
     min-height: 64.4px;
 }
 
-.nav-tabs-home {
-    --bs-nav-tabs-border-width: 0px;
-}
-
 ul.nav-tabs {
     border-color: rgb(222, 226, 230);
 }
@@ -385,6 +388,10 @@ blockquote.border-start {
     --bs-border-color: rgb(221, 221, 221);
 }
 
+.reviewer-detail {
+    --bs-list-group-border-color: rgba(0, 0, 0, 0.13);
+}
+
 .text-nhs-blue {
     color: #005eb8;
 }
@@ -397,6 +404,18 @@ select.select2-hidden-accessible + span {
     // !important is necessary here in order to override
     // select2's use of inline "style: auto;" on the span
     width: 100% !important;
+}
+
+.js-filter-table-count, .js-filter-list-count {
+    background-color: rgb(233, 236, 239);
+}
+
+// Fix for "Error: $color2: var(--bs-border-color) is not a color."
+// https://github.com/apalfrey/select2-bootstrap-5-theme/issues/75#issuecomment-1832189897
+$s2bs5-border-color: $border-color;
+
+.home-page-content img {
+    max-width: 100%;
 }
 
 // Must import this after bootstrap imports
@@ -644,10 +663,6 @@ select.select2-hidden-accessible + span {
 
 .gene-filter-list li {
     margin-bottom: 5px;
-}
-
-#myTabContent img {
-    max-width: 100%;
 }
 
 .alert-info a,

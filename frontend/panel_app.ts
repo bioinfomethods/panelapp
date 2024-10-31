@@ -2,9 +2,9 @@ import "bootstrap";
 import "jquery/src/ajax";
 import "select2";
 import "./components/Brand";
+import "./components/HomePages";
 import "./components/Navbar";
 import "./components/RatingBadge";
-import "./components/Sidebar";
 import "./panel_app.scss";
 
 declare global {
@@ -248,6 +248,37 @@ window.Modules = {};
 
           return a < b ? -1 : a > b ? 1 : 0;
         }
+      }
+    };
+  };
+
+  Modules["home-pages"] = function () {
+    this.start = function (element) {
+      var defaultPage = element[0].getAttribute("active");
+      showPageFromHash();
+
+      if ("onhashchange" in window) {
+        $(window).bind("hashchange", function (e) {
+          showPageFromHash();
+        });
+      }
+
+      element.on("activechanged", function (e) {
+        if (e.detail.active !== defaultPage) {
+          window.location.hash = "!" + e.detail.active;
+        } else {
+          window.location.hash = "!";
+        }
+      });
+
+      function showPageFromHash() {
+        var hash = "#" + defaultPage;
+
+        if (location.hash !== "" && location.hash !== "#!") {
+          hash = location.hash.replace(/!/, "");
+        }
+
+        element[0].setAttribute("active", hash.slice(1));
       }
     };
   };

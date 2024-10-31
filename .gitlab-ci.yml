@@ -5,7 +5,7 @@ variables:
   DOCKER_PYTHON: python:3.11.9-alpine3.19
   DOCKER_NODE: node:20.14.0-alpine3.19
   DOCKER_POSTGRES: docker.artifactory.aws.gel.ac/library/postgres:14.7
-  DOCKER_PLAYWRIGHT: mcr.microsoft.com/playwright:v1.46.1-jammy
+  DOCKER_PLAYWRIGHT: mcr.microsoft.com/playwright:v1.47.0-jammy
   DOCKER_IN_DOCKER: docker:24.0.1-dind
   DOCKER_DRIVER: overlay2
   DOCKER_HOST: tcp://docker:2376/
@@ -165,6 +165,11 @@ e2e_test_visual:
   extends: .e2e_test
   script:
     - npx playwright test tests/visual/
+
+test_component:
+  extends: .e2e_test
+  script:
+    - npm run test-ct
 
 ## Linting, formatting, etc
 import_sorting:

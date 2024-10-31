@@ -5,7 +5,7 @@ ARG node_base=node:20.14.0-alpine3.19
 FROM ${node_base} AS frontend_build
 
 COPY ./frontend /src/frontend
-COPY ./webpack.* package.json package-lock.json /src/
+COPY ./webpack.* package.json package-lock.json tsconfig.json /src/
 
 RUN cd /src && npm ci && npm run build
 
