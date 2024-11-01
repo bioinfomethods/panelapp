@@ -132,21 +132,21 @@ e2e_test_image_build:
         POSTGRES_USER: panelapp
         POSTGRES_PASSWORD: secret
     - name: $E2E_TEST_IMAGE_TAG
-      alias: panelapp
+      alias: web
       variables:
         PYTHONUNBUFFERED: "1"
         DJANGO_LOG_LEVEL: DEBUG
         DJANGO_SETTINGS_MODULE: panelapp.settings.test
         DATABASE_URL: postgres://panelapp:secret@db-postgres:5432/panelapp
-        ALLOWED_HOSTS: panelapp
+        ALLOWED_HOSTS: web
       command:
         - /bin/sh
         - "-c"
-        - "manage migrate && manage loaddata /app/data.json && manage runserver 0.0.0.0:8080"
+        - "manage migrate && manage loaddata /app/data.json && manage runserver 0.0.0.0:8000"
   variables:
     # Allows inter-service communication: https://stackoverflow.com/questions/48041101/gitlab-ci-cross-service-communication
     FF_NETWORK_PER_BUILD: 1
-    BASE_URL: http://panelapp:8080
+    BASE_URL: http://web:8000
   before_script:
     - npm ci
 

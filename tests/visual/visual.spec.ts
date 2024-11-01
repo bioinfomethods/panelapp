@@ -67,3 +67,11 @@ test.describe(() => {
     await expect(page).toHaveScreenshot("add-panel.png", { fullPage: true });
   });
 });
+
+test("403 error", async ({ page }) => {
+  await page.clock.setFixedTime(new Date("2024-01-01T00:00:00"));
+
+  await page.goto("/panels/create/");
+
+  await expect(page).toHaveScreenshot("403.png", { fullPage: true });
+});
