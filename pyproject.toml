@@ -113,6 +113,7 @@ pip = "^24.0"
 manage = "manage:main"
 home_page = "scripts.home_page:cli"
 datacleanup = "scripts.datacleanup:main"
+ensembl_id_update = "scripts.ensembl_id_update:main"
 
 [tool.mypy]
 plugins = ["returns.contrib.mypy.returns_plugin"]
