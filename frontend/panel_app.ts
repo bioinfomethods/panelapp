@@ -1,7 +1,19 @@
 import "bootstrap";
 import "jquery/src/ajax";
 import "select2";
+import "./components/Brand";
+import "./components/Navbar";
+import "./components/RatingBadge";
+import "./components/Sidebar";
 import "./panel_app.scss";
+
+declare global {
+  interface Window {
+    Modules: any;
+    GeneTags: any;
+    app: any;
+  }
+}
 
 window.Modules = {};
 
@@ -208,8 +220,8 @@ window.Modules = {};
         function byNumber(aElement, bElement) {
           var $a = $(aElement),
             $b = $(bElement),
-            aNum = parseInt($a.data(key), 10),
-            bNum = parseInt($b.data(key), 10),
+            aNum = parseInt(String($a.data(key)), 10),
+            bNum = parseInt(String($b.data(key)), 10),
             aText = $a.data(defaultKey),
             bText = $b.data(defaultKey);
 
@@ -231,8 +243,8 @@ window.Modules = {};
         function byName(aElement, bElement) {
           var $a = $(aElement),
             $b = $(bElement),
-            a = $a.data(key).toLowerCase(),
-            b = $b.data(key).toLowerCase();
+            a = String($a.data(key)).toLowerCase(),
+            b = String($b.data(key)).toLowerCase();
 
           return a < b ? -1 : a > b ? 1 : 0;
         }
@@ -330,7 +342,7 @@ window.Modules = {};
   Modules["filter-entities-type"] = function () {
     this.start = function (element) {
       var $element = $(element);
-      $element.find("li").attr("data-filtered", false);
+      $element.find("li").attr("data-filtered", "false");
       var listCount = $element.find(".js-filter-list-count");
 
       var displayGenesStatus = true;
@@ -341,36 +353,36 @@ window.Modules = {};
         if (displayGenes) {
           $element
             .find('li[data-type="gene"]')
-            .attr("data-filtered", false)
+            .attr("data-filtered", "false")
             .show();
         } else {
           $element
             .find('li[data-type="gene"]')
-            .attr("data-filtered", true)
+            .attr("data-filtered", "true")
             .hide();
         }
 
         if (displaySTRs) {
           $element
             .find('li[data-type="str"]')
-            .attr("data-filtered", false)
+            .attr("data-filtered", "false")
             .show();
         } else {
           $element
             .find('li[data-type="str"]')
-            .attr("data-filtered", true)
+            .attr("data-filtered", "true")
             .hide();
         }
 
         if (displayRegions) {
           $element
             .find('li[data-type="region"]')
-            .attr("data-filtered", false)
+            .attr("data-filtered", "false")
             .show();
         } else {
           $element
             .find('li[data-type="region"]')
-            .attr("data-filtered", true)
+            .attr("data-filtered", "true")
             .hide();
         }
 
@@ -444,8 +456,8 @@ $(function () {
           element = $(modules[i]),
           type = element.data("module");
 
-        if (typeof Modules[type] === "function") {
-          module = new Modules[type]();
+        if (typeof window.Modules[type] === "function") {
+          module = new window.Modules[type]();
           module.start(element);
         }
       }
@@ -464,14 +476,10 @@ $(function () {
 
   $(".remove-empty-array-val").submit(function () {
     $("#id_publications").val(
-      $("#id_publications")
-        .val()
-        .replace(/[; ]+$/g, "")
+      String($("#id_publications").val()).replace(/[; ]+$/g, "")
     );
     $("#id_phenotypes").val(
-      $("#id_phenotypes")
-        .val()
-        .replace(/[; ]+$/g, "")
+      String($("#id_phenotypes").val()).replace(/[; ]+$/g, "")
     );
   });
 });
