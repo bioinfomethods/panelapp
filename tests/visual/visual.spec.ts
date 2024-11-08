@@ -75,3 +75,17 @@ test("403 error", async ({ page }) => {
 
   await expect(page).toHaveScreenshot("403.png", { fullPage: true });
 });
+
+test("account registration", async ({ page }) => {
+  await page.goto("/accounts/registration/");
+
+  await expect(page).toHaveScreenshot("account-registration.png", {
+    fullPage: true,
+  });
+});
+
+test("password reset", async ({ page }) => {
+  await page.goto("/accounts/password_reset/");
+
+  await expect(page).toHaveScreenshot("password-reset.png", { fullPage: true });
+});
