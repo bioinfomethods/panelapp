@@ -73,7 +73,7 @@ export const test = base.extend<{
   },
 });
 
-const { Given, When, Then, Step } = createBdd(test);
+export const { Given, When, Then, Step } = createBdd(test);
 
 Step("I log in as {string}", async ({ page, accounts }, username: string) => {
   const account = accounts.get(username);
@@ -520,3 +520,11 @@ Then(
       .toBeVisible();
   }
 );
+
+When("I am on the home page", async ({ page }) => {
+  await page.goto("/");
+});
+
+When("I am on the panels page", async ({ page }) => {
+  await page.goto("/panels/");
+});
