@@ -18,6 +18,21 @@ test.describe(() => {
       fullPage: true,
     });
   });
+
+  test("panel entity detail review owner", async ({ page }) => {
+    await page.goto("/panels/2/gene/AAAS/#!review");
+
+    await expect(
+      page.getByRole("heading", { name: "Review feedback" })
+    ).toBeVisible();
+
+    await expect(page).toHaveScreenshot(
+      "panel-entity-detail-review-owner.png",
+      {
+        fullPage: true,
+      }
+    );
+  });
 });
 
 test("panel gene review", async ({ page }) => {
