@@ -131,3 +131,4 @@ webpack-stats.json
 
 # playwright-bdd
 .features-gen/
+*storybook.log

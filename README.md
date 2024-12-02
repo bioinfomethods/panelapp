@@ -329,6 +329,20 @@ It might be handy installing [AWScli-local](https://github.com/localstack/awscli
 It is a wrapper around AWS cli for interacting with LocalStack (it helps with not `--endpoint-url` and providing dummy
 credentials on every request).
 
+### Storybook
+
+[Storybook](https://storybook.js.org/) is used for developing frontend components in isolation.
+
+[Stories](https://storybook.js.org/docs/get-started/whats-a-story) are located under `stories/`.
+
+Run the storybook server:
+
+```
+npm run storybook
+```
+
+Due to HMR (Hot Module Reloading) modifying a component will live-update the story to enable fast development of frontend components.
+
 ### End-to-end tests
 
 #### Playwright
