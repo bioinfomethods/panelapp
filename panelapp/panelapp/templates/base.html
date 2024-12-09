@@ -1,6 +1,7 @@
 {% load static %}
 {% load banner %}
 {% load render_bundle from webpack_loader %}
+{% load django_htmx %}
 
 <!DOCTYPE html>
 <html class="no-js">
@@ -11,10 +12,11 @@
     <script nonce="{{CSP_NONCE}}">(function(d){d.className=d.className.replace(/^no-js\b/,'js');}(document.documentElement));</script>
     {% render_bundle 'main' 'css' %}
     {% render_bundle 'main' 'js' %}
+    {% django_htmx_script %}
     {% block header %}{% endblock %}
     <title>{% block title %}PanelApp{% endblock %}</title>
   </head>
-<body>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
 {% block navbar %}{% endblock %}
 
 {% banner %}

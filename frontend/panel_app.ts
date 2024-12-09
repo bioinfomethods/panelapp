@@ -1,4 +1,5 @@
 import "bootstrap";
+import htmx from "htmx.org";
 import "jquery/src/ajax";
 import "select2";
 import "./components/Brand";
@@ -14,6 +15,11 @@ declare global {
     app: any;
   }
 }
+
+htmx.config.allowEval = false;
+htmx.config.allowScriptTags = false;
+htmx.config.selfRequestsOnly = true;
+htmx.config.includeIndicatorStyles = false;
 
 window.Modules = {};
 

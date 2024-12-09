@@ -108,6 +108,7 @@ CUSTOM_APPS = [
     "django_filters",
     "webpack_loader",
     "csp",
+    "django_htmx",
 ]
 
 PROJECT_APPS = ["panelapp", "accounts", "panels", "webservices", "v1rewrites", "api"]

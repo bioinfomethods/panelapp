@@ -52,6 +52,7 @@
     "bootstrap": "=5.3.3",
     "bootswatch": "=5.3.3",
     "eldarion-ajax": "^0.16.0",
+    "htmx.org": "^2.0.3",
     "jquery": "=3.7.1",
     "lit": "^3.2.0",
     "select2": "=4.0.13",
