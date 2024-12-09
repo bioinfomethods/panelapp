@@ -21,10 +21,6 @@ test.describe(() => {
     await expect(page.getByTestId("lock-entity-AAAS")).toBeHidden();
     await expect(page.getByTestId("delete-entity-AAAS")).toBeHidden();
   });
-});
-
-test.describe(() => {
-  test.use({ storageState: "playwright/.auth/admin.json" });
 
   test("add gene: show mop info dialog", async ({ page }) => {
     await page.goto("/panels/1/gene/add");
@@ -34,10 +30,6 @@ test.describe(() => {
       .getByText("Mode of pathogenicity Exceptions to loss of function");
     await expect(dialog).toBeVisible();
   });
-});
-
-test.describe(() => {
-  test.use({ storageState: "playwright/.auth/admin.json" });
 
   test("review gene: show rating info dialog", async ({ page }) => {
     await page.goto("/panels/2/gene/AAAS/");
@@ -49,10 +41,6 @@ test.describe(() => {
       );
     await expect(dialog).toBeVisible();
   });
-});
-
-test.describe(() => {
-  test.use({ storageState: "playwright/.auth/admin.json" });
 
   test("edit gene: show mode of pathogenicity info dialog", async ({
     page,
