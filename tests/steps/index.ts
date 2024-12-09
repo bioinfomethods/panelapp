@@ -1,5 +1,5 @@
 import { expect } from "@playwright/test";
-import { test as base, createBdd, DataTable } from "playwright-bdd";
+import { createBdd, DataTable } from "playwright-bdd";
 import {
   parseNewGeneReview,
   parseNewGeneReviewComment,
@@ -13,65 +13,9 @@ import {
   parseNewPanel,
 } from "../lib/panel";
 import { AddGeneForm, parseNewPanelGene } from "../lib/panel-gene";
-import { Pages, Panels } from "../lib/panels";
+import { test } from "../lib/test";
 
-interface Account {
-  username: string;
-  password: string;
-  firstName: string;
-  lastName: string;
-}
-
-export const test = base.extend<{
-  pages: Pages;
-  panels: Panels;
-  accounts: Map<string, Account>;
-}>({
-  // https://playwright.dev/docs/test-fixtures#creating-a-fixture
-  pages: async ({ browser }, use) => {
-    const pages = new Pages(browser);
-    await use(pages);
-    await pages.dispose();
-  },
-  panels: async ({ pages }, use) => {
-    const panels = new Panels(pages);
-    await use(panels);
-    await panels.dispose();
-  },
-  accounts: async ({}, use) => {
-    await use(
-      new Map([
-        [
-          "admin",
-          {
-            username: "admin",
-            password: "changeme",
-            firstName: "",
-            lastName: "",
-          },
-        ],
-        [
-          "TEST_Curator",
-          {
-            username: "TEST_Curator",
-            password: "changeme",
-            firstName: "Curator",
-            lastName: "Test",
-          },
-        ],
-        [
-          "TEST_Reviewer",
-          {
-            username: "TEST_Reviewer",
-            password: "changeme",
-            firstName: "Reviewer",
-            lastName: "Test",
-          },
-        ],
-      ])
-    );
-  },
-});
+export { test };
 
 export const { Given, When, Then, Step } = createBdd(test);
 

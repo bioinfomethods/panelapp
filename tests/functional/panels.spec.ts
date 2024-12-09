@@ -1,4 +1,5 @@
-import { expect, test } from "@playwright/test";
+import { expect } from "@playwright/test";
+import { test } from "../lib/test";
 
 test.describe(() => {
   test.use({ storageState: "playwright/.auth/admin.json" });
