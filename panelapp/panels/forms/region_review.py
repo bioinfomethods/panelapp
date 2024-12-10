@@ -59,9 +59,8 @@ class RegionReviewForm(forms.ModelForm):
     comments = forms.CharField(widget=forms.Textarea, required=False)
 
     def __init__(self, *args, **kwargs):
-        self.panel = kwargs.pop("panel")
-        self.request = kwargs.pop("request")
         self.region = kwargs.pop("region")
+        self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
 
         original_fields = self.fields
@@ -79,7 +78,7 @@ class RegionReviewForm(forms.ModelForm):
         evaluation_data["comment"] = evaluation_data.pop("comments")
         panel = self.region.panel
         ev = panel.get_region(self.region.name).update_evaluation(
-            self.request.user, evaluation_data
+            self.user, evaluation_data
         )
         panel._update_saved_stats()
         return ev

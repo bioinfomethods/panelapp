@@ -1,35 +1,52 @@
 import { Page } from "@playwright/test";
 import { TestIdentifiable } from "./types";
 
-export interface NewPanelGene extends TestIdentifiable {
+export interface NewPanelStr extends TestIdentifiable {
   panelTestId: string;
-  symbol: string;
+  name: string;
+  chromosome: string;
+  position38Start: number;
+  position38End: number;
+  repeatedSequence: string;
+  normal: number;
+  pathogenic: number;
   sources: string[];
   modeOfInheritance: string;
-  modeOfPathogenicity?: string;
+  position37Start?: number;
+  position37End?: number;
+  symbol?: string;
   penetrance?: string;
   publications?: string;
   phenotypes?: string;
   tags?: string[];
-  transcripts?: string;
   additionalPanels?: string[];
   rating?: string;
   currentDiagnostic?: boolean;
   comments?: string;
 }
 
-export interface PanelGene extends NewPanelGene {}
+export interface PanelStr extends NewPanelStr {}
 
-export const parseNewPanelGene = (
-  data: Record<string, string>
-): NewPanelGene => {
+export const parseNewPanelStr = (data: Record<string, string>): NewPanelStr => {
   return {
     testId: data["ID"],
     panelTestId: data["Panel ID"],
-    symbol: data["Gene symbol"],
+    name: data["Name"],
+    chromosome: data["Chromosome"] ? data["Chromosome"] : "1",
+    position38Start: data["Pos 38 Start"]
+      ? Number.parseInt(data["Pos 38 Start"])
+      : 1,
+    position38End: data["Pos 38 End"] ? Number.parseInt(data["Pos 38 End"]) : 2,
+    repeatedSequence: data["Sequence"],
+    normal: data["Normal"] ? Number.parseInt(data["Normal"]) : 10,
+    pathogenic: data["Pathogenic"] ? Number.parseInt(data["Pathogenic"]) : 20,
     sources: data["Sources"].split(",").filter((x) => x),
-    modeOfPathogenicity: data["Mode of pathogenicity"],
     modeOfInheritance: data["Mode of inheritance"],
+    position37Start: data["Pos 37 Start"]
+      ? Number.parseInt(data["Pos 37 Start"])
+      : 1,
+    position37End: data["Pos 37 End"] ? Number.parseInt(data["Pos 37 End"]) : 2,
+    symbol: data["Gene symbol"],
     penetrance: data["Penetrance"],
     publications: data["Publications"],
     phenotypes: data["Phenotypes"],
@@ -44,11 +61,47 @@ export const parseNewPanelGene = (
   };
 };
 
-export class AddGeneForm {
+export class AddStrForm {
   readonly page: Page;
 
   constructor(page: Page) {
     this.page = page;
+  }
+
+  get nameInput() {
+    return this.page.getByPlaceholder("Name");
+  }
+
+  get chromosomeInput() {
+    return this.page.getByLabel("Chromosome:");
+  }
+
+  get position37StartInput() {
+    return this.page.getByPlaceholder("Position start (GRCh37)");
+  }
+
+  get position37EndInput() {
+    return this.page.getByPlaceholder("Position end (GRCh37)");
+  }
+
+  get position38StartInput() {
+    return this.page.getByPlaceholder("Position start (GRCh38)");
+  }
+
+  get position38EndInput() {
+    return this.page.getByPlaceholder("Position end (GRCh38)");
+  }
+
+  get repeatedSequenceInput() {
+    return this.page.getByPlaceholder("Repeated sequence");
+  }
+
+  get normalInput() {
+    return this.page.getByPlaceholder("Normal");
+  }
+
+  get pathogenicInput() {
+    return this.page.getByPlaceholder("Pathogenic");
   }
 
   get geneSymbolInput() {
@@ -61,10 +114,6 @@ export class AddGeneForm {
       .locator("div")
       .filter({ hasText: "Source: Source" })
       .getByRole("combobox");
-  }
-
-  get modeOfPathogenicityInput() {
-    return this.page.getByLabel("Mode of pathogenicity:");
   }
 
   get modeOfInheritanceInput() {
@@ -116,7 +165,43 @@ export class AddGeneForm {
   }
 
   get submitButton() {
-    return this.page.getByRole("button", { name: "Add gene" });
+    return this.page.getByRole("button", { name: "Add STR" });
+  }
+
+  async setName(name: string) {
+    await this.nameInput.fill(name);
+  }
+
+  async setChromosome(chromosome: string) {
+    await this.chromosomeInput.selectOption(chromosome);
+  }
+
+  async setPosition38Start(value: number) {
+    await this.position38StartInput.fill(value.toString());
+  }
+
+  async setPosition38End(value: number) {
+    await this.position38EndInput.fill(value.toString());
+  }
+
+  async setRepeatedSequence(value: string) {
+    await this.repeatedSequenceInput.fill(value);
+  }
+
+  async setNormal(value: number) {
+    await this.normalInput.fill(value.toString());
+  }
+
+  async setPathogenic(value: number) {
+    await this.pathogenicInput.fill(value.toString());
+  }
+
+  async setPosition37Start(value: number) {
+    await this.position37StartInput.fill(value.toString());
+  }
+
+  async setPosition37End(value: number) {
+    await this.position37EndInput.fill(value.toString());
   }
 
   async setGeneSymbol(name: string) {
@@ -126,13 +211,8 @@ export class AddGeneForm {
   }
 
   async addSource(name: string) {
-    await this.sourceInput.click();
     await this.sourceInput.pressSequentially(name);
     await this.page.getByRole("option", { name }).click();
-  }
-
-  async setModeOfPathogenicity(value: string) {
-    await this.modeOfPathogenicityInput.selectOption(value);
   }
 
   async setModeOfInheritance(value: string) {
@@ -159,11 +239,6 @@ export class AddGeneForm {
     await this.page.getByRole("option", { name }).click();
   }
 
-  async setTranscripts(value: string) {
-    await this.transcriptsInput.clear();
-    await this.transcriptsInput.pressSequentially(value);
-  }
-
   async addAdditionalPanel(name: string) {
     await this.additionalPanelsInput.click();
     await this.additionalPanelsInput.pressSequentially(name);
@@ -182,19 +257,52 @@ export class AddGeneForm {
     await this.commentsInput.pressSequentially(value);
   }
 
-  async fill(data: NewPanelGene) {
-    await this.setGeneSymbol(data.symbol);
+  async fill(data: NewPanelStr) {
+    await this.setName(data.name);
+
+    if (data.chromosome) {
+      await this.setChromosome(data.chromosome);
+    }
+
+    if (data.position38Start) {
+      await this.setPosition38Start(data.position38Start);
+    }
+
+    if (data.position38End) {
+      await this.setPosition38End(data.position38End);
+    }
+
+    if (data.position37Start) {
+      await this.setPosition37Start(data.position37Start);
+    }
+
+    if (data.position37End) {
+      await this.setPosition37End(data.position37End);
+    }
+
+    if (data.repeatedSequence) {
+      await this.setRepeatedSequence(data.repeatedSequence);
+    }
+
+    if (data.normal) {
+      await this.setNormal(data.normal);
+    }
+
+    if (data.pathogenic) {
+      await this.setPathogenic(data.pathogenic);
+    }
 
     if (data.sources) {
       for (const sourceName of data.sources) {
         await this.addSource(sourceName);
       }
     }
-    if (data.modeOfPathogenicity) {
-      await this.setModeOfPathogenicity(data.modeOfPathogenicity);
-    }
     if (data.modeOfInheritance) {
       await this.setModeOfInheritance(data.modeOfInheritance);
+    }
+
+    if (data.symbol) {
+      await this.setGeneSymbol(data.symbol);
     }
     if (data.penetrance) {
       await this.setPenetrance(data.penetrance);
@@ -209,9 +317,6 @@ export class AddGeneForm {
       for (const tagName of data.tags) {
         await this.addTag(tagName);
       }
-    }
-    if (data.transcripts) {
-      await this.setTranscripts(data.transcripts);
     }
     if (data.additionalPanels) {
       for (const panelName of data.additionalPanels) {

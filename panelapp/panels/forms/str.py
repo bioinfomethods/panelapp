@@ -161,7 +161,7 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.panel = kwargs.pop("panel")
-        self.request = kwargs.pop("request")
+        self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
 
         original_fields = self.fields
@@ -207,7 +207,7 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
         self.fields["penetrance"] = original_fields.get("penetrance")
         self.fields["publications"] = original_fields.get("publications")
         self.fields["phenotypes"] = original_fields.get("phenotypes")
-        if self.request.user.is_authenticated and self.request.user.reviewer.is_GEL():
+        if self.user.is_authenticated and self.user.reviewer.is_GEL():
             self.fields["tags"] = original_fields.get("tags")
             self.fields["additional_panels"] = original_fields.get("additional_panels")
         if not self.instance.pk:
@@ -300,7 +300,7 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
             if self.changed_data and self.changed_data != ["additional_panels"]:
                 self.panel = self.panel.increment_version()
                 self.panel.update_str(
-                    self.request.user,
+                    self.user,
                     initial_name,
                     str_data,
                     remove_gene=True if not str_data.get("gene") else False,
@@ -312,17 +312,16 @@ class PanelSTRForm(EntityFormMixin, forms.ModelForm):
             entity = self.panel.get_str(new_str_name)
         else:
             increment_version = (
-                self.request.user.is_authenticated
-                and self.request.user.reviewer.is_GEL()
+                self.user.is_authenticated and self.user.reviewer.is_GEL()
             )
             entity = self.panel.add_str(
-                self.request.user, new_str_name, str_data, increment_version
+                self.user, new_str_name, str_data, increment_version
             )
 
         if additional_panels:
             entity.copy_to_panels(
                 panels=additional_panels,
-                user=self.request.user,
+                user=self.user,
                 entity_data=str_data,
                 copy_data=bool(self.initial),
             )

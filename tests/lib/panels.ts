@@ -1,4 +1,6 @@
 import { Browser, expect, Page } from "@playwright/test";
+import { ReviewFeedback } from "../pages/review-feedback";
+import { GeneFeedback } from "./gene-feedback";
 import {
   GeneReview,
   GeneReviewComment,
@@ -8,6 +10,19 @@ import {
 } from "./gene-review";
 import { NewPanel, NewPanelForm, Panel } from "./panel";
 import { AddGeneForm, NewPanelGene, PanelGene } from "./panel-gene";
+import { AddRegionForm, NewPanelRegion, PanelRegion } from "./panel-region";
+import { AddStrForm, NewPanelStr, PanelStr } from "./panel-str";
+import {
+  NewRegionReview,
+  RegionReview,
+  ReviewRegionForm,
+} from "./region-review";
+import {
+  NewStrReview,
+  ReviewStrForm,
+  StrReview,
+  StrReviewComment,
+} from "./str-review";
 
 // Manage panels for use as fixtures in tests
 export class Panels {
@@ -16,6 +31,11 @@ export class Panels {
   panelGenes: Map<string, PanelGene>;
   geneReviews: Map<string, GeneReview>;
   geneReviewComments: Map<string, GeneReviewComment>;
+  panelStrs: Map<string, PanelStr>;
+  strReviews: Map<string, StrReview>;
+  strReviewComments: Map<string, StrReviewComment>;
+  panelRegions: Map<string, PanelRegion>;
+  regionReviews: Map<string, RegionReview>;
 
   constructor(pages: Pages) {
     this.pages = pages;
@@ -23,6 +43,11 @@ export class Panels {
     this.panelGenes = new Map();
     this.geneReviews = new Map();
     this.geneReviewComments = new Map();
+    this.panelStrs = new Map();
+    this.strReviews = new Map();
+    this.strReviewComments = new Map();
+    this.panelRegions = new Map();
+    this.regionReviews = new Map();
   }
 
   registerPanel(panel: Panel) {
@@ -39,6 +64,22 @@ export class Panels {
 
   registerGeneReviewComment(comment: GeneReviewComment) {
     this.geneReviewComments.set(comment.testId, comment);
+  }
+
+  registerPanelStr(panelStr: PanelStr) {
+    this.panelStrs.set(panelStr.testId, panelStr);
+  }
+
+  registerStrReview(strReview: StrReview) {
+    this.strReviews.set(strReview.testId, strReview);
+  }
+
+  registerPanelRegion(panelRegion: PanelRegion) {
+    this.panelRegions.set(panelRegion.testId, panelRegion);
+  }
+
+  registerRegionReview(regionReview: RegionReview) {
+    this.regionReviews.set(regionReview.testId, regionReview);
   }
 
   async delete(testId: string) {
@@ -112,6 +153,48 @@ export class Panels {
     this.registerPanelGene(gene);
   }
 
+  async addPanelStr(str: NewPanelStr) {
+    const panel = this.panels.get(str.panelTestId);
+    if (!panel) {
+      throw Error("Panel not found");
+    }
+
+    const page = await this.pages.get_or_create("admin");
+
+    await page.goto(`/panels/${panel.id}/str/add`);
+
+    let form = new AddStrForm(page);
+
+    await form.fill(str);
+    await form.submit();
+
+    await expect(page.getByText("Successfully added a new str")).toBeVisible();
+
+    this.registerPanelStr(str);
+  }
+
+  async addPanelRegion(region: NewPanelRegion) {
+    const panel = this.panels.get(region.panelTestId);
+    if (!panel) {
+      throw Error("Panel not found");
+    }
+
+    const page = await this.pages.get_or_create("admin");
+
+    await page.goto(`/panels/${panel.id}/region/add`);
+
+    let form = new AddRegionForm(page);
+
+    await form.fill(region);
+    await form.submit();
+
+    await expect(
+      page.getByText("Successfully added a new region")
+    ).toBeVisible();
+
+    this.registerPanelRegion(region);
+  }
+
   async reviewGene(review: NewGeneReview): Promise<string> {
     const panelGene = this.panelGenes.get(review.panelGeneTestId);
     if (!panelGene) {
@@ -137,25 +220,160 @@ export class Panels {
     // This locator is unique as there can only be one review per user
     // and the Delete button is only displayed for the user who owns
     // the review.
-    const href = await page
+    const url = await page
       .getByRole("link", { name: "Delete", exact: true })
-      .getAttribute("href");
+      .getAttribute("hx-get");
 
-    if (!href) {
-      throw new Error("href not found");
+    if (!url) {
+      throw new Error("url not found");
     }
 
-    const match = href.match(
+    const match = url.match(
       `\/panels\/${panel.id}\/gene\/${panelGene.symbol}/delete_evaluation/(\\d+)\/`
     );
     if (match === null) {
-      throw Error(`URL is incorrect: ${href}`);
+      throw Error(`URL is incorrect: ${url}`);
     }
     const id = match[1];
 
     this.registerGeneReview({ ...review, id });
 
     return id;
+  }
+
+  async reviewStr(review: NewStrReview): Promise<string> {
+    const panelStr = this.panelStrs.get(review.panelStrTestId);
+    if (!panelStr) {
+      throw Error("Panel Str not found");
+    }
+
+    const panel = this.panels.get(panelStr.panelTestId);
+    if (!panel) {
+      throw Error("Panel not found");
+    }
+
+    const page = await this.pages.get_or_create(review.createdBy);
+
+    await page.goto(`/panels/${panel.id}/str/${panelStr.name}/`);
+
+    let form = new ReviewStrForm(page);
+
+    await form.fill(review);
+    await form.submit();
+
+    await expect(page.getByText("Successfully reviewed str")).toBeVisible();
+
+    // This locator is unique as there can only be one review per user
+    // and the Delete button is only displayed for the user who owns
+    // the review.
+    const url = await page
+      .getByRole("link", { name: "Delete", exact: true })
+      .getAttribute("hx-get");
+
+    if (!url) {
+      throw new Error("url not found");
+    }
+
+    const match = url.match(
+      `/panels/${panel.id}/str/${panelStr.name}/delete_evaluation/(\\d+)/`
+    );
+    if (match === null) {
+      throw Error(`URL is incorrect: ${url}`);
+    }
+    const id = match[1];
+
+    this.registerStrReview({ ...review, id });
+
+    return id;
+  }
+
+  async reviewRegion(review: NewRegionReview): Promise<string> {
+    const panelRegion = this.panelRegions.get(review.panelRegionTestId);
+    if (!panelRegion) {
+      throw Error("Panel Region not found");
+    }
+
+    const panel = this.panels.get(panelRegion.panelTestId);
+    if (!panel) {
+      throw Error("Panel not found");
+    }
+
+    const page = await this.pages.get_or_create(review.createdBy);
+
+    await page.goto(`/panels/${panel.id}/region/${panelRegion.name}/`);
+
+    let form = new ReviewRegionForm(page);
+
+    await form.fill(review);
+    await form.submit();
+
+    await expect(page.getByText("Successfully reviewed region")).toBeVisible();
+
+    // This locator is unique as there can only be one review per user
+    // and the Delete button is only displayed for the user who owns
+    // the review.
+    const url = await page
+      .getByRole("link", { name: "Delete", exact: true })
+      .getAttribute("hx-get");
+
+    if (!url) {
+      throw new Error("url not found");
+    }
+
+    const match = url.match(
+      `/panels/${panel.id}/region/${panelRegion.name}/delete_evaluation/(\\d+)/`
+    );
+    if (match === null) {
+      throw Error(`URL is incorrect: ${url}`);
+    }
+    const id = match[1];
+
+    this.registerRegionReview({ ...review, id });
+
+    return id;
+  }
+
+  async reviewGeneFeedback(feedback: GeneFeedback): Promise<void> {
+    const panelGene = this.panelGenes.get(feedback.panelGeneTestId);
+    if (!panelGene) {
+      throw Error("Panel Gene not found");
+    }
+    const panel = this.panels.get(panelGene.panelTestId);
+    if (!panel) {
+      throw Error("Panel not found");
+    }
+
+    const page = await this.pages.get_or_create(feedback.by);
+
+    await page.goto(`/panels/${panel.id}/gene/${panelGene.symbol}/#!review`);
+
+    const feedbackPage = new ReviewFeedback(page);
+
+    if (feedback.deleteComments) {
+      for (const deleteComment of feedback.deleteComments) {
+        const deleteButton = page
+          .locator("blockquote")
+          .filter({
+            hasText: new RegExp(`Comment on.+: ${deleteComment.comment}`),
+          })
+          .getByRole("button");
+
+        await deleteButton.click();
+        await expect(deleteButton).not.toBeVisible();
+      }
+    }
+
+    if (feedback.tags) {
+      await feedbackPage.setTags(feedback.tags);
+      await expect(page.getByText(/Saved at \d\d:\d\d:\d\d/)).toBeVisible();
+    }
+
+    if (feedback.rating) {
+      await feedbackPage.setRating(
+        feedback.rating.rating,
+        feedback.rating.comment
+      );
+    }
   }
 
   async addGeneReviewComment(comment: NewGeneReviewComment): Promise<string> {

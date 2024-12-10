@@ -154,7 +154,7 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.panel = kwargs.pop("panel")
-        self.request = kwargs.pop("request")
+        self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
 
         original_fields = self.fields
@@ -184,7 +184,7 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
         self.fields["penetrance"] = original_fields.get("penetrance")
         self.fields["publications"] = original_fields.get("publications")
         self.fields["phenotypes"] = original_fields.get("phenotypes")
-        if self.request.user.is_authenticated and self.request.user.reviewer.is_GEL():
+        if self.user.is_authenticated and self.user.reviewer.is_GEL():
             self.fields["tags"] = original_fields.get("tags")
             self.fields["transcript"] = original_fields.get("transcript")
             self.fields["additional_panels"] = original_fields.get("additional_panels")
@@ -252,9 +252,7 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
             # When only copying entities don't create new version for the original one
             if self.changed_data and self.changed_data != ["additional_panels"]:
                 self.panel = self.panel.increment_version()
-                self.panel.update_gene(
-                    self.request.user, initial_gene_symbol, gene_data
-                )
+                self.panel.update_gene(self.user, initial_gene_symbol, gene_data)
                 self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
             else:
                 LOGGER.info("Copying gene to other panel")
@@ -262,17 +260,16 @@ class PanelGeneForm(EntityFormMixin, forms.ModelForm):
             entity = self.panel.get_gene(new_gene_symbol)
         else:
             increment_version = (
-                self.request.user.is_authenticated
-                and self.request.user.reviewer.is_GEL()
+                self.user.is_authenticated and self.user.reviewer.is_GEL()
             )
             entity = self.panel.add_gene(
-                self.request.user, new_gene_symbol, gene_data, increment_version
+                self.user, new_gene_symbol, gene_data, increment_version
             )
 
         if additional_panels:
             entity.copy_to_panels(
                 panels=additional_panels,
-                user=self.request.user,
+                user=self.user,
                 entity_data=gene_data,
                 copy_data=bool(self.initial),
             )

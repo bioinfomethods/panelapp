@@ -24,28 +24,34 @@
 from django.urls import re_path
 from django.views.generic import RedirectView
 
+from panels.views.feedback import (
+    clear_entity_mode_of_pathogenicity_view,
+    clear_entity_phenotypes_view,
+    clear_entity_publications_view,
+    clear_entity_source_for_entity_list_view,
+    clear_entity_source_view,
+    clear_entity_sources_view,
+    clear_entity_transcript_view,
+    delete_entity_comment_view,
+    delete_evaluation_by_user_view,
+    edit_entity_comment_form_view,
+    panel_entity_detail_view,
+    toggle_entity_ready_view,
+    update_entity_moi_view,
+    update_entity_mop_view,
+    update_entity_phenotypes_view,
+    update_entity_publications_view,
+    update_entity_rating_view,
+    update_entity_tags_view,
+)
+
 from .ajax_views import (
     ApproveEntityAjaxView,
     ApprovePanelAjaxView,
-    ClearModeOfPathogenicityAjaxView,
-    ClearPhoenotypesAjaxView,
-    ClearPublicationsAjaxView,
-    ClearSingleSourceAjaxView,
-    ClearSourcesAjaxView,
-    ClearTranscriptAjaxView,
     DeleteEntityAjaxView,
-    DeleteEntityCommentAjaxView,
-    DeleteEntityEvaluationAjaxView,
     DeletePanelAjaxView,
-    GetEntityCommentFormAjaxView,
     RejectPanelAjaxView,
     SubmitEntityCommentFormAjaxView,
-    UpdateEntityMOIAjaxView,
-    UpdateEntityMOPAjaxView,
-    UpdateEntityPhenotypesAjaxView,
-    UpdateEntityPublicationsAjaxView,
-    UpdateEntityRatingAjaxView,
-    UpdateEntityTagsAjaxView,
 )
 from .enums import VALID_ENTITY_FORMAT
 from .views import (
@@ -68,10 +74,7 @@ from .views import (
     EntityDetailView,
     EntityReviewView,
     GeneDetailRedirectView,
-    GenePanelSpanshotView,
     GenePanelView,
-    MarkEntityReadyView,
-    MarkGeneNotReadyView,
     OldCodeURLRedirect,
     PanelAddEntityView,
     PanelEditEntityView,
@@ -144,7 +147,7 @@ urlpatterns = [
     ),
     re_path(
         rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/$",
-        GenePanelSpanshotView.as_view(),
+        panel_entity_detail_view,
         name="evaluation",
     ),
     re_path(
@@ -158,13 +161,13 @@ urlpatterns = [
         name="review_entity",
     ),
     re_path(
-        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/mark_as_ready$",
-        MarkEntityReadyView.as_view(),
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/mark_entity_as_ready$",
+        toggle_entity_ready_view,
         name="mark_entity_as_ready",
     ),
     re_path(
-        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/mark_as_not_ready$",
-        MarkGeneNotReadyView.as_view(),
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/mark_entity_as_not_ready$",
+        toggle_entity_ready_view,
         name="mark_entity_as_not_ready",
     ),
     # AJAX endpoints
@@ -180,73 +183,78 @@ urlpatterns = [
     ),
     re_path(
         rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/clear_entity_sources$",
-        ClearSourcesAjaxView.as_view(),
+        clear_entity_sources_view,
         name="clear_entity_sources",
     ),
     re_path(
         rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/clear_entity_source/(?P<source>(.*))/$",
-        ClearSingleSourceAjaxView.as_view(),
+        clear_entity_source_view,
         name="clear_entity_source",
     ),
     re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/clear_entity_source_for_entity_list/(?P<source>(.*))/$",
+        clear_entity_source_for_entity_list_view,
+        name="clear_entity_source_for_entity_list",
+    ),
+    re_path(
         rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/clear_entity_phenotypes$",
-        ClearPhoenotypesAjaxView.as_view(),
+        clear_entity_phenotypes_view,
         name="clear_entity_phenotypes",
     ),
     re_path(
         rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/clear_entity_transcript$",
-        ClearTranscriptAjaxView.as_view(),
+        clear_entity_transcript_view,
         name="clear_entity_transcript",
     ),
     re_path(
         rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/clear_entity_publications$",
-        ClearPublicationsAjaxView.as_view(),
+        clear_entity_publications_view,
         name="clear_entity_publications",
     ),
     re_path(
         rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/clear_entity_mode_of_pathogenicity$",
-        ClearModeOfPathogenicityAjaxView.as_view(),
+        clear_entity_mode_of_pathogenicity_view,
         name="clear_entity_mode_of_pathogenicity",
     ),
     # AJAX Review endpoints
     re_path(
-        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_entity_tags/$",
-        UpdateEntityTagsAjaxView.as_view(),
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_tags/$",
+        update_entity_tags_view,
         name="update_entity_tags",
     ),
     re_path(
-        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_entity_rating/$",
-        UpdateEntityRatingAjaxView.as_view(),
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_rating/$",
+        update_entity_rating_view,
         name="update_entity_rating",
     ),
     re_path(
-        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_entity_moi/$",
-        UpdateEntityMOIAjaxView.as_view(),
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_moi/$",
+        update_entity_moi_view,
         name="update_entity_moi",
     ),
     re_path(
-        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_entity_mop/$",
-        UpdateEntityMOPAjaxView.as_view(),
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_mop/$",
+        update_entity_mop_view,
         name="update_entity_mop",
     ),
     re_path(
-        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_entity_phenotypes/$",
-        UpdateEntityPhenotypesAjaxView.as_view(),
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_phenotypes/$",
+        update_entity_phenotypes_view,
         name="update_entity_phenotypes",
     ),
     re_path(
-        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_entity_publications/$",
-        UpdateEntityPublicationsAjaxView.as_view(),
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_publications/$",
+        update_entity_publications_view,
         name="update_entity_publications",
     ),
     re_path(
         rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/delete_evaluation/(?P<evaluation_pk>[0-9]+)/$",
-        DeleteEntityEvaluationAjaxView.as_view(),
+        delete_evaluation_by_user_view,
         name="delete_evaluation_by_user",
     ),
     re_path(
         rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/edit_comment/{COMMENT_PK_PARAM}/$",
-        GetEntityCommentFormAjaxView.as_view(),
+        edit_entity_comment_form_view,
         name="edit_comment_by_user",
     ),
     re_path(
@@ -256,7 +264,7 @@ urlpatterns = [
     ),
     re_path(
         rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/delete_comment/{COMMENT_PK_PARAM}/$",
-        DeleteEntityCommentAjaxView.as_view(),
+        delete_entity_comment_view,
         name="delete_comment_by_user",
     ),
     re_path(

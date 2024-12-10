@@ -55,9 +55,8 @@ class GeneReviewForm(forms.ModelForm):
     comments = forms.CharField(widget=forms.Textarea, required=False)
 
     def __init__(self, *args, **kwargs):
-        self.panel = kwargs.pop("panel")
-        self.request = kwargs.pop("request")
         self.gene = kwargs.pop("gene")
+        self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
 
         original_fields = self.fields
@@ -82,7 +81,7 @@ class GeneReviewForm(forms.ModelForm):
         evaluation_data["comment"] = evaluation_data.pop("comments")
         panel = self.gene.panel
         ev = panel.get_gene(self.gene.gene.get("gene_symbol")).update_evaluation(
-            self.request.user, evaluation_data
+            self.user, evaluation_data
         )
         panel._update_saved_stats()
         return ev

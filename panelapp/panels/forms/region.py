@@ -159,7 +159,7 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         self.panel = kwargs.pop("panel")
-        self.request = kwargs.pop("request")
+        self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
 
         original_fields = self.fields
@@ -213,7 +213,7 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
         self.fields["type_of_variants"] = original_fields.get("type_of_variants")
         self.fields["publications"] = original_fields.get("publications")
         self.fields["phenotypes"] = original_fields.get("phenotypes")
-        if self.request.user.is_authenticated and self.request.user.reviewer.is_GEL():
+        if self.user.is_authenticated and self.user.reviewer.is_GEL():
             self.fields["tags"] = original_fields.get("tags")
             self.fields["additional_panels"] = original_fields.get("additional_panels")
         if not self.instance.pk:
@@ -287,7 +287,7 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
         if region_data.get("additional_panels"):
             self.instance.copy_to_panels(
                 self.cleaned_data["additional_panels"],
-                self.request.user,
+                self.user,
                 new_region_name,
                 initial_name,
                 region_data,
@@ -298,7 +298,7 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
             if self.changed_data and self.changed_data != ["additional_panels"]:
                 self.panel = self.panel.increment_version()
                 self.panel.update_region(
-                    self.request.user,
+                    self.user,
                     initial_name,
                     region_data,
                     remove_gene=True if not region_data.get("gene") else False,
@@ -310,17 +310,16 @@ class PanelRegionForm(EntityFormMixin, forms.ModelForm):
             entity = self.panel.get_region(new_region_name)
         else:
             increment_version = (
-                self.request.user.is_authenticated
-                and self.request.user.reviewer.is_GEL()
+                self.user.is_authenticated and self.user.reviewer.is_GEL()
             )
             entity = self.panel.add_region(
-                self.request.user, new_region_name, region_data, increment_version
+                self.user, new_region_name, region_data, increment_version
             )
 
         if additional_panels:
             entity.copy_to_panels(
                 panels=additional_panels,
-                user=self.request.user,
+                user=self.user,
                 entity_data=region_data,
                 copy_data=bool(self.initial),
             )

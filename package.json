@@ -24,6 +24,7 @@
     "@types/bootstrap": "^5.2.10",
     "@types/jquery": "^3.5.31",
     "@types/node": "^22.7.4",
+    "@types/select2": "^4.0.63",
     "autoprefixer": "^10.4.16",
     "css-loader": "^6.8.1",
     "dotenv": "^16.4.5",

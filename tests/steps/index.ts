@@ -1,10 +1,5 @@
 import { expect } from "@playwright/test";
 import { createBdd, DataTable } from "playwright-bdd";
-import {
-  parseNewGeneReview,
-  parseNewGeneReviewComment,
-  ReviewGeneForm,
-} from "../lib/gene-review";
 import { LoginPage } from "../lib/login";
 import {
   EditPanelForm,
@@ -13,6 +8,8 @@ import {
   parseNewPanel,
 } from "../lib/panel";
 import { AddGeneForm, parseNewPanelGene } from "../lib/panel-gene";
+import { parseNewPanelRegion } from "../lib/panel-region";
+import { parseNewPanelStr } from "../lib/panel-str";
 import { test } from "../lib/test";
 
 export { test };
@@ -139,6 +136,81 @@ Then("I see panel genes", async ({ page, panels }, data: DataTable) => {
         )
         .toContainText(row["Mode of inheritance"]);
     }
+
+    if (row["Tags"]) {
+      const tags = row["Tags"].split(",").filter((x) => x);
+      for (const tag of tags) {
+        await expect
+          .soft(
+            page
+              .getByRole("row", {
+                name: `${row["Gene symbol"]} in ${panel.level4}`,
+              })
+              .getByRole("cell")
+              .nth(3)
+              .getByText(tag)
+          )
+          .toBeVisible();
+      }
+    }
+
+    await page.goto(`/panels/${panel.id}/gene/${row["Gene symbol"]}/#!details`);
+
+    if (row["Tags"]) {
+      for (const tag of row["Tags"].split(",").filter((x) => x)) {
+        await expect(page.locator("dl").getByText(tag)).toBeVisible();
+      }
+    }
+
+    if (row["Rating"]) {
+      await expect(
+        page.locator("#gene-banner-heading").getByText(row["Rating"])
+      ).toBeVisible();
+    }
+
+    if (row["Mode of inheritance"]) {
+      await expect(
+        page.locator("dd").filter({ hasText: row["Mode of inheritance"] })
+      ).toBeVisible();
+    }
+
+    if (row["Mode of pathogenicity"]) {
+      await expect(
+        page.locator("dd").filter({ hasText: row["Mode of pathogenicity"] })
+      ).toBeVisible();
+    }
+
+    if (row["Publications"]) {
+      for (const publication of row["Publications"]
+        .split(";")
+        .filter((x) => x)) {
+        await expect(
+          page
+            .locator("#details-content")
+            .getByText(publication, { exact: true })
+        ).toBeVisible();
+      }
+    }
+
+    if (row["Phenotypes"]) {
+      for (const phenotype of row["Phenotypes"].split(";").filter((x) => x)) {
+        await expect(
+          page.locator("#details-content").getByText(phenotype, { exact: true })
+        ).toBeVisible();
+      }
+    }
+
+    if (row["Ready"]) {
+      if (row["Ready"] === "true") {
+        await expect(page.getByText("Ready for major version")).toBeVisible();
+      } else if (row["Ready"] === "false") {
+        await expect(
+          page.getByText("Ready for major version")
+        ).not.toBeVisible();
+      } else {
+        throw Error(`Invalid ready value: ${row["Ready"]}`);
+      }
+    }
   }
 });
 
@@ -167,6 +239,220 @@ Then("I do not see panel genes", async ({ page, panels }, data: DataTable) => {
   }
 });
 
+Then("I see panel strs", async ({ page, panels }, data: DataTable) => {
+  for (const row of data.hashes()) {
+    const panel = panels.panels.get(row["Panel ID"]);
+    if (!panel) {
+      throw Error("Panel not found");
+    }
+
+    await page.goto(`/panels/entities/${row["Name"]}`);
+
+    await expect
+      .soft(
+        page.getByRole("row", {
+          name: `${row["Name"]} STR in ${panel.level4}`,
+        })
+      )
+      .toBeVisible();
+
+    if (row["Mode of inheritance"]) {
+      await expect
+        .soft(
+          page
+            .getByRole("row", {
+              name: `${row["Name"]} STR in ${panel.level4}`,
+            })
+            .getByRole("cell")
+            .nth(2)
+        )
+        .toContainText(row["Mode of inheritance"]);
+    }
+
+    if (row["Tags"]) {
+      const tags = row["Tags"].split(",").filter((x) => x);
+      for (const tag of tags) {
+        await expect
+          .soft(
+            page
+              .getByRole("row", {
+                name: `${row["Name"]} STR in ${panel.level4}`,
+              })
+              .getByRole("cell")
+              .nth(3)
+              .getByText(tag)
+          )
+          .toBeVisible();
+      }
+    }
+
+    await page.goto(`/panels/${panel.id}/str/${row["Name"]}/#!details`);
+
+    if (row["Tags"]) {
+      for (const tag of row["Tags"].split(",").filter((x) => x)) {
+        await expect(page.locator("dl").getByText(tag)).toBeVisible();
+      }
+    }
+
+    if (row["Rating"]) {
+      await expect(
+        page.locator("#gene-banner-heading").getByText(row["Rating"])
+      ).toBeVisible();
+    }
+
+    if (row["Mode of inheritance"]) {
+      await expect(
+        page.locator("dd").filter({ hasText: row["Mode of inheritance"] })
+      ).toBeVisible();
+    }
+
+    if (row["Mode of pathogenicity"]) {
+      await expect(
+        page.locator("dd").filter({ hasText: row["Mode of pathogenicity"] })
+      ).toBeVisible();
+    }
+
+    if (row["Publications"]) {
+      for (const publication of row["Publications"]
+        .split(";")
+        .filter((x) => x)) {
+        await expect(
+          page
+            .locator("#details-content")
+            .getByText(publication, { exact: true })
+        ).toBeVisible();
+      }
+    }
+
+    if (row["Phenotypes"]) {
+      for (const phenotype of row["Phenotypes"].split(";").filter((x) => x)) {
+        await expect(
+          page.locator("#details-content").getByText(phenotype, { exact: true })
+        ).toBeVisible();
+      }
+    }
+
+    if (row["Ready"]) {
+      if (row["Ready"] === "true") {
+        await expect(page.getByText("Ready for major version")).toBeVisible();
+      } else if (row["Ready"] === "false") {
+        await expect(
+          page.getByText("Ready for major version")
+        ).not.toBeVisible();
+      } else {
+        throw Error(`Invalid ready value: ${row["Ready"]}`);
+      }
+    }
+  }
+});
+
+Then("I see panel regions", async ({ page, panels }, data: DataTable) => {
+  for (const row of data.hashes()) {
+    const panel = panels.panels.get(row["Panel ID"]);
+    if (!panel) {
+      throw Error("Panel not found");
+    }
+
+    await page.goto(`/panels/entities/${row["Name"]}`);
+
+    await expect
+      .soft(
+        page.getByRole("row", {
+          name: `${row["Name"]} Region in ${panel.level4}`,
+        })
+      )
+      .toBeVisible();
+
+    if (row["Mode of inheritance"]) {
+      await expect
+        .soft(
+          page
+            .getByRole("row", {
+              name: `${row["Name"]} Region in ${panel.level4}`,
+            })
+            .getByRole("cell")
+            .nth(2)
+        )
+        .toContainText(row["Mode of inheritance"]);
+    }
+
+    if (row["Tags"]) {
+      const tags = row["Tags"].split(",").filter((x) => x);
+      for (const tag of tags) {
+        await expect
+          .soft(
+            page
+              .getByRole("row", {
+                name: `${row["Name"]} Region in ${panel.level4}`,
+              })
+              .getByRole("cell")
+              .nth(3)
+              .getByText(tag)
+          )
+          .toBeVisible();
+      }
+    }
+
+    await page.goto(`/panels/${panel.id}/region/${row["Name"]}/#!details`);
+
+    if (row["Tags"]) {
+      for (const tag of row["Tags"].split(",").filter((x) => x)) {
+        await expect(page.locator("dl").getByText(tag)).toBeVisible();
+      }
+    }
+
+    if (row["Rating"]) {
+      await expect(
+        page.locator("#gene-banner-heading").getByText(row["Rating"])
+      ).toBeVisible();
+    }
+
+    if (row["Mode of inheritance"]) {
+      await expect(
+        page.locator("dd").filter({ hasText: row["Mode of inheritance"] })
+      ).toBeVisible();
+    }
+
+    if (row["Mode of pathogenicity"]) {
+      await expect(
+        page.locator("dd").filter({ hasText: row["Mode of pathogenicity"] })
+      ).toBeVisible();
+    }
+
+    if (row["Publications"]) {
+      for (const publication of row["Publications"]
+        .split(";")
+        .filter((x) => x)) {
+        await expect(
+          page
+            .locator("#details-content")
+            .getByText(publication, { exact: true })
+        ).toBeVisible();
+      }
+    }
+
+    if (row["Phenotypes"]) {
+      for (const phenotype of row["Phenotypes"].split(";").filter((x) => x)) {
+        await expect(
+          page.locator("#details-content").getByText(phenotype, { exact: true })
+        ).toBeVisible();
+      }
+    }
+
+    if (row["Ready"]) {
+      if (row["Ready"] === "true") {
+        await expect(page.getByText("Ready for major version")).toBeVisible();
+      } else if (row["Ready"] === "false") {
+        await expect(
+          page.getByText("Ready for major version")
+        ).not.toBeVisible();
+      } else {
+        throw Error(`Invalid ready value: ${row["Ready"]}`);
+      }
+    }
+  }
+});
+
 Given("there are panels", async ({ panels }, data: DataTable) => {
   for (const row of data.hashes()) {
     await panels.create(parseNewPanel(row));
@@ -179,296 +465,14 @@ Given("there are panel genes", async ({ panels }, data: DataTable) => {
   }
 });
 
-When("I review the gene", async ({ panels, page }, data: DataTable) => {
-  const panelGeneTestId = data.hashes()[0]["Panel Gene ID"];
-  const panelGene = panels.panelGenes.get(panelGeneTestId);
-  if (!panelGene) {
-    throw Error("Panel Gene not found");
-  }
-  const panel = panels.panels.get(panelGene.panelTestId);
-  if (!panel) {
-    throw Error("Panel not found");
-  }
-
-  await page.goto(`/panels/${panel.id}/gene/${panelGene.symbol}/`);
-
-  let form = new ReviewGeneForm(page);
-  const review = parseNewGeneReview(data.hashes()[0]);
-  await form.fill(review);
-  await form.submit();
-  await expect(page.getByText("Successfully reviewed gene")).toBeVisible();
-
-  const deleteButton = page.getByRole("link", {
-    name: "Delete",
-    exact: true,
-  });
-
-  await expect(deleteButton).toBeVisible();
-
-  const href = await deleteButton.getAttribute("href");
-  if (!href) {
-    throw Error("href is null");
-  }
-
-  const match = href.match(
-    `\/panels\/${panel.id}\/gene\/${panelGene.symbol}/delete_evaluation/(\\d+)\/`
-  );
-  if (match === null) {
-    throw Error(`URL is incorrect: ${href}`);
-  }
-  const id = match[1];
-
-  panels.registerGeneReview({ ...review, id });
-});
-
-Then("I see my review", async ({ page }) => {
-  await expect(page.getByText("Your review")).toBeVisible();
-});
-
-Given("there are gene reviews", async ({ panels }, data: DataTable) => {
+Given("there are panel strs", async ({ panels }, data: DataTable) => {
   for (const row of data.hashes()) {
-    await panels.reviewGene(parseNewGeneReview(row));
+    await panels.addPanelStr(parseNewPanelStr(row));
   }
 });
 
-When("I delete the gene review", async ({ panels, page }, data: DataTable) => {
-  const geneReview = panels.geneReviews.get(data.hashes()[0]["Gene Review ID"]);
-  if (!geneReview) {
-    throw Error("Gene Review not found");
-  }
-  const panelGene = panels.panelGenes.get(geneReview.panelGeneTestId);
-  if (!panelGene) {
-    throw Error("Panel Gene not found");
-  }
-  const panel = panels.panels.get(panelGene.panelTestId);
-  if (!panel) {
-    throw Error("Panel not found");
-  }
-
-  await page.goto(`/panels/${panel.id}/gene/${panelGene.symbol}/`);
-
-  await page.getByRole("link", { name: "Delete", exact: true }).click();
-});
-
-Then("I do not see my review", async ({ page }) => {
-  await expect(page.getByText("Your review")).not.toBeVisible();
-});
-
-When(
-  "I create a gene review comment",
-  async ({ panels, page }, data: DataTable) => {
-    const geneReview = panels.geneReviews.get(
-      data.hashes()[0]["Gene Review ID"]
-    );
-    if (!geneReview) {
-      throw Error("Gene Review not found");
-    }
-    const panelGene = panels.panelGenes.get(geneReview.panelGeneTestId);
-    if (!panelGene) {
-      throw Error("Panel Gene not found");
-    }
-    const panel = panels.panels.get(panelGene.panelTestId);
-    if (!panel) {
-      throw Error("Panel not found");
-    }
-
-    await page.goto(`/panels/${panel.id}/gene/${panelGene.symbol}/`);
-
-    let form = new ReviewGeneForm(page);
-    const comment = parseNewGeneReviewComment(data.hashes()[0]);
-    await form.fill({
-      comments: comment.content,
-    });
-    await form.submit();
-
-    await expect(page.getByText("Successfully reviewed gene")).toBeVisible();
-
-    const element = page.getByText(`${comment.content} Created:`);
-
-    await expect(element).toBeVisible();
-
-    const match = (await element.getAttribute("id"))?.match("comment_(\\d+)");
-    if (!match) {
-      throw Error("Unrecognised comment id");
-    }
-
-    const id = match[1];
-
-    panels.registerGeneReviewComment({ ...comment, id });
-  }
-);
-
-Then(
-  "I see the gene review comment",
-  async ({ panels, page }, data: DataTable) => {
-    const geneReviewComment = panels.geneReviewComments.get(
-      data.hashes()[0]["Gene Review Comment ID"]
-    );
-    if (!geneReviewComment) {
-      throw Error("Gene Review Comment not found");
-    }
-
-    await expect(
-      page.getByText(`${geneReviewComment.content} Created:`)
-    ).toBeVisible();
-  }
-);
-
-Given("there are gene review comments", async ({ panels }, data: DataTable) => {
+Given("there are panel regions", async ({ panels }, data: DataTable) => {
   for (const row of data.hashes()) {
-    await panels.addGeneReviewComment(parseNewGeneReviewComment(row));
+    await panels.addPanelRegion(parseNewPanelRegion(row));
   }
-});
-
-When(
-  "I delete the gene review comment",
-  async ({ panels, page }, data: DataTable) => {
-    const geneReviewComment = panels.geneReviewComments.get(
-      data.hashes()[0]["Gene Review Comment ID"]
-    );
-    if (!geneReviewComment) {
-      throw Error("Gene Review Comment not found");
-    }
-    const geneReview = panels.geneReviews.get(geneReviewComment.reviewTestId);
-    if (!geneReview) {
-      throw Error("Gene Review not found");
-    }
-    const panelGene = panels.panelGenes.get(geneReview.panelGeneTestId);
-    if (!panelGene) {
-      throw Error("Panel Gene not found");
-    }
-    const panel = panels.panels.get(panelGene.panelTestId);
-    if (!panel) {
-      throw Error("Panel not found");
-    }
-
-    await page.goto(`/panels/${panel.id}/gene/${panelGene.symbol}/`);
-
-    await page
-      .locator(`#comment_${geneReviewComment.id}`)
-      .getByRole("link", { name: "Delete comment" })
-      .click();
-  }
-);
-
-Then(
-  "I do not see the gene review comment",
-  async ({ panels, page }, data: DataTable) => {
-    const geneReviewComment = panels.geneReviewComments.get(
-      data.hashes()[0]["Gene Review Comment ID"]
-    );
-    if (!geneReviewComment) {
-      throw Error("Gene Review not found");
-    }
-
-    await expect(
-      page.getByText(`${geneReviewComment.content} Created:`)
-    ).not.toBeVisible();
-  }
-);
-
-Then(
-  "I cannot delete the gene review",
-  async ({ panels, page, accounts }, data: DataTable) => {
-    const geneReview = panels.geneReviews.get(
-      data.hashes()[0]["Gene Review ID"]
-    );
-    if (!geneReview) {
-      throw Error("Gene Review not found");
-    }
-    const panelGene = panels.panelGenes.get(geneReview.panelGeneTestId);
-    if (!panelGene) {
-      throw Error("Panel Gene not found");
-    }
-    const panel = panels.panels.get(panelGene.panelTestId);
-    if (!panel) {
-      throw Error("Panel not found");
-    }
-
-    await page.goto(`/panels/${panel.id}/gene/${panelGene.symbol}/`);
-
-    await expect
-      .soft(page.getByRole("link", { name: "Delete", exact: true }))
-      .not.toBeVisible();
-
-    // Bypass the interface and try to delete the review directly
-    await page.request.get(
-      `/panels/${panel.id}/gene/${panelGene.symbol}/delete_evaluation/${geneReview.id}/`,
-      {
-        headers: { "x-requested-with": "XMLHttpRequest" },
-      }
-    );
-
-    await page.reload();
-
-    const account = accounts.get(geneReview.createdBy);
-    if (!account) {
-      throw Error("Account not found");
-    }
-
-    await expect
-      .soft(
-        page
-          .locator("#evaluations div")
-          .filter({ hasText: `${account.firstName} ${account.lastName}` })
-          .first()
-      )
-      .toBeVisible();
-  }
-);
-
-Then(
-  "I cannot delete the gene review comment",
-  async ({ panels, page }, data: DataTable) => {
-    const geneReviewComment = panels.geneReviewComments.get(
-      data.hashes()[0]["Gene Review Comment ID"]
-    );
-    if (!geneReviewComment) {
-      throw Error("Gene Review Comment not found");
-    }
-    const geneReview = panels.geneReviews.get(geneReviewComment.reviewTestId);
-    if (!geneReview) {
-      throw Error("Gene Review not found");
-    }
-    const panelGene = panels.panelGenes.get(geneReview.panelGeneTestId);
-    if (!panelGene) {
-      throw Error("Panel Gene not found");
-    }
-    const panel = panels.panels.get(panelGene.panelTestId);
-    if (!panel) {
-      throw Error("Panel not found");
-    }
-
-    await page.goto(`/panels/${panel.id}/gene/${panelGene.symbol}/`);
-
-    await expect
-      .soft(
-        page
-          .locator(`#comment_${geneReviewComment.id}`)
-          .getByRole("link", { name: "Delete comment" })
-      )
-      .not.toBeVisible();
-
-    // Bypass the interface and try to delete the comment directly
-    await page.request.get(
-      `/panels/${panel.id}/gene/${panelGene.symbol}/delete_comment/${geneReviewComment.id}/`,
-      {
-        headers: { "x-requested-with": "XMLHttpRequest" },
-      }
-    );
-
-    await page.reload();
-
-    await expect
-      .soft(page.getByText(`${geneReviewComment.content} Created:`))
-      .toBeVisible();
-  }
-);
-
-When("I am on the home page", async ({ page }) => {
-  await page.goto("/");
-});
-
-When("I am on the panels page", async ({ page }) => {
-  await page.goto("/panels/");
 });

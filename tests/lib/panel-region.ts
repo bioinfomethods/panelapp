@@ -1,12 +1,21 @@
 import { Page } from "@playwright/test";
 import { TestIdentifiable } from "./types";
 
-export interface NewPanelGene extends TestIdentifiable {
+export interface NewPanelRegion extends TestIdentifiable {
   panelTestId: string;
-  symbol: string;
+  name: string;
+  chromosome: string;
+  position38Start: number;
+  position38End: number;
+  haploinsufficiencyScore: string;
+  triplosensitivityScore: string;
+  requiredOverlap: number;
   sources: string[];
   modeOfInheritance: string;
-  modeOfPathogenicity?: string;
+  verboseName?: string;
+  position37Start?: number;
+  position37End?: number;
+  symbol?: string;
   penetrance?: string;
   publications?: string;
   phenotypes?: string;
@@ -18,18 +27,35 @@ export interface NewPanelGene extends TestIdentifiable {
   comments?: string;
 }
 
-export interface PanelGene extends NewPanelGene {}
+export interface PanelRegion extends NewPanelRegion {}
 
-export const parseNewPanelGene = (
+export const parseNewPanelRegion = (
   data: Record<string, string>
-): NewPanelGene => {
+): NewPanelRegion => {
   return {
     testId: data["ID"],
     panelTestId: data["Panel ID"],
+    name: data["Name"],
+    chromosome: data["Chromosome"] ? data["Chromosome"] : "1",
+    position38Start: data["Pos 38 Start"]
+      ? Number.parseInt(data["Pos 38 Start"])
+      : 1,
+    position38End: data["Pos 38 End"] ? Number.parseInt(data["Pos 38 End"]) : 2,
+    haploinsufficiencyScore: data["Haplo"]
+      ? data["Haplo"]
+      : "No evidence to suggest that dosage sensitivity is associated with clinical phenotype",
+    triplosensitivityScore: data["Triplo"]
+      ? data["Triplo"]
+      : "No evidence to suggest that dosage sensitivity is associated with clinical phenotype",
+    requiredOverlap: data["Overlap"] ? Number.parseInt(data["Overlap"]) : 10,
     symbol: data["Gene symbol"],
     sources: data["Sources"].split(",").filter((x) => x),
-    modeOfPathogenicity: data["Mode of pathogenicity"],
     modeOfInheritance: data["Mode of inheritance"],
+    verboseName: data["Verbose Name"],
+    position37Start: data["Pos 37 Start"]
+      ? Number.parseInt(data["Pos 37 Start"])
+      : 1,
+    position37End: data["Pos 37 End"] ? Number.parseInt(data["Pos 37 End"]) : 2,
     penetrance: data["Penetrance"],
     publications: data["Publications"],
     phenotypes: data["Phenotypes"],
@@ -44,11 +70,51 @@ export const parseNewPanelGene = (
   };
 };
 
-export class AddGeneForm {
+export class AddRegionForm {
   readonly page: Page;
 
   constructor(page: Page) {
     this.page = page;
+  }
+
+  get nameInput() {
+    return this.page.getByPlaceholder("Name", { exact: true });
+  }
+
+  get verboseNameInput() {
+    return this.page.getByPlaceholder("Verbose name");
+  }
+
+  get chromosomeInput() {
+    return this.page.getByLabel("Chromosome:");
+  }
+
+  get position37StartInput() {
+    return this.page.getByPlaceholder("Position start (GRCh37)");
+  }
+
+  get position37EndInput() {
+    return this.page.getByPlaceholder("Position end (GRCh37)");
+  }
+
+  get position38StartInput() {
+    return this.page.getByPlaceholder("Position start (GRCh38)");
+  }
+
+  get position38EndInput() {
+    return this.page.getByPlaceholder("Position end (GRCh38)");
+  }
+
+  get haploinsufficiencyScoreInput() {
+    return this.page.getByLabel("Haploinsufficiency score:");
+  }
+
+  get triplosensitivityScoreInput() {
+    return this.page.getByLabel("Triplosensitivity score:");
+  }
+
+  get requiredOverlapInput() {
+    return this.page.getByPlaceholder("Required overlap percentage");
   }
 
   get geneSymbolInput() {
@@ -116,7 +182,47 @@ export class AddGeneForm {
   }
 
   get submitButton() {
-    return this.page.getByRole("button", { name: "Add gene" });
+    return this.page.getByRole("button", { name: "Add Region" });
+  }
+
+  async setName(name: string) {
+    await this.nameInput.fill(name);
+  }
+
+  async setVerboseName(name: string) {
+    await this.verboseNameInput.fill(name);
+  }
+
+  async setChromosome(chromosome: string) {
+    await this.chromosomeInput.selectOption(chromosome);
+  }
+
+  async setPosition38Start(value: number) {
+    await this.position38StartInput.fill(value.toString());
+  }
+
+  async setPosition38End(value: number) {
+    await this.position38EndInput.fill(value.toString());
+  }
+
+  async setPosition37Start(value: number) {
+    await this.position37StartInput.fill(value.toString());
+  }
+
+  async setPosition37End(value: number) {
+    await this.position37EndInput.fill(value.toString());
+  }
+
+  async setHaploinsufficiencyScore(value: string) {
+    await this.haploinsufficiencyScoreInput.selectOption(value);
+  }
+
+  async setTriplosensitivityScore(value: string) {
+    await this.triplosensitivityScoreInput.selectOption(value);
+  }
+
+  async setRequiredOverlap(value: number) {
+    await this.requiredOverlapInput.fill(value.toString());
   }
 
   async setGeneSymbol(name: string) {
@@ -126,7 +232,6 @@ export class AddGeneForm {
   }
 
   async addSource(name: string) {
-    await this.sourceInput.click();
     await this.sourceInput.pressSequentially(name);
     await this.page.getByRole("option", { name }).click();
   }
@@ -182,16 +287,52 @@ export class AddGeneForm {
     await this.commentsInput.pressSequentially(value);
   }
 
-  async fill(data: NewPanelGene) {
-    await this.setGeneSymbol(data.symbol);
+  async fill(data: NewPanelRegion) {
+    await this.setName(data.name);
 
+    if (data.verboseName) {
+      await this.setVerboseName(data.verboseName);
+    }
+
+    if (data.chromosome) {
+      await this.setChromosome(data.chromosome);
+    }
+
+    if (data.position38Start) {
+      await this.setPosition38Start(data.position38Start);
+    }
+
+    if (data.position38End) {
+      await this.setPosition38End(data.position38End);
+    }
+
+    if (data.position37Start) {
+      await this.setPosition37Start(data.position37Start);
+    }
+
+    if (data.position37End) {
+      await this.setPosition37End(data.position37End);
+    }
+
+    if (data.haploinsufficiencyScore) {
+      await this.setHaploinsufficiencyScore(data.haploinsufficiencyScore);
+    }
+
+    if (data.triplosensitivityScore) {
+      await this.setTriplosensitivityScore(data.triplosensitivityScore);
+    }
+
+    if (data.requiredOverlap) {
+      await this.setRequiredOverlap(data.requiredOverlap);
+    }
+
+    if (data.symbol) {
+      await this.setGeneSymbol(data.symbol);
+    }
     if (data.sources) {
       for (const sourceName of data.sources) {
         await this.addSource(sourceName);
       }
-    }
-    if (data.modeOfPathogenicity) {
-      await this.setModeOfPathogenicity(data.modeOfPathogenicity);
     }
     if (data.modeOfInheritance) {
       await this.setModeOfInheritance(data.modeOfInheritance);

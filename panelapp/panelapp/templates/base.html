@@ -21,12 +21,15 @@
 
 {% banner %}
 
-<div class="container">
+<div id="messages" class="container" hx-swap-oob="true">
   {% if messages %}
     {% for message in messages %}
       <div class="add-bottom-margin add-top-margin alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">{{ message }}</div>
     {% endfor %}
   {% endif %}
+</div>
+
+<div class="container">
   {% block content %}{% endblock %}
 </div>
 

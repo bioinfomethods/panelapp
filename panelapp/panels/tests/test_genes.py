@@ -198,7 +198,7 @@ class GeneTest(LoginGELUser):
             args=(gpes.panel.panel.pk, "gene", gpes.gene.get("gene_symbol")),
         )
         r = self.client.post(url, {})
-        self.assertEqual(r.status_code, 302)
+        self.assertEqual(r.status_code, 200)
 
     def test_update_gene_collection(self):
         gene_to_update = GeneFactory()
@@ -420,7 +420,7 @@ class CopyToPanelsTest(LoginGELUser):
             "gene_name": self.gene.gene_symbol,
             "comments": "new comment",
         }
-        form = PanelGeneForm(form_data, panel=self.gps, request=self.request)
+        form = PanelGeneForm(form_data, panel=self.gps, user=self.user)
         assert form.is_valid()
         form.save_gene()
         copied_gene = self.gps2.get_gene(self.gene.gene_symbol)
@@ -441,7 +441,7 @@ class CopyToPanelsTest(LoginGELUser):
         form = PanelGeneForm(
             form_data,
             panel=self.gps,
-            request=self.request,
+            user=self.user,
             instance=gene,
             initial=gene.get_form_initial(),
         )
@@ -478,7 +478,7 @@ class CopyToPanelsTest(LoginGELUser):
         form = PanelGeneForm(
             form_data,
             panel=self.gps,
-            request=self.request,
+            user=self.user,
             instance=gpes,
             initial=gpes.get_form_initial(),
         )
@@ -540,7 +540,7 @@ class CopyToPanelsTest(LoginGELUser):
         form = PanelGeneForm(
             form_data,
             panel=self.gps,
-            request=self.request,
+            user=self.user,
             instance=gpes,
             initial=gpes.get_form_initial(),
         )
@@ -568,7 +568,7 @@ class CopyToPanelsTest(LoginGELUser):
         form = PanelGeneForm(
             form_data,
             panel=self.gps,
-            request=self.request,
+            user=self.user,
             instance=gpes,
             initial=gpes.get_form_initial(),
         )
@@ -712,6 +712,6 @@ class CopyToPanelsTest(LoginGELUser):
             "gene_name": self.gene.gene_symbol,
         }
 
-        form = PanelGeneForm(form_data, panel=self.gps, request=self.request)
+        form = PanelGeneForm(form_data, panel=self.gps, user=self.user)
         assert not form.is_valid()
         assert self.gps2.has_gene(self.gene.gene_symbol)

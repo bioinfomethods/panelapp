@@ -13,8 +13,8 @@
         <a href="{% url 'panels:index' %}">Panels</a>
     </li>
     <li class="breadcrumb-item">
-        <a href="{{ view.panel.panel.get_absolute_url }}">
-            {{ view.panel.panel.name }}
+        <a href="{{ panel.panel.get_absolute_url }}">
+            {{ panel.panel.name }}
         </a>
     </li>
     <li class="breadcrumb-item active">
@@ -24,18 +24,18 @@
 
 <div class="row">
     <div class="col-sm-2">
-        <div id="genes_list" class="card">
+        <div id="genes_list" class="card" hx-swap-oob="true">
             {% include "panels/entity/evaluation_genes_list.html" %}
         </div>
-        <div id="strs_list" class="card add-top-margin">
+        <div id="strs_list" class="card add-top-margin" hx-swap-oob="true">
             {% include "panels/entity/evaluation_strs_list.html" %}
         </div>
-        <div id="regions_list" class="card add-top-margin">
+        <div id="regions_list" class="card add-top-margin" hx-swap-oob="true">
             {% include "panels/entity/evaluation_regions_list.html" %}
         </div>
     </div>
     <div class="col-sm-10">
-        <div id="gene_header">
+        <div id="gene_header" hx-swap-oob="true">
             {% include "panels/entity/header.html" %}
         </div>
         <hr />
@@ -106,23 +106,31 @@
 
             <div class="tab-content add-top-margin">
                 <div role="tabpanel" class="tab-pane active" id="evaluate">
-                    {% include "panels/entity/evaluate.html" %}
+                    <div id="evaluate-content" hx-swap-oob="true">
+                        {% include "panels/entity/evaluate.html" %}
+                    </div>
                 </div>
                 <div role="tabpanel" class="tab-pane" id="details">
-                    {% if entity.is_gene %}
-                        {% include "panels/genepanelentrysnapshot/details.html" %}
-                    {% elif entity.is_str %}
-                        {% include "panels/strs/details.html" %}
-                    {% elif entity.is_region %}
-                        {% include "panels/region/details.html" %}
-                    {% endif %}
+                    <div id="details-content" hx-swap-oob="true">
+                        {% if entity.is_gene %}
+                            {% include "panels/genepanelentrysnapshot/details.html" %}
+                        {% elif entity.is_str %}
+                            {% include "panels/strs/details.html" %}
+                        {% elif entity.is_region %}
+                            {% include "panels/region/details.html" %}
+                        {% endif %}
+                    </div>
                 </div>
                 <div role="tabpanel" class="tab-pane" id="history">
-                    {% include "panels/entity/history.html" %}
+                    <div id="history-content" hx-swap-oob="true">
+                        {% include "panels/entity/history.html" %}
+                    </div>
                 </div>
                 {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
                 <div role="tabpanel" class="tab-pane" id="review">
-                    {% include "panels/entity/review.html" %}
+                    <div id="review-content" hx-swap-oob="true">
+                        {% include "panels/entity/review.html" %}
+                    </div>
                 </div>
                 {% endif %}
             </div>
@@ -139,7 +147,7 @@
 {% endblock %}
 
 {% block js %}
-<script nonce="{{CSP_NONCE}}">
+<script nonce="{{ CSP_NONCE }}">
     window.GeneTags = [{% for tag in entity.tags.all %}{% if tag %}'{{ tag }}'{% if not forloop.last %},{% endif %}{% endif %}{% endfor %}];
 </script>
 {% endblock %}

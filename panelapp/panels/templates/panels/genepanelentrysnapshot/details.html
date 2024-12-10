@@ -24,7 +24,14 @@
                     {% endfor %}
                 </ul>
                 {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-                    <a class="link-muted" href="{% url 'panels:clear_entity_sources' panel.panel_id entity_type entity_name %}" data-ajax="true" data-success="djangoAjaxHandler">Clear Sources</a>
+                    <a
+                        href="#"
+                        class="link-muted"
+                        hx-get="{% url 'panels:clear_entity_sources' panel.panel_id entity_type entity_name %}"
+                        hx-swap="none"
+                    >
+                        Clear Sources
+                    </a>
                 {% endif %}
             </dd>
             {% endif %}
@@ -39,7 +46,12 @@
                         {% endfor %}
                     </ul>
                     {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-                        <a href="{% url 'panels:clear_entity_phenotypes' panel.panel_id entity_type entity_name %}" class="link-muted" data-ajax="true" data-success="djangoAjaxHandler">
+                        <a
+                            href="#"
+                            class="link-muted"
+                            hx-get="{% url 'panels:clear_entity_phenotypes' panel.panel_id entity_type entity_name %}"
+                            hx-swap="none"
+                        >
                             Clear phenotypes
                         </a>
                     {% endif %}
@@ -56,8 +68,13 @@
                         {% endfor %}
                     </ul>
                     {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-                        <a href="{% url 'panels:clear_entity_transcript' panel.panel_id entity_type entity_name %}" class="link-muted" data-ajax="true" data-success="djangoAjaxHandler">
-                            Clear transcripts
+                        <a
+                            href="#"
+                            class="link-muted"
+                            hx-get="{% url 'panels:clear_entity_transcript' panel.panel_id entity_type entity_name %}"
+                            hx-swap="none"
+                        >
+                            Clear phenotypes
                         </a>
                     {% endif %}
                 </dd>
@@ -90,7 +107,12 @@
                 </ul>
 
                 {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-                    <a href="{% url 'panels:clear_entity_publications' panel.panel_id entity_type entity_name %}" class="link-muted" data-ajax="true" data-success="djangoAjaxHandler">
+                    <a
+                        href="#"
+                        class="link-muted"
+                        hx-get="{% url 'panels:clear_entity_publications' panel.panel_id entity_type entity_name %}"
+                        hx-swap="none"
+                    >
                         Clear publications
                     </a>
                 {% endif %}
@@ -100,7 +122,12 @@
             <dt>Mode of Pathogenicity</dt>
             <dd>{{ entity.mode_of_pathogenicity }}</dd>
                 {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-                    <a href="{% url 'panels:clear_entity_mode_of_pathogenicity' panel.panel_id entity_type entity_name %}" class="link-muted" data-ajax="true" data-success="djangoAjaxHandler">
+                    <a
+                        href="#"
+                        class="link-muted"
+                        hx-get="{% url 'panels:clear_entity_mode_of_pathogenicity' panel.panel_id entity_type entity_name %}"
+                        hx-swap="none"
+                    >
                         Clear Mode of Pathogenicity
                     </a>
                 {% endif %}

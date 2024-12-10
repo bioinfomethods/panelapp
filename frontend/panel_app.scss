@@ -439,6 +439,46 @@ $s2bs5-border-color: $border-color;
 /* GEL status helpers
    ========================================================================== */
 
+// htmx indicator
+// https://htmx.org/attributes/hx-indicator/
+
+// This hides indicators by default
+// Included here because in order to support a strong CSP
+// the injection of this style is disabled by configuring
+// htmx.config.includeIndicatorStyles = false
+// We also replace the opacity default with a "display: none"
+.htmx-indicator {
+    display: none;
+}
+
+.htmx-request .htmx-indicator {
+    display: inline;
+}
+
+.htmx-request.htmx-indicator {
+    display: inline;
+}
+
+// https://stackoverflow.com/questions/71061942/htmx-indicator-moves-content-down-instead-of-replacing-it
+.loading {
+    display: none;
+}
+.htmx-request .loading {
+    display: block;
+}
+.htmx-request.loading {
+    display: block;
+}
+
+// Hide loaded content during htmx request
+.htmx-request .loaded {
+    display: none;
+}
+.htmx-request.loaded {
+    display: none;
+}
+
+
 .gel-green {
     background-color: #3fad46;
 }

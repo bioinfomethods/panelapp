@@ -760,7 +760,7 @@ class RegionTest(LoginGELUser):
             "moi": region.moi,
             "type_of_variants": region.type_of_variants,
         }
-        form = PanelRegionForm(form_data, panel=gps, request=req)
+        form = PanelRegionForm(form_data, panel=gps, user=user)
         assert form.is_valid()
         form.save_region()
         assert gps2.has_region(region.name)
@@ -793,6 +793,6 @@ class RegionTest(LoginGELUser):
             "moi": region.moi,
             "type_of_variants": region.type_of_variants,
         }
-        form = PanelRegionForm(form_data, panel=gps, request=req)
+        form = PanelRegionForm(form_data, panel=gps, user=user)
         assert not form.is_valid()
         assert gps2.has_region(region.name)

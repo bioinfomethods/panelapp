@@ -42,7 +42,14 @@
                     {% endfor %}
                 </ul>
                 {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-                    <a class="link-muted" href="{% url 'panels:clear_entity_sources' panel.panel_id entity_type entity_name %}" data-ajax="true" data-success="djangoAjaxHandler">Clear Sources</a>
+                    <a
+                        href="#"
+                        class="link-muted"
+                        hx-get="{% url 'panels:clear_entity_sources' panel.panel_id entity_type entity_name %}"
+                        hx-swap="none"
+                    >
+                        Clear Sources
+                    </a>
                 {% endif %}
             </dd>
             {% endif %}
@@ -57,7 +64,12 @@
                         {% endfor %}
                     </ul>
                     {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-                        <a href="{% url 'panels:clear_entity_phenotypes' panel.panel_id entity_type entity_name %}" class="link-muted" data-ajax="true" data-success="djangoAjaxHandler">
+                        <a
+                            href="#"
+                            class="link-muted"
+                            hx-get="{% url 'panels:clear_entity_phenotypes' panel.panel_id entity_type entity_name %}"
+                            hx-swap="none"
+                        >
                             Clear phenotypes
                         </a>
                     {% endif %}
@@ -93,7 +105,12 @@
                 </ul>
 
                 {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-                    <a href="{% url 'panels:clear_entity_publications' panel.panel_id entity_type entity_name %}" class="link-muted" data-ajax="true" data-success="djangoAjaxHandler">
+                    <a
+                        href="#"
+                        class="link-muted"
+                        hx-get="{% url 'panels:clear_entity_publications' panel.panel_id entity_type entity_name %}"
+                        hx-swap="none"
+                    >
                         Clear publications
                     </a>
                 {% endif %}

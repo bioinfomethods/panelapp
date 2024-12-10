@@ -300,12 +300,14 @@ class STRReviewTest(LoginGELUser):
         tag2 = TagFactory()
 
         res = self.client.post(
-            url, {"tags": [tag1.pk, tag2.pk]}, HTTP_X_REQUESTED_WITH="XMLHttpRequest"
+            url,
+            {"tags-tags": [tag1.pk, tag2.pk]},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
         )
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert gene.tags.count() == 2
         assert current_version == str_item.panel.panel.active_panel.version
 
@@ -328,7 +330,7 @@ class STRReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 1
         assert gene.moi == moi[1]
         assert gene.panel.version != str_item.panel.version
@@ -353,7 +355,7 @@ class STRReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 1
         assert gene.phenotypes == phenotypes_array
         assert gene.panel.version != str_item.panel.version
@@ -378,7 +380,7 @@ class STRReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 1
         assert gene.publications == publications_array
         assert gene.panel.version != str_item.panel.version
@@ -427,7 +429,7 @@ class STRReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 1
         assert res.content.find(str.encode(data["comment"])) != -1
         assert gene.saved_gel_status == new_status
@@ -439,7 +441,7 @@ class STRReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert (
             Comment.objects.count() == 2
         )  # FIXME old comments are deleted even for the current object...
@@ -452,7 +454,7 @@ class STRReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 3
         assert gene.saved_gel_status == new_status
 
@@ -463,7 +465,7 @@ class STRReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 4
         assert gene.saved_gel_status == new_status
         assert gene.panel.version != str_item.panel.version
@@ -516,7 +518,7 @@ class STRReviewTest(LoginGELUser):
         last_gene = GenePanel.objects.get(
             pk=str_item.panel.panel.pk
         ).active_panel.get_str(str_item.name)
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert last_gene.is_reviewd_by_user(self.gel_user) is False
         assert gene.panel.version == last_gene.panel.version
 
@@ -566,7 +568,7 @@ class STRReviewTest(LoginGELUser):
         res = self.client.get(
             delete_comment_url, HTTP_X_REQUESTED_WITH="XMLHttpRequest"
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert evaluation.comments.count() == 0
         assert res.content.find(str.encode("Your review")) != -1
         assert current_version == str_item.panel.panel.active_panel.version
@@ -694,11 +696,7 @@ def test_delete_other_user_comment(client, curator_user, other_curator_user):
         HTTP_X_REQUESTED_WITH="XMLHttpRequest",
     )
 
-    assert res.json() == {
-        "status": 500,
-        "statusText": "INTERNAL SERVER ERROR",
-        "content": "An error occured while processing an AJAX request.",
-    }
+    assert res.status_code == 403
 
     assert str_.evaluation.get().comments.count() == 1
 
@@ -746,10 +744,6 @@ def test_delete_other_user_review(client, curator_user, other_curator_user):
         HTTP_X_REQUESTED_WITH="XMLHttpRequest",
     )
 
-    assert res.json() == {
-        "status": 500,
-        "statusText": "INTERNAL SERVER ERROR",
-        "content": "An error occured while processing an AJAX request.",
-    }
+    assert res.status_code == 403
 
     assert str_.evaluation.count() == 1

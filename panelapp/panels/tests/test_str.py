@@ -904,7 +904,7 @@ class STRTest(LoginGELUser):
             "moi": str.moi,
             "pathogenic_repeats": str.pathogenic_repeats,
         }
-        form = PanelSTRForm(form_data, panel=gps, request=req)
+        form = PanelSTRForm(form_data, panel=gps, user=user)
         assert form.is_valid()
         form.save_str()
         assert gps2.has_str(str.name)
@@ -938,7 +938,7 @@ class STRTest(LoginGELUser):
             "moi": str.moi,
             "pathogenic_repeats": str.pathogenic_repeats,
         }
-        form = PanelSTRForm(form_data, panel=gps, request=req)
+        form = PanelSTRForm(form_data, panel=gps, user=user)
         assert not form.is_valid()
         assert gps2.has_str(str.name)
 

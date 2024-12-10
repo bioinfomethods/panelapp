@@ -35,6 +35,8 @@ from panels.models import (
 
 
 class UpdateSTRTagsForm(forms.ModelForm):
+    prefix = "tags"
+
     class Meta:
         model = STR
         fields = ("tags",)
@@ -47,9 +49,14 @@ class UpdateSTRTagsForm(forms.ModelForm):
         required=False,
     )
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
+        super().__init__(*args, **kwargs)
+
     def save(self, *args, **kwargs):
         if "tags" in self.changed_data:
-            self.instance.update_tags(kwargs["user"], self.cleaned_data["tags"])
+            self.instance.update_tags(self.user, self.cleaned_data["tags"])
+        return self.instance
 
 
 class UpdateSTRMOIForm(forms.ModelForm):
@@ -59,16 +66,20 @@ class UpdateSTRMOIForm(forms.ModelForm):
         model = STR
         fields = ("moi",)
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
+        super().__init__(*args, **kwargs)
+
     def save(self, *args, **kwargs):
         moi = self.cleaned_data["moi"]
         comment = self.cleaned_data["comment"]
-        user = kwargs.pop("user")
         self.instance.panel.increment_version()
         self.instance = GenePanel.objects.get(
             pk=self.instance.panel.panel.pk
         ).active_panel.get_str(self.instance.name)
-        self.instance.update_moi(moi, user, comment)
+        self.instance.update_moi(moi, self.user, comment)
         self.instance.panel._update_saved_stats()
+        return self.user
 
 
 class UpdateSTRPhenotypesForm(forms.ModelForm):
@@ -83,16 +94,20 @@ class UpdateSTRPhenotypesForm(forms.ModelForm):
         model = STR
         fields = ("phenotypes",)
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
+        super().__init__(*args, **kwargs)
+
     def save(self, *args, **kwargs):
         phenotypes = self.cleaned_data["phenotypes"]
         comment = self.cleaned_data["comment"]
-        user = kwargs.pop("user")
         self.instance.panel.increment_version()
         self.instance = GenePanel.objects.get(
             pk=self.instance.panel.panel.pk
         ).active_panel.get_str(self.instance.name)
-        self.instance.update_phenotypes(phenotypes, user, comment)
+        self.instance.update_phenotypes(phenotypes, self.user, comment)
         self.instance.panel._update_saved_stats()
+        return self.instance
 
 
 class UpdateSTRPublicationsForm(forms.ModelForm):
@@ -108,16 +123,20 @@ class UpdateSTRPublicationsForm(forms.ModelForm):
         model = STR
         fields = ("publications",)
 
+    def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
+        super().__init__(*args, **kwargs)
+
     def save(self, *args, **kwargs):
         publications = self.cleaned_data["publications"]
         comment = self.cleaned_data["comment"]
-        user = kwargs.pop("user")
         self.instance.panel.increment_version()
         self.instance = GenePanel.objects.get(
             pk=self.instance.panel.panel.pk
         ).active_panel.get_str(self.instance.name)
-        self.instance.update_publications(publications, user, comment)
+        self.instance.update_publications(publications, self.user, comment)
         self.instance.panel._update_saved_stats()
+        return self.instance
 
 
 class UpdateSTRRatingForm(forms.ModelForm):
@@ -129,6 +148,7 @@ class UpdateSTRRatingForm(forms.ModelForm):
         fields = ("saved_gel_status",)
 
     def __init__(self, *args, **kwargs):
+        self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
         original_fields = self.fields
         self.fields = OrderedDict()
@@ -138,10 +158,10 @@ class UpdateSTRRatingForm(forms.ModelForm):
 
     def save(self, *args, **kwargs):
         status = self.cleaned_data["status"]
-        user = kwargs.pop("user")
         self.instance.panel.increment_version()
         self.instance = GenePanel.objects.get(
             pk=self.instance.panel.panel.pk
         ).active_panel.get_str(self.instance.name)
-        self.instance.update_rating(status, user, self.cleaned_data["comment"])
+        self.instance.update_rating(status, self.user, self.cleaned_data["comment"])
         self.instance.panel._update_saved_stats()
+        return self.instance

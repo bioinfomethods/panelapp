@@ -60,9 +60,8 @@ class STRReviewForm(forms.ModelForm):
     comments = forms.CharField(widget=forms.Textarea, required=False)
 
     def __init__(self, *args, **kwargs):
-        self.panel = kwargs.pop("panel")
-        self.request = kwargs.pop("request")
         self.str_item = kwargs.pop("str_item")
+        self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
 
         original_fields = self.fields
@@ -81,7 +80,7 @@ class STRReviewForm(forms.ModelForm):
         evaluation_data["comment"] = evaluation_data.pop("comments")
         panel = self.str_item.panel
         ev = panel.get_str(self.str_item.name).update_evaluation(
-            self.request.user, evaluation_data
+            self.user, evaluation_data
         )
         panel._update_saved_stats()
         return ev

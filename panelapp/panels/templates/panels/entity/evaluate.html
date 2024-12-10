@@ -11,7 +11,15 @@
       {% if request.user == ev.user %}
       <div class="card-header" id="your-review">
         {% if request.user == ev.user %}
-          <a href="{% url "panels:delete_evaluation_by_user" panel.panel_id entity_type entity_name ev.pk %}" class="float-end btn btn-outline-light-panelapp btn-xs" data-ajax="true" data-success="djangoAjaxHandler">Delete</a>
+          <a
+            href="#"
+            class="float-end btn btn-outline-light-panelapp btn-xs"
+            hx-get="{% url 'panels:delete_evaluation_by_user' panel.panel_id entity_type entity_name ev.pk %}"
+            hx-swap="none"
+            hx-disabled-elt="this"
+          >
+            Delete
+          </a>
         {% endif %}
         <div class="card-title">
           Your review

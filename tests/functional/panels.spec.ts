@@ -1,4 +1,5 @@
 import { expect } from "@playwright/test";
+import { v4 as uuidv4 } from "uuid";
 import { test } from "../lib/test";
 
 test.describe(() => {
@@ -21,6 +22,99 @@ test.describe(() => {
     await expect(page.getByTestId("unlock-entity-AAAS")).toBeVisible();
     await expect(page.getByTestId("lock-entity-AAAS")).toBeHidden();
     await expect(page.getByTestId("delete-entity-AAAS")).toBeHidden();
+  });
+
+  test("remove source", async ({ page, panels }) => {
+    const panelId = await panels.create({
+      testId: "1",
+      createdBy: "admin",
+      level4: uuidv4(),
+      description: "Description",
+    });
+
+    await panels.addPanelGene({
+      panelTestId: "1",
+      testId: "1",
+      symbol: "BRCA1",
+      sources: ["Emory Genetics Laboratory", "UKGTN"],
+      modeOfInheritance: "Unknown",
+      rating: "Red List (low evidence)",
+    });
+
+    await page.goto(`/panels/${panelId}/`);
+
+    await page.getByTestId("unlock-entity-BRCA1").click();
+
+    const source = page
+      .getByRole("row", { name: "BRCA1" })
+      .getByRole("cell")
+      .nth(4)
+      .getByText("UKGTN");
+
+    await source.getByRole("link").click();
+
+    await expect(source).not.toBeVisible();
+    await expect(
+      page
+        .getByRole("row", { name: "BRCA1" })
+        .getByRole("cell")
+        .nth(4)
+        .getByText("Emory Genetics Laboratory")
+    ).toBeVisible();
+  });
+
+  test("remove expert review source", async ({ page, panels }) => {
+    const panelId = await panels.create({
+      testId: "1",
+      createdBy: "admin",
+      level4: uuidv4(),
+      description: "Description",
+    });
+
+    await panels.addPanelGene({
+      panelTestId: "1",
+      testId: "1",
+      symbol: "BRCA1",
+      sources: ["Emory Genetics Laboratory"],
+      modeOfInheritance: "Unknown",
+      rating: "Red List (low evidence)",
+    });
+
+    await panels.reviewGeneFeedback({
+      panelGeneTestId: "1",
+      by: "admin",
+      rating: { rating: "Amber List (moderate evidence)" },
+    });
+
+    await page.goto(`/panels/${panelId}/`);
+
+    await page.getByTestId("unlock-entity-BRCA1").click();
+
+    // Only the one who made the expert review can see this source
+    const source = page
+      .getByRole("row", { name: "BRCA1" })
+      .getByRole("cell")
+      .nth(4)
+      .getByText("Expert Review Amber");
+
+    await source.getByRole("link").click();
+
+    await expect(source).not.toBeVisible();
+    await expect(
+      page
+        .getByRole("row", { name: "BRCA1" })
+        .getByRole("cell")
+        .nth(4)
+        .getByText("Emory Genetics Laboratory")
+    ).toBeVisible();
+
+    await expect(
+      page
+        .getByRole("row", { name: "BRCA1" })
+        .getByRole("cell")
+        .nth(0)
+        .getByText("Red", { exact: true })
+    ).toBeVisible();
   });
 
   test("add gene: show mop info dialog", async ({ page }) => {

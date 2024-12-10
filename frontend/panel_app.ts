@@ -21,6 +21,20 @@ htmx.config.allowScriptTags = false;
 htmx.config.selfRequestsOnly = true;
 htmx.config.includeIndicatorStyles = false;
 
+// Hide the django-autocomplete-light select element by adding
+// the class "select2-hidden-accessible" which is already supposed
+// to be there.
+// This is necessary because after HTMX has inserted HTML containing
+// an autocomplete select2 widget this class is not there for unknown
+// reasons.
+// https://github.com/yourlabs/django-autocomplete-light/issues/1311
+// https://github.com/yourlabs/django-autocomplete-light/issues/1221
+htmx.on("htmx:afterSettle", (e) => {
+  $(
+    "select[data-autocomplete-light-function='select2']:not(.select2-hidden-accessible)"
+  ).addClass("select2-hidden-accessible");
+});
+
 window.Modules = {};
 
 (function (Modules) {
@@ -358,7 +372,7 @@ window.Modules = {};
     var that = this;
 
     this.start = function (element) {
-      $(element).click(function (ev) {
+      $(element).on("click", function (ev) {
         ev.preventDefault();
         var show = $(this).data("show");
         var hide = $(this).data("hide");
@@ -483,6 +497,12 @@ $(function () {
 
       $("body").on("ajax-loaded", function (evt) {
         that.start($(evt.target));
+      });
+
+      // re-initialize modules on changed elements
+      // e.g. the toggle or showhide module
+      htmx.on("htmx:afterSwap", (e) => {
+        that.start($(e.target));
       });
     };
 
