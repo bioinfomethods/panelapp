@@ -1,5 +1,6 @@
 include:
   - local: ".gitlab-ci/envs.yml"
+  - component: $CI_SERVER_FQDN/genomicsengland/secure-sdlc/cicd-components/secrets-detection/secretsdetection@1
 
 variables:
   DOCKER_PYTHON: python:3.11.9-alpine3.19
@@ -35,6 +36,7 @@ variables:
   env_name: dev
 
 stages:
+  - entrygate
   - test_build
   - test
   - image_build
@@ -106,6 +108,7 @@ code_test:
 e2e_test_image_build:
   image: $DOCKER_IN_DOCKER
   stage: test_build
+  needs: []
   before_script:
     - apk add aws-cli jq py3-boto3
     - source scripts/assume_role.sh
