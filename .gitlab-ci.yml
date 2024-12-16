@@ -1,6 +1,8 @@
 include:
   - local: ".gitlab-ci/envs.yml"
   - component: $CI_SERVER_FQDN/genomicsengland/secure-sdlc/cicd-components/secrets-detection/secretsdetection@1
+    inputs:
+      rule_statement: $CI_PIPELINE_SOURCE == "push"
 
 variables:
   DOCKER_PYTHON: python:3.11.9-alpine3.19
