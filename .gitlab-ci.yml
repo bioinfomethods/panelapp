@@ -68,10 +68,36 @@ default:
     AWS_ASSUME_ROLE: $ECR_ASSUME_ROLE
 
 debug:
-  stage: test
-  needs: []
+  stage: entrygate
   script:
     - env -u CI_JOB_JWT_V1 -u CI_JOB_JWT_V2 -u gel_gitlab_runner_key | sort
+
+## Linting, formatting, etc
+import_sorting:
+  stage: entrygate
+  image: $DOCKER_PYTHON
+  before_script:
+    - python3 -m venv "$POETRY_VENV"
+    - $POETRY_VENV/bin/pip install -U pip setuptools
+    - $POETRY_VENV/bin/pip install poetry=="$POETRY_VERSION"
+    - $POETRY_VENV/bin/poetry self add poetry-plugin-bundle
+    - $POETRY_VENV/bin/poetry bundle venv --only dev ./.venv
+    - source .venv/bin/activate
+  script:
+    - isort . -c
+
+formatter:
+  stage: entrygate
+  image: $DOCKER_PYTHON
+  before_script:
+    - python3 -m venv "$POETRY_VENV"
+    - $POETRY_VENV/bin/pip install -U pip setuptools
+    - $POETRY_VENV/bin/pip install poetry=="$POETRY_VERSION"
+    - $POETRY_VENV/bin/poetry self add poetry-plugin-bundle
+    - $POETRY_VENV/bin/poetry bundle venv --only dev ./.venv
+    - source .venv/bin/activate
+  script:
+    - black . --check
 
 # Code checks
 ## run unit and integration tests
@@ -175,33 +201,6 @@ test_component:
   extends: .e2e_test
   script:
     - npm run test-ct
-
-## Linting, formatting, etc
-import_sorting:
-  extends: .tests
-  needs: []
-  before_script:
-    - python3 -m venv "$POETRY_VENV"
-    - $POETRY_VENV/bin/pip install -U pip setuptools
-    - $POETRY_VENV/bin/pip install poetry=="$POETRY_VERSION"
-    - $POETRY_VENV/bin/poetry self add poetry-plugin-bundle
-    - $POETRY_VENV/bin/poetry bundle venv --only dev ./.venv
-    - source .venv/bin/activate
-  script:
-    - isort . -c
-
-formatter:
-  extends: .tests
-  needs: []
-  before_script:
-    - python3 -m venv "$POETRY_VENV"
-    - $POETRY_VENV/bin/pip install -U pip setuptools
-    - $POETRY_VENV/bin/pip install poetry=="$POETRY_VERSION"
-    - $POETRY_VENV/bin/poetry self add poetry-plugin-bundle
-    - $POETRY_VENV/bin/poetry bundle venv --only dev ./.venv
-    - source .venv/bin/activate
-  script:
-    - black . --check
 
 trivy:
   stage: test
