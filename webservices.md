@@ -1,13 +1,12 @@
-Panelapp WebServices
-====================
+# Panelapp WebServices
 
-# List Panels
+## List Panels
 
 Endpoint: `https://panelapp.genomicsengland.co.uk/WebServices/list_panels/`
 
 Returns the list of panels
 
-```
+```json
 {
     "result": [
         {
@@ -25,25 +24,24 @@ Returns the list of panels
 }
 ```
 
-## Filtering
+### Filtering
 
 Parameters:
 
 - `Name`: Filters the list by panel name
 
-## Examples
+### Examples
 
-- https://panelapp.genomicsengland.co.uk/WebServices/list_panels/
-- https://panelapp.genomicsengland.co.uk/WebServices/list_panels/?Name=Ocular%20malformations
+- <https://panelapp.genomicsengland.co.uk/WebServices/list_panels/>
+- <https://panelapp.genomicsengland.co.uk/WebServices/list_panels/?Name=Ocular%20malformations>
 
-
-# Get Panel Info
+## Get Panel Info
 
 Endpoint `https://panelapp.genomicsengland.co.uk/WebServices/get_panel/{Panel ID | Panel Name}/`
 
 Returns Panel info
 
-```
+```json
 {
     "result": {
         "Genes": [
@@ -72,7 +70,7 @@ Returns Panel info
 }
 ```
 
-## Filtering
+### Filtering
 
 Parameters:
 
@@ -109,24 +107,22 @@ Parameters:
 
 - `version`: Panel version
 
+### Examples
 
-## Examples
+- <https://panelapp.genomicsengland.co.uk/WebServices/get_panel/553f97abbb5a1616e5ed45f9/>
+- <https://panelapp.genomicsengland.co.uk/WebServices/get_panel/Anophthalmia/>
+- <https://panelapp.genomicsengland.co.uk/WebServices/get_panel/Anophthalmia/?ModeOfInheritance=biallelic,monoallelic>
+- <https://panelapp.genomicsengland.co.uk/WebServices/get_panel/Anophthalmia/?ModeOfPathogenicity=loss_of_function>
+- <https://panelapp.genomicsengland.co.uk/WebServices/get_panel/Anophthalmia/?Penetrance=Complete>
+- <https://panelapp.genomicsengland.co.uk/WebServices/get_panel/Anophthalmia/?LevelOfConfidence=HighEvidence,ModerateEvidence>
+- <https://panelapp.genomicsengland.co.uk/WebServices/get_panel/Anophthalmia/?version=1.7>
+- <https://panelapp.genomicsengland.co.uk/WebServices/get_panel/553f97abbb5a1616e5ed45f9/?version=1.7>
 
-- https://panelapp.genomicsengland.co.uk/WebServices/get_panel/553f97abbb5a1616e5ed45f9/
-- https://panelapp.genomicsengland.co.uk/WebServices/get_panel/Anophthalmia/
-- https://panelapp.genomicsengland.co.uk/WebServices/get_panel/Anophthalmia/?ModeOfInheritance=biallelic,monoallelic
-- https://panelapp.genomicsengland.co.uk/WebServices/get_panel/Anophthalmia/?ModeOfPathogenicity=loss_of_function
-- https://panelapp.genomicsengland.co.uk/WebServices/get_panel/Anophthalmia/?Penetrance=Complete
-- https://panelapp.genomicsengland.co.uk/WebServices/get_panel/Anophthalmia/?LevelOfConfidence=HighEvidence,ModerateEvidence
-- https://panelapp.genomicsengland.co.uk/WebServices/get_panel/Anophthalmia/?version=1.7
-- https://panelapp.genomicsengland.co.uk/WebServices/get_panel/553f97abbb5a1616e5ed45f9/?version=1.7
-
-
-# Search by Gene
+## Search by Gene
 
 Endpoint `https://panelapp.genomicsengland.co.uk/WebServices/search_genes/{Comma separated list of gene symbol}/`
 
-```
+```json
 {
     "results": [
         {
@@ -212,8 +208,7 @@ Endpoint `https://panelapp.genomicsengland.co.uk/WebServices/search_genes/{Comma
 }
 ```
 
-
-## Filtering
+### Filtering
 
 Parameters:
 
@@ -263,20 +258,21 @@ Parameters:
 
 - `panel_name`: only search specified panel names, comma separated list
 
-## Examples
+### Examples
 
-- https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/
-- https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/?ModeOfInheritance=biallelic,monoallelic
-- https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/?ModeOfPathogenicity=loss_of_function
-- https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/?Penetrance=Complete
-- https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/?LevelOfConfidence=HighEvidence,ModerateEvidence
-- https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/?Evidences=literature
-- https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/?panel_name=Regional%20overgrowth%20disorders
+- <https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/>
+- <https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/?ModeOfInheritance=biallelic,monoallelic>
+- <https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/?ModeOfPathogenicity=loss_of_function>
+- <https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/?Penetrance=Complete>
+- <https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/?LevelOfConfidence=HighEvidence,ModerateEvidence>
+- <https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/?Evidences=literature>
+- <https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/?panel_name=Regional%20overgrowth%20disorders>
 
-# Additional parameters
+## Additional parameters
 
 Additionally, you can specify `assembly` GET parameters with either `GRch37` (default) or `GRch38` as a value.
 
-EnsemblIds will be returned for the specified assembly version: GRch37 version 82 or GRch38 version 90 if they exists in the database.
+EnsemblIds will be returned for the specified assembly version: GRch37 version 82 or GRch38 version 90 if they exist in
+the database.
 
-- https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/?panel_name=Regional%20overgrowth%20disorders&assembly=GRch38
+- <https://panelapp.genomicsengland.co.uk/WebServices/search_genes/AKT2/?panel_name=Regional%20overgrowth%20disorders&assembly=GRch38>

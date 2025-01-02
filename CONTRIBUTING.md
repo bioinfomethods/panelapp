@@ -21,7 +21,7 @@ you need to follow the conventional commits.
 You can [validate](https://regex101.com/r/cP1SQR/1) the commit messages using regex
 validator, currently the rule is
 
-```
+```regexp
 ^(revert: )?(feat|fix|docs|refactor|perf|test|chore|ci)(|!)(\([a-z-]+\))?: .{1,50}
 ```
 
@@ -127,7 +127,7 @@ comparison.
 Once the changes have been reviewed and agreed by inspecting the test output the snapshots
 can be updated with this command:
 
-```
+```shell
 make update-snapshots
 ```
 

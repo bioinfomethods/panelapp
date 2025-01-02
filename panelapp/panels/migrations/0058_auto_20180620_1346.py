@@ -164,7 +164,7 @@ def populate_stats(apps, schema_editor):
             for key in keys:
                 out[key] = out.get(key, 0) + info.get(key, 0)
 
-        out["gene_reviewers"] = [r for r in out["gene_reviewers"] if r]  #  remove None
+        out["gene_reviewers"] = [r for r in out["gene_reviewers"] if r]  # remove None
         out["str_reviewers"] = [r for r in out["str_reviewers"] if r]  # remove None
         out["entity_reviewers"] = list(
             set(out["gene_reviewers"] + out["str_reviewers"])

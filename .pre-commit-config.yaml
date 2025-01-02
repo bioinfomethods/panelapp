@@ -1,19 +1,76 @@
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v2.3.0
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
     hooks:
-    -   id: check-yaml
-    -   id: end-of-file-fixer
-    -   id: trailing-whitespace
--   repo: https://github.com/psf/black
-    rev: 19.10b0
+      - id: check-added-large-files
+      - id: check-executables-have-shebangs
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-shebang-scripts-are-executable
+      - id: check-toml
+      - id: check-xml
+      - id: check-yaml
+      - id: detect-private-key
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: trailing-whitespace
+  - repo: https://github.com/psf/black
+    rev: 22.3.0
     hooks:
-    -   id: black
--   repo: https://github.com/timothycrosley/isort
-    rev: 5.0.5
+      - id: black
+  - repo: https://github.com/timothycrosley/isort
+    rev: 5.13.2
     hooks:
-    -   id: isort
--   repo: https://github.com/gitleaks/gitleaks
-    rev: v8.21.2
+      - id: isort
+  - repo: https://github.com/pycqa/flake8
+    rev: 7.1.1
+    hooks:
+      - id: flake8
+        args:
+          - "--max-line-length=128"
+          - "--extend-ignore=E266,E402,E501,E721,E722,E741,F401,F405,F523,F541,F811,F821,F841,W605"
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.8.0
+    hooks:
+      - id: bandit
+        args:
+          - "--exclude=*/test*.py"
+          - "--skip=B101,B113,B307,B311,B703"
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.14.1
+    hooks:
+      - id: mypy
+        additional_dependencies: [returns]
+        args:
+#          - "--check-untyped-defs"
+          - "--disable-error-code=arg-type"
+          - "--disable-error-code=assignment"
+          - "--disable-error-code=attr-defined"
+          - "--disable-error-code=call-overload"
+          - "--disable-error-code=import-not-found"
+          - "--disable-error-code=import-untyped"
+          - "--disable-error-code=name-defined"
+          - "--disable-error-code=return"
+          - "--disable-error-code=return-value"
+          - "--disable-error-code=str-format"
+          - "--disable-error-code=union-attr"
+          - "--disable-error-code=var-annotated"
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.10.0.1
+    hooks:
+      - id: shellcheck
+  - repo: https://github.com/mrtazz/checkmake.git
+    rev: 0.2.2
+    hooks:
+    -   id: checkmake
+  - repo: https://github.com/markdownlint/markdownlint
+    rev: v0.13.0
+    hooks:
+      - id: markdownlint
+        exclude: .gitleaks-ignore.comments.md
+        args:
+          - "--style=.markdownlint.rb"
+  - repo: https://github.com/gitleaks/gitleaks
+    rev: v8.22.1
     hooks:
       - id: gitleaks

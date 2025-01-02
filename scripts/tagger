@@ -69,27 +69,32 @@ from typing import (
 
 import boto3
 
-ENVIRONMENTS = os.getenv("TAGGER_ENVIRONMENTS", "build,dev,test,e2e,uat,prod").strip().lower().split(',')
-RE_ENV = re.compile(r'^[a-z0-9_]+$')
+ENVIRONMENTS = (
+    os.getenv("TAGGER_ENVIRONMENTS", "build,dev,test,e2e,uat,prod")
+    .strip()
+    .lower()
+    .split(",")
+)
+RE_ENV = re.compile(r"^[a-z0-9_]+$")
 if not all(RE_ENV.match(x) for x in ENVIRONMENTS):
     sys.exit(os.EX_CONFIG)
 
 
 class Commands(str, enum.Enum):
-    GET_TAGS = 'get-tags'
-    LIST_TAGS = 'list-tags'
-    CHECK_TAG = 'tag-exists'
-    ADD_ENV_TAG = 'add-env-tags'
-    ADD_TAG = 'add-tag'
-    VALIDATE_VERSION = 'validate-version'
-    FREESTYLE_TAG = 'freestyle-tag'
-    SELF_TEST = 'self-tests'
+    GET_TAGS = "get-tags"
+    LIST_TAGS = "list-tags"
+    CHECK_TAG = "tag-exists"
+    ADD_ENV_TAG = "add-env-tags"
+    ADD_TAG = "add-tag"
+    VALIDATE_VERSION = "validate-version"
+    FREESTYLE_TAG = "freestyle-tag"
+    SELF_TEST = "self-tests"
 
 
 class MutabilityOpts(str, enum.Enum):
-    YES = 'yes'
-    NO = 'no'
-    AUTO = 'auto'
+    YES = "yes"
+    NO = "no"
+    AUTO = "auto"
 
 
 @dataclasses.dataclass
@@ -193,15 +198,25 @@ class SemVers:
         """
         if not isinstance(other, SemVers):
             other = SemVers(other)
-            raise NotImplementedError(f'can not compare with object of type: {type(other)}')
-        max_type = 'zzzz'
+            raise NotImplementedError(
+                f"can not compare with object of type: {type(other)}"
+            )
+        max_type = "zzzz"
         max_version = 9999
-        left = (self.major, self.minor, self.patch,
-                self.pre_release_type or max_type,
-                self.pre_release_version or max_version)
-        right = (other.major, other.minor, other.patch,
-                 other.pre_release_type or max_type,
-                 other.pre_release_version or max_version)
+        left = (
+            self.major,
+            self.minor,
+            self.patch,
+            self.pre_release_type or max_type,
+            self.pre_release_version or max_version,
+        )
+        right = (
+            other.major,
+            other.minor,
+            other.patch,
+            other.pre_release_type or max_type,
+            other.pre_release_version or max_version,
+        )
         return left < right
 
     def __str__(self):
@@ -220,34 +235,49 @@ class Tagger:
     # Time format used for env tags, like "prod-20230130-173000":
     TIME_FORMAT = "%Y%m%d-%H%M%S"
     # Tag used to identify commits, like "git-abc1234f:
-    RE_ID_TAG = re.compile(r'''^(
+    RE_ID_TAG = re.compile(
+        r"""^(
             git-[a-f0-9]{8} |
             ci-[0-9]+
-        )$''', re.VERBOSE)
+        )$""",
+        re.VERBOSE,
+    )
     # Simplified semantic versioning tag:
-    RE_VERSION = re.compile(r'''^
+    RE_VERSION = re.compile(
+        r"""^
         (0|[1-9][0-9]*) \. (0|[1-9][0-9]*) \. (0|[1-9][0-9]*)
         ( - (alpha|beta|rc) \. ([1-9][0-9]*) )?
-        $''', re.VERBOSE)
+        $""",
+        re.VERBOSE,
+    )
     # Environment specific tags (first deployment):
-    RE_ENV = re.compile(f"""^
+    RE_ENV = re.compile(
+        f"""^
         ( {'|'.join(ENVIRONMENTS)} ) - [0-9]{{8}} - [0-9]{{6}}
-        $""", re.VERBOSE)
+        $""",
+        re.VERBOSE,
+    )
     # Rotating tags:
-    RE_ROTATING = re.compile(f"""^
+    RE_ROTATING = re.compile(
+        f"""^
         latest- ({'|'.join(ENVIRONMENTS)})
         ( - [0-9]+ )?
-        $""", re.VERBOSE)
+        $""",
+        re.VERBOSE,
+    )
     # Protected superset of git, ci, env, version, and rotating tags; everything else can be freely used
-    RE_RESTRICTED = re.compile(f"""^
+    RE_RESTRICTED = re.compile(
+        f"""^
         (
             git- |
-            ci- | 
+            ci- |
             ( {'|'.join(ENVIRONMENTS)} ) - |
             latest |
             [0-9]
         )
-        """, re.VERBOSE)
+        """,
+        re.VERBOSE,
+    )
 
     def __init__(self, argv: List[str]):
         self.args = self.parse_args(argv)
@@ -257,98 +287,153 @@ class Tagger:
     def client(self):
         if self._client is None:
             if self.args.assume_role:
-                client = boto3.client('sts')
+                client = boto3.client("sts")
                 response = client.assume_role(
                     RoleArn=self.args.assume_role,
-                    RoleSessionName='tagger-session',
+                    RoleSessionName="tagger-session",
                 )
                 self.debug(f'assume_role: {response["AssumedRoleUser"]["Arn"]}')
                 new_session = boto3.Session(
-                    aws_access_key_id=response['Credentials']['AccessKeyId'],
-                    aws_secret_access_key=response['Credentials']['SecretAccessKey'],
-                    aws_session_token=response['Credentials']['SessionToken'],
+                    aws_access_key_id=response["Credentials"]["AccessKeyId"],
+                    aws_secret_access_key=response["Credentials"]["SecretAccessKey"],
+                    aws_session_token=response["Credentials"]["SessionToken"],
                 )
                 self._client = new_session.client("ecr")
             else:
-                self._client = boto3.client('ecr')
+                self._client = boto3.client("ecr")
         return self._client
 
     def parse_args(self, argv: List[str]) -> argparse.Namespace:
         def timestamp(t: str) -> str:
-            return datetime.datetime.strptime(t, self.TIME_FORMAT).strftime(self.TIME_FORMAT)
+            return datetime.datetime.strptime(t, self.TIME_FORMAT).strftime(
+                self.TIME_FORMAT
+            )
 
-        parser = argparse.ArgumentParser(description=__doc__.splitlines()[0],
-                                         epilog="Help for specific command: tagger COMMAND --help")
-        parser.add_argument('--repository', help='name of the repository to operate on', required=False)
-        parser.add_argument('--registry', help='id of the registry to operate on', required=False)
-        parser.add_argument('--assume-role', metavar='ROLE_ARN', help='assume role')
-        parser.add_argument('--debug', action='store_true', help='add debug output')
-        parser.add_argument('--verbose', action='store_true', help='verbose output')
-        subparsers = parser.add_subparsers(metavar='command', dest='command', required=True,
-                                           help='help with: tagger command --help')
+        parser = argparse.ArgumentParser(
+            description=__doc__.splitlines()[0],
+            epilog="Help for specific command: tagger COMMAND --help",
+        )
+        parser.add_argument(
+            "--repository", help="name of the repository to operate on", required=False
+        )
+        parser.add_argument(
+            "--registry", help="id of the registry to operate on", required=False
+        )
+        parser.add_argument("--assume-role", metavar="ROLE_ARN", help="assume role")
+        parser.add_argument("--debug", action="store_true", help="add debug output")
+        parser.add_argument("--verbose", action="store_true", help="verbose output")
+        subparsers = parser.add_subparsers(
+            metavar="command",
+            dest="command",
+            required=True,
+            help="help with: tagger command --help",
+        )
 
-        parser_gt = subparsers.add_parser(Commands.GET_TAGS.value, help='get all tags of an image')
-        parser_gt.add_argument('image_tag', help='tag of image to look up')
+        parser_gt = subparsers.add_parser(
+            Commands.GET_TAGS.value, help="get all tags of an image"
+        )
+        parser_gt.add_argument("image_tag", help="tag of image to look up")
         parser_gt.set_defaults(func=self.cmd_get_tags)
 
-        parser_ct = subparsers.add_parser(Commands.CHECK_TAG.value,
-                                          help='check whether a tag exists (return code = 0) or not (return code = 1)')
-        parser_ct.add_argument('image_tag', help='tag of image to look up')
+        parser_ct = subparsers.add_parser(
+            Commands.CHECK_TAG.value,
+            help="check whether a tag exists (return code = 0) or not (return code = 1)",
+        )
+        parser_ct.add_argument("image_tag", help="tag of image to look up")
         parser_ct.set_defaults(func=self.cmd_tag_exists)
 
-        parser_rt = subparsers.add_parser(Commands.FREESTYLE_TAG.value,
-                                          help='check whether a tag can be used freely (return code = 0) '
-                                               'or is restricted (return code = 1)')
-        parser_rt.add_argument('image_tag', help='tag of image to look up')
+        parser_rt = subparsers.add_parser(
+            Commands.FREESTYLE_TAG.value,
+            help="check whether a tag can be used freely (return code = 0) "
+            "or is restricted (return code = 1)",
+        )
+        parser_rt.add_argument("image_tag", help="tag of image to look up")
         parser_rt.set_defaults(func=self.cmd_tag_is_freestyle)
 
-        parser_aet = subparsers.add_parser(Commands.ADD_ENV_TAG.value, help='add an environment tag')
-        parser_aet.add_argument('image_tag', help='tag of image to add the environment tag')
-        parser_aet.add_argument('--env', default=ENVIRONMENTS[0], choices=ENVIRONMENTS,
-                                help='environment to use (default: "%(default)s")')
-        parser_aet.add_argument('--add-latest', metavar='NUMBER', nargs='?',
-                                type=int, default=0, const=1, choices=range(self.MAX_ROTATING_TAGS+1),
-                                help='add a "latest-<env>-0" tag and shift existing "latest" tags, i.e. '
-                                     '"latest-<env>-0" becomes "latest-<env>-1" and so on up to NUMBER tags in total. '
-                                     'If NUMBER is 1 (or omitted), add "latest-<env>" tag. '
-                                     'The default is to not add any "latest" tags')
-        parser_aet.add_argument('--timestamp', metavar='TIMESTAMP', type=timestamp,
-                                default=datetime.datetime.utcnow().strftime("%Y%m%d-%H%M%S"),
-                                help='use TIMESTAMP instead of "now"; for retro-fitting tags to an existing repository;'
-                                ' must be in the format "YYYYmmdd-HHMMSS"')
+        parser_aet = subparsers.add_parser(
+            Commands.ADD_ENV_TAG.value, help="add an environment tag"
+        )
+        parser_aet.add_argument(
+            "image_tag", help="tag of image to add the environment tag"
+        )
+        parser_aet.add_argument(
+            "--env",
+            default=ENVIRONMENTS[0],
+            choices=ENVIRONMENTS,
+            help='environment to use (default: "%(default)s")',
+        )
+        parser_aet.add_argument(
+            "--add-latest",
+            metavar="NUMBER",
+            nargs="?",
+            type=int,
+            default=0,
+            const=1,
+            choices=range(self.MAX_ROTATING_TAGS + 1),
+            help='add a "latest-<env>-0" tag and shift existing "latest" tags, i.e. '
+            '"latest-<env>-0" becomes "latest-<env>-1" and so on up to NUMBER tags in total. '
+            'If NUMBER is 1 (or omitted), add "latest-<env>" tag. '
+            'The default is to not add any "latest" tags',
+        )
+        parser_aet.add_argument(
+            "--timestamp",
+            metavar="TIMESTAMP",
+            type=timestamp,
+            default=datetime.datetime.utcnow().strftime("%Y%m%d-%H%M%S"),
+            help='use TIMESTAMP instead of "now"; for retro-fitting tags to an existing repository;'
+            ' must be in the format "YYYYmmdd-HHMMSS"',
+        )
         parser_aet.set_defaults(func=self.cmd_add_env_tag)
 
-        parser_vvt = subparsers.add_parser(Commands.VALIDATE_VERSION.value, help='validate a version')
-        parser_vvt.add_argument('version', help='version to validate')
-        parser_vvt.add_argument('--no-alpha', action='store_true', help='fail if version is alpha')
-        parser_vvt.add_argument('--no-beta', action='store_true', help='fail if version is beta')
-        parser_vvt.add_argument('--no-rc', action='store_true', help='fail if version is rc')
+        parser_vvt = subparsers.add_parser(
+            Commands.VALIDATE_VERSION.value, help="validate a version"
+        )
+        parser_vvt.add_argument("version", help="version to validate")
+        parser_vvt.add_argument(
+            "--no-alpha", action="store_true", help="fail if version is alpha"
+        )
+        parser_vvt.add_argument(
+            "--no-beta", action="store_true", help="fail if version is beta"
+        )
+        parser_vvt.add_argument(
+            "--no-rc", action="store_true", help="fail if version is rc"
+        )
         parser_vvt.set_defaults(func=self.cmd_validate_version)
 
-        parser_at = subparsers.add_parser(Commands.ADD_TAG.value, help='add an new tag')
-        parser_at.add_argument('image_tag', help='tag of image to add the new tag')
-        parser_at.add_argument('new_tag', help='tag to add')
-        parser_at.add_argument('--mutable', default='auto', choices=[o.value for o in MutabilityOpts],
-                               help='treat new_tag as mutable; version tags can not be mutable; default: %(default)s')
+        parser_at = subparsers.add_parser(Commands.ADD_TAG.value, help="add an new tag")
+        parser_at.add_argument("image_tag", help="tag of image to add the new tag")
+        parser_at.add_argument("new_tag", help="tag to add")
+        parser_at.add_argument(
+            "--mutable",
+            default="auto",
+            choices=[o.value for o in MutabilityOpts],
+            help="treat new_tag as mutable; version tags can not be mutable; default: %(default)s",
+        )
         parser_at.set_defaults(func=self.cmd_add_tag)
 
-        parser_lt = subparsers.add_parser(Commands.LIST_TAGS.value, help='list all tags in a table')
+        parser_lt = subparsers.add_parser(
+            Commands.LIST_TAGS.value, help="list all tags in a table"
+        )
         parser_lt.set_defaults(func=self.cmd_list_tags)
 
-        parser_st = subparsers.add_parser(Commands.SELF_TEST.value, help='run the self test')
-        parser_st.add_argument('--verbose', action='store_true', default=False, help='verbose test output')
+        parser_st = subparsers.add_parser(
+            Commands.SELF_TEST.value, help="run the self test"
+        )
+        parser_st.add_argument(
+            "--verbose", action="store_true", default=False, help="verbose test output"
+        )
         parser_st.set_defaults(func=self.cmd_selftest)
 
         args = parser.parse_args(args=argv)
 
         if not args.registry:
-            args.registry = os.environ.get('TAGGER_REGISTRY')
+            args.registry = os.environ.get("TAGGER_REGISTRY")
         if not args.repository:
-            args.repository = os.environ.get('TAGGER_REPOSITORY')
+            args.repository = os.environ.get("TAGGER_REPOSITORY")
         if not args.assume_role:
-            args.assume_role = os.environ.get('TAGGER_ASSUME_ROLE')
+            args.assume_role = os.environ.get("TAGGER_ASSUME_ROLE")
         if not args.debug:
-            args.debug = bool(os.environ.get('TAGGER_DEBUG'))
+            args.debug = bool(os.environ.get("TAGGER_DEBUG"))
 
         return args
 
@@ -359,7 +444,6 @@ class Tagger:
     def debug(self, message):
         if self.args.debug:
             print(message, file=sys.stderr, flush=True)
-
 
     @classmethod
     def is_version_tag(cls, tag: str) -> bool:
@@ -407,10 +491,12 @@ class Tagger:
 
     @classmethod
     def is_special_tag(cls, tag: str) -> bool:
-        return (cls.is_id_tag(tag) or
-                cls.is_version_tag(tag) or
-                cls.is_env_tag(tag) or
-                cls.is_rotating_tag(tag))
+        return (
+            cls.is_id_tag(tag)
+            or cls.is_version_tag(tag)
+            or cls.is_env_tag(tag)
+            or cls.is_rotating_tag(tag)
+        )
 
     @classmethod
     def is_restricted_tag(cls, tag: str) -> bool:
@@ -441,7 +527,7 @@ class Tagger:
         >>> Tagger.sort_env_tags(['prod-123', 'dev-234', 'build-345', 'uat-456'])
         ['build-345', 'dev-234', 'uat-456', 'prod-123']
         """
-        return sorted(tags, key=lambda x: (ENVIRONMENTS.index(x.split('-')[0]), x))
+        return sorted(tags, key=lambda x: (ENVIRONMENTS.index(x.split("-")[0]), x))
 
     @classmethod
     def sort_rotating_tags(cls, tags: List[str]) -> List[str]:
@@ -451,7 +537,7 @@ class Tagger:
         >>> Tagger.sort_rotating_tags(['latest-prod-1', 'latest-dev-2', 'latest-build', 'latest-uat-4'])
         ['latest-build', 'latest-dev-2', 'latest-uat-4', 'latest-prod-1']
         """
-        return sorted(tags, key=lambda x: (ENVIRONMENTS.index(x.split('-')[1]), x))
+        return sorted(tags, key=lambda x: (ENVIRONMENTS.index(x.split("-")[1]), x))
 
     @classmethod
     def sort_version_tags(cls, tags: List[str]) -> List[str]:
@@ -465,12 +551,12 @@ class Tagger:
             response = self.client.describe_images(
                 registryId=self.args.registry,
                 repositoryName=self.args.repository,
-                imageIds=[{'imageTag': tag}],
+                imageIds=[{"imageTag": tag}],
             )
-            self.debug(f'get_tags: {response}')
+            self.debug(f"get_tags: {response}")
         except self.client.exceptions.ImageNotFoundException:
-            raise ValueError(f'Tag not found: {tag}')
-        return sorted(response['imageDetails'][0]['imageTags'])
+            raise ValueError(f"Tag not found: {tag}")
+        return sorted(response["imageDetails"][0]["imageTags"])
 
     def cmd_tag_exists(self) -> None:
         sys.exit(0 if self._tag_exists(self.args.image_tag) else 1)
@@ -490,15 +576,15 @@ class Tagger:
         if self.is_restricted_tag(self.args.new_tag):
             # version tag
             if not self.is_version_tag(self.args.new_tag):
-                raise ValueError(f'Tag is not a Sematic Version: {self.args.new_tag}')
+                raise ValueError(f"Tag is not a Sematic Version: {self.args.new_tag}")
             if self.args.mutable == MutabilityOpts.YES:
-                raise ValueError(f'Version tag can not be mutable: {self.args.new_tag}')
+                raise ValueError(f"Version tag can not be mutable: {self.args.new_tag}")
             mutable = False
         else:
             # free style
             mutable = self.args.mutable in [MutabilityOpts.YES, MutabilityOpts.AUTO]
         if not mutable and self._tag_exists(self.args.new_tag):
-            raise ValueError(f'Tag exists: {self.args.new_tag}')
+            raise ValueError(f"Tag exists: {self.args.new_tag}")
         return self._add_tag(self.args.image_tag, self.args.new_tag, mutable)
 
     def _add_tag(self, image_tag: str, new_tag: str, switch_mutability=False) -> str:
@@ -507,13 +593,15 @@ class Tagger:
             response = self.client.batch_get_image(
                 registryId=self.args.registry,
                 repositoryName=self.args.repository,
-                imageIds=[{'imageTag': image_tag}],
-                acceptedMediaTypes=['application/vnd.docker.distribution.manifest.v2+json'],
+                imageIds=[{"imageTag": image_tag}],
+                acceptedMediaTypes=[
+                    "application/vnd.docker.distribution.manifest.v2+json"
+                ],
             )
             self.debug(response)
-            manifest = response['images'][0]['imageManifest']
+            manifest = response["images"][0]["imageManifest"]
         except IndexError:
-            raise ValueError(f'Tag not found: {image_tag}')
+            raise ValueError(f"Tag not found: {image_tag}")
 
         if switch_mutability:
             with self.immutability_turned_off():
@@ -539,14 +627,14 @@ class Tagger:
         response = self.client.put_image_tag_mutability(
             registryId=self.args.registry,
             repositoryName=self.args.repository,
-            imageTagMutability='MUTABLE',
+            imageTagMutability="MUTABLE",
         )
         self.debug(response)
         yield
         response = self.client.put_image_tag_mutability(
             registryId=self.args.registry,
             repositoryName=self.args.repository,
-            imageTagMutability='IMMUTABLE',
+            imageTagMutability="IMMUTABLE",
         )
         self.debug(response)
 
@@ -554,30 +642,35 @@ class Tagger:
         new_tags = []
 
         existing_tags = self.cmd_get_tags()
-        same_env = [tag for tag in existing_tags if tag.startswith(f'{self.args.env}-')]
+        same_env = [tag for tag in existing_tags if tag.startswith(f"{self.args.env}-")]
         if same_env:
             new_tags.append(same_env[0])
         else:
-            new_tag = f'{self.args.env}-{self.timestamp()}'
+            new_tag = f"{self.args.env}-{self.timestamp()}"
             self._add_tag(self.args.image_tag, new_tag)
             new_tags.append(new_tag)
 
         if self.args.add_latest > 0:
             if self.args.add_latest == 1:
-                latest_tags = [f'latest-{self.args.env}']
-                delete_tags = [f'latest-{self.args.env}-{n}' for n in range(self.MAX_ROTATING_TAGS)]
+                latest_tags = [f"latest-{self.args.env}"]
+                delete_tags = [
+                    f"latest-{self.args.env}-{n}" for n in range(self.MAX_ROTATING_TAGS)
+                ]
             else:
-                latest_tags = [f'latest-{self.args.env}-{n}' for n in range(self.args.add_latest)]
-                delete_tags = ([f'latest-{self.args.env}'] +
-                               [f'latest-{self.args.env}-{n}'
-                                for n in range(self.args.add_latest, self.MAX_ROTATING_TAGS)])
+                latest_tags = [
+                    f"latest-{self.args.env}-{n}" for n in range(self.args.add_latest)
+                ]
+                delete_tags = [f"latest-{self.args.env}"] + [
+                    f"latest-{self.args.env}-{n}"
+                    for n in range(self.args.add_latest, self.MAX_ROTATING_TAGS)
+                ]
             if latest_tags[0] not in existing_tags:  # deploying the same image again?
                 with self.immutability_turned_off():
                     self._shift_tags([self.args.image_tag] + latest_tags)
                 self._delete_tags(delete_tags)
                 new_tags.append(latest_tags[0])
 
-        return ' '.join(new_tags)
+        return " ".join(new_tags)
 
     def _shift_tags(self, tags: List[str]):
         """
@@ -607,34 +700,58 @@ class Tagger:
     def cmd_validate_version(self):
         try:
             if not self.is_version_tag(self.args.version):
-                raise ValueError(f"not a valid simplified semantic version: {self.args.version}")
+                raise ValueError(
+                    f"not a valid simplified semantic version: {self.args.version}"
+                )
             pre_release_type = SemVers(self.args.version).pre_release_type
-            if self.args.no_alpha and pre_release_type == 'alpha':
-                raise ValueError(f"alpha pre-release versions are not allowed: {self.args.version}")
-            if self.args.no_beta and pre_release_type == 'beta':
-                raise ValueError(f"beta pre-release versions are not allowed: {self.args.version}")
-            if self.args.no_rc and pre_release_type == 'rc':
-                raise ValueError(f"rc pre-release versions are not allowed: {self.args.version}")
+            if self.args.no_alpha and pre_release_type == "alpha":
+                raise ValueError(
+                    f"alpha pre-release versions are not allowed: {self.args.version}"
+                )
+            if self.args.no_beta and pre_release_type == "beta":
+                raise ValueError(
+                    f"beta pre-release versions are not allowed: {self.args.version}"
+                )
+            if self.args.no_rc and pre_release_type == "rc":
+                raise ValueError(
+                    f"rc pre-release versions are not allowed: {self.args.version}"
+                )
         except ValueError as exc:
             print(exc, file=sys.stderr)
             sys.exit(os.EX_DATAERR)
 
     def cmd_list_tags(self) -> None:
-        response = self.client.describe_images(registryId=self.args.registry, repositoryName=self.args.repository)
+        response = self.client.describe_images(
+            registryId=self.args.registry, repositoryName=self.args.repository
+        )
         images = sorted(
-            [Image(pushed_at=x['imagePushedAt'], tags=sorted(x['imageTags']))
-             for x in response['imageDetails']],
-            key=lambda x: x.pushed_at, reverse=True)
+            [
+                Image(pushed_at=x["imagePushedAt"], tags=sorted(x["imageTags"]))
+                for x in response["imageDetails"]
+            ],
+            key=lambda x: x.pushed_at,
+            reverse=True,
+        )
 
-        headers = ['Pushed', 'Versions', 'Commit', 'First deployed', 'Latest deployed', 'Others']
-        data = [[
-            image.pushed_at.strftime('%Y%m%d-%H%M%S'),
-            ' '.join(self.sort_version_tags(image.versions)),
-            ' '.join(image.id_tags),
-            ' '.join(self.sort_env_tags(image.env_tags)),
-            ' '.join(self.sort_rotating_tags(image.latest_tags)),
-            ' '.join(image.other_tags),
-        ] for image in images]
+        headers = [
+            "Pushed",
+            "Versions",
+            "Commit",
+            "First deployed",
+            "Latest deployed",
+            "Others",
+        ]
+        data = [
+            [
+                image.pushed_at.strftime("%Y%m%d-%H%M%S"),
+                " ".join(self.sort_version_tags(image.versions)),
+                " ".join(image.id_tags),
+                " ".join(self.sort_env_tags(image.env_tags)),
+                " ".join(self.sort_rotating_tags(image.latest_tags)),
+                " ".join(image.other_tags),
+            ]
+            for image in images
+        ]
         table = [headers] + data
 
         if not self.args.verbose:
@@ -648,15 +765,16 @@ class Tagger:
         widths = [0] * len(data[0])
         for c in range(len(widths)):
             widths[c] = max(len(row[c]) for row in data)
-        row_format = ' | '.join([f"{{:<{widths[c]}}}" for c in range(len(widths))])
+        row_format = " | ".join([f"{{:<{widths[c]}}}" for c in range(len(widths))])
 
         print(row_format.format(*data[0]))
-        print(row_format.format(*['=' * w for w in widths]).replace(' ', '='))
+        print(row_format.format(*["=" * w for w in widths]).replace(" ", "="))
         for row in data[1:]:
             print(row_format.format(*row))
 
     def cmd_selftest(self):
         import doctest
+
         doctest.testmod(exclude_empty=True, verbose=self.args.verbose)
 
     def run(self):
@@ -681,7 +799,7 @@ def main():
         sys.exit(os.EX_OK)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
     # import cProfile
     # cProfile.run('main()', sort='cumtime')

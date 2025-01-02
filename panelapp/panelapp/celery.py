@@ -37,6 +37,7 @@ app = Celery("panelapp")
 
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
+
 # Celery uses Django logging configuration
 @setup_logging.connect
 def config_loggers(*args, **kwags):

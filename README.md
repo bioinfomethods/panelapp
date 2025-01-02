@@ -18,7 +18,8 @@ Python dependencies are installed via `setup.py`.
 
 All environments are dockerised.
 
-We make a distinction between local development environments and cloud environments, as they use different Dockerfiles and Django settings.
+We make a distinction between local development environments and cloud environments, as they use different Dockerfiles
+and Django settings.
 
 As much as possible, the application follows the [Twelve-Factors App](https://12factor.net/) design principles.
 
@@ -30,7 +31,8 @@ Dockerfiles for cloud are optimised for security and size.
 
 The application is agnostic to the container scheduler platform it runs in (e.g. Kubernetes, ECS).
 
-Docker-compose and Makefile in [./docker/cloud/](docker/cloud/) are for locally troubleshooting production docker images.
+Docker-compose and Makefile in [./docker/cloud/](./docker/cloud/Makefile) are for locally troubleshooting production
+docker images.
 They are NOT supposed to be used to deploy the application in any environment.
 
 ## Contributing to PanelApp
@@ -41,7 +43,7 @@ Check [CONTRIBUTING.md](./CONTRIBUTING.md) on how to contribute.
 
 ## Local development
 
-Local-dev uses Docker and the [Docker Compose stack](./docker-compose.yml) included.
+Local-dev uses Docker and the [Docker Compose stack](./docker/docker-compose.yml) included.
 
 Please use the [Makefile](./Makefile) provided to set up the local dev environment.
 
@@ -79,10 +81,10 @@ the Docker-Compose cluster as `localstack` but exposed to the host machine on lo
 These system dependencies are required to set up a virtualenv to use for development:
 
 ```shell
-$ brew install postgresql@15
-$ brew install openssl@3
-$ export LDFLAGS="-L/opt/homebrew/opt/openssl@3/lib"
-$ export CPPFLAGS="-I/opt/homebrew/opt/openssl@3/include"
+brew install postgresql@15
+brew install openssl@3
+export LDFLAGS="-L/opt/homebrew/opt/openssl@3/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/openssl@3/include"
 ```
 
 #### Linux (Ubuntu 22.04)
@@ -90,7 +92,7 @@ $ export CPPFLAGS="-I/opt/homebrew/opt/openssl@3/include"
 Depending on your system, some packages might be required:
 
 ```shell
-$ sudo apt install postgresql-common libpq-dev libcurl4-openssl-dev
+sudo apt install postgresql-common libpq-dev libcurl4-openssl-dev
 ```
 
 ### Dockerfile
@@ -100,18 +102,23 @@ All Python dependencies, including dev and test deps, are installed as editable.
 ### Native Development lifecycle
 
 1. Launch local support services:
+
    ```shell
    pushd docker/dev
    docker-compose up -d db localstack
    popd
    ```
+
 2. Create virtual environment:
+
    ```shell
    python -m venv .venv
    source .venv/bin/activate
    pip install '.[dev,tests]'
    ```
+
 3. Setup environment variables:
+
    ```shell
    export USE_S3=FALSE
    export DATABASE_USER=panelapp
@@ -122,19 +129,27 @@ All Python dependencies, including dev and test deps, are installed as editable.
    export DJANGO_SETTINGS_MODULE=panelapp.settings.dev
    export DJANGO_LOG_LEVEL=DEBUG
    ```
+
 4. Migrate the database:
+
    ```shell
    python panelapp/manage.py migrate
    ```
+
 5. Create the super-user:
+
    ```shell
    python panelapp/manage.py createsuperuser
    ```
+
 6. Load database data:
+
    ```shell
    python panelapp/manage.py loaddata deploy/genes.json.gz
    ```
+
 7. Start web server:
+
    ```shell
    python panelapp/manage.py runserver
    ```
@@ -143,7 +158,7 @@ All Python dependencies, including dev and test deps, are installed as editable.
 
 Add the following launch configurations:
 
-```
+```json
 {
     "name": "Django: Run Server",
     "type": "python",
@@ -181,8 +196,8 @@ The second configuration allows you to run and debug the database migration proc
 The third configuration allows you to use VSCode's [built-in python testing feature](https://code.visualstudio.com/docs/python/testing)
 to run and debug tests. See also:
 
-- https://code.visualstudio.com/docs/python/testing#_test-configuration-settings
-- https://code.visualstudio.com/docs/python/testing#_debug-tests
+- [test-configuration-settings](https://code.visualstudio.com/docs/python/testing#_test-configuration-settings)
+- [debug-tests](https://code.visualstudio.com/docs/python/testing#_debug-tests)
 
 ### Docker Development lifecycle
 
@@ -190,8 +205,8 @@ You should use the [Makefile](./Makefile) in this directory for all common tasks
 
 #### Build dev docker images
 
-```bash
-$ make build
+```shell
+make build
 ```
 
 > You must rebuild the base docker images if you change any dependencies in `setup.py`.
@@ -203,35 +218,48 @@ $ make build
 To start an empty application from scratch (no Panel, but includes Genes data).
 
 1. Start a new dev stack (in detached mode):
-   ```bash
-   $ make up
+
+   ```shell
+   make up
    ```
+
 2. Create db schema or apply migration (give few seconds to the db container to start, before running `migrate`):
-   ```bash
-   $ make migrate
+
+   ```shell
+   make migrate
    ```
+
 3. Load gene data:
-   ```bash
-   $ make loaddata
+
+   ```shell
+   make loaddata
    ```
+
    Genes data contains public gene info, such as ensemble IDs, HGNC symbols, OMIM ID.
+
 4. Create all required mock AWS resources, if the do not exist:
-   ```bash
-   $ make mock-aws
+
+   ```shell
+   make mock-aws
    ```
+
 5. Deploy static files:
-   ```bash
-   $ make collectstatic
+
+   ```shell
+   make collectstatic
    ```
+
 6. Create admin user
-   ```bash
-   $ make createsuperuser
+
+   ```shell
+   make createsuperuser
    ```
+
    This is the user to log into the webapp: username=`admin`, pwd=`changeme`, email=`admin@local`
 
 #### Developing and accessing the application
 
-The application is available at `http://localhost:8080/`
+The application is available at [localhost:8080](http://localhost:8080/)
 
 The Python code is mounted from the host `<project-root>/panelapp` directory.
 
@@ -240,51 +268,63 @@ Any change to these files (e.g. **changes to dependencies versions**) requires r
 the cluster.
 
 - Run tests:
-  ```bash
-  $ make tests
+
+  ```shell
+  make tests
   ```
+
 - To tail logs from **all** containers:
-  ```bash
-  $ make logs
+
+  ```shell
+  make logs
   ```
+
   To see logs from a single service you must use `docker-compose` or `docker` commands, directly.
+
 - Stop the stack, without losing the state (db content):
-  ```bash
-  $ make stop
+
+  ```shell
+  make stop
   ```
+
   Restart after stopping with `start`.
+
 - Tear down the stack destroying the state (db content):
-  ```bash
-  $ make down
+
+  ```shell
+  make down
   ```
+
 - The content of mock S3 buckets is actually saved in the temp directory (`/tmp/localstack` on Linux or
   `/private/tmp/localstack` on OSX). When you re-create the cluster and `mock-aws` resources, content of S3 buckets will
   be there. To clear them use:
-  ```bash
-  $ make clear-s3
+
+  ```shell
+  make clear-s3
   ```
+
 - Run a Django arbitrary command:
 
-  ```bash
-  $ make command <command> [<args>...]
+  ```shell
+  make command <command> [<args>...]
   ```
 
   E.g. to run shell_plus extension to debug models
 
-  ```bash
-  $ make command shell_plus
+  ```shell
+  make command shell_plus
   ```
 
 ### Application Configuration
 
-Django settings: [`panelapp.settings.docker-dev`](../../panelapp/panelapp/settings/docker-dev.py).
+Django settings: [panelapp.settings.docker-dev](./panelapp/panelapp/settings/docker-dev.py).
 
 The [docker-compose.yml](./docker/docker-compose.yml) sets all required environment variables.
 
 By default, it uses mocked S3 and SQS by LocalStack.
 
 > You could run the application against RabbitMQ and the local file system, tweaking
-> [docker-dev settings](../../panelapp/panelapp/settings/docker-dev.py) and [docker-compose.yml](./docker/docker-compose.yml),
+> [docker-dev settings](./panelapp/panelapp/settings/docker-dev.py) and [docker-compose.yml](./docker/docker-compose.yml),
 > but this backward compatibility may be dropped in the future.
 
 Sending email is completely disabled: it only outputs to console.
@@ -318,8 +358,8 @@ Service endpoints are LocalStack defaults:
   the
   host machine they are actually exposed to `localhost`. To allow resources hosted at `localstack` to be accessible on
   the host machine:
-  - Linux: Alias `localstack` to `localhost` in the host machine's `/etc/hosts` file.
-  - Windows: Add the line `127.0.0.1 localstack` to the host machine's `C:\Windows\System32\drivers\etc\hosts` file.
+    - Linux: Alias `localstack` to `localhost` in the host machine's `/etc/hosts` file.
+    - Windows: Add the line `127.0.0.1 localstack` to the host machine's `C:\Windows\System32\drivers\etc\hosts` file.
 - LocalStack SES does not support SMTP
 
 #### AWScli-local
@@ -337,11 +377,12 @@ credentials on every request).
 
 Run the storybook server:
 
-```
+```shell
 npm run storybook
 ```
 
-Due to HMR (Hot Module Reloading) modifying a component will live-update the story to enable fast development of frontend components.
+Due to HMR (Hot Module Reloading) modifying a component will live-update the story to enable fast development of
+frontend components.
 
 ### End-to-end tests
 
@@ -360,7 +401,7 @@ The version of Playwright in the following locations must be kept in sync:
 
 Seed a local database with test data:
 
-```
+```shell
 python panelapp/manage.py loaddata frontend/tests/data.json
 ```
 
@@ -369,13 +410,13 @@ that matches the source of truth (CI/CD) using docker.
 
 Before running this command please ensure the image for this is built:
 
-```
+```shell
 docker-compose build playwright
 ```
 
 Execute the functional tests:
 
-```
+```shell
 make e2e-test-functional
 ```
 
@@ -383,19 +424,19 @@ NOTE: the functional tests modify state which will cause the visual tests to fai
 
 Execute the visual tests:
 
-```
+```shell
 make e2e-test-visual
 ```
 
 Tests can be run using [the CLI](https://playwright.dev/docs/running-tests#command-line) directly on a development machine:
 
-```
+```shell
 npx playwright test
 ```
 
 They can also be run (among other things) using [the GUI](https://playwright.dev/docs/running-tests#run-tests-in-ui-mode):
 
-```
+```shell
 npx playwright test --ui
 ```
 
@@ -403,7 +444,7 @@ npx playwright test --ui
 
 Tests can be written from scratch or they can be partially generated using [codegen](https://playwright.dev/docs/codegen-intro#running-codegen):
 
-```
+```shell
 npx playwright codegen localhost:8080
 ```
 
@@ -423,10 +464,8 @@ against a screenshot of the same page or element taken at the time of the test.
 If a visual change has occurred and it is necessary for this change to be included then the snapshots
 that differ must be updated to accommodate this:
 
-```
-
+```shell
 make update-snapshots
-
 ```
 
 The updated snapshots can then be committed alongside the code changes that cause the visual changes.
@@ -441,7 +480,8 @@ To make a change to this data:
 2. Ensure that there is no data currently in the local database.
 3. Load the data into the database: `python panelapp/manage.py loaddata ./frontend/tests/data.json`
 4. Use the local PanelApp instance to put it into the desired state, e.g. by adding/removing panels/genes etc.
-5. Export the data from the local instance to a JSON file: `python panelapp/manage.py dumpdata | jq 'map(select(.model != "authtoken.token"))' > data.json`
+5. Export the data from the local instance to a JSON file:
+   `python panelapp/manage.py dumpdata | jq 'map(select(.model != "authtoken.token"))' > data.json`
 6. Copy the exported `data.json` over the existing one at `./frontend/tests/data.json`
 7. Update the visual test snapshots using `make update-snapshots`
 8. Commit the changes to the repository
@@ -450,37 +490,68 @@ To make a change to this data:
 
 Acceptance tests are written using the [gherkin language](https://cucumber.io/docs/gherkin/).
 
-These are located under `tests/features` and also use the `playwright` framework, integrated using the [playwright-bdd library](https://vitalets.github.io/playwright-bdd/).
+These are located under `tests/features` and also use the `playwright` framework, integrated using the
+[playwright-bdd library](https://vitalets.github.io/playwright-bdd/).
 
 Execute BDD tests using `docker`:
 
-```
+```shell
 make e2e-test-bdd
 ```
 
 Execute BDD tests directly:
 
-```
+```shell
 npx bddgen -c playwright-bdd.config.ts && npx playwright test -c playwright-bdd.config.ts
 ```
 
 While developing tests you can have the BDD tests kept up-to-date using:
 
-```
+```shell
 npm run watch:bdd
 ```
+
+### Coding style and linting
+
+This project uses [pre-commit](https://pre-commit.com/) framework to run code linter, style checker etc.
+
+After initialising the Python environment, the checks can be run by
+
+```shell
+pre-commit run --all-files
+```
+
+The pre-commit hooks are defined in [pre-commit config](./.pre-commit-config.yaml). To run all hooks before commit, use
+
+```shell
+pre-commit install
+```
+
+The hooks used
+
+| hook                                                               | language   |
+|:-------------------------------------------------------------------|:-----------|
+| [pre-commit-hooks](https://github.com/pre-commit/pre-commit-hooks) | generic    |
+| [gitleaks](https://github.com/gitleaks/gitleaks)                   | generic    |
+| [black](https://github.com/psf/black)                              | Python     |
+| [isort](https://github.com/timothycrosley/isort)                   | Python     |
+| [flake8](https://github.com/pycqa/flake8)                          | Python     |
+| [bandit](https://github.com/PyCQA/bandit)                          | Python     |
+| [mypy](https://github.com/python/mypy)                             | Python     |
+| [shellcheck](https://www.shellcheck.net/)                          | Shell/Bash |
+| [checkmate](https://github.com/mrtazz/checkmake.git)               | Makefile   |
+| [markdownlint](https://github.com/markdownlint/markdownlint)       | Markdown   |
 
 ## Deployment
 
 ### Enable relative static resource URLs
 
-The `AWS_STATICFILES_USE_RELATIVE_URL` environment variable in tandem with `AWS_S3_STATICFILES_CUSTOM_DOMAIN` controls whether PanelApp uses relative paths for static resources instead of fully-qualified URLs, e.g. `/static/app.css` instead of `https://example.com/static/app.css`.
+The `AWS_STATICFILES_USE_RELATIVE_URL` environment variable in tandem with `AWS_S3_STATICFILES_CUSTOM_DOMAIN` controls
+whether PanelApp uses relative paths for static resources instead of fully-qualified URLs, e.g. `/static/app.css`
+instead of `https://example.com/static/app.css`.
 
-Set `AWS_STATICFILES_USE_RELATIVE_URL` to `TRUE` and `AWS_S3_STATICFILES_CUSTOM_DOMAIN` to any non-empty value to enable this behaviour.
-
-```
-
-```
+Set `AWS_STATICFILES_USE_RELATIVE_URL` to `TRUE` and `AWS_S3_STATICFILES_CUSTOM_DOMAIN` to any non-empty value to enable
+this behaviour.
 
 ### Content Security Policy
 
@@ -488,13 +559,16 @@ A [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CS
 
 `Content-Security-Policy: default-src 'self' nonce-$nonce; form-action 'self'; frame-ancestors 'self'`
 
-Where `$nonce` is a [nonce](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/nonce) generated uniquely by the server for each request and attached to `style` and `script` tags in the returned markup to enable them to function.
+Where `$nonce` is a [nonce](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/nonce) generated
+uniquely by the server for each request and attached to `style` and `script` tags in the returned markup to enable them
+to function.
 
-If AWS deployment is enabled then the security policy has the `default-src` directive extended by the STATIC_URL and the MEDIA_URL settings to allow static and media resources to be loaded from those locations.
+If AWS deployment is enabled then the security policy has the `default-src` directive extended by the STATIC_URL and the
+MEDIA_URL settings to allow static and media resources to be loaded from those locations.
 
-# Troubleshooting
+## Troubleshooting
 
-## Error: Couldn't find a Program
+### Error: Couldn't find a Program
 
 When running component tests (`npm run test-ct`) the error `Couldn't find a Program` is encountered.
 
@@ -504,10 +578,10 @@ The solution is to run `npm dedupe`.
 
 Relevant links:
 
-- https://github.com/babel/babel/discussions/13742
-- https://docs.npmjs.com/cli/v10/commands/npm-dedupe
+- [babel discussion](https://github.com/babel/babel/discussions/13742)
+- [npm dedupe](https://docs.npmjs.com/cli/v10/commands/npm-dedupe)
 
-## RollupError: Could not resolve "..." from "playwright/index.ts"
+### RollupError: Could not resolve "..." from "playwright/index.ts"
 
 When running component tests this error might be encountered during development.
 

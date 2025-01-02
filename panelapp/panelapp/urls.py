@@ -63,7 +63,7 @@ schema_view = get_schema_view(
     patterns=[path("api/", include("api.urls"))],  # exclude old webservices
     validators=["flex", "ssv"],
     public=True,
-    permission_classes=(permissions.AllowAny,),  #  FIXME(Oleg) we need read only.
+    permission_classes=(permissions.AllowAny,),  # FIXME(Oleg) we need read only.
 )
 
 

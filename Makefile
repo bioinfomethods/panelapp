@@ -26,6 +26,8 @@ ifeq ($(OS),Darwin)
 endif
 export TMPDIR := $(TMPDIR)
 
+all: help
+
 e2e-test-functional: up mock-aws collectstatic ## Run e2e functional tests
 	$(DOCKERCOMPOSE) run --rm playwright /bin/sh -c "npm ci && npm run build && npx wait-on http://web:8000 && npx playwright test tests/functional/"
 
@@ -83,6 +85,7 @@ start: ## Restart a stopped cluster
 down: ## Destroy cluster
 	$(DOCKERCOMPOSE) down
 
+test: tests
 tests: ## Run tests
 	$(DOCKERCOMPOSE) exec web bash -c 'cd /app ; pytest'
 
@@ -130,5 +133,4 @@ endef
 .mock-sqs-queue: ## Create mock SQS queue for Celery
 	$(call create-sqs-queue-if-not-exists,panelapp)
 
-.PHONY:	clean .copy_sources .mock-s3-static .mock-s3-media .mock-sqs-queue up down migrate loaddata collectstatic stop start mock-aws createsuperuser command tests logs clear-s3
-.DEFAULT_GOAL:=help
+.PHONY:	all clean .copy_sources .mock-s3-static .mock-s3-media .mock-sqs-queue up down migrate loaddata collectstatic stop start mock-aws createsuperuser command test tests logs clear-s3

@@ -170,7 +170,7 @@ def update_stats(apps, schema_editor):
 
         out["gene_reviewers"] = list(
             set([r for r in out["gene_reviewers"] if r])
-        )  #  remove None
+        )  # remove None
         out["str_reviewers"] = list(
             set([r for r in out["str_reviewers"] if r])
         )  # remove None
