@@ -6,6 +6,7 @@ on:
       - main
       - roo
       - develop
+      - feat-genomicsengland-base-gh-action
 
 permissions:
   id-token: write
