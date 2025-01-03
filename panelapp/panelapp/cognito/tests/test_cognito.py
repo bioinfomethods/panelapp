@@ -21,10 +21,14 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-import ast
-import json
-import os
+from string import (
+    ascii_letters,
+    ascii_lowercase,
+    digits,
+)
+from textwrap import dedent
 
+import faker
 from django.http import SimpleCookie
 from django.test import (
     SimpleTestCase,
@@ -33,6 +37,43 @@ from django.test import (
 from jose import jwt
 
 from panelapp.cognito.middleware import ALBAuthMiddleware
+
+fake = faker.Faker()
+
+MOCK_ENCODED_JWT_DATA = (
+    "eyJ0eXAiOiJKV1QiLCJraWQiOiIzZTgxOTlkZC1lNjVkLTQzY2UtODAxMS01ZmQ3N2RjYWIxZTMiLCJhbGciOiJFUzI1NiIsImlzcyI6Imh0dH"
+    "BzOi8vY29nbml0by1pZHAudXMtZWFzdC0xLmFtYXpvbmF3cy5jb20vdXMtZWFzdC0xXzFDM3Y3NFZGayIsImNsaWVudCI6IjJwdGlma282NHA5"
+    "YmpyZXJyN3U0MmhubjF0Iiwic2lnbmVyIjoiYXJuOmF3czplbGFzdGljbG9hZGJhbGFuY2luZzp1cy1lYXN0LTE6MDI3MTk1NzEyMjM2OmxvYW"
+    "RiYWxhbmNlci9hcHAvcGFuZWxhcHAtZGV2LWFsYi9iNjBiOWQxYzdlNDA5YzljIiwiZXhwIjoxNTYwNTI3MzUzfQ=="
+    "."
+    "eyJzdWIiOiI2ZDAxNjU1MS01M2FiLTRlMTgtODkxZC1hOTI0YmUyNDE0NDkiLCJpZGVudGl0aWVzIjoiW3tcInVzZXJJZFwiOlwiMTAwMzk5OT"
+    "E0MDM3MTE5Mzk4OTkzXCIsXCJwcm92aWRlck5hbWVcIjpcIkdvb2dsZVwiLFwicHJvdmlkZXJUeXBlXCI6XCJHb29nbGVcIixcImlzc3Vlclwi"
+    "Om51bGwsXCJwcmltYXJ5XCI6dHJ1ZSxcImRhdGVDcmVhdGVkXCI6MTU2MDUyMDUxMTg4Mn1dIiwiZW1haWxfdmVyaWZpZWQiOiJ0cnVlIiwibm"
+    "FtZSI6Iktob2xpeCBUZWNoIiwiZ2l2ZW5fbmFtZSI6Iktob2xpeCIsImZhbWlseV9uYW1lIjoiVGVjaCIsImVtYWlsIjoia2hvbGl4LnRlY2hA"
+    "Z21haWwuY29tIiwidXNlcm5hbWUiOiJHb29nbGVfMTAwMzk5OTE0MDM3MTE5Mzk4OTkzIiwiZXhwIjoxNTYwNTI3MzUzLCJpc3MiOiJodHRwcz"
+    "ovL2NvZ25pdG8taWRwLnVzLWVhc3QtMS5hbWF6b25hd3MuY29tL3VzLWVhc3QtMV8xQzN2NzRWRmsifQ=="
+    "."
+    "ZzTZ2iBFs2RK2VQAEi_piExDtVGNh627ofRiUX-RAn8VZhWB-F_qIOv5sNzvhTTS4L_cu1ObmbZtKbHHptr3Bg=="
+)
+MOCK_PUBLIC_KEY = dedent(
+    """\
+    -----BEGIN PUBLIC KEY-----
+    MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEL7UTKxPfCJ2joAN47z1NoYQlt8JP
+    6Rw4OrJstuGGoBDrYOeEsMdSEwFgXfNav/m9O7E1FRLPpOdC7UnlnUXbmA==
+    -----END PUBLIC KEY-----
+    """
+)
+MOCK_META = {
+    "HTTP_X_AMZN_OIDC_ACCESSTOKEN": fake.lexify(text="?" * 120),
+    "HTTP_X_AMZN_OIDC_IDENTITY": f"${fake.uuid4()}",
+    "HTTP_X_AMZN_OIDC_DATA": fake.lexify(text="?" * 120),
+}
+MOCK_META_HTTP_COOKIE = (
+    f"csrftoken={fake.lexify(text='?' * 64, letters=ascii_letters+digits)}; "
+    f"AWSELBAuthSessionCookie-0={fake.lexify(text='?' * 120, letters=ascii_letters + digits)}; "
+    f"AWSELBAuthSessionCookie-0={fake.lexify(text='?' * 85, letters=ascii_letters + digits)}; "
+    f"sessionid={fake.lexify(text='?' * 32, letters=ascii_lowercase + digits)}"
+)
 
 
 @override_settings(
@@ -45,49 +86,34 @@ from panelapp.cognito.middleware import ALBAuthMiddleware
     AWS_AMZN_OIDC_DATA="HTTP_X_AMZN_OIDC_DATA",
 )
 class CognitoTestCase(SimpleTestCase):
-    def setUp(self) -> None:
-        file_path = os.path.join(os.path.dirname(__file__), "fixtures.json")
-        test_file = os.path.abspath(file_path)
-
-        with open(test_file) as f:
-            mock_data = json.load(f)
-            self.mock_encoded_jwt_data = mock_data.get("mock_encoded_jwt_data")
-            self.mock_public_key = mock_data.get("mock_public_key")
-            self.mock_meta = ast.literal_eval(mock_data.get("mock_meta"))
-            self.mock_meta_http_cookie = ast.literal_eval(
-                mock_data.get("mock_meta_http_cookie")
-            )
-
     def test_has_amzn_oidc_headers(self):
-        self.assertTrue(ALBAuthMiddleware.has_amzn_oidc_headers(self.mock_meta))
+        self.assertTrue(ALBAuthMiddleware.has_amzn_oidc_headers(MOCK_META))
 
     def test_verify_amzn_jwt_structure(self):
         self.assertTrue(
-            ALBAuthMiddleware.verify_amzn_jwt_structure(self.mock_encoded_jwt_data)
+            ALBAuthMiddleware.verify_amzn_jwt_structure(MOCK_ENCODED_JWT_DATA)
         )
 
     def test_get_verified_jwt_claims(self):
         with self.assertRaisesMessage(Exception, "Signature has expired."):
             claims = ALBAuthMiddleware.get_verified_jwt_claims(
-                self.mock_encoded_jwt_data, self.mock_public_key
+                MOCK_ENCODED_JWT_DATA, MOCK_PUBLIC_KEY
             )
             self.assertIsNone(claims)
 
     def test_get_alb_session_cookies(self):
-        http_cookie = self.mock_meta_http_cookie.get("HTTP_COOKIE")
-        self.assertIsNotNone(http_cookie)
-        alb_session_cookies = ALBAuthMiddleware.get_alb_session_cookies(http_cookie)
+        alb_session_cookies = ALBAuthMiddleware.get_alb_session_cookies(
+            MOCK_META_HTTP_COOKIE
+        )
         self.assertTrue(alb_session_cookies)
 
         cook = SimpleCookie()
-        cook.load(http_cookie)
+        cook.load(MOCK_META_HTTP_COOKIE)
         morsel_keys = cook.get(alb_session_cookies[0]).keys()
         self.assertTrue("expires" in morsel_keys)
 
     def test_get_public_key(self):
         this = ALBAuthMiddleware(None)
-        kid = jwt.get_unverified_headers(self.mock_encoded_jwt_data).get("kid")
-        this.cache_holder[kid] = self.mock_public_key
-        self.assertEqual(
-            this.get_public_key(self.mock_encoded_jwt_data), self.mock_public_key
-        )
+        kid = jwt.get_unverified_headers(MOCK_ENCODED_JWT_DATA).get("kid")
+        this.cache_holder[kid] = MOCK_PUBLIC_KEY
+        self.assertEqual(this.get_public_key(MOCK_ENCODED_JWT_DATA), MOCK_PUBLIC_KEY)
