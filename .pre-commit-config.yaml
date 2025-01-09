@@ -4,6 +4,7 @@ repos:
     hooks:
       - id: check-added-large-files
       - id: check-executables-have-shebangs
+      - id: check-illegal-windows-names
       - id: check-json
       - id: check-merge-conflict
       - id: check-shebang-scripts-are-executable
@@ -13,6 +14,7 @@ repos:
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: mixed-line-ending
+      - id: no-commit-to-branch
       - id: trailing-whitespace
   - repo: https://github.com/psf/black
     rev: 22.3.0
@@ -40,8 +42,13 @@ repos:
     rev: v1.14.1
     hooks:
       - id: mypy
-        additional_dependencies: [returns]
+        additional_dependencies:
+          - boto3-stubs
+          - returns
+          - types-requests
+          - types-tabulate
         args:
+          - "--scripts-are-modules"
 #          - "--check-untyped-defs"
           - "--disable-error-code=arg-type"
           - "--disable-error-code=assignment"
@@ -53,13 +60,12 @@ repos:
           - "--disable-error-code=return"
           - "--disable-error-code=return-value"
           - "--disable-error-code=str-format"
-          - "--disable-error-code=union-attr"
           - "--disable-error-code=var-annotated"
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.10.0.1
     hooks:
       - id: shellcheck
-  - repo: https://github.com/mrtazz/checkmake.git
+  - repo: https://github.com/mrtazz/checkmake
     rev: 0.2.2
     hooks:
     -   id: checkmake
@@ -70,6 +76,15 @@ repos:
         exclude: .gitleaks-ignore.comments.md
         args:
           - "--style=.markdownlint.rb"
+  - repo: https://github.com/bridgecrewio/checkov
+    rev: 3.2.347
+    hooks:
+      - id: checkov_diff
+        alias: checkov
+        name: Checkov
+        args:
+          - "--config=.checkov.yaml"
+          - "--file"  # must be last
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.22.1
     hooks:

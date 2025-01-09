@@ -107,7 +107,7 @@ code_test:
     POSTGRES_DB: panelapp
     POSTGRES_USER: panelapp
     POSTGRES_PASSWORD: secret
-    DATABASE_URL: postgres://panelapp:secret@db-postgres:5432/panelapp
+    DATABASE_URL: postgres://panelapp:secret@db-postgres:5432/panelapp  # checkov:skip=CKV_SECRET_4
     DJANGO_SETTINGS_MODULE: panelapp.settings.test
     DJANGO_LOG_LEVEL: INFO
   before_script:

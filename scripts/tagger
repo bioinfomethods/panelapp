@@ -64,7 +64,9 @@ import sys
 from operator import itemgetter
 from typing import (
     List,
+    Match,
     Optional,
+    cast,
 )
 
 import boto3
@@ -127,7 +129,7 @@ class Image:
 class SemVers:
     def __init__(self, version: str):
         self.version = version
-        self.match = Tagger.RE_VERSION.search(version)
+        self.match = cast(Match, Tagger.RE_VERSION.search(version))
         if not self.match:
             raise ValueError("not a simplified semantic version")
 
@@ -171,8 +173,7 @@ class SemVers:
         4
         >>> SemVers('1.2.3').pre_release_version
         """
-        if (group := self.match.group(6)) is not None:
-            return int(group)
+        return int(group) if (group := self.match.group(6)) is not None else None
 
     def __eq__(self, other):
         """
