@@ -45,7 +45,7 @@ jobs:
 
   tests:
     needs: init
-    environment: ${{ needs.init.outputs.env_name }}
+    environment: mcri-vcgs-staging
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -99,7 +99,7 @@ jobs:
 
   build:
     needs: init
-    environment: ${{ needs.init.outputs.env_name }}
+    environment: mcri-vcgs-staging
     runs-on: ubuntu-latest
 
     steps:
@@ -182,7 +182,7 @@ jobs:
 
   deploy:
     needs: [init, tests, build]
-    environment: ${{ needs.init.outputs.env_name }}
+    environment: mcri-vcgs-staging
     runs-on: ubuntu-latest
     env:
       TF_VAR_env_name: ${{ needs.init.outputs.env_name }}
