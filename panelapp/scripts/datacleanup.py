@@ -44,15 +44,22 @@ from accounts.models import (
     User,
 )
 
+CURATOR = "TEST_Curator"
+REVIEWER = "TEST_Reviewer"
+
 
 def fix_test_users():
     with transaction.atomic():
-        test_curator = User.objects.get(username="TEST_Curator")
-        test_curator_reviewer = Reviewer.objects.get(user=test_curator)
-        test_curator.is_staff = True
-        test_curator_reviewer.user_type = Reviewer.TYPES.GEL
-        test_curator.save()
-        test_curator_reviewer.save()
+        try:
+            test_curator = User.objects.get(username=CURATOR)
+        except User.DoesNotExist:
+            print(f"User {CURATOR} does not exist", file=sys.stderr)
+        else:
+            test_curator_reviewer = Reviewer.objects.get(user=test_curator)
+            test_curator.is_staff = True
+            test_curator_reviewer.user_type = Reviewer.TYPES.GEL
+            test_curator.save()
+            test_curator_reviewer.save()
 
 
 def anonymise_emails():
@@ -65,7 +72,7 @@ def anonymise_emails():
         all_users += 1
         if user.is_staff and user.is_active:
             continue
-        if user.username in ["TEST_Curator", "TEST_Reviewer"]:
+        if user.username in [CURATOR, REVIEWER]:
             continue
         passive_users += 1
         # user.username = f'user-{user.id}'
