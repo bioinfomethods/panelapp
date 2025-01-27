@@ -115,9 +115,6 @@ home_page = "scripts.home_page:cli"
 datacleanup = "scripts.datacleanup:main"
 ensembl_id_update = "scripts.ensembl_id_update:main"
 
-[tool.mypy]
-plugins = ["returns.contrib.mypy.returns_plugin"]
-
 [tool.pytest.ini_options]
 testpaths = ["panelapp"]
 python_files = ["tests.py", "test_*.py", "*_tests.py"]
@@ -129,3 +126,36 @@ python_paths = ["panelapp"]
 profile = "black"
 force_grid_wrap = 2
 src_paths = ["panelapp"]
+
+[tool.bandit]
+exclude_dirs = [
+    "panelapp/accounts/tests",
+    "panelapp/panelapp/cognito/tests",
+    "panelapp/panelapp/settings/test.py",
+    "panelapp/panelapp/tests",
+    "panelapp/panels/tests",
+]
+skips = [
+    "B101",  # assert_used
+    "B113",  # request_without_timeout
+    "B307",  # blacklist: eval
+    "B311",  # blacklist  # FIXME: just remove random from module blacklist
+    "B703",  # django_mark_safe
+]
+
+[tool.mypy]
+plugins = ["returns.contrib.mypy.returns_plugin"]
+scripts_are_modules = true
+disable_error_code = [
+   "arg-type",
+   "assignment",
+   "attr-defined",
+   "call-overload",
+   "import-not-found",
+   "import-untyped",
+   "name-defined",
+   "return",
+   "return-value",
+   "str-format",
+   "var-annotated",
+]

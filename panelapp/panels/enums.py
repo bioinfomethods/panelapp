@@ -3,7 +3,7 @@ from enum import Enum
 # Valid entity name - gene symbols, region or STR names
 # Used in URLs, file upload checks, and other validations
 # TODO: Switch to HGNC ids for gene symbols
-VALID_ENTITY_FORMAT = "[\w\-\.\$\~\@\#\ ]+"
+VALID_ENTITY_FORMAT = r"[\w\-\.\$\~\@\#\ ]+"
 
 
 class GeneDataType(Enum):

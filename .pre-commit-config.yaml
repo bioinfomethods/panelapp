@@ -28,16 +28,12 @@ repos:
     rev: 7.1.1
     hooks:
       - id: flake8
-        args:
-          - "--max-line-length=128"
-          - "--extend-ignore=E266,E402,E501,E721,E722,E741,F401,F405,F523,F541,F811,F821,F841,W605"
   - repo: https://github.com/PyCQA/bandit
     rev: 1.8.0
     hooks:
       - id: bandit
-        args:
-          - "--exclude=*/test*.py"
-          - "--skip=B101,B113,B307,B311,B703"
+        additional_dependencies: ["bandit[toml]"]
+        args: ["-c", "pyproject.toml"]
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.14.1
     hooks:
@@ -47,20 +43,6 @@ repos:
           - returns
           - types-requests
           - types-tabulate
-        args:
-          - "--scripts-are-modules"
-#          - "--check-untyped-defs"
-          - "--disable-error-code=arg-type"
-          - "--disable-error-code=assignment"
-          - "--disable-error-code=attr-defined"
-          - "--disable-error-code=call-overload"
-          - "--disable-error-code=import-not-found"
-          - "--disable-error-code=import-untyped"
-          - "--disable-error-code=name-defined"
-          - "--disable-error-code=return"
-          - "--disable-error-code=return-value"
-          - "--disable-error-code=str-format"
-          - "--disable-error-code=var-annotated"
   - repo: https://github.com/shellcheck-py/shellcheck-py
     rev: v0.10.0.1
     hooks:
@@ -69,22 +51,20 @@ repos:
     rev: 0.2.2
     hooks:
     -   id: checkmake
+        alias: make
   - repo: https://github.com/markdownlint/markdownlint
     rev: v0.13.0
     hooks:
       - id: markdownlint
-        exclude: .gitleaks-ignore.comments.md
-        args:
-          - "--style=.markdownlint.rb"
+        alias: markdown
+        args: ["--style=.markdownlint.rb"]
   - repo: https://github.com/bridgecrewio/checkov
     rev: 3.2.347
     hooks:
       - id: checkov_diff
         alias: checkov
         name: Checkov
-        args:
-          - "--config=.checkov.yaml"
-          - "--file"  # must be last
+        args: ["--config=.checkov.yaml", "--file"]
   - repo: https://github.com/gitleaks/gitleaks
     rev: v8.22.1
     hooks:

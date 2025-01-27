@@ -1,0 +1,25 @@
+[flake8]
+max-line-length = 120
+extend-ignore =
+    E266,
+    E501,
+    F401,
+    F405,
+    F841,
+per-file-ignores =
+    panelapp/scripts/datacleanup.py: E402
+    panelapp/scripts/home_page.py: E402
+    panelapp/panels/models/genepanelentrysnapshot.py: E721
+    panelapp/panels/forms/panel.py: E722
+    panelapp/panels/models/uploaded_panel_list.py: E741
+    panelapp/panels/tests/test_templatetags.py: E741
+    panelapp/panels/models/uploaded_review_list.py: E741
+    panelapp/panels/models/entity.py: F523
+    panelapp/panels/models/genepanelsnapshot.py: F523
+    panelapp/panels/views/entities.py: F523
+    panelapp/panels/tests/test_genes.py: F541
+    panelapp/scripts/tests/test_home_page.py: F541
+    panelapp/panelapp/tests/factories.py: F811
+    panelapp/panels/tasks/moi_checks.py: F821
+    panelapp/panels/templatetags/panel_helpers.py: F821
+    panelapp/panels/views/genes.py: F821

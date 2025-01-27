@@ -78,12 +78,10 @@ pre-commit-hooks:
   image: $DOCKER_PYTHON
   before_script:
     - apk add git bash ruby
-    - python3 -m venv "$POETRY_VENV"
-    - $POETRY_VENV/bin/pip install -U pip setuptools
-    - $POETRY_VENV/bin/pip install poetry=="$POETRY_VERSION"
-    - $POETRY_VENV/bin/poetry self add poetry-plugin-bundle
-    - $POETRY_VENV/bin/poetry bundle venv --only dev ./.venv
+    - python3 -m venv .venv
     - source .venv/bin/activate
+    - pip install pre-commit
+    - pre-commit install-hooks
   script:
     - pre-commit run --all-files
 

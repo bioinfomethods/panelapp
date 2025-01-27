@@ -148,7 +148,7 @@ def pubmed_link(publication):
 
 @register.filter
 def remove_special(seq):
-    return re.sub("\W+", "", seq)
+    return re.sub(r"\W+", "", seq)
 
 
 @register.filter

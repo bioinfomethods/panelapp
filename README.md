@@ -513,7 +513,7 @@ npm run watch:bdd
 
 ### Coding style and linting
 
-This project uses [pre-commit](https://pre-commit.com/) framework to run code linter, style checker etc.
+This project uses [pre-commit](https://pre-commit.com/) framework to run code linters, style checkers etc.
 
 After initialising the Python environment, the checks can be run by
 
@@ -521,7 +521,8 @@ After initialising the Python environment, the checks can be run by
 pre-commit run --all-files
 ```
 
-The pre-commit hooks are defined in [pre-commit config](./.pre-commit-config.yaml). To run all hooks before commit, use
+The pre-commit hooks are defined in [pre-commit config](./.pre-commit-config.yaml). To run all hooks automatically
+before commit, use
 
 ```shell
 pre-commit install
@@ -529,18 +530,19 @@ pre-commit install
 
 The hooks used
 
-| hook                                                               | language   |
-|:-------------------------------------------------------------------|:-----------|
-| [pre-commit-hooks](https://github.com/pre-commit/pre-commit-hooks) | generic    |
-| [gitleaks](https://github.com/gitleaks/gitleaks)                   | generic    |
-| [black](https://github.com/psf/black)                              | Python     |
-| [isort](https://github.com/timothycrosley/isort)                   | Python     |
-| [flake8](https://github.com/pycqa/flake8)                          | Python     |
-| [bandit](https://github.com/PyCQA/bandit)                          | Python     |
-| [mypy](https://github.com/python/mypy)                             | Python     |
-| [shellcheck](https://www.shellcheck.net/)                          | Shell/Bash |
-| [checkmate](https://github.com/mrtazz/checkmake.git)               | Makefile   |
-| [markdownlint](https://github.com/markdownlint/markdownlint)       | Markdown   |
+| Collection                                                         | Hook name                                                                  | Type             | Language   |
+|:-------------------------------------------------------------------|:---------------------------------------------------------------------------|:-----------------|:-----------|
+| [pre-commit-hooks](https://github.com/pre-commit/pre-commit-hooks) | (see [config](.pre-commit-config.yaml), repo pre-commit-hooks for details) | Code formatter   | generic    |
+| [black](https://github.com/psf/black)                              | black                                                                      | Code formatter   | Python     |
+| [isort](https://github.com/timothycrosley/isort)                   | isort                                                                      | Code formatter   | Python     |
+| [flake8](https://github.com/pycqa/flake8)                          | flake8                                                                     | Code linter      | Python     |
+| [bandit](https://github.com/PyCQA/bandit)                          | bandit                                                                     | Security scanner | Python     |
+| [mypy](https://github.com/python/mypy)                             | mypy                                                                       | Type checker     | Python     |
+| [shellcheck](https://www.shellcheck.net/)                          | shellcheck                                                                 | Code linter      | Shell/Bash |
+| [checkmate](https://github.com/mrtazz/checkmake)                   | make                                                                       | Code linter      | Makefile   |
+| [markdownlint](https://github.com/markdownlint/markdownlint)       | markdown                                                                   | Code linter      | Markdown   |
+| [Checkov](https://github.com/bridgecrewio/checkov)                 | checkov                                                                    | Security scanner | IaC, CI/CD |
+| [gitleaks](https://github.com/gitleaks/gitleaks)                   | gitleaks                                                                   | Security scanner | git        |
 
 ## Deployment
 
@@ -548,7 +550,7 @@ The hooks used
 
 The `AWS_STATICFILES_USE_RELATIVE_URL` environment variable in tandem with `AWS_S3_STATICFILES_CUSTOM_DOMAIN` controls
 whether PanelApp uses relative paths for static resources instead of fully-qualified URLs, e.g. `/static/app.css`
-instead of `https://example.com/static/app.css`.
+instead of <https://example.com/static/app.css>.
 
 Set `AWS_STATICFILES_USE_RELATIVE_URL` to `TRUE` and `AWS_S3_STATICFILES_CUSTOM_DOMAIN` to any non-empty value to enable
 this behaviour.
