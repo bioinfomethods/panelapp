@@ -123,7 +123,7 @@ jobs:
         with:
           unset-current-credentials: true
           aws-region: ${{ vars.AWS_REGION }}
-          role-to-assume: arn:aws:iam::${{ vars.ACCOUNT_ID }}:role/github-oidc-provider-aws
+          role-to-assume: ${{ vars.AWS_OIDC_PROVIDER_ROLE }}
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -223,7 +223,7 @@ jobs:
         with:
           unset-current-credentials: true
           aws-region: ${{ vars.AWS_REGION }}
-          role-to-assume: arn:aws:iam::${{ vars.ACCOUNT_ID }}:role/github-oidc-provider-aws
+          role-to-assume: ${{ vars.AWS_OIDC_PROVIDER_ROLE }}
 
       - name: Create backend.conf file
         run: |
