@@ -43,7 +43,7 @@ jobs:
           echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
           echo "env_name=${{ steps.init_env.outputs.env_name }}"
-          echo "github_actions_environment=${{ steps.init_env.outputs.env_name }}"
+          echo "github_actions_environment=${{ steps.init_env.outputs.github_actions_environment }}"
 
     outputs:
       env_name: ${{ steps.init_env.outputs.env_name }}
