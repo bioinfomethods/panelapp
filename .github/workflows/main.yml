@@ -26,10 +26,14 @@ jobs:
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
           if [ "$CI_ACTION_REF_NAME_SLUG" == "main" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "master" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "roo" ]; then
             echo "env_name=prod" >> "$GITHUB_OUTPUT"
+            echo "github_actions_environment=prod" >> "$GITHUB_OUTPUT"
           elif [ "$CI_ACTION_REF_NAME_SLUG" == "develop" ]; then
-            echo "env_name=test" >> "$GITHUB_OUTPUT"
+            # FIXME: Only temporarily
+            echo "env_name=prod" >> "$GITHUB_OUTPUT"
+            echo "github_actions_environment=mcri-vcgs-prod" >> "$GITHUB_OUTPUT"
           else
             echo "env_name=test" >> "$GITHUB_OUTPUT"
+            echo "github_actions_environment=test" >> "$GITHUB_OUTPUT"
           fi
           echo "env_name=$env_name"
           echo "GITHUB_OUTPUT=$GITHUB_OUTPUT"
@@ -39,13 +43,15 @@ jobs:
           echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
           echo "env_name=${{ steps.init_env.outputs.env_name }}"
+          echo "github_actions_environment=${{ steps.init_env.outputs.env_name }}"
 
     outputs:
       env_name: ${{ steps.init_env.outputs.env_name }}
+      github_actions_environment: ${{ steps.init_env.outputs.github_actions_environment }}
 
   tests:
     needs: init
-    environment: ${{ needs.init.outputs.env_name }}
+    environment: ${{ needs.init.outputs.github_actions_environment }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -99,7 +105,7 @@ jobs:
 
   build:
     needs: init
-    environment: ${{ needs.init.outputs.env_name }}
+    environment: ${{ needs.init.outputs.github_actions_environment }}
     runs-on: ubuntu-latest
 
     steps:
@@ -123,7 +129,7 @@ jobs:
         with:
           unset-current-credentials: true
           aws-region: ${{ vars.AWS_REGION }}
-          role-to-assume: arn:aws:iam::487143049215:role/github-oidc-provider-aws
+          role-to-assume: ${{ vars.AWS_OIDC_PROVIDER_ROLE }}
 
       - name: Login to Amazon ECR
         id: login-ecr
@@ -182,7 +188,7 @@ jobs:
 
   deploy:
     needs: [init, tests, build]
-    environment: ${{ needs.init.outputs.env_name }}
+    environment: ${{ needs.init.outputs.github_actions_environment }}
     runs-on: ubuntu-latest
     env:
       TF_VAR_env_name: ${{ needs.init.outputs.env_name }}
@@ -223,7 +229,7 @@ jobs:
         with:
           unset-current-credentials: true
           aws-region: ${{ vars.AWS_REGION }}
-          role-to-assume: arn:aws:iam::487143049215:role/github-oidc-provider-aws
+          role-to-assume: ${{ vars.AWS_OIDC_PROVIDER_ROLE }}
 
       - name: Create backend.conf file
         run: |
