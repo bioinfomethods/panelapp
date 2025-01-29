@@ -154,32 +154,42 @@ jobs:
           docker tag "$ECR_REGISTRY/$BASE_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$BASE_REPO_NAME:$CI_SHA_SHORT"
           docker push "$ECR_REGISTRY/$BASE_REPO_NAME:$CI_ACTION_REF_NAME_SLUG"
           docker push "$ECR_REGISTRY/$BASE_REPO_NAME:$CI_SHA_SHORT"
-          if [ "${{ needs.init.outputs.env_name }}" != "prod" ]; then
+
+          # if [ "${{ needs.init.outputs.env_name }}" != "prod" ]; then
             echo "Tagging latest base image for non-prod environment"
             docker tag "$ECR_REGISTRY/$BASE_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$BASE_REPO_NAME:latest"
             docker push "$ECR_REGISTRY/$BASE_REPO_NAME:latest"
-          fi
+          # fi
+
+          # if [ "${{ needs.init.outputs.env_name }}" != "prod" ]; then
+            echo "Tagging latest base image for non-prod environment"
+            docker tag "$ECR_REGISTRY/$BASE_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$BASE_REPO_NAME:latest"
+            docker push "$ECR_REGISTRY/$BASE_REPO_NAME:latest"
+          # fi
 
           docker build -t "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" --build-arg "BASE_IMAGE=$ECR_REGISTRY/$BASE_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" --file ./docker/cloud/Dockerfile-web .
           docker tag "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_SHA_SHORT"
           docker push "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG"
           docker push "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_SHA_SHORT"
-          if [ "${{ needs.init.outputs.env_name }}" != "prod" ]; then
+
+          # if [ "${{ needs.init.outputs.env_name }}" != "prod" ]; then
             echo "Tagging latest web image for non-prod environment"
             docker tag "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$WEB_REPO_NAME:latest"
             docker push "$ECR_REGISTRY/$WEB_REPO_NAME:latest"
-          fi
+          # fi
+
           echo "web_image=$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" >> "$GITHUB_OUTPUT"
 
           docker build -t "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" --build-arg "BASE_IMAGE=$ECR_REGISTRY/$BASE_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" --file ./docker/cloud/Dockerfile-worker .
           docker tag "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_SHA_SHORT"
           docker push "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG"
           docker push "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_SHA_SHORT"
-          if [ "${{ needs.init.outputs.env_name }}" != "prod" ]; then
+
+          # if [ "${{ needs.init.outputs.env_name }}" != "prod" ]; then
             echo "Tagging latest worker image for non-prod environment"
             docker tag "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$WORKER_REPO_NAME:latest"
             docker push "$ECR_REGISTRY/$WORKER_REPO_NAME:latest"
-          fi
+          # fi
           echo "worker_image=$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" >> "$GITHUB_OUTPUT"
     outputs:
       base_image: ${{ steps.build_image.outputs.base_image }}
