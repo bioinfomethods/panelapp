@@ -264,7 +264,6 @@ jobs:
           cd $WORKING_DIR
           pip install boto3 argparse
           sleep 30
-          # FIXME
-          # python3 infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-${{needs.init.outputs.env_name}} -panelapp
+          python3 infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-${{needs.init.outputs.env_name}} -panelapp
           sleep 30
           python3 infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-${{needs.init.outputs.env_name}} -panelapp
