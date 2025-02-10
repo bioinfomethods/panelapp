@@ -4,7 +4,7 @@
 {% load django_htmx %}
 
 <!DOCTYPE html>
-<html class="no-js">
+<html class="no-js" lang="en">
   <head lang="en">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -29,9 +29,9 @@
   {% endif %}
 </div>
 
-<div class="container">
+<main class="container" role="main">
   {% block content %}{% endblock %}
-</div>
+</main>
 
 {% block body %}{% endblock %}
 {% block modals %}{% endblock %}
