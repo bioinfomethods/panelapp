@@ -17,7 +17,8 @@ variables:
   DOCKER_TLS_VERIFY: 1
   FF_GITLAB_REGISTRY_HELPER_IMAGE: 1
   PANELAPP_TF_DIR: "panelapp-infra/terraform/panelapp/"
-  POETRY_VERSION: "1.8.2"
+  POETRY_VERSION: "1.8.5"
+  POETRY_PLUGIN_BUNDLE_VERSION: "1.5.0"
   POETRY_VENV: /tmp/poetry
   AWS_REGION: eu-west-2
   AWS_DEFAULT_REGION: eu-west-2
@@ -113,7 +114,7 @@ code_test:
     - python3 -m venv "$POETRY_VENV"
     - $POETRY_VENV/bin/pip install -U pip setuptools
     - $POETRY_VENV/bin/pip install poetry=="$POETRY_VERSION"
-    - $POETRY_VENV/bin/poetry self add poetry-plugin-bundle
+    - $POETRY_VENV/bin/poetry self add poetry-plugin-bundle=="$POETRY_PLUGIN_BUNDLE_VERSION"
     - $POETRY_VENV/bin/poetry bundle venv --only main,test ./.venv
     - source .venv/bin/activate
   script:
@@ -129,7 +130,7 @@ e2e_test_image_build:
     - source scripts/assume_role.sh
   script:
     - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
-    - docker build -f ./docker/Dockerfile -t "$E2E_TEST_IMAGE_TAG" --target test --build-arg node_base="${DOCKER_NODE}" --build-arg python_base="${DOCKER_PYTHON}" .
+    - docker build -f ./docker/Dockerfile -t "$E2E_TEST_IMAGE_TAG" --target test --build-arg node_base="${DOCKER_NODE}" --build-arg python_base="${DOCKER_PYTHON}" --build-arg POETRY_VERSION="${POETRY_VERSION}" --build-arg POETRY_PLUGIN_BUNDLE_VERSION="${POETRY_PLUGIN_BUNDLE_VERSION}" .
     - docker push "$E2E_TEST_IMAGE_TAG"
 
 .e2e_test:
@@ -223,7 +224,7 @@ image_build:
   script:
     - aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin "$ECR_REGISTRY"
     - if scripts/tagger validate-version "$APP_VERSION"; then sed -i -e "s/^version =.*/version = \"${APP_VERSION}\"/" ./pyproject.toml; fi
-    - docker build -f ./docker/Dockerfile -t "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG" --target prod --build-arg node_base="${DOCKER_NODE}" --build-arg python_base="${DOCKER_PYTHON}" .
+    - docker build -f ./docker/Dockerfile -t "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG" --target prod --build-arg node_base="${DOCKER_NODE}" --build-arg python_base="${DOCKER_PYTHON}" --build-arg POETRY_VERSION="${POETRY_VERSION}" --build-arg POETRY_PLUGIN_BUNDLE_VERSION="${POETRY_PLUGIN_BUNDLE_VERSION}" .
     - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG"
     - scripts/tagger add-env-tags --env=build --add-latest=1 "$BUILD_TAG"
   variables:

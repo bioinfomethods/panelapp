@@ -1,7 +1,6 @@
 ARG python_base=python:3.11.9-alpine3.19
 ARG node_base=node:20.14.0-alpine3.19
 
-
 FROM ${node_base} AS frontend_build
 
 COPY ./frontend /src/frontend
@@ -11,7 +10,8 @@ RUN cd /src && npm ci && npm run build
 
 FROM ${python_base} AS backend_build_prod
 
-ENV POETRY_VERSION=1.8.3
+ARG POETRY_VERSION=1.8.5
+ARG POETRY_PLUGIN_BUNDLE_VERSION=1.5.0
 
 WORKDIR /src
 
@@ -20,8 +20,8 @@ RUN apk upgrade --no-cache && \
     apk add --no-cache musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev && \
     python3 -m venv /src/.poetry && \
     /src/.poetry/bin/pip install -U pip setuptools && \
-    /src/.poetry/bin/pip install poetry=="$POETRY_VERSION" && \
-    /src/.poetry/bin/poetry self add poetry-plugin-bundle
+    /src/.poetry/bin/pip install poetry=="${POETRY_VERSION}" && \
+    /src/.poetry/bin/poetry self add poetry-plugin-bundle=="${POETRY_PLUGIN_BUNDLE_VERSION}"
 
 COPY ./pyproject.toml ./poetry.lock ./README.md /src/
 COPY ./panelapp /src/panelapp
