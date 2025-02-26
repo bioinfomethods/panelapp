@@ -1,7 +1,7 @@
 """TODO: module doc..."""
 
 import os
-from setuptools import find_packages, setup
+from setuptools import setup
 
 # allow setup.py to be run from any path
 os.chdir(os.path.normpath(os.path.join(os.path.abspath(__file__), os.pardir)))
@@ -84,5 +84,6 @@ setup(
         "pycurl==7.45.3",
         "simple-json-log-formatter==0.5.5",
         "python-jose[cryptography]==3.0.1",
+         "jsonschema<4.0",
     ],
 )
