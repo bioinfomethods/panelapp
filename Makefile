@@ -31,9 +31,6 @@ all: help
 e2e-test-functional: up mock-aws collectstatic ## Run e2e functional tests
 	$(DOCKERCOMPOSE) run --rm playwright /bin/sh -c "npm ci && npm run build && npx wait-on http://web:8000 && npx playwright test tests/functional/"
 
-e2e-test-bdd: up mock-aws collectstatic ## Run e2e bdd tests
-	$(DOCKERCOMPOSE) run --rm playwright /bin/sh -c "npm ci && npx bddgen -c playwright-bdd.config.ts && npx playwright test -c playwright-bdd.config.ts"
-
 e2e-test-visual: up mock-aws collectstatic ## Run e2e visual tests
 	$(DOCKERCOMPOSE) run --rm playwright /bin/sh -c "npm ci && npm run build && npx wait-on http://web:8000 && npx playwright test tests/visual/"
 

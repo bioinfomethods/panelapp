@@ -4,7 +4,6 @@
   "scripts": {
     "build": "webpack --config webpack.prod.js",
     "watch": "webpack watch --config webpack.dev.js",
-    "watch:bdd": "nodemon -w ./tests/features -w ./tests/steps -e feature,js,ts --exec 'npx bddgen -c playwright-bdd.config.ts'",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build"
   },
@@ -28,7 +27,6 @@
     "dotenv": "^16.4.5",
     "mini-css-extract-plugin": "^2.7.6",
     "nodemon": "^3.1.7",
-    "playwright-bdd": "^7.5.0",
     "postcss": "^8.4.31",
     "postcss-loader": "^7.3.3",
     "sass": "^1.79.4",
