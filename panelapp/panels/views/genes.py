@@ -160,9 +160,11 @@ class DownloadPanelTSVMixin(PanelMixin, DetailView):
                     ";".join(map(remove_non_ascii, self.object.level4title.omim)),
                     ";".join(map(remove_non_ascii, self.object.level4title.orphanet)),
                     ";".join(map(remove_non_ascii, self.object.level4title.hpo)),
-                    ";".join(map(remove_non_ascii, gpentry.publications))
-                    if gpentry.publications
-                    else "",
+                    (
+                        ";".join(map(remove_non_ascii, gpentry.publications))
+                        if gpentry.publications
+                        else ""
+                    ),
                     "",
                     str(gpentry.flagged),
                     str(gpentry.saved_gel_status),
@@ -213,9 +215,11 @@ class DownloadPanelTSVMixin(PanelMixin, DetailView):
                     ";".join(map(remove_non_ascii, self.object.level4title.omim)),
                     ";".join(map(remove_non_ascii, self.object.level4title.orphanet)),
                     ";".join(map(remove_non_ascii, self.object.level4title.hpo)),
-                    ";".join(map(remove_non_ascii, strentry.publications))
-                    if strentry.publications
-                    else "",
+                    (
+                        ";".join(map(remove_non_ascii, strentry.publications))
+                        if strentry.publications
+                        else ""
+                    ),
                     "",
                     str(strentry.flagged),
                     str(strentry.saved_gel_status),
@@ -223,18 +227,22 @@ class DownloadPanelTSVMixin(PanelMixin, DetailView):
                     str(version),
                     strentry.ready,
                     "",
-                    strentry.gene.get("ensembl_genes", {})
-                    .get("GRch37", {})
-                    .get("82", {})
-                    .get("ensembl_id", "-")
-                    if strentry.gene
-                    else "",
-                    strentry.gene.get("ensembl_genes", {})
-                    .get("GRch38", {})
-                    .get("90", {})
-                    .get("ensembl_id", "-")
-                    if strentry.gene
-                    else "",
+                    (
+                        strentry.gene.get("ensembl_genes", {})
+                        .get("GRch37", {})
+                        .get("82", {})
+                        .get("ensembl_id", "-")
+                        if strentry.gene
+                        else ""
+                    ),
+                    (
+                        strentry.gene.get("ensembl_genes", {})
+                        .get("GRch38", {})
+                        .get("90", {})
+                        .get("ensembl_id", "-")
+                        if strentry.gene
+                        else ""
+                    ),
                     strentry.gene.get("hgnc_id", "-") if strentry.gene else "",
                     strentry.chromosome,
                     strentry.position_37.lower if strentry.position_37 else "",
@@ -276,9 +284,11 @@ class DownloadPanelTSVMixin(PanelMixin, DetailView):
                     ";".join(map(remove_non_ascii, self.object.level4title.omim)),
                     ";".join(map(remove_non_ascii, self.object.level4title.orphanet)),
                     ";".join(map(remove_non_ascii, self.object.level4title.hpo)),
-                    ";".join(map(remove_non_ascii, region.publications))
-                    if region.publications
-                    else "",
+                    (
+                        ";".join(map(remove_non_ascii, region.publications))
+                        if region.publications
+                        else ""
+                    ),
                     "",
                     str(region.flagged),
                     str(region.saved_gel_status),
@@ -286,18 +296,22 @@ class DownloadPanelTSVMixin(PanelMixin, DetailView):
                     str(version),
                     region.ready,
                     "",
-                    region.gene.get("ensembl_genes", {})
-                    .get("GRch37", {})
-                    .get("82", {})
-                    .get("ensembl_id", "-")
-                    if region.gene
-                    else "",
-                    region.gene.get("ensembl_genes", {})
-                    .get("GRch38", {})
-                    .get("90", {})
-                    .get("ensembl_id", "-")
-                    if region.gene
-                    else "",
+                    (
+                        region.gene.get("ensembl_genes", {})
+                        .get("GRch37", {})
+                        .get("82", {})
+                        .get("ensembl_id", "-")
+                        if region.gene
+                        else ""
+                    ),
+                    (
+                        region.gene.get("ensembl_genes", {})
+                        .get("GRch38", {})
+                        .get("90", {})
+                        .get("ensembl_id", "-")
+                        if region.gene
+                        else ""
+                    ),
                     region.gene.get("hgnc_id", "-") if region.gene else "",
                     region.chromosome,
                     region.position_37.lower if region.position_37 else "",

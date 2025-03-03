@@ -9,6 +9,7 @@ packages = [
     { include = "api", from = "panelapp" },
     { include = "panelapp", from = "panelapp" },
     { include = "panels", from = "panelapp" },
+    { include = "releases", from = "panelapp" },
     { include = "scripts", from = "panelapp" },
     { include = "v1rewrites", from = "panelapp" },
     { include = "webservices", from = "panelapp" },
@@ -47,6 +48,7 @@ django-csp = "^4.0b1"
 django-extensions = "^3.2.3"
 django-filter = "^22.1"
 django-htmx = "^1.21.0"
+django-import-export = "^4.3.3"
 django-markdown-deux = "^1.0.6"
 django-markdownx = "^4.0.7"
 django-mathfilters = "^1.0.0"
@@ -77,6 +79,7 @@ requests = "^2.32.0"
 returns = "^0.22.0"
 setuptools = "^78.0.0"
 swagger-spec-validator = "^3.0.3"
+tenacity = "^9.0.0"
 typer-slim = "^0.12.0"
 
 [tool.poetry.group.test.dependencies]
@@ -93,6 +96,8 @@ pytest-runner = "^6.0.1"
 pytest-sugar = "^1.0.0"
 pytest-xdist = "^3.5.0"
 responses = "^0.25.0"
+testfixtures = "^8.2.0"
+time-machine = "^2.14.1"
 
 
 [tool.poetry.group.dev.dependencies]
@@ -134,28 +139,29 @@ exclude_dirs = [
     "panelapp/panelapp/settings/test.py",
     "panelapp/panelapp/tests",
     "panelapp/panels/tests",
+    "panelapp/releases/tests",
 ]
 skips = [
-    "B101",  # assert_used
-    "B113",  # request_without_timeout
-    "B307",  # blacklist: eval
-    "B311",  # blacklist  # FIXME: just remove random from module blacklist
-    "B703",  # django_mark_safe
+    "B101", # assert_used
+    "B113", # request_without_timeout
+    "B307", # blacklist: eval
+    "B311", # blacklist  # FIXME: just remove random from module blacklist
+    "B703", # django_mark_safe
 ]
 
 [tool.mypy]
 plugins = ["returns.contrib.mypy.returns_plugin"]
 scripts_are_modules = true
 disable_error_code = [
-   "arg-type",
-   "assignment",
-   "attr-defined",
-   "call-overload",
-   "import-not-found",
-   "import-untyped",
-   "name-defined",
-   "return",
-   "return-value",
-   "str-format",
-   "var-annotated",
+    "arg-type",
+    "assignment",
+    "attr-defined",
+    "call-overload",
+    "import-not-found",
+    "import-untyped",
+    "name-defined",
+    "return",
+    "return-value",
+    "str-format",
+    "var-annotated",
 ]

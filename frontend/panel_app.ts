@@ -1,8 +1,14 @@
+import "@popperjs/core";
 import "bootstrap";
+import { Tooltip } from "bootstrap";
 import htmx from "htmx.org";
 import "jquery/src/ajax";
 import "select2";
+import "./components/ArrowDown";
+import "./components/ArrowRight";
+import "./components/Badge";
 import "./components/Brand";
+import "./components/Facet";
 import "./components/HomePages";
 import "./components/Navbar";
 import "./components/RatingBadge";
@@ -529,7 +535,16 @@ $(function () {
   window.app = app;
   app.startApp();
 
-  $('[data-toggle="tooltip"]').tooltip();
+  // https://getbootstrap.com/docs/5.3/components/tooltips/#enable-tooltips
+  const enableTooltips = () => {
+    let triggers = $('[data-bs-toggle="tooltip"]');
+    let tooltips = [...triggers].map((elem) => new Tooltip(elem));
+  };
+  enableTooltips();
+  // Refresh tooltips after an htmx request has returned
+  document.body.addEventListener("htmx:afterRequest", function (evt) {
+    enableTooltips();
+  });
 
   $(".remove-empty-array-val").submit(function () {
     $("#id_publications").val(

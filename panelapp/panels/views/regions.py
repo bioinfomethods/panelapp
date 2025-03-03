@@ -92,12 +92,16 @@ class DownloadAllRegions(GELReviewerRequiredMixin, View):
                     entry.position_37.upper if entry.position_37 else "",
                     entry.position_38.lower,
                     entry.position_38.upper,
-                    entry.haploinsufficiency_score
-                    if entry.haploinsufficiency_score
-                    else "",
-                    entry.triplosensitivity_score
-                    if entry.triplosensitivity_score
-                    else "",
+                    (
+                        entry.haploinsufficiency_score
+                        if entry.haploinsufficiency_score
+                        else ""
+                    ),
+                    (
+                        entry.triplosensitivity_score
+                        if entry.triplosensitivity_score
+                        else ""
+                    ),
                     entry.required_overlap_percentage,
                     entry.type_of_variants,
                     entry.gene.get("gene_symbol") if entry.gene else "",
@@ -109,32 +113,40 @@ class DownloadAllRegions(GELReviewerRequiredMixin, View):
                     ";".join([evidence.name for evidence in entry.evidence.all()]),
                     entry.moi,
                     ";".join([tag.name for tag in entry.tags.all()]),
-                    entry.gene.get("ensembl_genes", {})
-                    .get("GRch37", {})
-                    .get("82", {})
-                    .get("ensembl_id", "")
-                    if entry.gene
-                    else "",
-                    entry.gene.get("ensembl_genes", {})
-                    .get("GRch38", {})
-                    .get("90", {})
-                    .get("ensembl_id", "")
-                    if entry.gene
-                    else "",
+                    (
+                        entry.gene.get("ensembl_genes", {})
+                        .get("GRch37", {})
+                        .get("82", {})
+                        .get("ensembl_id", "")
+                        if entry.gene
+                        else ""
+                    ),
+                    (
+                        entry.gene.get("ensembl_genes", {})
+                        .get("GRch38", {})
+                        .get("90", {})
+                        .get("ensembl_id", "")
+                        if entry.gene
+                        else ""
+                    ),
                     entry.gene.get("biotype", "-") if entry.gene else "-",
                     phenotypes,
-                    entry.gene.get("ensembl_genes", {})
-                    .get("GRch37", {})
-                    .get("82", {})
-                    .get("location", "")
-                    if entry.gene
-                    else "",
-                    entry.gene.get("ensembl_genes", {})
-                    .get("GRch38", {})
-                    .get("90", {})
-                    .get("location", "")
-                    if entry.gene
-                    else "",
+                    (
+                        entry.gene.get("ensembl_genes", {})
+                        .get("GRch37", {})
+                        .get("82", {})
+                        .get("location", "")
+                        if entry.gene
+                        else ""
+                    ),
+                    (
+                        entry.gene.get("ensembl_genes", {})
+                        .get("GRch38", {})
+                        .get("90", {})
+                        .get("location", "")
+                        if entry.gene
+                        else ""
+                    ),
                     ";".join([t.name for t in entry.panel.panel.types.all()]),
                     super_panel_id if is_super_panel else "-",
                     super_panel_name if is_super_panel else "-",

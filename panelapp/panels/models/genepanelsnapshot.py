@@ -23,6 +23,10 @@
 ##
 import logging
 from copy import deepcopy
+from datetime import (
+    date,
+    datetime,
+)
 
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.contrib.postgres.fields import ArrayField
@@ -62,6 +66,7 @@ from .evaluation import Evaluation
 from .evidence import Evidence
 from .gene import Gene
 from .genepanel import GenePanel
+from .historical_snapshot import HistoricalSnapshot
 from .Level4Title import Level4Title
 from .tag import Tag
 from .trackrecord import TrackRecord
@@ -3389,6 +3394,41 @@ class GenePanelSnapshot(TimeStampedModel):
             }
 
         Activity.log(user=user, panel_snapshot=self, text=text, extra_info=extra_info)
+
+    def promote(self, user: User, now: datetime, comment: str | None = None):
+        historical_snapshot = HistoricalSnapshot.from_panel(self)
+        if self.version_comment and comment:
+            self.version_comment = f"{comment}\n\n{self.version_comment}"
+        else:
+            self.version_comment = self.version_comment or comment
+        self.major_version = self.major_version + 1
+        self.minor_version = 0
+        self.created = now
+        self.modified = now
+        historical_snapshot.save()
+        self.save()
+
+        self.add_activity(
+            user,
+            f"promoted panel to version {self.major_version}.{self.minor_version}",
+        )
+        email_panel_promoted.delay(self.panel.pk)
+
+    def sign_off(self, user: User, now: datetime):
+        historical_snapshot = HistoricalSnapshot.from_panel(self)
+        historical_snapshot.signed_off_date = now.date()
+        self.minor_version = self.minor_version + 1
+        self.created = now
+        self.modified = now
+        self.panel.signed_off = historical_snapshot
+        historical_snapshot.save()
+        self.panel.save()
+        self.save()
+
+        self.add_activity(
+            user,
+            f"Panel version {historical_snapshot.major_version}.{historical_snapshot.minor_version} has been signed off on {now.date()}",
+        )
 
 
 def fix_super_panel_entities(apps):

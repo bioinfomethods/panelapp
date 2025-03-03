@@ -370,7 +370,7 @@ class HistoricalSnapshot(models.Model):
         return response
 
     @classmethod
-    def import_panel(cls, panel, comment=None):
+    def from_panel(cls, panel, comment=None):
         from api.v1.serializers import PanelSerializer
 
         json = PanelSerializer(panel, include_entities=True)
@@ -382,7 +382,11 @@ class HistoricalSnapshot(models.Model):
         instance.reason = comment
         instance.schema_version = panelapp.__version__
         instance.data = json.data
+        return instance
 
+    @classmethod
+    def import_panel(cls, panel, comment=None):
+        instance = cls.from_panel(panel, comment=comment)
         instance.save()
         return instance
 

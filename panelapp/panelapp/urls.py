@@ -71,6 +71,7 @@ urlpatterns = [
     path("", Homepage.as_view(), name="home"),
     path("accounts/", include("accounts.urls", namespace="accounts")),
     path("panels/", include("panels.urls", namespace="panels")),
+    path("releases/", include("releases.urls", namespace="releases")),
     path("crowdsourcing/", include("v1rewrites.urls", namespace="v1rewrites")),
     re_path(
         r"^api/docs(?P<format>\.json|\.yaml)$",

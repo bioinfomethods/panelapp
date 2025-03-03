@@ -1,0 +1,40 @@
+{% extends "default.html" %}
+{% load django_bootstrap5 %}
+{% block content %}
+<ol class="breadcrumb add-top-margin">
+  <li class="breadcrumb-item">
+    <a href="{% url 'releases:list' %}">Releases</a>
+  </li>
+  <li class="breadcrumb-item">
+      <a href="{% url 'releases:detail' release.pk %}">{{ release.name }}</a>
+  </li>
+  <li class="breadcrumb-item active">Edit</li>
+</ol>
+
+<div
+  class="page-header add-top-margin border-bottom"
+  id="banner"
+>
+  <h1>{% block title %}Edit Release{% endblock %}</h1>
+</div>
+
+<form class="form add-top-margin" method="POST">
+  {% csrf_token %}
+
+  <div class="card p-3">
+    {% bootstrap_form form %}
+    {{ form.media }}
+  </div>
+
+  <div class="add-top-margin add-bottom-margin">
+    <input
+      class="btn btn-primary"
+      type="submit"
+      name="action"
+      value="Submit"
+    />
+    <a href="{% url 'releases:detail' release.pk %}" class="btn btn-outline-light-panelapp">Cancel</a>
+  </div>
+</form>
+
+{% endblock %}

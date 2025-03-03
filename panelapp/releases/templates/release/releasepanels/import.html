@@ -1,0 +1,51 @@
+{% extends "default.html" %}
+{% load django_bootstrap5 %}
+{% block content %}
+
+<div class="px-2">
+  <ol class="breadcrumb add-top-margin">
+    <li class="breadcrumb-item">
+        <a href="{% url 'releases:list' %}">Releases</a>
+    </li>
+    <li class="breadcrumb-item">
+        <a href="{% url 'releases:detail' release.pk %}">{{ release.name }}</a>
+    </li>
+    <li class="breadcrumb-item">
+      <a href="{% url 'releases:releasepanel-list' release.pk %}">Panels</a>
+    </li>
+    <li class="breadcrumb-item active">
+        Import
+    </li>
+  </ol>
+
+  <div
+    class="page-header add-top-margin border-bottom"
+    id="banner"
+  >
+    <div class="d-flex gap-2 add-top-margin">
+      <h1>{% block title %}Import Release Panels{% endblock %}</h1>
+      <div class="d-flex align-items-center">
+        <a data-bs-toggle="modal" href="#import_help"><i class="fa fa-question-circle"></i></a>
+      </div>
+    </div>
+  </div>
+
+  {% if form.errors %}
+    <div id="errors" class="add-top-margin alert alert-danger">
+      There are issues with the submission.
+    </div>
+  {% endif %}
+
+  <div class="add-top-margin">
+    <form method="post" action="{% url 'releases:releasepanel-import' release.pk %}" enctype="multipart/form-data">
+      {% csrf_token %}
+      {% bootstrap_form form %}
+      <button type="submit" class="btn btn-primary">Import</button>
+    </form>
+  </div>
+</div>
+{% endblock %}
+
+{% block modals %}
+    {% include "release/releasepanels/import_help.html" %}
+{% endblock %}

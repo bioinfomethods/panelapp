@@ -1,4 +1,5 @@
 import { Browser, expect, Page } from "@playwright/test";
+import { stringify } from "csv/sync";
 import { ReviewFeedback } from "../pages/review-feedback";
 import { GeneFeedback } from "./gene-feedback";
 import {
@@ -17,6 +18,8 @@ import {
   RegionReview,
   ReviewRegionForm,
 } from "./region-review";
+import { NewRelease, NewReleaseForm, Release } from "./release";
+import { NewReleasePanel, ReleasePanel } from "./release-panel";
 import {
   NewStrReview,
   ReviewStrForm,
@@ -36,6 +39,8 @@ export class Panels {
   strReviewComments: Map<string, StrReviewComment>;
   panelRegions: Map<string, PanelRegion>;
   regionReviews: Map<string, RegionReview>;
+  releases: Map<string, Release>;
+  releasePanels: Map<string, ReleasePanel>;
 
   constructor(pages: Pages) {
     this.pages = pages;
@@ -48,6 +53,8 @@ export class Panels {
     this.strReviewComments = new Map();
     this.panelRegions = new Map();
     this.regionReviews = new Map();
+    this.releases = new Map();
+    this.releasePanels = new Map();
   }
 
   registerPanel(panel: Panel) {
@@ -82,6 +89,14 @@ export class Panels {
     this.regionReviews.set(regionReview.testId, regionReview);
   }
 
+  registerRelease(release: Release) {
+    this.releases.set(release.testId, release);
+  }
+
+  registerReleasePanel(releasePanel: ReleasePanel) {
+    this.releasePanels.set(releasePanel.testId, releasePanel);
+  }
+
   async delete(testId: string) {
     const panel = this.panels.get(testId);
     if (!panel) {
@@ -110,6 +125,20 @@ export class Panels {
       .soft(page.getByText("Successfully added a new panel"))
       .toBeVisible();
 
+    const match = page.url().match(`https?://[^/]+/panels/(\\d+)/`);
+    if (match === null) {
+      throw Error(`URL is incorrect: ${page.url()}`);
+    }
+    const id = match[1];
+
+    if (panel.comment) {
+      // Can only add a comment by promoting the panel
+      await page
+        .getByPlaceholder("Comment about this new version")
+        .fill(panel.comment);
+      await page.getByRole("button", { name: "Increase Version" }).click();
+    }
+
     // The panel version cannot be set directly on creation
     // however we can verify that it matches the expected
     // initial state
@@ -118,16 +147,10 @@ export class Panels {
         .soft(
           page
             .getByRole("heading")
-            .filter({ hasText: `(Version ${panel.version})` })
+            .filter({ hasText: `(Version ${panel.version})` }),
         )
         .toBeVisible();
     }
-
-    const match = page.url().match(`https?:\/\/[^\/]+\/panels\/(\\d+)\/`);
-    if (match === null) {
-      throw Error(`URL is incorrect: ${page.url()}`);
-    }
-    const id = match[1];
 
     this.registerPanel({ ...panel, id });
     return id;
@@ -189,7 +212,7 @@ export class Panels {
     await form.submit();
 
     await expect(
-      page.getByText("Successfully added a new region")
+      page.getByText("Successfully added a new region"),
     ).toBeVisible();
 
     this.registerPanelRegion(region);
@@ -229,7 +252,7 @@ export class Panels {
     }
 
     const match = url.match(
-      `\/panels\/${panel.id}\/gene\/${panelGene.symbol}/delete_evaluation/(\\d+)\/`
+      `\/panels\/${panel.id}\/gene\/${panelGene.symbol}/delete_evaluation/(\\d+)\/`,
     );
     if (match === null) {
       throw Error(`URL is incorrect: ${url}`);
@@ -275,7 +298,7 @@ export class Panels {
     }
 
     const match = url.match(
-      `/panels/${panel.id}/str/${panelStr.name}/delete_evaluation/(\\d+)/`
+      `/panels/${panel.id}/str/${panelStr.name}/delete_evaluation/(\\d+)/`,
     );
     if (match === null) {
       throw Error(`URL is incorrect: ${url}`);
@@ -321,7 +344,7 @@ export class Panels {
     }
 
     const match = url.match(
-      `/panels/${panel.id}/region/${panelRegion.name}/delete_evaluation/(\\d+)/`
+      `/panels/${panel.id}/region/${panelRegion.name}/delete_evaluation/(\\d+)/`,
     );
     if (match === null) {
       throw Error(`URL is incorrect: ${url}`);
@@ -371,7 +394,7 @@ export class Panels {
     if (feedback.rating) {
       await feedbackPage.setRating(
         feedback.rating.rating,
-        feedback.rating.comment
+        feedback.rating.comment,
       );
     }
   }
@@ -416,6 +439,115 @@ export class Panels {
     this.registerGeneReviewComment({ ...comment, id });
 
     return id;
+  }
+
+  async createRelease(release: NewRelease) {
+    const page = await this.pages.get_or_create(release.createdBy);
+
+    await page.goto("/releases/create/");
+
+    let form = new NewReleaseForm(page);
+    await form.fill(release);
+    await form.submit();
+
+    await expect(
+      page.getByRole("heading", { name: release.name }),
+    ).toBeVisible();
+
+    const match = page.url().match(`https?://[^/]+/releases/(\\d+)/`);
+    if (match === null) {
+      throw Error(`URL is incorrect: ${page.url()}`);
+    }
+    const id = match[1];
+
+    this.registerRelease({ ...release, id });
+    return id;
+  }
+
+  async deployRelease(testId: string) {
+    const release = this.releases.get(testId);
+    if (!release) {
+      throw new Error("Release not found");
+    }
+
+    const page = await this.pages.get_or_create("admin");
+
+    await page.goto(`/releases/${release.id}/deployment/`);
+
+    page.on("dialog", (dialog) => dialog.accept());
+    await page.getByRole("button", { name: "Deploy" }).click();
+
+    await expect(page.getByText("DONE")).toBeVisible({ timeout: 15000 });
+  }
+
+  async renameRelease(testId: string, name: string) {
+    const release = this.releases.get(testId);
+    if (!release) {
+      throw Error("Release not found");
+    }
+    const page = await this.pages.get_or_create("admin");
+
+    await page.goto(`/releases/${release.id}/edit/`);
+
+    await page.getByPlaceholder("Name").fill(name);
+
+    await page.getByRole("button", { name: "Submit" }).click();
+
+    await expect(page.getByRole("heading", { name })).toBeVisible();
+
+    release.name = name;
+  }
+
+  async setReleasePanels(releasePanels: NewReleasePanel[]) {
+    const groupedByRelease = releasePanels.reduce((acc, x) => {
+      acc[x.releaseTestId] = acc[x.releaseTestId] || [];
+      acc[x.releaseTestId].push(x);
+      return acc;
+    }, {});
+
+    const page = await this.pages.get_or_create("admin");
+
+    for (const releaseTestId of Object.keys(groupedByRelease)) {
+      const release = this.releases.get(releaseTestId);
+      if (!release) {
+        throw Error("Release not found");
+      }
+      const releasePanelsByRelease = groupedByRelease[releaseTestId];
+
+      const fields = ["Panel ID", "Promote"];
+      const records = releasePanelsByRelease.map((x) => {
+        // Convert test panel id to actual panel id
+        const panel = this.panels.get(x.panelTestId);
+        if (!panel) {
+          throw Error("Panel not found");
+        }
+        return { "Panel ID": panel.id, Promote: x.promote.toString() };
+      });
+
+      const rows = records.map((rec) => fields.map((field) => rec[field]));
+
+      const encoded = stringify([fields].concat(rows));
+
+      await page.goto(`/releases/${release.id}/panels/import/`);
+
+      const fileChooserPromise = page.waitForEvent("filechooser");
+      await page.getByLabel("File to import").click();
+      const fileChooser = await fileChooserPromise;
+
+      await fileChooser.setFiles({
+        name: "panels.csv",
+        mimeType: "text/csv",
+        buffer: Buffer.from(encoded),
+      });
+
+      await page.getByLabel("Format").selectOption("csv");
+
+      await page.getByRole("button", { name: "Import" }).click();
+
+      await expect(
+        page.getByRole("heading", { name: "Release Panels" }),
+      ).toBeVisible();
+    }
   }
 
   async dispose() {

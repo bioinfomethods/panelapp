@@ -8,6 +8,7 @@
     "build-storybook": "storybook build"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.10.1",
     "@chromatic-com/storybook": "^3.2.2",
     "@playwright/test": "^1.50.1",
     "@storybook/addon-a11y": "^8.4.7",
@@ -24,6 +25,7 @@
     "@types/select2": "^4.0.63",
     "autoprefixer": "^10.4.16",
     "css-loader": "^6.8.1",
+    "csv": "^6.3.11",
     "dotenv": "^16.4.5",
     "mini-css-extract-plugin": "^2.7.6",
     "nodemon": "^3.1.7",

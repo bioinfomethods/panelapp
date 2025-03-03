@@ -1,0 +1,31 @@
+<div class="add-bottom-margin">
+  <div class="d-grid">
+    <div class="row">
+      <div class="col-md-auto">
+        {% for facet in facets.facets %}
+          {% include "components/facet.html" with facet=facet only %}
+        {% endfor %}
+      </div>
+      <div class="col">
+        {% include "components/searchbar.html" with widget=searchbar only %}
+        {% include "components/paging.html" with objects=releasepanels page_range=page_range url=url htmx_indicator=".loading,.loaded" htmx_sync="closest form:abort" only %}
+        <div
+          class="loading htmx-indicator"
+        >
+          <div
+            class="d-flex justify-content-center"
+          >
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </div>
+        </div>
+        <div class="loaded add-bottom-margin d-grid gap-4">
+          <div id="panels" hx-swap-oob="true">
+            {% include "release/releasepanels/table.html" %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

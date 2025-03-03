@@ -46,6 +46,7 @@ from panels.models import (
     Tag,
     TrackRecord,
 )
+from panels.models.historical_snapshot import HistoricalSnapshot
 
 fake = Faker()
 
@@ -343,3 +344,16 @@ class RegionFactory(factory.django.DjangoModelFactory):
             return
 
         self.panel._update_saved_stats()
+
+
+class HistoricalSnapshotFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = HistoricalSnapshot
+
+    panel = factory.SubFactory(GenePanelFactory)
+    major_version = 0
+    minor_version = 0
+    reason = None
+    schema_version = ""
+    data = "{}"
+    signed_off_date = None

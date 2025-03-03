@@ -21,12 +21,18 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from datetime import timedelta
+from datetime import (
+    date,
+    datetime,
+    timedelta,
+)
 from random import (
     choice,
     randint,
 )
+from typing import cast
 
+from django.core import mail
 from django.test import (
     Client,
     override_settings,
@@ -907,3 +913,52 @@ class GenePanelSnapshotTest(LoginGELUser):
 
         new_ap = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel
         assert new_ap.get_gene(gene_symbol).transcript == ["2383bnb"]
+
+    def test_promote(self):
+        gps = cast(
+            GenePanelSnapshot,
+            GenePanelSnapshotFactory(major_version=0, minor_version=0),
+        )
+        gpes = cast(GenePanelEntrySnapshot, GenePanelEntrySnapshotFactory(panel=gps))
+        gps.update_gene(
+            self.verified_user, gpes.gene_core.gene_symbol, {"transcript": ["2383bnb"]}
+        )
+
+        gps.promote(
+            self.gel_user, now=datetime(2025, 1, 1), comment="This is a comment"
+        )
+
+        assert gps.major_version == 1
+        assert gps.minor_version == 0
+        assert gps.version_comment == "This is a comment"
+        assert gps.created == datetime(2025, 1, 1)
+
+        assert len(mail.outbox) == 4
+
+        assert (
+            HistoricalSnapshot.objects.filter(
+                panel=gps.panel, major_version=0, minor_version=0
+            ).first()
+            is not None
+        )
+
+    def test_sign_off(self):
+        gps = cast(
+            GenePanelSnapshot,
+            GenePanelSnapshotFactory(major_version=0, minor_version=0),
+        )
+
+        gps.sign_off(self.gel_user, now=datetime(2025, 1, 1))
+
+        assert gps.major_version == 0
+        assert gps.minor_version == 1
+        assert gps.created == datetime(2025, 1, 1)
+
+        historical_snapshot = HistoricalSnapshot.objects.filter(
+            panel=gps.panel, major_version=0, minor_version=0
+        ).first()
+
+        assert historical_snapshot is not None
+        assert historical_snapshot.signed_off_date == date(2025, 1, 1)
+
+        assert gps.panel.signed_off == historical_snapshot

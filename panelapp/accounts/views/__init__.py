@@ -33,11 +33,11 @@ from django.views.generic import (
 )
 from django.views.generic.edit import CreateView
 
-from .forms import (
+from ..forms import (
     ChangePasswordForm,
     RegistrationForm,
 )
-from .models import User
+from ..models import User
 
 
 class UserRegistrationView(CreateView):

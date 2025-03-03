@@ -80,6 +80,11 @@ export default class Navbar extends LitElement {
           >Import panel</a
         >
       </li>
+      <li class="nav-item">
+        <a class="nav-link nav-panelapp rounded mx-2 my-1" href="/releases/"
+          >Releases</a
+        >
+      </li>
       <li class="nav-item dropdown">
         <a
           href="#"

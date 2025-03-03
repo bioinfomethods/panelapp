@@ -21,6 +21,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+
 from dal_select2.views import (
     Select2ListView,
     Select2QuerySetView,

@@ -18,6 +18,7 @@ export interface NewPanel extends TestIdentifiable, Provenance {
   childPanels?: string[];
   status?: string;
   version?: string;
+  comment?: string;
 }
 
 export interface Panel extends NewPanel, Identifiable {}
@@ -49,6 +50,7 @@ export const parseNewPanel = (data: Record<string, string>): NewPanel => {
       : undefined,
     status: data["Status"],
     version: data["Version"],
+    comment: data["Comment"],
     createdBy: data["User"] || "admin",
   };
 };

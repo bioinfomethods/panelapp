@@ -111,7 +111,15 @@ CUSTOM_APPS = [
     "django_htmx",
 ]
 
-PROJECT_APPS = ["panelapp", "accounts", "panels", "webservices", "v1rewrites", "api"]
+PROJECT_APPS = [
+    "panelapp",
+    "accounts",
+    "panels",
+    "webservices",
+    "v1rewrites",
+    "api",
+    "releases",
+]
 
 INSTALLED_APPS = DJANGO_APPS + CUSTOM_APPS + PROJECT_APPS
 
@@ -126,6 +134,7 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "csp.middleware.CSPMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 
 ROOT_URLCONF = "panelapp.urls"
@@ -164,7 +173,7 @@ DATABASE_NAME = os.getenv("DATABASE_NAME", "panelapp")
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
     (
-        f"postgres://{DATABASE_USER}:{urllib.parse.quote(DATABASE_PASSWORD,safe='')}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
+        f"postgres://{DATABASE_USER}:{urllib.parse.quote(DATABASE_PASSWORD, safe='')}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
         if DATABASE_USER and DATABASE_PASSWORD and DATABASE_HOST
         else None
     ),
@@ -244,6 +253,11 @@ LOGGING = {
             "propagate": False,
         },
         "accounts": {
+            "handlers": ["console"],
+            "level": APP_LOG_LEVEL,
+            "propagate": False,
+        },
+        "releases": {
             "handlers": ["console"],
             "level": APP_LOG_LEVEL,
             "propagate": False,

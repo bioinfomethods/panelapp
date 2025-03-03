@@ -22,17 +22,34 @@
 ## under the License.
 ##
 import logging
+from smtplib import SMTPDataError
 
 from django.conf import settings
 from django.core.mail import (
     send_mail,
     send_mass_mail,
 )
+from tenacity import (
+    before_sleep_log,
+    retry,
+    retry_if_exception_type,
+    stop_after_attempt,
+    wait_random_exponential,
+)
 
 from .celery import app
 
+logger = logging.getLogger(__name__)
+
 
 @app.task
+@retry(
+    reraise=True,
+    retry=retry_if_exception_type(SMTPDataError),
+    wait=wait_random_exponential(multiplier=2, max=30),
+    stop=stop_after_attempt(10),
+    before_sleep=before_sleep_log(logger, logging.WARNING),
+)
 def send_email(email, subject, text, html=None):
     "Send emails via Celery task"
 
@@ -47,6 +64,13 @@ def send_email(email, subject, text, html=None):
 
 
 @app.task
+@retry(
+    reraise=True,
+    retry=retry_if_exception_type(SMTPDataError),
+    wait=wait_random_exponential(multiplier=2, max=30),
+    stop=stop_after_attempt(10),
+    before_sleep=before_sleep_log(logger, logging.WARNING),
+)
 def send_mass_email(messages):
     send_mass_mail(messages, fail_silently=False)
 

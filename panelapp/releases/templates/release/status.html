@@ -1,0 +1,11 @@
+{% if release.deployment.end %}
+<span
+  id="release-status"
+  class="badge text-bg-success"
+  data-bs-toggle="tooltip"
+  data-bs-title="{{ release.deployment.end }}"
+  >DONE</span
+>
+{% else %}
+<span id="release-status" class="badge text-bg-secondary">PENDING</span>
+{% endif %}

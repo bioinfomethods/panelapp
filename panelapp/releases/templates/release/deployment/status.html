@@ -1,0 +1,44 @@
+<div id="deployment-status" hx-swap-oob="true" class="d-inline-block">
+  {% if release.deployment.end %}
+    <button
+      class="btn btn-success"
+      type="button"
+      data-bs-toggle="tooltip"
+      data-bs-title="{{ release.deployment.end }}"
+    >
+      <strong>DONE</strong>
+    </button>
+  {% elif release.deployment %}
+    {% if release.deployment.timed_out %}
+    <button
+      class="btn btn-primary"
+      type="button"
+      hx-post="{% url 'releases:deployment' release.pk %}"
+      hx-disabled-elt="this"
+    >
+      {% include "components/button_loading_content.html" with text="Retry" %}
+    </button>
+    {% else %}
+    <button
+      class="btn btn-primary"
+      type="button"
+      disabled
+      hx-get="{% url 'releases:deployment-status' release.pk %}"
+      hx-trigger="load delay:5s"
+    >
+      <span class="spinner-border spinner-border-sm" aria-hidden="true"></span>
+      <span role="status">Deploying...</span>
+    </button>
+    {% endif %}
+  {% else %}
+    <button
+      class="btn btn-primary"
+      type="button"
+      hx-post="{% url 'releases:deployment' release.pk %}"
+      hx-confirm="Are you sure you wish to update {{ release.panel_count }} panels?"
+      hx-disabled-elt="this"
+    >
+      {% include "components/button_loading_content.html" with text="Deploy" %}
+    </button>
+  {% endif %}
+</div>

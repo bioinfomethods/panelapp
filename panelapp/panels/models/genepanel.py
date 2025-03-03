@@ -21,6 +21,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+import json
 from datetime import datetime
 from typing import (
     List,
@@ -239,3 +240,6 @@ class GenePanel(TimeStampedModel):
             .exclude(pk__in=exclude_pks)
             .order_by("-major_version", "-minor_version")
         )
+
+    def type_names_json(self) -> str:
+        return json.dumps(list(self.types.values_list("name", flat=True)), indent=None)

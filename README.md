@@ -472,17 +472,16 @@ The updated snapshots can then be committed alongside the code changes that caus
 
 #### Managing test data
 
-Data for UI testing is stored at `./frontend/tests/data.json` in the Django data dump format.
+Data for UI testing is stored at `./tests/data.json` in the Django data dump format.
 
 To make a change to this data:
 
 1. Start up a local instance of PanelApp using the steps earlier in this document.
 2. Ensure that there is no data currently in the local database.
-3. Load the data into the database: `python panelapp/manage.py loaddata ./frontend/tests/data.json`
+3. Load the data into the database: `python panelapp/manage.py loaddata ./tests/data.json`
 4. Use the local PanelApp instance to put it into the desired state, e.g. by adding/removing panels/genes etc.
-5. Export the data from the local instance to a JSON file:
-   `python panelapp/manage.py dumpdata | jq 'map(select(.model != "authtoken.token"))' > data.json`
-6. Copy the exported `data.json` over the existing one at `./frontend/tests/data.json`
+5. Export the data from the local instance to a JSON file: `scripts/dumpdata.sh > data.json`
+6. Copy the exported `data.json` over the existing one at `./tests/data.json`
 7. Update the visual test snapshots using `make update-snapshots`
 8. Commit the changes to the repository
 

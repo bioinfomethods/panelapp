@@ -1,0 +1,54 @@
+<nav
+  id="pages"
+  aria-label="pages"
+  class="add-top-margin"
+  hx-swap-oob="true"
+>
+  <ul class="pagination">
+    <li class="page-item">
+      <button
+        class="page-link {% if not objects.has_previous %}disabled{% endif %}"
+        type="button"
+        aria-label="Previous"
+        hx-get="{{ url }}{% if objects.has_previous %}?page={{ objects.previous_page_number }}{% endif %}"
+        hx-include="closest form"
+        hx-indicator="{{ htmx_indicator }}"
+        hx-swap="none"
+        hx-sync="{{ htmx_sync }}"
+      >
+        <span aria-hidden="true">&laquo;</span>
+      </button>
+    </li>
+    {% for number in page_range %}
+    <li
+      class="page-item {% if number == objects.paginator.ELLIPSIS %}disabled{% elif number == objects.number %}active{% endif %}"
+    >
+      <button
+        class="page-link"
+        type="button"
+        hx-get="{{ url }}?page={{ number }}"
+        hx-include="closest form"
+        hx-indicator="{{ htmx_indicator }}"
+        hx-swap="none"
+        hx-sync="{{ htmx_sync }}"
+      >
+        {{ number }}
+      </button>
+    </li>
+    {% endfor %}
+    <li class="page-item">
+      <button
+        class="page-link {% if not objects.has_next %}disabled{% endif %}"
+        type="button"
+        aria-label="Next"
+        hx-get="{{ url }}{% if objects.has_next %}?page={{ objects.next_page_number }}{% endif %}"
+        hx-include="closest form"
+        hx-indicator="{{ htmx_indicator }}"
+        hx-swap="none"
+        hx-sync="{{ htmx_sync }}"
+      >
+        <span aria-hidden="true">&raquo;</span>
+      </button>
+    </li>
+  </ul>
+</nav>
