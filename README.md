@@ -358,8 +358,8 @@ Service endpoints are LocalStack defaults:
   the
   host machine they are actually exposed to `localhost`. To allow resources hosted at `localstack` to be accessible on
   the host machine:
-    - Linux: Alias `localstack` to `localhost` in the host machine's `/etc/hosts` file.
-    - Windows: Add the line `127.0.0.1 localstack` to the host machine's `C:\Windows\System32\drivers\etc\hosts` file.
+- Linux: Alias `localstack` to `localhost` in the host machine's `/etc/hosts` file.
+- Windows: Add the line `127.0.0.1 localstack` to the host machine's `C:\Windows\System32\drivers\etc\hosts` file.
 - LocalStack SES does not support SMTP
 
 #### AWScli-local
@@ -531,7 +531,7 @@ pre-commit install
 The hooks used
 
 | Collection                                                         | Hook name                                                                  | Type             | Language   |
-|:-------------------------------------------------------------------|:---------------------------------------------------------------------------|:-----------------|:-----------|
+| :----------------------------------------------------------------- | :------------------------------------------------------------------------- | :--------------- | :--------- |
 | [pre-commit-hooks](https://github.com/pre-commit/pre-commit-hooks) | (see [config](.pre-commit-config.yaml), repo pre-commit-hooks for details) | Code formatter   | generic    |
 | [black](https://github.com/psf/black)                              | black                                                                      | Code formatter   | Python     |
 | [isort](https://github.com/timothycrosley/isort)                   | isort                                                                      | Code formatter   | Python     |
@@ -572,7 +572,7 @@ MEDIA_URL settings to allow static and media resources to be loaded from those l
 
 ### Error: Couldn't find a Program
 
-When running component tests (`npm run test-ct`) the error `Couldn't find a Program` is encountered.
+Sometimes the error `Couldn't find a Program` is encountered when running `npm` commands.
 
 The issue is due to duplication in `node_module` due to transitive shared dependencies such as `babel`.
 
@@ -582,13 +582,3 @@ Relevant links:
 
 - [babel discussion](https://github.com/babel/babel/discussions/13742)
 - [npm dedupe](https://docs.npmjs.com/cli/v10/commands/npm-dedupe)
-
-### RollupError: Could not resolve "..." from "playwright/index.ts"
-
-When running component tests this error might be encountered during development.
-
-This is due to `playwright/.cache` which stores cached paths to source files such as `../../frontend/components/Navbar.ts`.
-
-If the location of the source file is changed this will be come out of sync.
-
-The solution is to `rm playwright/.cache` which will prompt playwright to update this at the next run.

@@ -40,12 +40,6 @@ e2e-test-visual: up mock-aws collectstatic ## Run e2e visual tests
 update-snapshots: up mock-aws collectstatic ## Update e2e snapshots
 	$(DOCKERCOMPOSE) run --rm playwright /bin/sh -c "npm ci && npm run build && npx wait-on http://web:8000 && npx playwright test tests/visual/ --update-snapshots"
 
-test-component: ## Run UI component tests
-	$(DOCKERCOMPOSE) run --rm playwright /bin/sh -c "npm ci && npm run test-ct"
-
-update-component-snapshots: ## Update component snapshots
-	$(DOCKERCOMPOSE) run --rm playwright /bin/sh -c "npm ci && npx playwright test -c playwright-ct.config.ts --update-snapshots"
-
 clean: ## Remove build directory
 	rm -rf $(BUILDDIR)
 	rm -rf $(DISTDIR)

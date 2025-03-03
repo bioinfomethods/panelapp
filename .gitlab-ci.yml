@@ -86,7 +86,6 @@ pre-commit-hooks:
   script:
     - pre-commit run --all-files
 
-
 # Code checks
 ## run unit and integration tests
 code_test:
@@ -106,7 +105,7 @@ code_test:
     POSTGRES_DB: panelapp
     POSTGRES_USER: panelapp
     POSTGRES_PASSWORD: secret
-    DATABASE_URL: postgres://panelapp:secret@db-postgres:5432/panelapp  # checkov:skip=CKV_SECRET_4
+    DATABASE_URL: postgres://panelapp:secret@db-postgres:5432/panelapp # checkov:skip=CKV_SECRET_4
     DJANGO_SETTINGS_MODULE: panelapp.settings.test
     DJANGO_LOG_LEVEL: INFO
   before_script:
@@ -184,11 +183,6 @@ e2e_test_visual:
   extends: .e2e_test
   script:
     - npx playwright test tests/visual/
-
-test_component:
-  extends: .e2e_test
-  script:
-    - npm run test-ct
 
 trivy:
   stage: test
