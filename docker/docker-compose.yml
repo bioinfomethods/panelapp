@@ -3,7 +3,7 @@ volumes:
 
 services:
   playwright:
-    image: mcr.microsoft.com/playwright:v1.47.0-jammy
+    image: mcr.microsoft.com/playwright:v1.50.1-jammy
     volumes:
       - ../tests/:/work/tests/
       - ../frontend/:/work/frontend/
@@ -52,6 +52,7 @@ services:
       - POSTGRES_PASSWORD=secret
       - POSTGRES_USER=panelapp
       - POSTGRES_DB=panelapp
+    command: ["postgres", "-c", "log_statement=all", "-c", "work_mem=256MB"]
 
   web:
     build:
