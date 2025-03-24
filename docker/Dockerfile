@@ -18,8 +18,8 @@ WORKDIR /src
 RUN apk upgrade --no-cache && \
     apk add --no-cache postgresql-libs curl jpeg-dev zlib-dev && \
     apk add --no-cache musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev && \
+    pip install --upgrade pip setuptools && \
     python3 -m venv /src/.poetry && \
-    /src/.poetry/bin/pip install -U pip setuptools && \
     /src/.poetry/bin/pip install poetry=="${POETRY_VERSION}" && \
     /src/.poetry/bin/poetry self add poetry-plugin-bundle=="${POETRY_PLUGIN_BUNDLE_VERSION}"
 
@@ -40,6 +40,7 @@ RUN adduser -D -u 1000 -s /sbin/nologin  -g app app && \
     chown app:app /app
 
 RUN apk upgrade --no-cache && \
+    pip install --upgrade pip setuptools && \
     apk add --no-cache postgresql-libs curl jpeg-dev zlib-dev
 
 COPY --chown=app:app ./deploy/gunicorn_config.py /app/
