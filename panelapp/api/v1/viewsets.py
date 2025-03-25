@@ -245,6 +245,7 @@ class EntityViewSet(viewsets.mixins.ListModelMixin, viewsets.GenericViewSet):
     lookup_field = "entity_name"
     lookup_url_kwarg = "entity_name"
     recent_version_only = False
+    lookup_value_regex = "[^/]+"
 
     def filter_list(self, obj):
         entity_name = self.request.query_params.get("entity_name")
@@ -472,6 +473,7 @@ class EntitySearch(ReadOnlyListViewset):
     lookup_field = "entity_name"
     lookup_url_kwarg = "entity_name"
     filterset_class = EntitySearchFilter
+    lookup_value_regex = "[^/]+"
 
     @property
     def active_snapshot_ids(self):
