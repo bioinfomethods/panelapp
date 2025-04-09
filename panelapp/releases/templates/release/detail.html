@@ -1,0 +1,56 @@
+{% extends "default.html" %}
+{% load django_bootstrap5 %}
+{% block content %}
+
+<ol id="breadcrumbs" class="breadcrumb add-top-margin">
+  <li class="breadcrumb-item">
+    <a href="{% url 'releases:list' %}">Releases</a>
+  </li>
+  <li class="breadcrumb-item active">{{ release.name }}</li>
+</ol>
+
+<div
+  class="page-header add-top-margin border-bottom"
+  id="banner"
+>
+  <div id="name" class="d-flex gap-2 add-top-margin">
+    <h1>{% block title %}{{ release.name }}{% endblock %}</h1>
+  </div>
+</div>
+
+<div id="links" class="add-top-margin">
+  <a
+    class="btn btn-outline-light-panelapp"
+    href="{% url 'releases:edit' release.pk %}"
+  >
+    <i class="fa fa-pen-to-square"></i> Edit
+  </a>
+  <a
+    class="btn btn-outline-light-panelapp"
+    href="{% url 'releases:releasepanel-list' release.pk %}"
+  >
+    <i class="fa fa-list"></i> Panels
+  </a>
+  <a
+    class="btn btn-outline-light-panelapp"
+    href="{% url 'releases:deployment' release.pk %}"
+  >
+    <i class="fa fa-rocket"></i> Deployment {% include "release/status.html" %}
+  </a>
+</div>
+
+<div class="add-top-margin">
+  <x-facet label="Summary" open>
+    <div id="summary" class="ps-4 pt-1">
+      {% include "release/releasepanels/summary.html" with summary=release only %}
+    </div>
+  </x-facet>
+
+  <x-facet label="Promotion Comment" open>
+    <div id="promotion-comment" class="ps-4 pt-1 ">
+      {{ release.promotion_comment|linebreaksbr }}
+    </div>
+  </x-facet>
+</div>
+
+{% endblock %}

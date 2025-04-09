@@ -23,13 +23,18 @@
 ##
 from django.test import TransactionTestCase
 from django.urls import reverse_lazy
-from panels.models import GenePanel
-from panels.models import PanelType
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
-from panels.tests.factories import STRFactory
-from panels.tests.factories import RegionFactory
-from panels.tests.factories import PanelTypeFactory
+
+from panels.models import (
+    GenePanel,
+    PanelType,
+)
+from panels.tests.factories import (
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+    PanelTypeFactory,
+    RegionFactory,
+    STRFactory,
+)
 from webservices.utils import convert_mop
 
 
@@ -180,7 +185,9 @@ class TestWebservices(TransactionTestCase):
         self.assertEqual(r.status_code, 200)
 
     def test_get_panel_by_old_pk(self):
-        r = self.client.get(reverse_lazy("webservices:get_panel", args=(self.gpes.panel.panel.old_pk,)))
+        r = self.client.get(
+            reverse_lazy("webservices:get_panel", args=(self.gpes.panel.panel.old_pk,))
+        )
         self.assertEqual(r.status_code, 200)
         self.assertTrue(b"Query Error" not in r.content)
 

@@ -1,7 +1,7 @@
 {% extends "default.html" %}
 {% load static %}
-{% load staticfiles %}
-{% load bootstrap3 %}
+{% load static %}
+{% load django_bootstrap5 %}
 
 {% block content %}
 <ol class="breadcrumb">
@@ -35,23 +35,17 @@
                 <fieldset>
                     {% for field in form %}
                         <div class="form-group">
-                            {% if field.errors %}
-                                {% for error in field.errors %}
-                                    <span class="label label-danger">{{ error|escape }}</span>
-                                {% endfor %}
-                            {% endif %}
-
                             {% if field.name == "mode_of_pathogenicity" %}
-                                {{ field.label_tag }} <a data-toggle="modal" data-target="#model_of_path" ><i class="fa fa-question-circle"></i></a>
+                                {{ field.label_tag }} <a data-bs-toggle="modal" href="#model_of_path" data-testid="review-show-info-mop" ><i class="fa fa-question-circle"></i></a>
                             {% elif field.name == "Model_of_inheritance" %}
-                                {{ field.label_tag }} <a data-toggle="modal" data-target="#moi" ><i class="fa fa-question-circle"></i></a>
+                                {{ field.label_tag }} <a data-bs-toggle="modal" href="#moi" data-testid="review-show-info-moi" ><i class="fa fa-question-circle"></i></a>
                             {% elif field.name == "rating" %}
                                 <hr />
                                 <h4 class="add-label-margin">Review gene</h4>
                                 <p class="text-muted">You can optionally include a review of this gene when you add it.</p>
                                 {{ field.label_tag }}
                             {% elif field.name == "current_diagnostic" %}
-                                {{ field.label_tag }} <a data-toggle="modal" data-target="#diagostic" ><i class="fa fa-question-circle"></i></a>
+                                {{ field.label_tag }} <a data-bs-toggle="modal" href="#diagostic" data-testid="review-show-info-current-diagnostic" ><i class="fa fa-question-circle"></i></a>
                             {% else %}
                                 {{ field.label_tag }}
                             {% endif %}

@@ -1,0 +1,17 @@
+<div>
+  <label for="{{ widget.id }}" class="rm">{{ widget.label }}</label>
+  <div class="input-group">
+    <input
+      id="{{ widget.id }}"
+      name="{{ widget.name }}"
+      type="search"
+      class="form-control normal"
+      placeholder="{{ widget.placeholder }}"
+      value="{{ widget.value }}"
+      {{ widget.htmx|safe }}
+    />
+    <span id="searchbar-count" class="input-group-text" hx-swap-oob="true">
+      {{ widget.page.paginator.count }} {{ widget.object_name_plural }}
+    </span>
+  </div>
+</div>

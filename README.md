@@ -1,49 +1,29 @@
 # PanelApp
 
-
 Panel App is a crowd-sourced repository of information about various gene panels.
-
-
 
 ## Application overview
 
-Panel App is a project based on Django Framework (v2.1).
+Panel App is a project based on Django Framework.
 It uses PostgreSQL as database, AWS SQS as message queue backend and AWS S3 for file storage.
 
-Python version: 3.5
+Python version: 3.8
 
 Python dependencies are installed via `setup.py`.
 
 > The previous version of the application used a hosted RabbitMQ instance and the local file system for file storage.
 > This new version has been refactored to work on AWS, leveraging managed AWS services.
-> Using RabbitMQ and the local file system is still possible with the Django settings `./panelapp/panelapp/settings/on-prem.py`, 
+> Using RabbitMQ and the local file system is still possible with the Django settings `./panelapp/panelapp/settings/on-prem.py`,
 > but backward compatibility is not fully guaranteed.
 
-All environment are dockerised. 
+All environments are dockerised.
 
-We make a distinction between local development environments and cloud environments, as they use different Dockerfiles and Django settings.
+We make a distinction between local development environments and cloud environments, as they use different Dockerfiles
+and Django settings.
 
 As much as possible, the application follows the [Twelve-Factors App](https://12factor.net/) design principles.
 
-## Local development environments
-
-**For more details about local development environment setup and tooling, see [./docker/dev/README.md](docker/dev/README.md).**
-
-
-The local environment allows developers to change the code and observe changes.
-
-It also uses [LocalStack](https://github.com/localstack/localstack), to mock AWS SQS and S3 services.
-
-A [Docker Compose](docker/dev/docker-compose.yml) stack that includes PanelApp (_Web_ and _Worker_), a PostgreSQL instance and [LocalStack](https://github.com/localstack/localstack) is provided.
-
-_Web_ and _Worker_ components share the same codebase but _web_ runs as web-app server while _worker_ runs as Celery.
-
-A [Makefile](docker/dev/Makefile) is provided to facilitate dev-time operations.
-
-
 ## Cloud environments
-
-**For details on _Cloud_ environments see [./docker/cloud/README.md](docker/cloud/README.md).**
 
 All environments, except the local-dev environment, are assumed to run on AWS against actual AWS services.
 
@@ -51,9 +31,528 @@ Dockerfiles for cloud are optimised for security and size.
 
 The application is agnostic to the container scheduler platform it runs in (e.g. Kubernetes, ECS).
 
-Docker-compose and Makefile in  [./docker/cloud/](docker/cloud/) are for locally troubleshooting production docker images.
+Docker-compose and Makefile in [./docker/cloud/](./docker/cloud/Makefile) are for locally troubleshooting production
+docker images.
 They are NOT supposed to be used to deploy the application in any environment.
 
 ## Contributing to PanelApp
 
 All contributions are under [Apache2 license](http://www.apache.org/licenses/LICENSE-2.0.html#contributions).
+
+Check [CONTRIBUTING.md](./CONTRIBUTING.md) on how to contribute.
+
+## Local development
+
+Local-dev uses Docker and the [Docker Compose stack](./docker/docker-compose.yml) included.
+
+Please use the [Makefile](./Makefile) provided to set up the local dev environment.
+
+### Docker-Compose stack
+
+Docker Compose stack includes:
+
+- _Web_ component: a Django app server run with `runserver_plus`.
+- _Worker_ component: a Celery application.
+- A PostgreSQL instance
+- [LocalStack](https://github.com/localstack/localstack), mocking S3 and SQS.
+
+The application source code is mounted from the local machine as volumes into the running containers.
+Any change to the code will be immediately reflected.
+
+> If you start the docker-compose cluster directly, without the Makefile, you need to set `TMPDIR` env variable.
+> To `/tmp/localstack` on Linux or `/private/tmp/localstack` on OSX.
+
+### Developer machine requirements
+
+Software requirements:
+
+- Docker: tested with Docker 18.09.2 on Mac
+- AWS CLI: tested with aws-cli/1.16.156 Python/2.7.16 botocore/1.12.146
+
+Local setup requirements:
+
+- Edit your `/etc/hosts` file adding `localstack` as alias to `localhost`
+
+This is required because [LocalStack](https://github.com/localstack/localstack), mocking AWS services, is running in
+the Docker-Compose cluster as `localstack` but exposed to the host machine on localhost on port 4566.
+
+#### Virtualenv Apple M1 Homebrew
+
+These system dependencies are required to set up a virtualenv to use for development:
+
+```shell
+brew install postgresql@15
+brew install openssl@3
+export LDFLAGS="-L/opt/homebrew/opt/openssl@3/lib"
+export CPPFLAGS="-I/opt/homebrew/opt/openssl@3/include"
+```
+
+#### Linux (Ubuntu 22.04)
+
+Depending on your system, some packages might be required:
+
+```shell
+sudo apt install postgresql-common libpq-dev libcurl4-openssl-dev
+```
+
+### Dockerfile
+
+All Python dependencies, including dev and test deps, are installed as editable.
+
+### Native Development lifecycle
+
+1. Launch local support services:
+
+   ```shell
+   pushd docker/dev
+   docker-compose up -d db localstack
+   popd
+   ```
+
+2. Create virtual environment:
+
+   ```shell
+   python -m venv .venv
+   source .venv/bin/activate
+   pip install '.[dev,tests]'
+   ```
+
+3. Setup environment variables:
+
+   ```shell
+   export USE_S3=FALSE
+   export DATABASE_USER=panelapp
+   export DATABASE_PASSWORD=secret
+   export DATABASE_HOST=localhost
+   export DATABASE_PORT=5432
+   export DATABASE_NAME=panelapp
+   export DJANGO_SETTINGS_MODULE=panelapp.settings.dev
+   export DJANGO_LOG_LEVEL=DEBUG
+   ```
+
+4. Migrate the database:
+
+   ```shell
+   python panelapp/manage.py migrate
+   ```
+
+5. Create the super-user:
+
+   ```shell
+   python panelapp/manage.py createsuperuser
+   ```
+
+6. Load database data:
+
+   ```shell
+   python panelapp/manage.py loaddata deploy/genes.json.gz
+   ```
+
+7. Start web server:
+
+   ```shell
+   python panelapp/manage.py runserver
+   ```
+
+#### VSCode Setup
+
+Add the following launch configurations:
+
+```json
+{
+    "name": "Django: Run Server",
+    "type": "python",
+    "request": "launch",
+    "program": "${workspaceFolder}/panelapp/manage.py",
+    "args": ["runserver"],
+    "django": true,
+    "justMyCode": false
+}
+{
+    "name": "Django: Migrate",
+    "type": "python",
+    "request": "launch",
+    "program": "${workspaceFolder}/panelapp/manage.py",
+    "args": ["migrate"],
+    "django": true,
+    "justMyCode": false
+}
+{
+    "name": "Python: Debug Tests",
+    "type": "python",
+    "request": "launch",
+    "program": "${file}",
+    "purpose": ["debug-test"],
+    "console": "integratedTerminal",
+    "env": { "PYTEST_ADDOPTS": "--no-cov" },
+    "justMyCode": false
+}
+```
+
+The first configuration allows you to run and debug local web server instance.
+
+The second configuration allows you to run and debug the database migration process.
+
+The third configuration allows you to use VSCode's [built-in python testing feature](https://code.visualstudio.com/docs/python/testing)
+to run and debug tests. See also:
+
+- [test-configuration-settings](https://code.visualstudio.com/docs/python/testing#_test-configuration-settings)
+- [debug-tests](https://code.visualstudio.com/docs/python/testing#_debug-tests)
+
+### Docker Development lifecycle
+
+You should use the [Makefile](./Makefile) in this directory for all common tasks.
+
+#### Build dev docker images
+
+```shell
+make build
+```
+
+> You must rebuild the base docker images if you change any dependencies in `setup.py`.
+> Any other code change does not require to rebuild, as the source code is mounted from the host machine file system
+> and installed in editable mode.
+
+#### Run and set up the stack
+
+To start an empty application from scratch (no Panel, but includes Genes data).
+
+1. Start a new dev stack (in detached mode):
+
+   ```shell
+   make up
+   ```
+
+2. Create db schema or apply migration (give few seconds to the db container to start, before running `migrate`):
+
+   ```shell
+   make migrate
+   ```
+
+3. Load gene data:
+
+   ```shell
+   make loaddata
+   ```
+
+   Genes data contains public gene info, such as ensemble IDs, HGNC symbols, OMIM ID.
+
+4. Create all required mock AWS resources, if the do not exist:
+
+   ```shell
+   make mock-aws
+   ```
+
+5. Deploy static files:
+
+   ```shell
+   make collectstatic
+   ```
+
+6. Create admin user
+
+   ```shell
+   make createsuperuser
+   ```
+
+   This is the user to log into the webapp: username=`admin`, pwd=`changeme`, email=`admin@local`
+
+#### Developing and accessing the application
+
+The application is available at [localhost:8080](http://localhost:8080/)
+
+The Python code is mounted from the host `<project-root>/panelapp` directory.
+
+**`setup.py`, `setup.cfg`, `MANIFEST.in` and `VERSION` are copied into the container when the Docker image is build.**
+Any change to these files (e.g. **changes to dependencies versions**) requires rebuilding the container and restarting
+the cluster.
+
+- Run tests:
+
+  ```shell
+  make tests
+  ```
+
+- To tail logs from **all** containers:
+
+  ```shell
+  make logs
+  ```
+
+  To see logs from a single service you must use `docker-compose` or `docker` commands, directly.
+
+- Stop the stack, without losing the state (db content):
+
+  ```shell
+  make stop
+  ```
+
+  Restart after stopping with `start`.
+
+- Tear down the stack destroying the state (db content):
+
+  ```shell
+  make down
+  ```
+
+- The content of mock S3 buckets is actually saved in the temp directory (`/tmp/localstack` on Linux or
+  `/private/tmp/localstack` on OSX). When you re-create the cluster and `mock-aws` resources, content of S3 buckets will
+  be there. To clear them use:
+
+  ```shell
+  make clear-s3
+  ```
+
+- Run a Django arbitrary command:
+
+  ```shell
+  make command <command> [<args>...]
+  ```
+
+  E.g. to run shell_plus extension to debug models
+
+  ```shell
+  make command shell_plus
+  ```
+
+### Application Configuration
+
+Django settings: [panelapp.settings.docker-dev](./panelapp/panelapp/settings/docker-dev.py).
+
+The [docker-compose.yml](./docker/docker-compose.yml) sets all required environment variables.
+
+By default, it uses mocked S3 and SQS by LocalStack.
+
+> You could run the application against RabbitMQ and the local file system, tweaking
+> [docker-dev settings](./panelapp/panelapp/settings/docker-dev.py) and [docker-compose.yml](./docker/docker-compose.yml),
+> but this backward compatibility may be dropped in the future.
+
+Sending email is completely disabled: it only outputs to console.
+
+### LocalStack
+
+The Docker-Compose cluster also includes an instance of [LocalStack](https://github.com/localstack/localstack) running
+S3, SQS for local development.
+
+A minimal LocalStack UI is accessible from `http://localhost:8090/`
+
+Service endpoints are LocalStack defaults:
+
+- S3: `http://localhost:4566`
+- SQS: `http://localhost:4566`
+
+> If you are running Docker Compose directly (or from the IDE) on OSX, beware that requires the environment variable
+> `TMPDIR=/private/tmp/localstack`. Failing to do this causes LocalStack mounting the host directory `/tmp/localstack`
+> (default on Linux), but Docker has no write access to `/tmp` on OSX. The symptom will be a number of _Mount denied_
+> or permissions errors on starting LocalStack.
+
+#### Differences between AWS LocalStack and real AWS services
+
+- Running containers do not have any IAM Role; AWS credentials are not actually required but all libraries/cli tools
+  expect them. `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` must be set as environment variables in the running
+  container (actual values do not matter).
+- [Service endpoints](https://github.com/localstack/localstack#user-content-overview) are different.
+  You have to pass `endpoint_url` to most of libraries/CLI commands. Also, you may have to disable `https` with
+  `use_ssl=False` as LocalStack uses http while S3, for example, uses https by default.
+- Containers running inside the docker-compose cluster see all LocalStack service coming from `localstack` host. From
+  the
+  host machine they are actually exposed to `localhost`. To allow resources hosted at `localstack` to be accessible on
+  the host machine:
+- Linux: Alias `localstack` to `localhost` in the host machine's `/etc/hosts` file.
+- Windows: Add the line `127.0.0.1 localstack` to the host machine's `C:\Windows\System32\drivers\etc\hosts` file.
+- LocalStack SES does not support SMTP
+
+#### AWScli-local
+
+It might be handy installing [AWScli-local](https://github.com/localstack/awscli-local) on developer's machine.
+
+It is a wrapper around AWS cli for interacting with LocalStack (it helps with not `--endpoint-url` and providing dummy
+credentials on every request).
+
+### Storybook
+
+[Storybook](https://storybook.js.org/) is used for developing frontend components in isolation.
+
+[Stories](https://storybook.js.org/docs/get-started/whats-a-story) are located under `stories/`.
+
+Run the storybook server:
+
+```shell
+npm run storybook
+```
+
+Due to HMR (Hot Module Reloading) modifying a component will live-update the story to enable fast development of
+frontend components.
+
+### End-to-end tests
+
+#### Playwright
+
+End-to-end testing makes use of the [Playwright](https://playwright.dev/) framework.
+
+##### Updating Playwright
+
+The version of Playwright in the following locations must be kept in sync:
+
+- `package.json`
+- `.gitlab-ci.yml`
+
+#### Running tests
+
+Seed a local database with test data:
+
+```shell
+python panelapp/manage.py loaddata frontend/tests/data.json
+```
+
+For convenience a Makefile command is provided to run the tests on a reproducible platform
+that matches the source of truth (CI/CD) using docker.
+
+Before running this command please ensure the image for this is built:
+
+```shell
+docker-compose build playwright
+```
+
+Execute the functional tests:
+
+```shell
+make e2e-test-functional
+```
+
+NOTE: the functional tests modify state which will cause the visual tests to fail.
+
+Execute the visual tests:
+
+```shell
+make e2e-test-visual
+```
+
+Tests can be run using [the CLI](https://playwright.dev/docs/running-tests#command-line) directly on a development machine:
+
+```shell
+npx playwright test
+```
+
+They can also be run (among other things) using [the GUI](https://playwright.dev/docs/running-tests#run-tests-in-ui-mode):
+
+```shell
+npx playwright test --ui
+```
+
+#### Creating a test
+
+Tests can be written from scratch or they can be partially generated using [codegen](https://playwright.dev/docs/codegen-intro#running-codegen):
+
+```shell
+npx playwright codegen localhost:8080
+```
+
+This will launch a GUI where interactions will be recorded in a generated test function.
+
+After the interactions are complete the code can be copied into an existing test file.
+
+#### Debugging a test
+
+See [the documentation](https://playwright.dev/docs/running-tests#debugging-tests).
+
+#### Visual changes
+
+Testing includes visual comparison tests that compare a reference snapshot of a page or element
+against a screenshot of the same page or element taken at the time of the test.
+
+If a visual change has occurred and it is necessary for this change to be included then the snapshots
+that differ must be updated to accommodate this:
+
+```shell
+make update-snapshots
+```
+
+The updated snapshots can then be committed alongside the code changes that cause the visual changes.
+
+#### Managing test data
+
+Data for UI testing is stored at `./tests/data.json` in the Django data dump format.
+
+To make a change to this data:
+
+1. Start up a local instance of PanelApp using the steps earlier in this document.
+2. Ensure that there is no data currently in the local database.
+3. Load the data into the database: `python panelapp/manage.py loaddata ./tests/data.json`
+4. Use the local PanelApp instance to put it into the desired state, e.g. by adding/removing panels/genes etc.
+5. Export the data from the local instance to a JSON file: `scripts/dumpdata.sh > data.json`
+6. Copy the exported `data.json` over the existing one at `./tests/data.json`
+7. Update the visual test snapshots using `make update-snapshots`
+8. Commit the changes to the repository
+
+### Coding style and linting
+
+This project uses [pre-commit](https://pre-commit.com/) framework to run code linters, style checkers etc.
+
+After initialising the Python environment, the checks can be run by
+
+```shell
+pre-commit run --all-files
+```
+
+The pre-commit hooks are defined in [pre-commit config](./.pre-commit-config.yaml). To run all hooks automatically
+before commit, use
+
+```shell
+pre-commit install
+```
+
+The hooks used
+
+| Collection                                                         | Hook name                                                                  | Type             | Language   |
+| :----------------------------------------------------------------- | :------------------------------------------------------------------------- | :--------------- | :--------- |
+| [pre-commit-hooks](https://github.com/pre-commit/pre-commit-hooks) | (see [config](.pre-commit-config.yaml), repo pre-commit-hooks for details) | Code formatter   | generic    |
+| [black](https://github.com/psf/black)                              | black                                                                      | Code formatter   | Python     |
+| [isort](https://github.com/timothycrosley/isort)                   | isort                                                                      | Code formatter   | Python     |
+| [flake8](https://github.com/pycqa/flake8)                          | flake8                                                                     | Code linter      | Python     |
+| [bandit](https://github.com/PyCQA/bandit)                          | bandit                                                                     | Security scanner | Python     |
+| [mypy](https://github.com/python/mypy)                             | mypy                                                                       | Type checker     | Python     |
+| [shellcheck](https://www.shellcheck.net/)                          | shellcheck                                                                 | Code linter      | Shell/Bash |
+| [checkmate](https://github.com/mrtazz/checkmake)                   | make                                                                       | Code linter      | Makefile   |
+| [markdownlint](https://github.com/markdownlint/markdownlint)       | markdown                                                                   | Code linter      | Markdown   |
+| [Checkov](https://github.com/bridgecrewio/checkov)                 | checkov                                                                    | Security scanner | IaC, CI/CD |
+| [gitleaks](https://github.com/gitleaks/gitleaks)                   | gitleaks                                                                   | Security scanner | git        |
+
+## Deployment
+
+### Enable relative static resource URLs
+
+The `AWS_STATICFILES_USE_RELATIVE_URL` environment variable in tandem with `AWS_S3_STATICFILES_CUSTOM_DOMAIN` controls
+whether PanelApp uses relative paths for static resources instead of fully-qualified URLs, e.g. `/static/app.css`
+instead of <https://example.com/static/app.css>.
+
+Set `AWS_STATICFILES_USE_RELATIVE_URL` to `TRUE` and `AWS_S3_STATICFILES_CUSTOM_DOMAIN` to any non-empty value to enable
+this behaviour.
+
+### Content Security Policy
+
+A [Content Security Policy](https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP) is used for security reasons:
+
+`Content-Security-Policy: default-src 'self' nonce-$nonce; form-action 'self'; frame-ancestors 'self'`
+
+Where `$nonce` is a [nonce](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/nonce) generated
+uniquely by the server for each request and attached to `style` and `script` tags in the returned markup to enable them
+to function.
+
+If AWS deployment is enabled then the security policy has the `default-src` directive extended by the STATIC_URL and the
+MEDIA_URL settings to allow static and media resources to be loaded from those locations.
+
+## Troubleshooting
+
+### Error: Couldn't find a Program
+
+Sometimes the error `Couldn't find a Program` is encountered when running `npm` commands.
+
+The issue is due to duplication in `node_module` due to transitive shared dependencies such as `babel`.
+
+The solution is to run `npm dedupe`.
+
+Relevant links:
+
+- [babel discussion](https://github.com/babel/babel/discussions/13742)
+- [npm dedupe](https://docs.npmjs.com/cli/v10/commands/npm-dedupe)

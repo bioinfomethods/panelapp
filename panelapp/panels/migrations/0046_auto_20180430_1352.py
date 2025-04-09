@@ -26,7 +26,10 @@
 from __future__ import unicode_literals
 
 import django.contrib.postgres.fields.ranges
-from django.db import migrations, models
+from django.db import (
+    migrations,
+    models,
+)
 
 
 class Migration(migrations.Migration):

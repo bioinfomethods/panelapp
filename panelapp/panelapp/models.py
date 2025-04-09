@@ -31,9 +31,10 @@ in the admin panel.
 @MIGRATION HomeText data should be prefield via django migration, and populated with the migrate script
 """
 
-from django.db import models
 import markdown
+from django.db import models
 from markdownx.models import MarkdownxField
+
 from panelapp.utils.storage import OverwriteStorage
 
 
@@ -56,9 +57,7 @@ class HomeText(models.Model):
 
 
 class Image(models.Model):
-    image = models.ImageField(
-        upload_to="images", max_length=255
-    )
+    image = models.ImageField(upload_to="images", max_length=255)
     alt = models.CharField("Alterative text", max_length=64)
     title = models.CharField("Image title", max_length=128, null=True, blank=True)
 
@@ -69,9 +68,7 @@ class Image(models.Model):
 class File(models.Model):
     """File storage for any file which should be available online"""
 
-    file = models.FileField(
-        upload_to="files", max_length=512
-    )
+    file = models.FileField(upload_to="files", max_length=512)
     title = models.CharField("File title", max_length=128)
 
     def __str__(self):

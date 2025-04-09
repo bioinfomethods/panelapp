@@ -22,17 +22,19 @@
 ## under the License.
 ##
 import random
+
 from django.db import transaction
-from accounts.models import Reviewer
 from psycopg2.extras import NumericRange
+
+from accounts.models import Reviewer
 from panels.models import (
-    Region,
     STR,
+    Evaluation,
+    Evidence,
+    Gene,
     GenePanelEntrySnapshot,
     GenePanelSnapshot,
-    Evaluation,
-    Gene,
-    Evidence,
+    Region,
 )
 
 

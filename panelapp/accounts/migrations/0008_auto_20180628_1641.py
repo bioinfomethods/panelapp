@@ -25,6 +25,7 @@
 
 from django.db import migrations
 from rest_framework.authtoken.models import Token
+
 from accounts.models import User
 
 

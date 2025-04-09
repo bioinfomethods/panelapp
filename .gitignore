@@ -23,7 +23,7 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+/lib/
 lib64/
 parts/
 sdist/
@@ -118,3 +118,20 @@ temp_dump_data
 pgdata*
 schemaspy
 .terraform.lock.hcl
+# npm
+.pnp.*
+node_modules
+
+# webpack
+webpack-stats.json
+
+# playwright
+/playwright/.auth
+/playwright-report/
+/test-results/
+/blob-report/
+/playwright/.cache/
+
+# playwright-bdd
+.features-gen/
+*storybook.log

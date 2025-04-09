@@ -1,5 +1,5 @@
 {% extends "default.html" %}
-{% load staticfiles %}
+{% load static %}
 {% load mathfilters %}
 
 {% block title %}Panels{% endblock %}
@@ -12,9 +12,9 @@
 <div class="container">
     {% with view_panels=view.panels %}
       {% with panels_count=view_panels|length %}
-        <h1><span id="panels_count">{{ panels_count }}</span> panel{{ panels_count|pluralize }}</h1>
+        <h1 class="mt-5"><span id="panels_count">{{ panels_count }}</span> panel{{ panels_count|pluralize }}</h1>
       {% endwith %}
-        <button type="button" class="btn btn-default text-right" data-toggle="modal" data-target="#compare-modal">
+        <button type="button" class="btn btn-outline-light-panelapp text-right" data-bs-toggle="modal" data-bs-target="#compare-modal">
           Compare two panels
         </button>
         <div id="panels_table">
@@ -26,7 +26,7 @@
 {% endblock %}
 
 {% block js %}
-<script type="text/javascript">
+<script nonce="{{CSP_NONCE}}" type="text/javascript">
   $(document).ready(function() {
     var panels = '';
     $('#panel_records tr').each(function(index, panel) {

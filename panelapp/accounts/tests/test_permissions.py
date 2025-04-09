@@ -22,6 +22,7 @@
 ## under the License.
 ##
 from django.contrib.auth.models import Group
+
 from accounts.tests.setup import TestMigrations
 
 

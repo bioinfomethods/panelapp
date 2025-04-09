@@ -27,20 +27,28 @@ Author: Oleg Gerasimenko
 
 (c) 2018 Genomics England
 """
+from copy import deepcopy
+from typing import List
 
-from django.db.models import Manager
-from django.db.models import Count
-from django.db.models import Subquery
+from django.core.exceptions import PermissionDenied
+from django.db.models import (
+    Count,
+    Manager,
+    Subquery,
+)
 from django.utils import timezone
 from model_utils import Choices
 
-from .evaluation import Evaluation
+from accounts.models import User
+from panels.enums import GeneDataType
+from panels.models.genepanelsnapshot import GenePanelSnapshot
+from panels.templatetags.panel_helpers import get_gene_list_data
+
 from .comment import Comment
-from .trackrecord import TrackRecord
+from .evaluation import Evaluation
 from .evidence import Evidence
 from .genepanel import GenePanel
-from panels.templatetags.panel_helpers import get_gene_list_data
-from panels.templatetags.panel_helpers import GeneDataType
+from .trackrecord import TrackRecord
 
 
 class EntityManager(Manager):
@@ -119,7 +127,7 @@ class AbstractEntity:
         self.save()
 
     def evidence_status(self, update=False):
-        """ This is a refactored `get_gel_status` function.
+        """This is a refactored `get_gel_status` function.
 
         It goes through evidences, check if they are valid or were provided by
         curators, and returns the status.
@@ -236,13 +244,23 @@ class AbstractEntity:
         self.panel.add_activity(user, "Added comment: {}".format(comment.comment), self)
 
     def delete_evaluation(self, evaluation_pk, user=None):
-        self.evaluation.get(pk=evaluation_pk).delete()
+        evaluation = self.evaluation.get(pk=evaluation_pk)
+        if user and user != evaluation.user:
+            raise PermissionDenied
+
+        evaluation.delete()
+
         if user:
             self.panel.add_activity(user, "Deleted their review", self)
 
     def delete_comment(self, comment_pk, user=None):
         evaluation = self.evaluation.get(comments=comment_pk)
-        evaluation.comments.get(pk=comment_pk).delete()
+        comment = evaluation.comments.get(pk=comment_pk)
+        if user and user != comment.user:
+            raise PermissionDenied
+
+        comment.delete()
+
         if user:
             self.panel.add_activity(user, "Deleted their comment", self)
 
@@ -358,8 +376,10 @@ class AbstractEntity:
             evidence = Evidence.objects.create(
                 name="Expert Review Green", rating=5, reviewer=user.reviewer
             )
-            issue_description = "{} has been classified as Green List (High Evidence).".format(
-                self.label.capitalize()
+            issue_description = (
+                "{} has been classified as Green List (High Evidence).".format(
+                    self.label.capitalize()
+                )
             )
             self.flagged = False
             self.evidence.add(evidence)
@@ -367,8 +387,10 @@ class AbstractEntity:
             evidence = Evidence.objects.create(
                 name="Expert Review Amber", rating=5, reviewer=user.reviewer
             )
-            issue_description = "{} has been classified as Amber List (Moderate Evidence).".format(
-                self.label.capitalize()
+            issue_description = (
+                "{} has been classified as Amber List (Moderate Evidence).".format(
+                    self.label.capitalize()
+                )
             )
             self.flagged = False
             self.evidence.add(evidence)
@@ -376,8 +398,10 @@ class AbstractEntity:
             evidence = Evidence.objects.create(
                 name="Expert Review Red", rating=5, reviewer=user.reviewer
             )
-            issue_description = "{} has been classified as Red List (Low Evidence).".format(
-                self.label.capitalize()
+            issue_description = (
+                "{} has been classified as Red List (Low Evidence).".format(
+                    self.label.capitalize()
+                )
             )
             self.evidence.add(evidence)
             self.flagged = False
@@ -560,7 +584,7 @@ class AbstractEntity:
             user, "Classified {} as {}".format(self.label, human_status), self
         )
 
-    def update_evaluation(self, user, evaluation_data):
+    def update_evaluation(self, user, evaluation_data, append_only=False):
         """
         This method adds or updates an evaluation in case the user has already
         added an evaluation in the past. In this case it just checks the new values
@@ -578,7 +602,8 @@ class AbstractEntity:
                 - moi
                 - current_diagnostic
                 - rating
-
+            append_only (bool): if True publications and phenotypes will be added
+                rather than overwritten.
         returns:
             Evaluation: new or updated evaluation
         """
@@ -617,17 +642,27 @@ class AbstractEntity:
             publications = evaluation_data.get("publications")
             if publications and evaluation.publications != publications:
                 changed = True
-                evaluation.publications = publications
+                new_publications = (
+                    list(set(publications + evaluation.publications))
+                    if append_only
+                    else publications
+                )
+                evaluation.publications = new_publications
                 activities.append(
-                    "Changed publications: {}".format(", ".join(publications))
+                    "Changed publications to: {}".format(", ".join(new_publications))
                 )
 
             phenotypes = evaluation_data.get("phenotypes")
             if phenotypes and evaluation.phenotypes != phenotypes:
                 changed = True
-                evaluation.phenotypes = phenotypes
+                new_phenotypes = (
+                    list(set(phenotypes + evaluation.phenotypes))
+                    if append_only
+                    else phenotypes
+                )
+                evaluation.phenotypes = new_phenotypes
                 activities.append(
-                    "Changed phenotypes: {}".format(", ".join(phenotypes))
+                    "Changed phenotypes to: {}".format(", ".join(new_phenotypes))
                 )
 
             moi = evaluation_data.get("moi")
@@ -738,6 +773,86 @@ class AbstractEntity:
 
             self.panel.add_activity(user, activity_text, self)
             return evaluation
+
+    def copy_to_panels(
+        self,
+        panels: List[GenePanelSnapshot],
+        user: User,
+        entity_data: dict,
+        copy_data=False,
+    ):
+        """Copy entity to additional panels
+
+        Evidences are included in entity_data on form save, thus not copied manually
+
+        :param panels: List of panels
+        :param user: User
+        :param entity_data: Entitiy data
+        :param copy_data: boolean - Whether to copy evaluations, etc or not, used when
+            adding the gene first time to the panel.
+        """
+
+        tags = []
+        evaluations = []
+        comments = []
+        evidences = []
+
+        if copy_data:
+            tags = list(self.tags.all())
+            evaluations = list(self.evaluation.prefetch_related("comments"))
+            comments = list(self.comments.all())
+            evidences = [
+                ev
+                for ev in self.evidence.all()
+                if ev.name not in entity_data["sources"]
+            ]
+
+        for panel in panels:
+            if self.is_gene():
+                copied_entity = panel.add_gene(user, self.name, entity_data, True)
+            elif self.is_str():
+                copied_entity = panel.add_str(user, self.name, entity_data, True)
+            elif self.is_region():
+                copied_entity = panel.add_region(user, self.name, entity_data, True)
+
+            if copied_entity and copy_data:
+                panel.add_activity(
+                    user, f"Entity copied from {self.panel}", copied_entity
+                )
+
+                for evidence in deepcopy(evidences):
+                    evidence.pk = None
+                    evidence.save()
+                    copied_entity.evidence.add(evidence)
+
+                # Note - potentially slow if performed on large number of entities
+                for evaluation in deepcopy(evaluations):
+                    evaluation_comments = list(evaluation.comments.all())
+
+                    evaluation.pk = None
+                    copied_from = str(self.panel)
+                    original_panel = evaluation.original_panel
+
+                    if original_panel:
+                        copied_from = f"{copied_from}, {original_panel}"
+
+                    evaluation.original_panel = copied_from
+                    evaluation.save()
+                    for comment in evaluation_comments:
+                        comment.pk = None
+                        comment.save()
+                    evaluation.comments.add(*evaluation_comments)
+
+                    copied_entity.evaluation.add(evaluation)
+
+                copied_entity.tags.add(*tags)
+
+                for comment in deepcopy(comments):
+                    comment.pk = None
+                    comment.save()
+                    copied_entity.comments.add(comment)
+
+                copied_entity.evidence_status(update=True)
 
     @property
     def gene_list_class(self):

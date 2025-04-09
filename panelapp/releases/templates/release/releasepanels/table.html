@@ -1,0 +1,36 @@
+<table class="table table-bordered">
+  <thead class="table-light">
+    <tr>
+      <th>ID</th>
+      {% include "components/sortable-table-header.html" with component=name_header only %}
+      <th>Status</th>
+      <th>Changes</th>
+      <th>Signed Off (Before)</th>
+      <th>Signed Off (After)</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {% for releasepanel in releasepanels %}
+    <tr>
+      <td>{{ releasepanel.before.panel.panel_id }}</td>
+      <td>
+        <h5 class="remove-bottom-margin">
+          <a href="{% url 'panels:detail' releasepanel.before.panel.panel_id %}">{{ releasepanel.before.panel.name }}</a>
+        </h5>
+      </td>
+      <td>{{ releasepanel.before.panel.status }}</td>
+      <td>
+        <ul class="list-group">
+          {% if releasepanel.before.promote %}
+          <li class="list-group-item"><i class="fa fa-angles-up"></i> Promote</li>
+          {% endif %}
+          <li class="list-group-item"><i class="fa fa-check"></i> Sign Off</li>
+        </ul>
+      </td>
+      <td>{{ releasepanel.before.panel.signed_off|default:"" }}</td>
+      <td>{{ releasepanel.after.panel.signed_off|default:"" }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

@@ -1,0 +1,40 @@
+{% load static %}
+{% load banner %}
+{% load render_bundle from webpack_loader %}
+{% load django_htmx %}
+
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+  <head lang="en">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <script nonce="{{CSP_NONCE}}">(function(d){d.className=d.className.replace(/^no-js\b/,'js');}(document.documentElement));</script>
+    {% render_bundle 'main' 'css' %}
+    {% render_bundle 'main' 'js' %}
+    {% django_htmx_script %}
+    {% block header %}{% endblock %}
+    <title>{% block title %}PanelApp{% endblock %}</title>
+  </head>
+<body hx-headers='{"X-CSRFToken": "{{ csrf_token }}"}'>
+{% block navbar %}{% endblock %}
+
+{% banner %}
+
+<div id="messages" class="container" hx-swap-oob="true">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="add-bottom-margin add-top-margin alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+</div>
+
+<main class="container" role="main">
+  {% block content %}{% endblock %}
+</main>
+
+{% block body %}{% endblock %}
+{% block modals %}{% endblock %}
+{% block js %}{% endblock %}
+</body>
+</html>

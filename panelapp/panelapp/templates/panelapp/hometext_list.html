@@ -1,37 +1,18 @@
 {% extends "default.html" %}
-{% load staticfiles %}
+{% load static %}
 {% load markdown_deux_tags %}
 {% block body %}
-<div class="splash" style="background-color: #EAF1F1">
-  <div class="container">
-    <h1>{% block title %}PanelApp Australia{% endblock %}</h1>
-    <p class="lead">A crowdsourcing tool to allow gene panels to be shared, downloaded, viewed and evaluated by the Scientific Community</p>
-  </div>
+<div class="container-fluid pb-1 pt-3 mb-4 bg-panelapp-light">
+  <x-brand title="PanelApp Australia"></x-brand>
 </div>
 
 <div class="container">
-  <div class="row" data-module="tab-switcher" data-default-tab="Introduction">
-    <div class="col-sm-3">
-      <ul class="nav nav-pills nav-stacked">
-        <li class="active"><a href="#Introduction" data-toggle="tab" aria-expanded="true">Home</a></li>
-        <li><a href="#News" data-toggle="tab" aria-expanded="false">News</a></li>
-        <li><a href="#Navigating" data-toggle="tab" aria-expanded="false">Navigate & Explore</a></li>
-        <li><a href="#Reviewers" data-toggle="tab" aria-expanded="false">Reviewers</a></li>
-        <li><a href="#Guidelines" data-toggle="tab" aria-expanded="false">Guidelines</a></li>
-        <li><a href="#API" data-toggle="tab" aria-expanded="false">API</a></li>
-        <li><a href="#FAQs" data-toggle="tab" aria-expanded="false">FAQs</a></li>
-        <li><a href="#Content" data-toggle="tab" aria-expanded="false">Contact, Content & Glossary</a></li>
-      </ul>
-    </div>
-    <div class="col-sm-9">
-      <div id="myTabContent" class="tab-content">
-        {% for hometext in object_list %}
-        <div class="tab-pane active in" id="{{ hometext.href }}">
-          <div class="copy-container">{{ hometext.render_markdown|safe }}</div>
-        </div>
-        {% endfor %}
-      </div>
-    </div>
+  <div class="row">
+    <x-home-pages active="Introduction" data-module="home-pages">
+      {% for hometext in object_list %}
+        <div slot="{{ hometext.href }}" class="copy-container home-page-content">{{ hometext.render_markdown|safe }}</div>
+      {% endfor %}
+    </x-home-pages>
   </div>
 </div>
 {% endblock %}

@@ -33,7 +33,7 @@ from .base import *  # noqa
 # Secrets
 #
 # * `SECRET_KEY` - used to encrypt cookies
-# * `DATABASE_URL` - PostgreSQL config url in the following format: postgresql://username:password@host:port/database_name
+# * `DATABASE_URL` - PostgreSQL config url in the following format: postgresql://username:password@host:port/database_name  # checkov:skip=CKV_SECRET_4
 # * `CELERY_BROKER_URL` - Celery config for RabbitMQ, in the following format: amqp://username:password@host:port/virtual
 # * `HEALTH_CHECK_TOKEN` - URL token for authorizing status checks
 # * `EMAIL_HOST_PASSWORD` - SMTP password

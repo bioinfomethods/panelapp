@@ -26,7 +26,10 @@
 from __future__ import unicode_literals
 
 import array_field_select.fields
-from django.db import migrations, models
+from django.db import (
+    migrations,
+    models,
+)
 
 
 class Migration(migrations.Migration):

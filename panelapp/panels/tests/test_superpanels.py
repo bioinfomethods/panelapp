@@ -21,22 +21,40 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+from dataclasses import dataclass
+from datetime import (
+    datetime,
+    timezone,
+)
 from random import randint
+
+import pytest
+from django.apps import apps
 from django.urls import reverse_lazy
 from faker import Factory
-from accounts.tests.setup import LoginGELUser
-from accounts.tests.setup import LoginReviewerUser
-from panels.models import GenePanelEntrySnapshot
-from panels.models import GenePanelSnapshot
-from panels.models import Evidence
-from panels.models import GenePanel
-from panels.models import Evaluation
-from panels.tests.factories import GeneFactory
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
-from panels.tests.factories import TagFactory
-from panels.tests.factories import CommentFactory
+from freezegun import freeze_time
+from pytest_cases import parametrize_with_cases
 
+from accounts.tests.setup import (
+    LoginGELUser,
+    LoginReviewerUser,
+)
+from panels.models import (
+    Evaluation,
+    Evidence,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+)
+from panels.models.genepanelsnapshot import fix_super_panel_entities
+from panels.tests.factories import (
+    CommentFactory,
+    GeneFactory,
+    GenePanelEntrySnapshotFactory,
+    GenePanelFactory,
+    GenePanelSnapshotFactory,
+    TagFactory,
+)
 
 fake = Factory.create()
 
@@ -374,3 +392,988 @@ class SuperPanelsTest(LoginGELUser):
         del parent2.panel.active_panel
         parent2 = parent2.panel.active_panel
         self.assertEqual(parent2.version, "0.3")
+
+
+class Cases_KMDS_1185:
+    @pytest.mark.django_db
+    @freeze_time("2023-01-01")
+    def case_gene(self, client, curator_user):
+        client.login(username=curator_user.username, password="pass")
+
+        GeneFactory(gene_symbol="BRCA1", gene_name="BRCA1")
+
+        # Panel is created and starts life as a "normal" Panel (i.e not a super panel)
+
+        # Panel is public so that it is visible through the API
+        super_panel = GenePanelSnapshotFactory(
+            level4title__name="Test Super Panel",
+            level4title__level3title="",
+            level4title__level2title="",
+            panel__status=GenePanel.STATUS.public,
+            panel__old_pk="",
+            old_panels=[],
+        )
+
+        # Panel has the BRCA1 Gene added to it with a penetrance of Incomplete
+        super_panel.add_gene(
+            curator_user,
+            "BRCA1",
+            {
+                "gene": None,
+                "chromosome": "1",
+                "position_37": [12345, 12346],
+                "position_38": [12345, 123456],
+                "sources": [],
+                "phenotypes": [],
+                "publications": [],
+                "moi": "Unknown",
+                "mode_of_pathogenicity": "",
+                "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+                "current_diagnostic": False,
+            },
+        )
+
+        # A new Panel is created
+        child_panel = GenePanelSnapshotFactory(
+            level4title__name="Test Component Panel",
+            level4title__level3title="",
+            level4title__level2title="",
+            panel__status=GenePanel.STATUS.public,
+            panel__old_pk="",
+            old_panels=[],
+        )
+        # Child Panel has the BRCA1 Gene added to it with a penetrance of Complete
+        child_panel.add_gene(
+            curator_user,
+            "BRCA1",
+            {
+                "gene": None,
+                "position_37": [12345, 12346],
+                "position_38": [12345, 123456],
+                "sources": [],
+                "phenotypes": [],
+                "publications": [],
+                "moi": "Unknown",
+                "mode_of_pathogenicity": "",
+                "penetrance": GenePanelEntrySnapshot.PENETRANCE.Complete,
+                "current_diagnostic": False,
+            },
+        )
+
+        # The original Panel has the Child Panel added to it, making it a Super Panel
+        res = client.post(
+            reverse_lazy("panels:update", kwargs={"pk": super_panel.panel_id}),
+            {
+                "level2": "",
+                "level3": "",
+                "level4": "Test Super Panel",
+                "description": "Testing",
+                "omim": "",
+                "orphanet": "",
+                "hpo": "",
+                "old_panels": "",
+                "status": GenePanel.STATUS.public,
+                "child_panels": [child_panel.pk],
+            },
+        )
+        assert res.status_code == 302
+
+        return (
+            super_panel.pk,
+            "BRCA1",
+            {
+                "strs-detail": {
+                    "count": 0,
+                    "next": None,
+                    "previous": None,
+                    "results": [],
+                },
+                "regions-detail": {
+                    "count": 0,
+                    "next": None,
+                    "previous": None,
+                    "results": [],
+                },
+                "panels-detail": {
+                    "id": 1,
+                    "version": "0.2",
+                    "name": "Test Super Panel",
+                    "hash_id": "",
+                    "version_created": "2023-01-01T00:00:00Z",
+                    "status": "public",
+                    "disease_group": "",
+                    "disease_sub_group": "",
+                    "relevant_disorders": [],
+                    "types": [],
+                    "stats": {
+                        "number_of_genes": 1,
+                        "number_of_regions": 0,
+                        "number_of_strs": 0,
+                    },
+                    "strs": [],
+                    "regions": [],
+                    "genes": [
+                        {
+                            "confidence_level": "0",
+                            "entity_name": "BRCA1",
+                            "entity_type": "gene",
+                            "evidence": [],
+                            "gene_data": {
+                                "alias": None,
+                                "alias_name": None,
+                                "biotype": None,
+                                "ensembl_genes": {},
+                                "gene_name": "BRCA1",
+                                "gene_symbol": "BRCA1",
+                                "hgnc_date_symbol_changed": None,
+                                "hgnc_id": None,
+                                "hgnc_release": None,
+                                "hgnc_symbol": None,
+                                "omim_gene": None,
+                            },
+                            "mode_of_inheritance": "Unknown",
+                            "mode_of_pathogenicity": "",
+                            "penetrance": "Complete",
+                            "phenotypes": [],
+                            "publications": [],
+                            "tags": [],
+                            "transcript": None,
+                            "panel": {
+                                "id": 2,
+                                "version": "0.1",
+                                "name": "Test Component Panel",
+                                "hash_id": "",
+                                "version_created": "2023-01-01T00:00:00Z",
+                                "status": "public",
+                                "disease_group": "",
+                                "disease_sub_group": "",
+                                "relevant_disorders": [],
+                                "types": [],
+                                "stats": {
+                                    "number_of_genes": 1,
+                                    "number_of_regions": 0,
+                                    "number_of_strs": 0,
+                                },
+                            },
+                        }
+                    ],
+                },
+                "entities-detail": {
+                    "count": 1,
+                    "next": None,
+                    "previous": None,
+                    "results": [
+                        {
+                            "confidence_level": "0",
+                            "entity_name": "BRCA1",
+                            "entity_type": "gene",
+                            "evidence": [],
+                            "gene_data": {
+                                "alias": None,
+                                "alias_name": None,
+                                "biotype": None,
+                                "ensembl_genes": {},
+                                "gene_name": "BRCA1",
+                                "gene_symbol": "BRCA1",
+                                "hgnc_date_symbol_changed": None,
+                                "hgnc_id": None,
+                                "hgnc_release": None,
+                                "hgnc_symbol": None,
+                                "omim_gene": None,
+                            },
+                            "mode_of_inheritance": "Unknown",
+                            "mode_of_pathogenicity": "",
+                            "panel": {
+                                "disease_group": "",
+                                "disease_sub_group": "",
+                                "hash_id": "",
+                                "id": 2,
+                                "name": "Test Component Panel",
+                                "relevant_disorders": [],
+                                "stats": {
+                                    "number_of_genes": 1,
+                                    "number_of_regions": 0,
+                                    "number_of_strs": 0,
+                                },
+                                "status": "public",
+                                "types": [],
+                                "version": "0.1",
+                                "version_created": "2023-01-01T00:00:00Z",
+                            },
+                            "penetrance": "Complete",
+                            "phenotypes": [],
+                            "publications": [],
+                            "tags": [],
+                            "transcript": None,
+                        },
+                    ],
+                },
+                "genes-detail": {
+                    "count": 1,
+                    "next": None,
+                    "previous": None,
+                    "results": [
+                        {
+                            "confidence_level": "0",
+                            "entity_name": "BRCA1",
+                            "entity_type": "gene",
+                            "evidence": [],
+                            "gene_data": {
+                                "alias": None,
+                                "alias_name": None,
+                                "biotype": None,
+                                "ensembl_genes": {},
+                                "gene_name": "BRCA1",
+                                "gene_symbol": "BRCA1",
+                                "hgnc_date_symbol_changed": None,
+                                "hgnc_id": None,
+                                "hgnc_release": None,
+                                "hgnc_symbol": None,
+                                "omim_gene": None,
+                            },
+                            "mode_of_inheritance": "Unknown",
+                            "mode_of_pathogenicity": "",
+                            "panel": {
+                                "disease_group": "",
+                                "disease_sub_group": "",
+                                "hash_id": "",
+                                "id": 2,
+                                "name": "Test Component Panel",
+                                "relevant_disorders": [],
+                                "stats": {
+                                    "number_of_genes": 1,
+                                    "number_of_regions": 0,
+                                    "number_of_strs": 0,
+                                },
+                                "status": "public",
+                                "types": [],
+                                "version": "0.1",
+                                "version_created": "2023-01-01T00:00:00Z",
+                            },
+                            "penetrance": "Complete",
+                            "phenotypes": [],
+                            "publications": [],
+                            "tags": [],
+                            "transcript": None,
+                        },
+                    ],
+                },
+            },
+        )
+
+    @pytest.mark.django_db
+    @freeze_time("2023-01-01")
+    def case_str(self, client, curator_user):
+        client.login(username=curator_user.username, password="pass")
+
+        # Panel is created and starts life as a "normal" Panel (i.e not a super panel)
+
+        # Panel is public so that it is visible through the API
+        super_panel = GenePanelSnapshotFactory(
+            level4title__name="Test Super Panel",
+            level4title__level3title="",
+            level4title__level2title="",
+            panel__status=GenePanel.STATUS.public,
+            panel__old_pk="",
+            old_panels=[],
+        )
+
+        # Panel has the AR_CAG STR added to it with a normal_repeats of 34
+        super_panel.add_str(
+            curator_user,
+            "AR_CAG",
+            {
+                "gene": None,
+                "chromosome": "1",
+                "position_37": [12345, 12346],
+                "position_38": [12345, 123456],
+                "normal_repeats": 34,
+                "pathogenic_repeats": 40,
+                "repeated_sequence": "CAG",
+                "sources": [],
+                "phenotypes": [],
+                "publications": [],
+                "moi": "Unknown",
+                "mode_of_pathogenicity": "",
+                "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+                "current_diagnostic": False,
+            },
+        )
+
+        # A new Panel is created
+        child_panel = GenePanelSnapshotFactory(
+            level4title__name="Test Component Panel",
+            level4title__level3title="",
+            level4title__level2title="",
+            panel__status=GenePanel.STATUS.public,
+            panel__old_pk="",
+            old_panels=[],
+        )
+        # Child Panel has the AR_CAG STR added to it with a normal_repeats of 35
+        child_panel.add_str(
+            curator_user,
+            "AR_CAG",
+            {
+                "gene": None,
+                "chromosome": "1",
+                "position_37": [12345, 12346],
+                "position_38": [12345, 123456],
+                "normal_repeats": 35,
+                "pathogenic_repeats": 40,
+                "repeated_sequence": "CAG",
+                "sources": [],
+                "phenotypes": [],
+                "publications": [],
+                "moi": "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
+                "mode_of_pathogenicity": "",
+                "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+                "current_diagnostic": False,
+            },
+        )
+
+        # The original Panel has the Child Panel added to it, making it a Super Panel
+        res = client.post(
+            reverse_lazy("panels:update", kwargs={"pk": super_panel.panel_id}),
+            {
+                "level2": "",
+                "level3": "",
+                "level4": "Test Super Panel",
+                "description": "Testing",
+                "omim": "",
+                "orphanet": "",
+                "hpo": "",
+                "old_panels": "",
+                "status": GenePanel.STATUS.public,
+                "child_panels": [child_panel.pk],
+            },
+        )
+        assert res.status_code == 302
+
+        return (
+            super_panel.pk,
+            "AR_CAG",
+            {
+                "genes-detail": {
+                    "count": 0,
+                    "next": None,
+                    "previous": None,
+                    "results": [],
+                },
+                "regions-detail": {
+                    "count": 0,
+                    "next": None,
+                    "previous": None,
+                    "results": [],
+                },
+                "panels-detail": {
+                    "id": 1,
+                    "version": "0.2",
+                    "name": "Test Super Panel",
+                    "hash_id": "",
+                    "version_created": "2023-01-01T00:00:00Z",
+                    "status": "public",
+                    "disease_group": "",
+                    "disease_sub_group": "",
+                    "relevant_disorders": [],
+                    "types": [],
+                    "stats": {
+                        "number_of_genes": 0,
+                        "number_of_regions": 0,
+                        "number_of_strs": 1,
+                    },
+                    "genes": [],
+                    "regions": [],
+                    "strs": [
+                        {
+                            "chromosome": "1",
+                            "confidence_level": "0",
+                            "entity_name": "AR_CAG",
+                            "entity_type": "str",
+                            "repeated_sequence": "CAG",
+                            "evidence": [],
+                            "gene_data": None,
+                            "grch37_coordinates": [12345, 12346],
+                            "grch38_coordinates": [12345, 123456],
+                            "mode_of_inheritance": "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
+                            "normal_repeats": 35,
+                            "pathogenic_repeats": 40,
+                            "repeated_sequence": "CAG",
+                            "penetrance": "Incomplete",
+                            "phenotypes": [],
+                            "publications": [],
+                            "tags": [],
+                            "panel": {
+                                "id": 2,
+                                "version": "0.1",
+                                "name": "Test Component Panel",
+                                "hash_id": "",
+                                "version_created": "2023-01-01T00:00:00Z",
+                                "status": "public",
+                                "disease_group": "",
+                                "disease_sub_group": "",
+                                "relevant_disorders": [],
+                                "types": [],
+                                "stats": {
+                                    "number_of_genes": 0,
+                                    "number_of_regions": 0,
+                                    "number_of_strs": 1,
+                                },
+                            },
+                        }
+                    ],
+                },
+                "entities-detail": {
+                    "count": 1,
+                    "next": None,
+                    "previous": None,
+                    "results": [
+                        {
+                            "chromosome": "1",
+                            "confidence_level": "0",
+                            "entity_name": "AR_CAG",
+                            "entity_type": "str",
+                            "evidence": [],
+                            "gene_data": None,
+                            "grch37_coordinates": [12345, 12346],
+                            "grch38_coordinates": [12345, 123456],
+                            "mode_of_inheritance": "X-LINKED: hemizygous mutation in males, "
+                            "biallelic mutations in females",
+                            "normal_repeats": 35,
+                            "panel": {
+                                "disease_group": "",
+                                "disease_sub_group": "",
+                                "hash_id": "",
+                                "id": 2,
+                                "name": "Test Component Panel",
+                                "relevant_disorders": [],
+                                "stats": {
+                                    "number_of_genes": 0,
+                                    "number_of_regions": 0,
+                                    "number_of_strs": 1,
+                                },
+                                "status": "public",
+                                "types": [],
+                                "version": "0.1",
+                                "version_created": "2023-01-01T00:00:00Z",
+                            },
+                            "pathogenic_repeats": 40,
+                            "penetrance": "Incomplete",
+                            "phenotypes": [],
+                            "publications": [],
+                            "repeated_sequence": "CAG",
+                            "tags": [],
+                        },
+                    ],
+                },
+                "strs-detail": {
+                    "count": 1,
+                    "next": None,
+                    "previous": None,
+                    "results": [
+                        {
+                            "chromosome": "1",
+                            "confidence_level": "0",
+                            "entity_name": "AR_CAG",
+                            "entity_type": "str",
+                            "evidence": [],
+                            "gene_data": None,
+                            "grch37_coordinates": [12345, 12346],
+                            "grch38_coordinates": [12345, 123456],
+                            "mode_of_inheritance": "X-LINKED: hemizygous mutation in males, "
+                            "biallelic mutations in females",
+                            "normal_repeats": 35,
+                            "panel": {
+                                "disease_group": "",
+                                "disease_sub_group": "",
+                                "hash_id": "",
+                                "id": 2,
+                                "name": "Test Component Panel",
+                                "relevant_disorders": [],
+                                "stats": {
+                                    "number_of_genes": 0,
+                                    "number_of_regions": 0,
+                                    "number_of_strs": 1,
+                                },
+                                "status": "public",
+                                "types": [],
+                                "version": "0.1",
+                                "version_created": "2023-01-01T00:00:00Z",
+                            },
+                            "pathogenic_repeats": 40,
+                            "penetrance": "Incomplete",
+                            "phenotypes": [],
+                            "publications": [],
+                            "repeated_sequence": "CAG",
+                            "tags": [],
+                        },
+                    ],
+                },
+            },
+        )
+
+    @pytest.mark.django_db
+    @freeze_time("2023-01-01")
+    def case_region(self, client, curator_user):
+        client.login(username=curator_user.username, password="pass")
+
+        # Panel is created and starts life as a "normal" Panel (i.e not a super panel)
+
+        # Panel is public so that it is visible through the API
+        super_panel = GenePanelSnapshotFactory(
+            level4title__name="Test Super Panel",
+            level4title__level3title="",
+            level4title__level2title="",
+            panel__status=GenePanel.STATUS.public,
+            panel__old_pk="",
+            old_panels=[],
+        )
+
+        # Panel has the REGION Region added to it with a haploinsufficiency_score of Incorrect
+        super_panel.add_region(
+            curator_user,
+            "REGION",
+            {
+                "gene": None,
+                "position_37": [12345, 12346],
+                "position_38": [12345, 123456],
+                "verbose_name": "REGION",
+                "chromosome": "1",
+                "haploinsufficiency_score": "20",
+                "triplosensitivity_score": "",
+                "required_overlap_percentage": 20,
+                "sources": [],
+                "phenotypes": [],
+                "publications": [],
+                "moi": "Unknown",
+                "mode_of_pathogenicity": "",
+                "penetrance": GenePanelEntrySnapshot.PENETRANCE.Complete,
+                "current_diagnostic": False,
+            },
+        )
+
+        # A new Panel is created
+        child_panel = GenePanelSnapshotFactory(
+            level4title__name="Test Component Panel",
+            level4title__level3title="",
+            level4title__level2title="",
+            panel__status=GenePanel.STATUS.public,
+            panel__old_pk="",
+            old_panels=[],
+        )
+        # Child Panel has the REGION Region added to it with a haploinsuffiency_score of Correct
+        child_panel.add_region(
+            curator_user,
+            "REGION",
+            {
+                "gene": None,
+                "position_37": [12345, 12346],
+                "position_38": [12345, 123456],
+                "verbose_name": "REGION",
+                "chromosome": "1",
+                "haploinsufficiency_score": "10",
+                "triplosensitivity_score": "",
+                "required_overlap_percentage": 20,
+                "sources": [],
+                "phenotypes": [],
+                "publications": [],
+                "moi": "Unknown",
+                "mode_of_pathogenicity": "",
+                "penetrance": GenePanelEntrySnapshot.PENETRANCE.Complete,
+                "current_diagnostic": False,
+            },
+        )
+
+        # The original Panel has the Child Panel added to it, making it a Super Panel
+        res = client.post(
+            reverse_lazy("panels:update", kwargs={"pk": super_panel.panel_id}),
+            {
+                "level2": "",
+                "level3": "",
+                "level4": "Test Super Panel",
+                "description": "Testing",
+                "omim": "",
+                "orphanet": "",
+                "hpo": "",
+                "old_panels": "",
+                "status": GenePanel.STATUS.public,
+                "child_panels": [child_panel.pk],
+            },
+        )
+        assert res.status_code == 302
+
+        return (
+            super_panel.pk,
+            "REGION",
+            {
+                "genes-detail": {
+                    "count": 0,
+                    "next": None,
+                    "previous": None,
+                    "results": [],
+                },
+                "strs-detail": {
+                    "count": 0,
+                    "next": None,
+                    "previous": None,
+                    "results": [],
+                },
+                "panels-detail": {
+                    "id": 1,
+                    "version": "0.2",
+                    "name": "Test Super Panel",
+                    "hash_id": "",
+                    "version_created": "2023-01-01T00:00:00Z",
+                    "status": "public",
+                    "disease_group": "",
+                    "disease_sub_group": "",
+                    "relevant_disorders": [],
+                    "types": [],
+                    "stats": {
+                        "number_of_genes": 0,
+                        "number_of_regions": 1,
+                        "number_of_strs": 0,
+                    },
+                    "genes": [],
+                    "strs": [],
+                    "regions": [
+                        {
+                            "confidence_level": "0",
+                            "entity_name": "REGION",
+                            "entity_type": "region",
+                            "evidence": [],
+                            "gene_data": None,
+                            "mode_of_inheritance": "Unknown",
+                            "mode_of_pathogenicity": None,
+                            "grch37_coordinates": [12345, 12346],
+                            "grch38_coordinates": [12345, 123456],
+                            "verbose_name": "REGION",
+                            "chromosome": "1",
+                            "haploinsufficiency_score": "10",
+                            "triplosensitivity_score": "",
+                            "required_overlap_percentage": 20,
+                            "penetrance": "Complete",
+                            "phenotypes": [],
+                            "publications": [],
+                            "tags": [],
+                            "type_of_variants": "small",
+                            "panel": {
+                                "id": 2,
+                                "version": "0.1",
+                                "name": "Test Component Panel",
+                                "hash_id": "",
+                                "version_created": "2023-01-01T00:00:00Z",
+                                "status": "public",
+                                "disease_group": "",
+                                "disease_sub_group": "",
+                                "relevant_disorders": [],
+                                "types": [],
+                                "stats": {
+                                    "number_of_genes": 0,
+                                    "number_of_regions": 1,
+                                    "number_of_strs": 0,
+                                },
+                            },
+                        }
+                    ],
+                },
+                "entities-detail": {
+                    "count": 1,
+                    "next": None,
+                    "previous": None,
+                    "results": [
+                        {
+                            "confidence_level": "0",
+                            "entity_name": "REGION",
+                            "entity_type": "region",
+                            "evidence": [],
+                            "gene_data": None,
+                            "mode_of_inheritance": "Unknown",
+                            "mode_of_pathogenicity": None,
+                            "grch37_coordinates": [12345, 12346],
+                            "grch38_coordinates": [12345, 123456],
+                            "verbose_name": "REGION",
+                            "chromosome": "1",
+                            "haploinsufficiency_score": "10",
+                            "triplosensitivity_score": "",
+                            "required_overlap_percentage": 20,
+                            "panel": {
+                                "disease_group": "",
+                                "disease_sub_group": "",
+                                "hash_id": "",
+                                "id": 2,
+                                "name": "Test Component Panel",
+                                "relevant_disorders": [],
+                                "stats": {
+                                    "number_of_genes": 0,
+                                    "number_of_regions": 1,
+                                    "number_of_strs": 0,
+                                },
+                                "status": "public",
+                                "types": [],
+                                "version": "0.1",
+                                "version_created": "2023-01-01T00:00:00Z",
+                            },
+                            "penetrance": "Complete",
+                            "phenotypes": [],
+                            "publications": [],
+                            "tags": [],
+                            "type_of_variants": "small",
+                        },
+                    ],
+                },
+                "regions-detail": {
+                    "count": 1,
+                    "next": None,
+                    "previous": None,
+                    "results": [
+                        {
+                            "confidence_level": "0",
+                            "entity_name": "REGION",
+                            "entity_type": "region",
+                            "evidence": [],
+                            "gene_data": None,
+                            "mode_of_inheritance": "Unknown",
+                            "mode_of_pathogenicity": None,
+                            "grch37_coordinates": [12345, 12346],
+                            "grch38_coordinates": [12345, 123456],
+                            "verbose_name": "REGION",
+                            "chromosome": "1",
+                            "haploinsufficiency_score": "10",
+                            "triplosensitivity_score": "",
+                            "required_overlap_percentage": 20,
+                            "panel": {
+                                "disease_group": "",
+                                "disease_sub_group": "",
+                                "hash_id": "",
+                                "id": 2,
+                                "name": "Test Component Panel",
+                                "relevant_disorders": [],
+                                "stats": {
+                                    "number_of_genes": 0,
+                                    "number_of_regions": 1,
+                                    "number_of_strs": 0,
+                                },
+                                "status": "public",
+                                "types": [],
+                                "version": "0.1",
+                                "version_created": "2023-01-01T00:00:00Z",
+                            },
+                            "penetrance": "Complete",
+                            "phenotypes": [],
+                            "publications": [],
+                            "tags": [],
+                            "type_of_variants": "small",
+                        },
+                    ],
+                },
+            },
+        )
+
+
+@parametrize_with_cases(["panel_id", "entity_name", "expected"], cases=Cases_KMDS_1185)
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_kmds_1185(client, panel_id: int, entity_name: str, expected):
+    """Super panels only contain component panel entities"""
+    actual = {
+        "panels-detail": client.get(
+            reverse_lazy("api:v1:panels-detail", args=(panel_id,))
+        ).json(),
+        "entities-detail": client.get(
+            reverse_lazy("api:v1:entities-detail", args=(entity_name,))
+        ).json(),
+        "genes-detail": client.get(
+            reverse_lazy("api:v1:genes-detail", args=(entity_name,))
+        ).json(),
+        "strs-detail": client.get(
+            reverse_lazy("api:v1:strs-detail", args=(entity_name,))
+        ).json(),
+        "regions-detail": client.get(
+            reverse_lazy("api:v1:regions-detail", args=(entity_name,))
+        ).json(),
+    }
+
+    assert actual == expected
+
+
+@pytest.mark.django_db(transaction=True, reset_sequences=True)
+def test_fix_super_panel_entities(client, curator_user):
+    client.login(username=curator_user.username, password="pass")
+
+    GeneFactory(gene_symbol="BRCA1", gene_name="BRCA1")
+
+    panel1 = GenePanelFactory(
+        status=GenePanel.STATUS.public,
+        old_pk="",
+    )
+
+    panel1_snapshot_v01 = GenePanelSnapshotFactory(
+        panel=panel1,
+        major_version=0,
+        minor_version=1,
+        level4title__name="Test Panel 1",
+        level4title__level3title="",
+        level4title__level2title="",
+        panel__status=GenePanel.STATUS.public,
+        panel__old_pk="",
+        old_panels=[],
+    )
+    panel1_snapshot_v01.add_gene(
+        curator_user,
+        "BRCA1",
+        {
+            "gene": None,
+            "chromosome": "1",
+            "position_37": [12345, 12346],
+            "position_38": [12345, 123456],
+            "sources": [],
+            "phenotypes": [],
+            "publications": [],
+            "moi": "Unknown",
+            "mode_of_pathogenicity": "",
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            "current_diagnostic": False,
+        },
+        increment_version=False,
+    )
+    panel1_snapshot_v01.add_str(
+        curator_user,
+        "AR_CAG",
+        {
+            "gene": None,
+            "chromosome": "1",
+            "position_37": [12345, 12346],
+            "position_38": [12345, 123456],
+            "normal_repeats": 34,
+            "pathogenic_repeats": 40,
+            "repeated_sequence": "CAG",
+            "sources": [],
+            "phenotypes": [],
+            "publications": [],
+            "moi": "Unknown",
+            "mode_of_pathogenicity": "",
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            "current_diagnostic": False,
+        },
+        increment_version=False,
+    )
+    panel1_snapshot_v01.add_region(
+        curator_user,
+        "REGION",
+        {
+            "gene": None,
+            "position_37": [12345, 12346],
+            "position_38": [12345, 123456],
+            "verbose_name": "REGION",
+            "chromosome": "1",
+            "haploinsufficiency_score": "20",
+            "triplosensitivity_score": "",
+            "required_overlap_percentage": 20,
+            "sources": [],
+            "phenotypes": [],
+            "publications": [],
+            "moi": "Unknown",
+            "mode_of_pathogenicity": "",
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Complete,
+            "current_diagnostic": False,
+        },
+        increment_version=False,
+    )
+
+    panel1_snapshot_v02 = GenePanelSnapshotFactory(
+        panel=panel1,
+        major_version=0,
+        minor_version=2,
+        level4title__name="Test Panel 1",
+        level4title__level3title="",
+        level4title__level2title="",
+        panel__status=GenePanel.STATUS.public,
+        panel__old_pk="",
+        old_panels=[],
+    )
+    panel1_snapshot_v02.add_gene(
+        curator_user,
+        "BRCA1",
+        {
+            "gene": None,
+            "chromosome": "1",
+            "position_37": [12345, 12346],
+            "position_38": [12345, 123456],
+            "sources": [],
+            "phenotypes": [],
+            "publications": [],
+            "moi": "Unknown",
+            "mode_of_pathogenicity": "",
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            "current_diagnostic": False,
+        },
+        increment_version=False,
+    )
+    panel1_snapshot_v02.add_str(
+        curator_user,
+        "AR_CAG",
+        {
+            "gene": None,
+            "chromosome": "1",
+            "position_37": [12345, 12346],
+            "position_38": [12345, 123456],
+            "normal_repeats": 34,
+            "pathogenic_repeats": 40,
+            "repeated_sequence": "CAG",
+            "sources": [],
+            "phenotypes": [],
+            "publications": [],
+            "moi": "Unknown",
+            "mode_of_pathogenicity": "",
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            "current_diagnostic": False,
+        },
+        increment_version=False,
+    )
+    panel1_snapshot_v02.add_region(
+        curator_user,
+        "REGION",
+        {
+            "gene": None,
+            "position_37": [12345, 12346],
+            "position_38": [12345, 123456],
+            "verbose_name": "REGION",
+            "chromosome": "1",
+            "haploinsufficiency_score": "20",
+            "triplosensitivity_score": "",
+            "required_overlap_percentage": 20,
+            "sources": [],
+            "phenotypes": [],
+            "publications": [],
+            "moi": "Unknown",
+            "mode_of_pathogenicity": "",
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Complete,
+            "current_diagnostic": False,
+        },
+        increment_version=False,
+    )
+
+    panel2_snapshot_v01 = GenePanelSnapshotFactory(
+        major_version=0,
+        minor_version=1,
+        level4title__name="Test Panel 2",
+        level4title__level3title="",
+        level4title__level2title="",
+        panel__status=GenePanel.STATUS.public,
+        panel__old_pk="",
+        old_panels=[],
+    )
+
+    panel1_snapshot_v02.child_panels.set([panel2_snapshot_v01])
+
+    fix_super_panel_entities(apps)
+
+    panel1_snapshot_v01.refresh_from_db()
+    assert len(panel1_snapshot_v01.genepanelentrysnapshot_set.all()) == 1
+    assert len(panel1_snapshot_v01.region_set.all()) == 1
+    assert len(panel1_snapshot_v01.str_set.all()) == 1
+
+    panel1_snapshot_v02.refresh_from_db()
+
+    assert len(panel1_snapshot_v02.genepanelentrysnapshot_set.all()) == 0
+    assert len(panel1_snapshot_v02.region_set.all()) == 0
+    assert len(panel1_snapshot_v02.str_set.all()) == 0

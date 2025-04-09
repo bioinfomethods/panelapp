@@ -23,19 +23,27 @@
 ##
 import os
 from random import randint
+
+import pytest
 from django.urls import reverse_lazy
 from django.utils import timezone
 from faker import Factory
-from accounts.tests.setup import LoginGELUser
-from panels.models import GenePanel
-from panels.models import Comment
-from panels.models import Evaluation
-from panels.models import Activity
-from panels.tests.factories import TagFactory
-from panels.tests.factories import GeneFactory
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
 
+from accounts.tests.setup import LoginGELUser
+from panels.models import (
+    Activity,
+    Comment,
+    Evaluation,
+    GenePanel,
+    GenePanelSnapshot,
+)
+from panels.tests._utils import get_test_request_messages
+from panels.tests.factories import (
+    GeneFactory,
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+    TagFactory,
+)
 
 fake = Factory.create()
 
@@ -310,12 +318,14 @@ class GeneReviewTest(LoginGELUser):
         tag2 = TagFactory()
 
         res = self.client.post(
-            url, {"tags": [tag1.pk, tag2.pk]}, HTTP_X_REQUESTED_WITH="XMLHttpRequest"
+            url,
+            {"tags-tags": [tag1.pk, tag2.pk]},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
         )
         gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
             gpes.gene.get("gene_symbol")
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert gene.tags.count() == 2
         assert current_version == gpes.panel.panel.active_panel.version
 
@@ -338,7 +348,7 @@ class GeneReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
             gpes.gene.get("gene_symbol")
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 1
         assert gene.mode_of_pathogenicity == mop
         assert gene.panel.version != gpes.panel.version
@@ -362,7 +372,7 @@ class GeneReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
             gpes.gene.get("gene_symbol")
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 1
         assert gene.moi == moi
         assert gene.panel.version != gpes.panel.version
@@ -387,7 +397,7 @@ class GeneReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
             gpes.gene.get("gene_symbol")
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 1
         assert gene.phenotypes == phenotypes_array
         assert gene.panel.version != gpes.panel.version
@@ -429,7 +439,7 @@ class GeneReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
             gpes.gene.get("gene_symbol")
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 1
         assert gene.publications == publications_array
         assert gene.panel.version != gpes.panel.version
@@ -504,7 +514,7 @@ class GeneReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
             gpes.gene.get("gene_symbol")
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 1
         assert res.content.find(str.encode(data["comment"])) != -1
         assert gene.saved_gel_status == new_status
@@ -516,7 +526,7 @@ class GeneReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
             gpes.gene.get("gene_symbol")
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 2
         assert gene.saved_gel_status == new_status
 
@@ -527,7 +537,7 @@ class GeneReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
             gpes.gene.get("gene_symbol")
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 3
         assert gene.saved_gel_status == new_status
 
@@ -538,7 +548,7 @@ class GeneReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
             gpes.gene.get("gene_symbol")
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 4
         assert gene.saved_gel_status == new_status
         assert gene.panel.version != gpes.panel.version
@@ -591,7 +601,7 @@ class GeneReviewTest(LoginGELUser):
         last_gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
             gpes.gene.get("gene_symbol")
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert last_gene.is_reviewd_by_user(self.gel_user) is False
         assert gene.panel.version == last_gene.panel.version
 
@@ -641,7 +651,7 @@ class GeneReviewTest(LoginGELUser):
         res = self.client.get(
             delete_comment_url, HTTP_X_REQUESTED_WITH="XMLHttpRequest"
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert evaluation.comments.count() == 0
         assert res.content.find(str.encode("Your review")) != -1
         assert current_version == gpes.panel.panel.active_panel.version
@@ -740,14 +750,18 @@ class GeneReviewTest(LoginGELUser):
             gene_core=gene2, panel=gps, evaluation=(None,)
         )
 
-        file_path = os.path.join(os.path.dirname(__file__), "import_reviews_data.tsv")
+        file_path = os.path.join(
+            os.path.dirname(__file__), "tsv_files/import_reviews_data.tsv"
+        )
         test_reviews_file = os.path.abspath(file_path)
 
         with open(test_reviews_file) as f:
             url = reverse_lazy("panels:upload_reviews")
-            self.client.post(url, {"review_list": f})
+            res = self.client.post(url, {"review_list": f})
 
-        ap = GenePanel.objects.get(name="Panel One").active_panel
+        error_messages = get_test_request_messages(res.wsgi_request, 25)
+        ap = GenePanelSnapshot.objects.get(panel__name="Panel One")
+        assert len(error_messages) == 0
         assert ap.get_gene(gene.gene_symbol).evaluation.count() == 1
         assert ap.get_gene(gene2.gene_symbol).evaluation.count() == 1
         assert current_version != ap.version
@@ -761,15 +775,119 @@ class GeneReviewTest(LoginGELUser):
             gene_core=gene, panel=gps, evaluation=(None,)
         )
 
-        file_path = os.path.join(os.path.dirname(__file__), "import_review_data_error.tsv")
+        file_path = os.path.join(
+            os.path.dirname(__file__), "tsv_files/import_review_data_error.tsv"
+        )
         test_reviews_file = os.path.abspath(file_path)
 
         with open(test_reviews_file) as f:
             url = reverse_lazy("panels:upload_reviews")
             res = self.client.post(url, {"review_list": f})
-            messages = [str(m) for m in res.wsgi_request._messages]
-            expected_messages = ['Line: 2 has incorrect Gene rating: INVALID-RANK']
-            assert messages == expected_messages
+            error_messages = get_test_request_messages(res.wsgi_request, 25)
+            expected_messages = [
+                "Row 2, column 'rating' is invalid: Incorrect gene rating: INVALID-RANK"
+            ]
+            assert error_messages == expected_messages
 
         ap = GenePanel.objects.get(name="Panel One").active_panel
         assert ap.get_gene(gene.gene_symbol).evaluation.count() == 0
+
+
+@pytest.mark.django_db
+def test_delete_other_user_comment(client, curator_user, other_curator_user):
+    gpes = GenePanelEntrySnapshotFactory(evaluation=[])
+
+    client.login(username=curator_user.username, password="pass")
+
+    client.post(
+        reverse_lazy(
+            "panels:review_entity",
+            kwargs={
+                "pk": gpes.panel.panel.pk,
+                "entity_type": "gene",
+                "entity_name": gpes.gene.get("gene_symbol"),
+            },
+        ),
+        {
+            "rating": Evaluation.RATINGS.AMBER,
+            "current_diagnostic": True,
+            "comments": "testing",
+            "moi": list(Evaluation.MODES_OF_INHERITANCE)[1][0],
+            "mode_of_pathogenicity": list(Evaluation.MODES_OF_PATHOGENICITY)[1][0],
+        },
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
+        gpes.gene.get("gene_symbol")
+    )
+    evaluation = gene.evaluation.get(user=curator_user)
+
+    client.login(username=other_curator_user.username, password="pass")
+
+    res = client.get(
+        reverse_lazy(
+            "panels:delete_comment_by_user",
+            kwargs={
+                "pk": gpes.panel.panel.pk,
+                "entity_type": "gene",
+                "entity_name": gpes.gene.get("gene_symbol"),
+                "comment_pk": evaluation.comments.first().pk,
+            },
+        ),
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    assert res.status_code == 403
+
+    assert gene.evaluation.get().comments.count() == 1
+
+
+@pytest.mark.django_db
+def test_delete_other_user_review(client, curator_user, other_curator_user):
+    gpes = GenePanelEntrySnapshotFactory(evaluation=[])
+
+    client.login(username=curator_user.username, password="pass")
+
+    client.post(
+        reverse_lazy(
+            "panels:review_entity",
+            kwargs={
+                "pk": gpes.panel.panel.pk,
+                "entity_type": "gene",
+                "entity_name": gpes.gene.get("gene_symbol"),
+            },
+        ),
+        {
+            "rating": Evaluation.RATINGS.AMBER,
+            "current_diagnostic": True,
+            "comments": "testing",
+            "moi": list(Evaluation.MODES_OF_INHERITANCE)[1][0],
+            "mode_of_pathogenicity": list(Evaluation.MODES_OF_PATHOGENICITY)[1][0],
+        },
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
+        gpes.gene.get("gene_symbol")
+    )
+    evaluation = gene.evaluation.get(user=curator_user)
+
+    client.login(username=other_curator_user.username, password="pass")
+
+    res = client.get(
+        reverse_lazy(
+            "panels:delete_evaluation_by_user",
+            kwargs={
+                "pk": gpes.panel.panel.pk,
+                "entity_type": "gene",
+                "entity_name": gpes.gene.get("gene_symbol"),
+                "evaluation_pk": evaluation.pk,
+            },
+        ),
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    assert res.status_code == 403
+
+    assert gene.evaluation.count() == 1

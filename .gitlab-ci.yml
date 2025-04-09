@@ -1,208 +1,278 @@
+include:
+  - local: ".gitlab-ci/envs.yml"
+  - component: $CI_SERVER_FQDN/genomicsengland/secure-sdlc/cicd-components/secrets-detection/secretsdetection@1
+    inputs:
+      rule_statement: $CI_PIPELINE_SOURCE == "push"
+
 variables:
-  PANNELAPP_TF_DIR : "panelapp-infra/terraform/panelapp/"
+  DOCKER_PYTHON: python:3.11.9-alpine3.19
+  DOCKER_NODE: node:20.14.0-alpine3.19
+  DOCKER_POSTGRES: docker.artifactory.aws.gel.ac/library/postgres:14.7
+  DOCKER_PLAYWRIGHT: mcr.microsoft.com/playwright:v1.50.1-jammy
+  DOCKER_IN_DOCKER: docker:24.0.1-dind
+  DOCKER_DRIVER: overlay2
+  DOCKER_HOST: tcp://docker:2376/
+  DOCKER_TLS_CERTDIR: "/certs"
+  DOCKER_CERT_PATH: "$DOCKER_TLS_CERTDIR/client"
+  DOCKER_TLS_VERIFY: 1
+  FF_GITLAB_REGISTRY_HELPER_IMAGE: 1
+  PANELAPP_TF_DIR: "panelapp-infra/terraform/panelapp/"
+  POETRY_VERSION: "1.8.5"
+  POETRY_PLUGIN_BUNDLE_VERSION: "1.5.0"
+  POETRY_VENV: /tmp/poetry
+  AWS_REGION: eu-west-2
+  AWS_DEFAULT_REGION: eu-west-2
+  AWS_ACCOUNT_ID: "577192787797"
+  AWS_ASSUME_ROLE: "arn:aws:iam::${AWS_ACCOUNT_ID}:role/CIDeploypanelapp"
+  ECR_ACCOUNT_ID: 577192787797
+  ECR_REGISTRY: "${ECR_ACCOUNT_ID}.dkr.ecr.eu-west-2.amazonaws.com"
+  ECR_ASSUME_ROLE: "arn:aws:iam::${ECR_ACCOUNT_ID}:role/CIDeploypanelapp"
+  ECR_REPOSITORY: panelapp
+  TAGGER_REGISTRY: $ECR_ACCOUNT_ID
+  TAGGER_REPOSITORY: $ECR_REPOSITORY
+  TAGGER_ENVIRONMENTS: "build,dev,test,e2e,uat,prod"
+  #  TAGGER_DEBUG: 'yes'
+  CI_DEBUG_TRACE: "false"
+  #  TF_LOG: DEBUG
+  E2E_TEST_IMAGE_TAG: "$CI_REGISTRY_IMAGE/e2e-test:$CI_COMMIT_SHORT_SHA"
+  APP_VERSION: "0.0.0"
+  env_name: dev
 
 stages:
-   - code_test
-   - image_build
-   - deploy_to_stage         # Manual
-   - deploy_to_production    # Manual
-   - deploy_to_test          # Manual
+  - entrygate
+  - test_build
+  - test
+  - image_build
+  - tag
 
+services:
+  - name: $DOCKER_IN_DOCKER
+    alias: docker
+    command:
+      - "--registry-mirror"
+      - "https://docker.artifactory.aws.gel.ac"
+
+default:
+  tags:
+    - pool_name:panelapp_docker
+
+.tests:
+  image: $DOCKER_PYTHON
+  stage: test
+
+.tag:
+  image: $DOCKER_IN_DOCKER
+  before_script:
+    - apk add aws-cli jq py3-boto3
+    - source scripts/assume_role.sh
+  variables:
+    AWS_ASSUME_ROLE: $ECR_ASSUME_ROLE
+
+debug:
+  stage: entrygate
+  script:
+    - env -u CI_JOB_JWT_V1 -u CI_JOB_JWT_V2 -u gel_gitlab_runner_key | sort
+
+## Linting, formatting, etc
+pre-commit-hooks:
+  stage: entrygate
+  image: $DOCKER_PYTHON
+  before_script:
+    - apk add git bash ruby
+    - python3 -m venv .venv
+    - source .venv/bin/activate
+    - pip install pre-commit
+    - pre-commit install-hooks
+  script:
+    - pre-commit run --all-files
+
+# Code checks
+## run unit and integration tests
 code_test:
-  image: python:3.6.8-alpine3.9
-  except:
-    - schedules
-  stage: code_test
-  only:
-    - tags
-    - merge_requests
-    - branches
+  extends: .tests
+  needs: []
+  coverage: /^TOTAL.+?(\d+\%)$/
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: coverage.xml
+      junit: report.xml
   services:
-    - name: postgres:9.6.9
+    - name: $DOCKER_POSTGRES
       alias: db-postgres
   variables:
     POSTGRES_DB: panelapp
     POSTGRES_USER: panelapp
     POSTGRES_PASSWORD: secret
-    DATABASE_URL: postgres://panelapp:secret@db-postgres:5432/panelapp
+    DATABASE_URL: postgres://panelapp:secret@db-postgres:5432/panelapp # checkov:skip=CKV_SECRET_4
     DJANGO_SETTINGS_MODULE: panelapp.settings.test
     DJANGO_LOG_LEVEL: INFO
-  script:
-    - apk add --no-cache postgresql-libs git curl jpeg-dev zlib-dev gcc musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev
-    - pip install .[tests]
-    - pip install pytest-runner
-    - pytest
-
-
-
-image_build:
-  except:
-    - schedules
-  image: docker:stable
-  dependencies:
-    - code_test
-  only:
-    refs:
-      - tags
-    variables:
-      - $CI_COMMIT_TAG =~ /\d+\.\d+\.\d+\w*$/
-  services:
-    - docker:dind
-  stage: image_build
-  script:
-    # installing py-setuptools to extract the name and version
-    - apk -U add py-setuptools make
-    - export PACKAGE_NAME=$(python setup.py --name)
-    - export PACKAGE_VERSION=$(python setup.py --version)
-    # Check whether the Package Version matches with the TAG version
-    #- (if [ PACKAGE_VERSION = $CI_COMMIT_TAG ]; then /bin/true; echo "TAG and file Version matches"; else echo "Error!! TAG NAME AND Version file did not Match";/bin/false; fi)
-    # Build the docker image
-    - docker build -t ${PACKAGE_NAME}-base --file ./docker/cloud/Dockerfile-base .
-    - docker build -t ${PACKAGE_NAME}-web --file ./docker/cloud/Dockerfile-web .
-    - docker build -t ${PACKAGE_NAME}-worker --file ./docker/cloud/Dockerfile-worker .
-    # login into dockerHub to push the images
-    - docker login -u $DOCKERHUB_USER -p $DOCKERHUB_PASS
-    # Tag the images with Version and push them to DockerHub
-    - docker tag ${PACKAGE_NAME}-web $DOCKERHUB_ORG/${PACKAGE_NAME}-web:${PACKAGE_VERSION}
-    - docker tag ${PACKAGE_NAME}-worker $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:${PACKAGE_VERSION}
-    - docker tag ${PACKAGE_NAME}-base $DOCKERHUB_ORG/${PACKAGE_NAME}-base:${PACKAGE_VERSION}
-    - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-web:${PACKAGE_VERSION}
-    - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:${PACKAGE_VERSION}
-    - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-base:${PACKAGE_VERSION}
-    # Tag images as latest and push them to DockerHub
-    - docker tag ${PACKAGE_NAME}-web $DOCKERHUB_ORG/${PACKAGE_NAME}-web:latest
-    - docker tag ${PACKAGE_NAME}-worker $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:latest
-    - docker tag ${PACKAGE_NAME}-base $DOCKERHUB_ORG/${PACKAGE_NAME}-base:latest
-    - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-web:latest
-    - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-worker:latest
-    - docker push $DOCKERHUB_ORG/${PACKAGE_NAME}-base:latest
-
-deploy_to_stage:
-   stage: deploy_to_stage
-   except:
-     - schedules
-   when: manual
-   environment:
-     name: stage
-     on_stop: destroy_stage
-   dependencies:
-     - image_build
-   tags:
-     - TF_panelapp_stage
-   only:
-     refs:
-       - tags
-     variables:
-       - $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+[a-z]*\d$/
-   variables:
-     env_name : stage
-   before_script:
-     # This will initialize the required environment variable and files to run Terraform
-     - wget -q 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -O aws_creds
-     - export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' aws_creds)
-     - export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
-     - export AWS_SESSION_TOKEN=$(jq -r '.Token' aws_creds)
-     - export AWS_DEFAULT_REGION=$default_region
-     - git clone --single-branch --branch $INFRA_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-     - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
-   script:
-     - export WORKING_DIR=$(pwd)
-     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$CI_COMMIT_TAG && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$CI_COMMIT_TAG
-     - sleep 30
-     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-stage -panelapp
-     - sleep 30
-     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-stage -panelapp
-
-
-destroy_stage:
-  stage: deploy_to_stage
-  when: manual
-  only:
-    refs:
-      - tags
-    variables:
-      - $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+[a-z]*\d$/
-  except:
-    - schedules
-  variables:
-     env_name : stage
-  environment:
-    name: stage
-    action: stop
-  tags:
-    - TF_panelapp_stage
   before_script:
-    - wget -q 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -O aws_creds
-    - export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' aws_creds)
-    - export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
-    - export AWS_SESSION_TOKEN=$(jq -r '.Token' aws_creds)
-    - export AWS_DEFAULT_REGION=$default_region
-    - git clone --single-branch --branch $INFRA_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-    - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
+    - apk add --no-cache postgresql-libs git curl jpeg-dev zlib-dev gcc musl-dev curl-dev postgresql-dev build-base linux-headers libffi-dev
+    - python3 -m venv "$POETRY_VENV"
+    - $POETRY_VENV/bin/pip install -U pip setuptools
+    - $POETRY_VENV/bin/pip install poetry=="$POETRY_VERSION"
+    - $POETRY_VENV/bin/poetry self add poetry-plugin-bundle=="$POETRY_PLUGIN_BUNDLE_VERSION"
+    - $POETRY_VENV/bin/poetry bundle venv --only main,test ./.venv
+    - source .venv/bin/activate
   script:
-    - export WORKING_DIR=$(pwd)
-    - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var image_tag=$CI_COMMIT_TAG -var 'EC2_mgmt_count=0' && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var 'aurora_replica=0' -var 'panelapp_replica=0' -var image_tag=$CI_COMMIT_TAG -var 'EC2_mgmt_count=0'
+    - pytest --cov-report term --cov-report xml --junitxml=report.xml
 
+# Build docker image for end-to-end testing purposes
+e2e_test_image_build:
+  image: $DOCKER_IN_DOCKER
+  stage: test_build
+  needs: []
+  before_script:
+    - apk add aws-cli jq py3-boto3
+    - source scripts/assume_role.sh
+  script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_JOB_TOKEN $CI_REGISTRY
+    - docker build -f ./docker/Dockerfile -t "$E2E_TEST_IMAGE_TAG" --target test --build-arg node_base="${DOCKER_NODE}" --build-arg python_base="${DOCKER_PYTHON}" --build-arg POETRY_VERSION="${POETRY_VERSION}" --build-arg POETRY_PLUGIN_BUNDLE_VERSION="${POETRY_PLUGIN_BUNDLE_VERSION}" .
+    - docker push "$E2E_TEST_IMAGE_TAG"
 
-deploy_to_production:
-   stage: deploy_to_production
-   except:
-    - schedules
-   when: manual
-   environment:
-     name: prod
-   tags:
-     - TF_panelapp_prod
-   only:
-     refs:
-       - tags
-     variables:
-       - $CI_COMMIT_TAG =~ /^\d+\.\d+\.\d+$/
-   variables:
-     env_name : prod
-   before_script:
-     - wget -q 169.254.170.2$AWS_CONTAINER_CREDENTIALS_RELATIVE_URI -O aws_creds
-     - export AWS_ACCESS_KEY_ID=$(jq -r '.AccessKeyId' aws_creds)
-     - export AWS_SECRET_ACCESS_KEY=$(jq -r '.SecretAccessKey' aws_creds)
-     - export AWS_SESSION_TOKEN=$(jq -r '.Token' aws_creds)
-     - export AWS_DEFAULT_REGION=$default_region
-     - git clone --single-branch --branch $INFRA_REF_TAG  https://$TF_CODE_REPO_USER:$TF_CODE_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-infra.git
-     - git clone https://$INFRA_DEPLOY_TOKEN_USERNAME:$TF_INFRA_REPO_TOKEN@gitlab.com/genomicsengland/panelapp/panelapp-config.git
-   script:
-     - export WORKING_DIR=$(pwd)
-     # Take DB snapshot and delete the old one
-     - python3 $WORKING_DIR/panelapp-infra/rds_snapshot.py -create -recycle
-     - sleep 60
-     - cd $PANNELAPP_TF_DIR; terraform init -backend-config "$WORKING_DIR/panelapp-config/$env_name/panelapp-backend.conf" && terraform plan -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$CI_COMMIT_TAG && terraform apply -auto-approve -var-file="$WORKING_DIR/panelapp-config/$env_name/terraform.tfvars" -var image_tag=$CI_COMMIT_TAG
-     - sleep 30
-     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-prod -panelapp
-     - sleep 30
-     - python3 $WORKING_DIR/panelapp-infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-prod -panelapp
-
-
-deploy_to_test:
-  stage: deploy_to_test
-  only:
-    - schedules
-  tags:
-    - executor:docker
-  environment:
-    name: test
-    on_stop: destroy_test
+.e2e_test:
+  image: $DOCKER_PLAYWRIGHT
+  stage: test
+  dependencies:
+    - e2e_test_image_build
+  artifacts:
+    paths:
+      - test-results/
+      - playwright-report/
+    when: always
+  services:
+    - name: $DOCKER_POSTGRES
+      alias: db-postgres
+      variables:
+        POSTGRES_DB: panelapp
+        POSTGRES_USER: panelapp
+        POSTGRES_PASSWORD: secret
+    - name: $E2E_TEST_IMAGE_TAG
+      alias: web
+      variables:
+        PYTHONUNBUFFERED: "1"
+        DJANGO_LOG_LEVEL: DEBUG
+        DJANGO_SETTINGS_MODULE: panelapp.settings.test
+        DATABASE_URL: postgres://panelapp:secret@db-postgres:5432/panelapp
+        ALLOWED_HOSTS: web
+      command:
+        - /bin/sh
+        - "-c"
+        - "manage migrate && manage loaddata /app/data.json && manage runserver 0.0.0.0:8000"
   variables:
-    env_name: test
-  script:
-    - echo "Scripts will be added once the test Environment is released from UAT"
+    # Allows inter-service communication: https://stackoverflow.com/questions/48041101/gitlab-ci-cross-service-communication
+    FF_NETWORK_PER_BUILD: 1
+    BASE_URL: http://web:8000
+  before_script:
+    - npm ci
 
-destroy_test:
-  when: manual
-  only:
-    - schedules
-  stage: deploy_to_test
-  tags:
-    - executor:docker
-  environment:
-    name: test
-    action: stop
+e2e_test_functional:
+  extends: .e2e_test
   script:
-    - echo "Scripts will be added once the test Environment is released from UAT"
+    - npx playwright test tests/functional/
+
+e2e_test_visual:
+  extends: .e2e_test
+  script:
+    - npx playwright test tests/visual/
+
+trivy:
+  stage: test
+  needs: []
+  image:
+    name: aquasec/trivy:0.42.1
+    entrypoint: [""]
+  script:
+    - trivy fs --exit-code 0 --cache-dir .trivycache/ --severity MEDIUM,HIGH,CRITICAL --ignore-unfixed --format template --template "@/contrib/junit.tpl" -o trivy.junit.xml .
+    - trivy fs --exit-code 1 --cache-dir .trivycache/ --severity CRITICAL --ignore-unfixed --no-progress .
+    - if [[ -s .trivyignore ]]; then echo ".trivyignore is not empty" ; cat .trivyignore ; exit 2 ; fi
+  allow_failure:
+    exit_codes:
+      - 2 # warn when .trivyignore exists and is not empty
+  rules:
+    - if: $TEST
+      allow_failure: true
+      when: never
+  artifacts:
+    when: always
+    reports:
+      junit: "trivy.junit.xml"
+    paths:
+      - "trivy.junit.xml"
+
+# Build docker image
+image_build:
+  image: $DOCKER_IN_DOCKER
+  stage: image_build
+  before_script:
+    - apk add aws-cli jq py3-boto3
+    - source scripts/assume_role.sh
+  script:
+    - aws ecr get-login-password --region eu-west-2 | docker login --username AWS --password-stdin "$ECR_REGISTRY"
+    - if scripts/tagger validate-version "$APP_VERSION"; then sed -i -e "s/^version =.*/version = \"${APP_VERSION}\"/" ./pyproject.toml; fi
+    - docker build -f ./docker/Dockerfile -t "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG" --target prod --build-arg node_base="${DOCKER_NODE}" --build-arg python_base="${DOCKER_PYTHON}" --build-arg POETRY_VERSION="${POETRY_VERSION}" --build-arg POETRY_PLUGIN_BUNDLE_VERSION="${POETRY_PLUGIN_BUNDLE_VERSION}" .
+    - docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG"
+    - scripts/tagger add-env-tags --env=build --add-latest=1 "$BUILD_TAG"
+  variables:
+    AWS_ASSUME_ROLE: $ECR_ASSUME_ROLE
+    BUILD_TAG: "ci-$CI_PIPELINE_ID"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push"
+
+scan:
+  stage: image_build
+  needs:
+    - image_build
+  environment:
+    name: $env_name
+  image: $DOCKER_IN_DOCKER
+  before_script:
+    - apk add aws-cli jq py3-boto3
+    - |
+      export $(printf "AWS_ACCESS_KEY_ID=%s AWS_SECRET_ACCESS_KEY=%s AWS_SESSION_TOKEN=%s" \
+        $(aws sts assume-role \
+          --role-arn "${AWS_ASSUME_ROLE}" \
+          --role-session-name "gitlab-ci-${CI_PROJECT_NAME}-${CI_PIPELINE_IID}" \
+          --query "Credentials.[AccessKeyId,SecretAccessKey,SessionToken]" \
+          --output text
+        )
+      )
+  script:
+    - aws ecr describe-image-scan-findings --repository-name "$ECR_REPOSITORY" --image-id imageTag="$BUILD_TAG" | tee "inspector_findings_$BUILD_TAG.json"
+    - count_findings () { jq ".imageScanFindings.findingSeverityCounts.$1 // 0" "inspector_findings_$BUILD_TAG.json"; }
+    - |
+      set -e
+      if [ "$(count_findings CRITICAL)" -gt 0 ]; then
+        echo -e "\e[91mThe image "$ECR_REPOSITORY:$BUILD_TAG" has $(count_findings CRITICAL) CRITICAL findings.\e[0m"
+        exit 101
+      elif [ "$(count_findings HIGH)" -gt 0 ]; then
+        echo -e "\e[93mThe image "$ECR_REPOSITORY:$BUILD_TAG" has $(count_findings HIGH) HIGH findings.\e[0m"
+        exit 102
+      else
+        echo -e "\e[92mAll good!\e[0m"
+      fi
+  variables:
+    AWS_ASSUME_ROLE: $ECR_ASSUME_ROLE
+    BUILD_TAG: "ci-$CI_PIPELINE_ID"
+  allow_failure:
+    exit_codes:
+      - 101
+      - 102
+  artifacts:
+    paths:
+      - inspector_findings_$BUILD_TAG.json
+    when: on_failure
+
+add_tags:
+  stage: tag
+  extends: .tag
+  script:
+    - '(scripts/tagger validate-version "$APP_VERSION" && ! scripts/tagger tag-exists "$APP_VERSION") || scripts/tagger freestyle-tag "$APP_VERSION"'
+    - scripts/tagger add-tag "$BUILD_TAG" "$APP_VERSION"
+    - scripts/tagger --verbose list-tags
+  variables:
+    BUILD_TAG: "ci-$CI_PIPELINE_ID"
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "push" && $APP_VERSION != "0.0.0"

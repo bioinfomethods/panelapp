@@ -23,25 +23,35 @@
 ##
 import os
 from random import randint
-from django.core import mail
-from django.test import Client
+
+import pytest
+from django.test.client import RequestFactory
 from django.urls import reverse_lazy
 from faker import Factory
-from accounts.tests.setup import LoginGELUser
-from panels.models import GenePanel
-from panels.models import GenePanelEntrySnapshot
-from panels.models import Evaluation
-from panels.models import Evidence
-from panels.models import GenePanelSnapshot
-from panels.models import HistoricalSnapshot
-from panels.tasks import email_panel_promoted
-from panels.tests.factories import GeneFactory
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
-from panels.tests.factories import STRFactory
-from panels.tests.factories import TagFactory
-from panels.tests.factories import CommentFactory
 
+from accounts.models import (
+    Reviewer,
+    User,
+)
+from accounts.tests.factories import UserFactory
+from accounts.tests.setup import LoginGELUser
+from panels.forms import PanelSTRForm
+from panels.models import (
+    Evaluation,
+    Evidence,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    HistoricalSnapshot,
+)
+from panels.tests.factories import (
+    CommentFactory,
+    EvidenceFactory,
+    GeneFactory,
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+    STRFactory,
+    TagFactory,
+)
 
 fake = Factory.create()
 
@@ -123,6 +133,29 @@ class STRTest(LoginGELUser):
         assert sorted(list(new_str.tags.all().values_list("pk", flat=True))) == sorted(
             gene_data["tags"]
         )
+
+    def test_add_str_wrong_name(self):
+        gps = GenePanelSnapshotFactory()
+
+        url = reverse_lazy(
+            "panels:add_entity", kwargs={"pk": gps.panel.pk, "entity_type": "str"}
+        )
+        gene_data = {
+            "name": "Incorrect (Name)",
+            "chromosome": "1",
+            "position_37_0": "",
+            "position_37_1": "",
+            "position_38_0": "12345",
+            "position_38_1": "123456",
+            "repeated_sequence": "ATAT",
+            "normal_repeats": "2",
+            "pathogenic_repeats": "5",
+            "current_diagnostic": "True",
+            # other data omitted
+        }
+        res = self.client.post(url, gene_data)
+        assert res.status_code == 200
+        assert b"STR is not in the right format" in res.content
 
     def test_add_str_to_panel_no_gene_data(self):
         """STRs can exist without genes"""
@@ -212,7 +245,7 @@ class STRTest(LoginGELUser):
         assert res.status_code == 200
 
     def test_edit_str_in_panel(self):
-        str_item = STRFactory()
+        str_item = STRFactory(evidence=EvidenceFactory.create_batch(4))
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -266,7 +299,7 @@ class STRTest(LoginGELUser):
         self.assertEqual(int(str_data["position_37_1"]), new_str.position_37.upper)
 
     def test_edit_repeated_sequence(self):
-        str_item = STRFactory()
+        str_item = STRFactory(evidence=EvidenceFactory.create_batch(4))
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -315,7 +348,7 @@ class STRTest(LoginGELUser):
         assert new_str.repeated_sequence == "ATATAT"
 
     def test_edit_incorrect_repeated_sequence(self):
-        str_item = STRFactory()
+        str_item = STRFactory(evidence=EvidenceFactory.create_batch(4))
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -365,7 +398,7 @@ class STRTest(LoginGELUser):
     def test_remove_gene_from_str(self):
         """We need ability to remove genes from STRs"""
 
-        str_item = STRFactory()
+        str_item = STRFactory(evidence=EvidenceFactory.create_batch(4))
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -421,7 +454,10 @@ class STRTest(LoginGELUser):
     def test_remove_sources(self):
         """Remove sources via edit gene detail section"""
 
-        str_item = STRFactory(penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete)
+        str_item = STRFactory(
+            penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            evidence=EvidenceFactory.create_batch(4),
+        )
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -459,10 +495,61 @@ class STRTest(LoginGELUser):
         ).active_panel.get_str(str_item.name)
         assert new_str.penetrance != str_item.penetrance
 
+    def test_remove_expert_source(self):
+        """Removing expert sources should throw an error"""
+
+        str_item = STRFactory()
+        str_item.evidence.all().delete()
+
+        evidence = EvidenceFactory(name="Research", reviewer__user_type="GEL")
+        expert_review = EvidenceFactory(
+            name="Expert Review Green", reviewer__user_type="GEL"
+        )
+
+        str_item.evidence.add(evidence, expert_review)
+
+        url = reverse_lazy(
+            "panels:edit_entity",
+            kwargs={
+                "pk": str_item.panel.panel.pk,
+                "entity_type": "str",
+                "entity_name": str_item.name,
+            },
+        )
+
+        str_data = {
+            "name": str_item.name,
+            "chromosome": "1",
+            "position_37_0": "12345",
+            "position_37_1": "12346",
+            "position_38_0": "12345",
+            "position_38_1": "123456",
+            "repeated_sequence": "ATAT",
+            "normal_repeats": "2",
+            "pathogenic_repeats": "5",
+            "gene": str_item.gene_core.pk,
+            "gene_name": "Gene name",
+            "source": ["Other"],
+            "tags": str_item.tags.values_list("pk", flat=True),
+            "publications": ";".join(str_item.publications),
+            "phenotypes": ";".join(str_item.phenotypes),
+            "moi": str_item.moi,
+            "penetrance": "",
+        }
+
+        form_error = "Please remove extra Expert Review sources from panel detail page"
+
+        res = self.client.post(url, str_data)
+        assert res.status_code == 200
+        assert res.context["form"].errors.get("source") == [form_error]
+
     def test_add_tag_via_edit_details(self):
         """Set tags via edit gene detail section"""
 
-        str_item = STRFactory(penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete)
+        str_item = STRFactory(
+            penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            evidence=EvidenceFactory.create_batch(4),
+        )
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -511,7 +598,10 @@ class STRTest(LoginGELUser):
     def test_remove_tag_via_edit_details(self):
         """Remove tags via edit gene detail section"""
 
-        str_item = STRFactory(penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete)
+        str_item = STRFactory(
+            penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            evidence=EvidenceFactory.create_batch(4),
+        )
 
         tag = TagFactory(name="some tag")
         str_item.tags.add(tag)
@@ -556,7 +646,10 @@ class STRTest(LoginGELUser):
     def test_change_penetrance(self):
         """Test if a curator can change Gene penetrance"""
 
-        str_item = STRFactory(penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete)
+        str_item = STRFactory(
+            penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            evidence=EvidenceFactory.create_batch(4),
+        )
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -597,7 +690,10 @@ class STRTest(LoginGELUser):
     def test_add_publication(self):
         """Add a publication to a gene panel entry"""
 
-        str_item = STRFactory(penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete)
+        str_item = STRFactory(
+            penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            evidence=EvidenceFactory.create_batch(4),
+        )
         str_item.publications = []
         str_item.save()
 
@@ -639,7 +735,10 @@ class STRTest(LoginGELUser):
     def test_remove_publication(self):
         """Remove a publication to a gene panel entry"""
 
-        str_item = STRFactory(penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete)
+        str_item = STRFactory(
+            penetrance=GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+            evidence=EvidenceFactory.create_batch(4),
+        )
         str_item.publications = [fake.sentence(), fake.sentence()]
         str_item.save()
 
@@ -693,7 +792,7 @@ class STRTest(LoginGELUser):
         assert new_ap.has_str("NewSTR") is True
 
     def test_update_str_preserves_comments_order(self):
-        str_item = STRFactory()
+        str_item = STRFactory(evidence=EvidenceFactory.create_batch(4))
         comments = list(CommentFactory.create_batch(4, user=self.verified_user))
 
         for ev in str_item.evaluation.all():
@@ -717,7 +816,7 @@ class STRTest(LoginGELUser):
         self.assertEqual(1, max_comments_num_after_update)
 
     def test_edit_str_name_ajax(self):
-        str_item = STRFactory()
+        str_item = STRFactory(evidence=EvidenceFactory.create_batch(4))
         url = reverse_lazy(
             "panels:edit_entity",
             kwargs={
@@ -775,3 +874,107 @@ class STRTest(LoginGELUser):
         )
         self.assertEqual(res.status_code, 200)
         self.assertTrue(res.content.find(strs.repeated_sequence.encode()) != 1)
+
+    def test_copy_str_to_panel(self):
+        str = STRFactory()
+        gps = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        gps2 = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        req = RequestFactory()
+        user = User.objects.create(username="GEL", first_name="Genomics England")
+        Reviewer.objects.create(
+            user=user,
+            user_type="GEL",
+            affiliation="Genomics England",
+            workplace="Other",
+            role="Other",
+            group="Other",
+        )
+        req.user = user
+
+        form_data = {
+            "additional_panels": [gps2.pk],
+            "name": str.name,
+            "chromosome": str.chromosome,
+            "panel": gps,
+            "position_38_0": str.position_38.lower,
+            "position_38_1": str.position_38.upper,
+            "source": ["Expert Review", "Expert Review"],
+            "repeated_sequence": "T",
+            "normal_repeats": str.normal_repeats,
+            "moi": str.moi,
+            "pathogenic_repeats": str.pathogenic_repeats,
+        }
+        form = PanelSTRForm(form_data, panel=gps, user=user)
+        assert form.is_valid()
+        form.save_str()
+        assert gps2.has_str(str.name)
+
+    def test_copy_existing_str_to_panel(self):
+        gps = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        gps2 = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        str = STRFactory.create(panel=gps2)
+        req = RequestFactory()
+        user = User.objects.create(username="GEL", first_name="Genomics England")
+        Reviewer.objects.create(
+            user=user,
+            user_type="GEL",
+            affiliation="Genomics England",
+            workplace="Other",
+            role="Other",
+            group="Other",
+        )
+        req.user = user
+
+        form_data = {
+            "additional_panels": [gps2.pk],
+            "name": str.name,
+            "chromosome": str.chromosome,
+            "panel": gps,
+            "position_38_0": str.position_38.lower,
+            "position_38_1": str.position_38.upper,
+            "source": ["Expert Review", "Expert Review"],
+            "repeated_sequence": "T",
+            "normal_repeats": str.normal_repeats,
+            "moi": str.moi,
+            "pathogenic_repeats": str.pathogenic_repeats,
+        }
+        form = PanelSTRForm(form_data, panel=gps, user=user)
+        assert not form.is_valid()
+        assert gps2.has_str(str.name)
+
+
+@pytest.mark.django_db
+@pytest.mark.xfail(
+    reason="PANELAPP-799: reported bug", strict=True, raises=AssertionError
+)
+def test_update_str_replace_expert_review_green_source():
+    """This test relates to PANELAPP-799"""
+    bilbo = UserFactory(username="bilbo", reviewer__user_type=Reviewer.TYPES.REVIEWER)
+    frodo = UserFactory(username="frodo", reviewer__user_type=Reviewer.TYPES.GEL)
+    panel = GenePanelSnapshotFactory(
+        panel__name="Amyotrophic lateral sclerosis/motor neuron disease",
+    )
+    ar_cag = STRFactory(
+        name="AR_CAG",
+        panel=panel,
+        evidence=[
+            EvidenceFactory(
+                name="Expert Review Green",
+                rating=5,
+                reviewer=bilbo.reviewer,
+            )
+        ],
+    )
+
+    panel.update_str(
+        frodo, "AR_CAG", {"sources": ["Expert Review Green"]}, append_only=True
+    )
+
+    ar_cag.refresh_from_db()
+
+    [evidence] = ar_cag.evidence.all()
+
+    assert evidence.name == "Expert Review Green"
+    assert evidence.rating == 5
+    assert evidence.comment == ""
+    assert evidence.reviewer.user.username == "frodo"

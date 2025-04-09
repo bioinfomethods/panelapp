@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 ##
 ## Copyright (c) 2016-2019 Genomics England Ltd.
 ##
@@ -31,6 +30,7 @@ Custom S3 Storage for static and media file
 # See https://www.caktusgroup.com/blog/2014/11/10/Using-Amazon-S3-to-store-your-Django-sites-static-and-media-files/
 
 import logging
+from urllib.parse import urlparse
 
 from django.conf import settings
 from storages.backends.s3boto3 import S3Boto3Storage
@@ -45,8 +45,15 @@ class StaticStorage(S3Boto3Storage):
     object_parameters = settings.AWS_S3_STATICFILES_OBJECT_PARAMETERS
     custom_domain = settings.AWS_S3_STATICFILES_CUSTOM_DOMAIN
     default_acl = settings.AWS_STATICFILES_DEFAULT_ACL
-    querystring_auth = False # We assume static files are public
+    querystring_auth = False  # We assume static files are public
     logger.debug("Static Files bucket: {}, Location: {}".format(bucket_name, location))
+
+    def url(self, *args, **kwargs):
+        url = super().url(*args, **kwargs)
+        if settings.AWS_STATICFILES_USE_RELATIVE_URL:
+            parts = urlparse(url)
+            return "".join(parts[2:])
+        return url
 
 
 class MediaStorage(S3Boto3Storage):
@@ -56,5 +63,5 @@ class MediaStorage(S3Boto3Storage):
     object_parameters = settings.AWS_S3_MEDIAFILES_OBJECT_PARAMETERS
     custom_domain = settings.AWS_S3_MEDIAFILES_CUSTOM_DOMAIN
     default_acl = settings.AWS_MEDIAFILES_DEFAULT_ACL
-    querystring_auth = False # We assume media files are public
+    querystring_auth = False  # We assume media files are public
     logger.debug("Media Files bucket: {}, Location: {}".format(bucket_name, location))

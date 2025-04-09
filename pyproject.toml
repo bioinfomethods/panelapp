@@ -1,0 +1,167 @@
+[tool.poetry]
+name = "panelapp"
+version = "0.0.0"
+description = ""
+authors = ["Alasdair Colley <alasdair.colley@genomicsengland.co.uk>"]
+readme = "README.md"
+packages = [
+    { include = "accounts", from = "panelapp" },
+    { include = "api", from = "panelapp" },
+    { include = "panelapp", from = "panelapp" },
+    { include = "panels", from = "panelapp" },
+    { include = "releases", from = "panelapp" },
+    { include = "scripts", from = "panelapp" },
+    { include = "v1rewrites", from = "panelapp" },
+    { include = "webservices", from = "panelapp" },
+    { include = "manage.py", from = "panelapp" },
+    { include = "s3_storages.py", from = "panelapp" },
+]
+classifiers = [
+    "Environment :: Other Environment",
+    "Intended Audience :: Other Audience",
+    "License :: Other/Proprietary License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering",
+]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+beautifulsoup4 = "^4.12.3"
+boto3 = "^1.34.67"
+celery = "^5.3.6"
+click = "^8.1.7"
+dj-database-url = "^2.1.0"
+django = "^4.2"
+django-admin-list-filter-dropdown = "^1.0.3"
+django-array-field-select-multiple = "^0.3.0"
+django-autocomplete-light = "^3.11.0"
+django-bootstrap5 = "^23.4"
+django-click = "^2.3.0"
+django-cors-headers = "^4.3.1"
+django-csp = "^4.0b1"
+django-extensions = "^3.2.3"
+django-filter = "^22.1"
+django-htmx = "^1.21.0"
+django-import-export = "^4.3.3"
+django-markdown-deux = "^1.0.6"
+django-markdownx = "^4.0.7"
+django-mathfilters = "^1.0.0"
+django-model-utils = "^4.4.0"
+django-object-actions = "^4.2.0"
+django-qurl-templatetag = "^0.0.14"
+django-storages = "^1.14.2"
+django-webpack-loader = "^3.1.0"
+djangoajax = "^3.3"
+djangorestframework = "^3.15.0"
+djangorestframework-jsonapi = "^6.1.0"
+drf-nested-routers = "^0.93.5"
+drf-yasg = "^1.21.7"
+flex = "^6.14.1"
+gunicorn = "^23.0.0"
+jsonschema = "^4.21.1"
+lenses = "^1.2.0"
+markdown = "^3.6"
+mistletoe = "^1.3.0"
+psycopg2-binary = "^2.9.9"
+pycurl = "^7.45.3"
+pyserde = "^0.15.0"
+python-jose = "^3.3.0"
+python-json-logger = "^2.0.7"
+pytz = "^2024.1"
+pyyaml = "^6.0.1"
+requests = "^2.32.0"
+returns = "^0.22.0"
+setuptools = "^78.0.0"
+swagger-spec-validator = "^3.0.3"
+tenacity = "^9.0.0"
+typer-slim = "^0.12.0"
+
+[tool.poetry.group.test.dependencies]
+factory-boy = "^3.3.0"
+faker = "^24.3.0"
+freezegun = "^1.4.0"
+pytest = "^6.2.5"
+pytest-cases = "^3.8.4"
+pytest-cov = "^4.1.0"
+pytest-django = "^4.5.2"
+pytest-mock = "^3.12.0"
+pytest-pythonpath = "^0.7.4"
+pytest-runner = "^6.0.1"
+pytest-sugar = "^1.0.0"
+pytest-xdist = "^3.5.0"
+responses = "^0.25.0"
+testfixtures = "^8.2.0"
+time-machine = "^2.14.1"
+
+
+[tool.poetry.group.dev.dependencies]
+django-debug-toolbar = "^4.3.0"
+ipython = "7.18.1"
+pdbpp = "^0.10.3"
+pre-commit = "^4.0.1"
+werkzeug = "^3.0.1"
+
+[tool.poetry.group.deploy]
+optional = true
+
+[tool.poetry.group.deploy.dependencies]
+ddtrace = "=1.18.3"
+pip = "^24.0"
+
+[tool.poetry.scripts]
+manage = "manage:main"
+home_page = "scripts.home_page:cli"
+datacleanup = "scripts.datacleanup:main"
+ensembl_id_update = "scripts.ensembl_id_update:main"
+
+[tool.pytest.ini_options]
+testpaths = ["panelapp"]
+python_files = ["tests.py", "test_*.py", "*_tests.py"]
+addopts = "--durations=2 --ds=panelapp.settings.test --cov=. --no-cov-on-fail -n auto"
+DJANGO_SETTINGS_MODULE = "panelapp.settings.test"
+python_paths = ["panelapp"]
+
+[tool.isort]
+profile = "black"
+force_grid_wrap = 2
+src_paths = ["panelapp"]
+
+[tool.bandit]
+exclude_dirs = [
+    "panelapp/accounts/tests",
+    "panelapp/panelapp/cognito/tests",
+    "panelapp/panelapp/settings/test.py",
+    "panelapp/panelapp/tests",
+    "panelapp/panels/tests",
+    "panelapp/releases/tests",
+]
+skips = [
+    "B101", # assert_used
+    "B113", # request_without_timeout
+    "B307", # blacklist: eval
+    "B311", # blacklist  # FIXME: just remove random from module blacklist
+    "B703", # django_mark_safe
+]
+
+[tool.mypy]
+plugins = ["returns.contrib.mypy.returns_plugin"]
+scripts_are_modules = true
+disable_error_code = [
+    "arg-type",
+    "assignment",
+    "attr-defined",
+    "call-overload",
+    "import-not-found",
+    "import-untyped",
+    "name-defined",
+    "return",
+    "return-value",
+    "str-format",
+    "var-annotated",
+]

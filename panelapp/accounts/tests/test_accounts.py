@@ -22,16 +22,22 @@
 ## under the License.
 ##
 import random
-from django.core import mail
+
 from django.contrib.messages import get_messages
+from django.core import mail
 from django.urls import reverse_lazy
 from faker import Factory
+
+from accounts.models import (
+    Reviewer,
+    User,
+)
+from accounts.tasks import (
+    registration_email,
+    revierwer_confirmed_email,
+    reviewer_confirmation_requset_email,
+)
 from accounts.tests.setup import SetupUsers
-from accounts.models import User
-from accounts.models import Reviewer
-from accounts.tasks import registration_email
-from accounts.tasks import reviewer_confirmation_requset_email
-from accounts.tasks import revierwer_confirmed_email
 
 fake = Factory.create()
 
@@ -40,7 +46,7 @@ class TestUsers(SetupUsers):
     def test_registration(self):
         email = fake.email()
         username = fake.user_name()
-        password = fake.sentence()
+        password = "P4s$wwword!"
 
         data = {
             "username": username,
@@ -127,7 +133,7 @@ class TestUsers(SetupUsers):
     def test_change_password(self):
         username = self.external_user.username
         self.client.login(username=username, password="pass")
-        password = fake.sentence()
+        password = "P4s$wwword!"
 
         data = {
             "current_password": "pass",

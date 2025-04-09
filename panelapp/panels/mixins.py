@@ -21,8 +21,9 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.urls import reverse_lazy
 from django.shortcuts import redirect
+from django.urls import reverse_lazy
+
 from .models import GenePanel
 
 

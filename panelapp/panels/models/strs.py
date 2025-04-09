@@ -28,27 +28,33 @@ Author: Oleg Gerasimenko
 (c) 2018 Genomics England
 """
 
-from django.db import models
-from django.db.models import Count
-from django.db.models import Subquery
-from django.db.models import Value as V
+from django.contrib.postgres.fields import (
+    ArrayField,
+    IntegerRangeField,
+)
 from django.core.serializers.json import DjangoJSONEncoder
-from django.contrib.postgres.fields import JSONField
-from django.contrib.postgres.fields import ArrayField
-from django.contrib.postgres.fields import IntegerRangeField
+from django.db import models
+from django.db.models import (
+    Count,
+    JSONField,
+    Subquery,
+)
+from django.db.models import Value as V
 from django.urls import reverse
-
 from model_utils.models import TimeStampedModel
-from .entity import AbstractEntity
-from .entity import EntityManager
+
+from .comment import Comment
+from .entity import (
+    AbstractEntity,
+    EntityManager,
+)
+from .evaluation import Evaluation
+from .evidence import Evidence
 from .gene import Gene
 from .genepanel import GenePanel
-from .evidence import Evidence
-from .evaluation import Evaluation
-from .trackrecord import TrackRecord
-from .comment import Comment
-from .tag import Tag
 from .genepanelsnapshot import GenePanelSnapshot
+from .tag import Tag
+from .trackrecord import TrackRecord
 
 
 class STRManager(EntityManager):
@@ -232,9 +238,11 @@ class STR(AbstractEntity, TimeStampedModel):
         return {
             "name": self.name,
             "chromosome": self.chromosome,
-            "position_37": (self.position_37.lower, self.position_37.upper)
-            if self.position_37
-            else None,
+            "position_37": (
+                (self.position_37.lower, self.position_37.upper)
+                if self.position_37
+                else None
+            ),
             "position_38": (self.position_38.lower, self.position_38.upper),
             "repeated_sequence": self.repeated_sequence,
             "normal_repeats": self.normal_repeats,

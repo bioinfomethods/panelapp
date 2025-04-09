@@ -1,0 +1,19 @@
+{% extends "default.html" %}
+{% load django_bootstrap5 %}
+
+{% block content %}
+<div class="page-header add-top-margin border-bottom" id="banner">
+  <h1>{% block title %}Releases{% endblock %}</h1>
+</div>
+<a href="{% url 'releases:create' %}" class="btn btn-outline-light-panelapp add-top-margin">Create release</a>
+
+<div class="add-top-margin">
+  <form>
+    <div class="d-flex gap-2 add-top-margin add-bottom-margin">
+      <div class="flex-fill">
+        {% include "release/paged.html" %}
+      </div>
+    </div>
+  </form>
+</div>
+{% endblock %}

@@ -21,308 +21,287 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.conf.urls import url
-
+from django.urls import re_path
 from django.views.generic import RedirectView
-from .views import AdminView
-from .views import AdminUploadGenesView
-from .views import AdminUploadPanelsView
-from .views import AdminUploadReviewsView
-from .views import EntitiesListView
-from .views import CreatePanelView
-from .views import EntityDetailView
-from .views import GenePanelView
-from .views import PanelsIndexView
-from .views import UpdatePanelView
-from .views import PromotePanelView
-from .views import PanelAddEntityView
-from .views import PanelEditEntityView
-from .views import PanelMarkNotReadyView
-from .views import GenePanelSpanshotView
-from .views import EntityReviewView
-from .views import MarkEntityReadyView
-from .views import DownloadPanelTSVView
-from .views import DownloadPanelVersionTSVView
-from .views import MarkGeneNotReadyView
-from .views import ComparePanelsView
-from .views import CompareGeneView
-from .views import CopyReviewsView
-from .views import DownloadAllGenes
-from .views import DownloadAllPanels
-from .views import ActivityListView
-from .views import DownloadAllSTRs
-from .views import DownloadAllRegions
-from .views import GeneDetailRedirectView
-from .views import RedirectGenesToEntities
-from .views import OldCodeURLRedirect
-from .ajax_views import ClearPublicationsAjaxView
-from .ajax_views import ClearPhoenotypesAjaxView
-from .ajax_views import ClearModeOfPathogenicityAjaxView
-from .ajax_views import ClearSourcesAjaxView
-from .ajax_views import ClearSingleSourceAjaxView
-from .ajax_views import ClearTranscriptAjaxView
-from .ajax_views import DeletePanelAjaxView
-from .ajax_views import DeleteEntityAjaxView
-from .ajax_views import RejectPanelAjaxView
-from .ajax_views import ApprovePanelAjaxView
-from .ajax_views import UpdateEntityTagsAjaxView
-from .ajax_views import UpdateEntityMOPAjaxView
-from .ajax_views import UpdateEntityMOIAjaxView
-from .ajax_views import UpdateEntityPhenotypesAjaxView
-from .ajax_views import UpdateEntityPublicationsAjaxView
-from .ajax_views import UpdateEntityRatingAjaxView
-from .ajax_views import DeleteEntityEvaluationAjaxView
-from .ajax_views import GetEntityCommentFormAjaxView
-from .ajax_views import DeleteEntityCommentAjaxView
-from .ajax_views import SubmitEntityCommentFormAjaxView
-from .ajax_views import ApproveEntityAjaxView
 
+from panels.views.feedback import (
+    clear_entity_mode_of_pathogenicity_view,
+    clear_entity_phenotypes_view,
+    clear_entity_publications_view,
+    clear_entity_source_for_entity_list_view,
+    clear_entity_source_view,
+    clear_entity_sources_view,
+    clear_entity_transcript_view,
+    delete_entity_comment_view,
+    delete_evaluation_by_user_view,
+    edit_entity_comment_form_view,
+    panel_entity_detail_view,
+    toggle_entity_ready_view,
+    update_entity_moi_view,
+    update_entity_mop_view,
+    update_entity_phenotypes_view,
+    update_entity_publications_view,
+    update_entity_rating_view,
+    update_entity_tags_view,
+)
+
+from .ajax_views import (
+    ApproveEntityAjaxView,
+    ApprovePanelAjaxView,
+    DeleteEntityAjaxView,
+    DeletePanelAjaxView,
+    RejectPanelAjaxView,
+    SubmitEntityCommentFormAjaxView,
+)
+from .enums import VALID_ENTITY_FORMAT
+from .views import (
+    ActivityListView,
+    AdminUploadGenesView,
+    AdminUploadPanelsView,
+    AdminUploadReviewsView,
+    AdminView,
+    CompareGeneView,
+    ComparePanelsView,
+    CopyReviewsView,
+    CreatePanelView,
+    DownloadAllGenes,
+    DownloadAllPanels,
+    DownloadAllRegions,
+    DownloadAllSTRs,
+    DownloadPanelTSVView,
+    DownloadPanelVersionTSVView,
+    EntitiesListView,
+    EntityDetailView,
+    EntityReviewView,
+    GeneDetailRedirectView,
+    GenePanelView,
+    OldCodeURLRedirect,
+    PanelAddEntityView,
+    PanelEditEntityView,
+    PanelMarkNotReadyView,
+    PanelsIndexView,
+    PromotePanelView,
+    RedirectGenesToEntities,
+    UpdatePanelView,
+)
 
 app_name = "panels"
 
-entity_regex = "[\w\-\.\$\~\@\#\ ]+"
 entity_types = "gene|str|region"
+TYPE_PARAM = f"(?P<entity_type>({entity_types}))"
+NAME_PARAM = f"(?P<entity_name>{VALID_ENTITY_FORMAT})"
+PK_PARAM = "(?P<pk>[0-9]+)"
+COMMENT_PK_PARAM = "(?P<comment_pk>[0-9]+)"
 
 urlpatterns = [
-    url(r"^$", PanelsIndexView.as_view(), name="index"),
-    url(r"^compare/$", ComparePanelsView.as_view(), name="compare_panels_form"),
-    url(
+    re_path(r"^$", PanelsIndexView.as_view(), name="index"),
+    re_path(r"^compare/$", ComparePanelsView.as_view(), name="compare_panels_form"),
+    re_path(
         r"^compare/(?P<panel_1_id>[0-9]+)/(?P<panel_2_id>[0-9]+)$",
         ComparePanelsView.as_view(),
         name="compare",
     ),
-    url(
+    re_path(
         r"^compare/(?P<panel_1_id>[0-9]+)/(?P<panel_2_id>[0-9]+)/(?P<gene_symbol>[\w\-]+)$",
         CompareGeneView.as_view(),
         name="compare_genes",
     ),
-    url(
+    re_path(
         r"^copy/(?P<panel_1_id>[0-9]+)/(?P<panel_2_id>[0-9]+)$",
         CopyReviewsView.as_view(),
         name="copy_reviews",
     ),
-    url(r"^(?P<pk>[0-9]+)/$", GenePanelView.as_view(), name="detail"),
-    url(r"^(?P<pk>[0-9]+)/update$", UpdatePanelView.as_view(), name="update"),
-    url(r"^(?P<pk>[0-9]+)/promote$", PromotePanelView.as_view(), name="promote"),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/add".format(types=entity_types),
+    re_path(rf"^{PK_PARAM}/$", GenePanelView.as_view(), name="detail"),
+    re_path(rf"^{PK_PARAM}/update$", UpdatePanelView.as_view(), name="update"),
+    re_path(rf"^{PK_PARAM}/promote$", PromotePanelView.as_view(), name="promote"),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/add$",
         PanelAddEntityView.as_view(),
         name="add_entity",
     ),
-    url(r"^(?P<pk>[0-9]+)/delete$", DeletePanelAjaxView.as_view(), name="delete_panel"),
-    url(r"^(?P<pk>[0-9]+)/reject$", RejectPanelAjaxView.as_view(), name="reject_panel"),
-    url(
-        r"^(?P<pk>[0-9]+)/approve$",
+    re_path(
+        rf"^{PK_PARAM}/delete$", DeletePanelAjaxView.as_view(), name="delete_panel"
+    ),
+    re_path(
+        rf"^{PK_PARAM}/reject$", RejectPanelAjaxView.as_view(), name="reject_panel"
+    ),
+    re_path(
+        rf"^{PK_PARAM}/approve$",
         ApprovePanelAjaxView.as_view(),
         name="approve_panel",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/download/(?P<categories>[0-4]+)/$",
+    re_path(
+        rf"^{PK_PARAM}/download/(?P<categories>[0-4]+)/$",
         DownloadPanelTSVView.as_view(),
         name="download_panel_tsv",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/download_version/$",
+    re_path(
+        rf"^{PK_PARAM}/download_version/$",
         DownloadPanelVersionTSVView.as_view(),
         name="download_old_panel_tsv",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_name>{})/$".format(entity_regex),
+    re_path(
+        rf"^{PK_PARAM}/{NAME_PARAM}/$",
         RedirectGenesToEntities.as_view(),
         name="redirect_previous_structure",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        GenePanelSpanshotView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/$",
+        panel_entity_detail_view,
         name="evaluation",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/edit$".format(
-            types=entity_types, regex=entity_regex
-        ),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/edit$",
         PanelEditEntityView.as_view(),
         name="edit_entity",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/review$".format(
-            types=entity_types, regex=entity_regex
-        ),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/review$",
         EntityReviewView.as_view(),
         name="review_entity",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/mark_as_ready$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        MarkEntityReadyView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/mark_entity_as_ready$",
+        toggle_entity_ready_view,
         name="mark_entity_as_ready",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/mark_as_not_ready$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        MarkGeneNotReadyView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/mark_entity_as_not_ready$",
+        toggle_entity_ready_view,
         name="mark_entity_as_not_ready",
     ),
     # AJAX endpoints
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/delete$".format(
-            types=entity_types, regex=entity_regex
-        ),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/delete$",
         DeleteEntityAjaxView.as_view(),
         name="delete_entity",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/approve$".format(
-            types=entity_types, regex=entity_regex
-        ),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/approve$",
         ApproveEntityAjaxView.as_view(),
         name="approve_entity",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/clear_entity_sources$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        ClearSourcesAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/clear_entity_sources$",
+        clear_entity_sources_view,
         name="clear_entity_sources",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/clear_entity_source/(?P<source>(.*))/$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        ClearSingleSourceAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/clear_entity_source/(?P<source>(.*))/$",
+        clear_entity_source_view,
         name="clear_entity_source",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/clear_entity_phenotypes$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        ClearPhoenotypesAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/clear_entity_source_for_entity_list/(?P<source>(.*))/$",
+        clear_entity_source_for_entity_list_view,
+        name="clear_entity_source_for_entity_list",
+    ),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/clear_entity_phenotypes$",
+        clear_entity_phenotypes_view,
         name="clear_entity_phenotypes",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/clear_entity_transcript$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        ClearTranscriptAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/clear_entity_transcript$",
+        clear_entity_transcript_view,
         name="clear_entity_transcript",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/clear_entity_publications$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        ClearPublicationsAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/clear_entity_publications$",
+        clear_entity_publications_view,
         name="clear_entity_publications",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/clear_entity_mode_of_pathogenicity$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        ClearModeOfPathogenicityAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/clear_entity_mode_of_pathogenicity$",
+        clear_entity_mode_of_pathogenicity_view,
         name="clear_entity_mode_of_pathogenicity",
     ),
     # AJAX Review endpoints
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/update_entity_tags/$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        UpdateEntityTagsAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_tags/$",
+        update_entity_tags_view,
         name="update_entity_tags",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/update_entity_rating/$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        UpdateEntityRatingAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_rating/$",
+        update_entity_rating_view,
         name="update_entity_rating",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/update_entity_moi/$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        UpdateEntityMOIAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_moi/$",
+        update_entity_moi_view,
         name="update_entity_moi",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/update_entity_mop/$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        UpdateEntityMOPAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_mop/$",
+        update_entity_mop_view,
         name="update_entity_mop",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/update_entity_phenotypes/$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        UpdateEntityPhenotypesAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_phenotypes/$",
+        update_entity_phenotypes_view,
         name="update_entity_phenotypes",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/update_entity_publications/$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        UpdateEntityPublicationsAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/update_publications/$",
+        update_entity_publications_view,
         name="update_entity_publications",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/delete_evaluation/(?P<evaluation_pk>[0-9]+)/$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        DeleteEntityEvaluationAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/delete_evaluation/(?P<evaluation_pk>[0-9]+)/$",
+        delete_evaluation_by_user_view,
         name="delete_evaluation_by_user",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/edit_comment/(?P<comment_pk>[0-9]+)/$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        GetEntityCommentFormAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/edit_comment/{COMMENT_PK_PARAM}/$",
+        edit_entity_comment_form_view,
         name="edit_comment_by_user",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/submit_edit_comment/(?P<comment_pk>[0-9]+)/$".format(
-            types=entity_types, regex=entity_regex
-        ),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/submit_edit_comment/{COMMENT_PK_PARAM}/$",
         SubmitEntityCommentFormAjaxView.as_view(),
         name="submit_edit_comment_by_user",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/delete_comment/(?P<comment_pk>[0-9]+)/$".format(
-            types=entity_types, regex=entity_regex
-        ),
-        DeleteEntityCommentAjaxView.as_view(),
+    re_path(
+        rf"^{PK_PARAM}/{TYPE_PARAM}/{NAME_PARAM}/delete_comment/{COMMENT_PK_PARAM}/$",
+        delete_entity_comment_view,
         name="delete_comment_by_user",
     ),
-    url(
-        r"^(?P<pk>[0-9]+)/mark_not_ready$".format(entity_regex),
+    re_path(
+        rf"^{PK_PARAM}/mark_not_ready$",
         PanelMarkNotReadyView.as_view(),
         name="mark_not_ready",
     ),
-    url(
+    re_path(
         r"^(?P<pk>[a-z0-9]{24})/(?P<uri>.*|$)",
         OldCodeURLRedirect.as_view(),
         name="old_code_url_redirect",
     ),
-    url(r"^create/", CreatePanelView.as_view(), name="create"),
-    url(r"^entities/$", EntitiesListView.as_view(), name="entities_list"),
-    url(r"^genes/$", RedirectView.as_view(url="/panels/entities"), name="genes_list"),
-    url(
-        r"^entities/(?P<slug>{regex})$".format(types=entity_types, regex=entity_regex),
+    re_path(r"^create/", CreatePanelView.as_view(), name="create"),
+    re_path(r"^entities/$", EntitiesListView.as_view(), name="entities_list"),
+    re_path(
+        r"^genes/$", RedirectView.as_view(url="/panels/entities"), name="genes_list"
+    ),
+    re_path(
+        rf"^entities/{NAME_PARAM}$",
         EntityDetailView.as_view(),
         name="entity_detail",
     ),
-    url(
-        r"^genes/(?P<slug>{regex})$".format(types=entity_types, regex=entity_regex),
+    re_path(
+        rf"^genes/{NAME_PARAM}$",
         GeneDetailRedirectView.as_view(),
     ),
-    url(r"^activity/$", ActivityListView.as_view(), name="activity"),
-    url(r"^admin/", AdminView.as_view(), name="admin"),
-    url(r"^upload_genes/", AdminUploadGenesView.as_view(), name="upload_genes"),
-    url(r"^download_genes/", DownloadAllGenes.as_view(), name="download_genes"),
-    url(r"^download_strs/", DownloadAllSTRs.as_view(), name="download_strs"),
-    url(r"^download_regions/", DownloadAllRegions.as_view(), name="download_regions"),
-    url(r"^upload_panel/", AdminUploadPanelsView.as_view(), name="upload_panels"),
-    url(r"^download_panel/", DownloadAllPanels.as_view(), name="download_panels"),
-    url(r"^upload_reviews/", AdminUploadReviewsView.as_view(), name="upload_reviews"),
+    re_path(r"^activity/$", ActivityListView.as_view(), name="activity"),
+    re_path(r"^admin/", AdminView.as_view(), name="admin"),
+    re_path(r"^upload_genes/", AdminUploadGenesView.as_view(), name="upload_genes"),
+    re_path(r"^download_genes/", DownloadAllGenes.as_view(), name="download_genes"),
+    re_path(r"^download_strs/", DownloadAllSTRs.as_view(), name="download_strs"),
+    re_path(
+        r"^download_regions/", DownloadAllRegions.as_view(), name="download_regions"
+    ),
+    re_path(r"^upload_panel/", AdminUploadPanelsView.as_view(), name="upload_panels"),
+    re_path(r"^download_panel/", DownloadAllPanels.as_view(), name="download_panels"),
+    re_path(
+        r"^upload_reviews/", AdminUploadReviewsView.as_view(), name="upload_reviews"
+    ),
 ]

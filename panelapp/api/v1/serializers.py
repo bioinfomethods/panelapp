@@ -22,14 +22,17 @@
 ## under the License.
 ##
 from rest_framework import serializers
-from panels.models import GenePanelSnapshot
-from panels.models import GenePanelEntrySnapshot
-from panels.models import STR
-from panels.models import Region
-from panels.models import Activity
-from panels.models import Evaluation
-from panels.models import PanelType
-from panels.models import HistoricalSnapshot
+
+from panels.models import (
+    STR,
+    Activity,
+    Evaluation,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    HistoricalSnapshot,
+    PanelType,
+    Region,
+)
 
 
 class NonEmptyItemsListField(serializers.ListField):
@@ -170,7 +173,7 @@ class GeneSerializer(serializers.ModelSerializer):
             "mode_of_inheritance",
             "tags",
             "panel",
-            "transcript"
+            "transcript",
         )
 
     entity_type = serializers.CharField()
@@ -354,8 +357,8 @@ class HistoricalSnapshotSerializer(serializers.ModelSerializer):
         )
 
     def to_representation(self, instance):
-        instance.data.pop('genes', None)
-        instance.data.pop('regions', None)
-        instance.data.pop('strs', None)
-        instance.data['signed_off'] = instance.signed_off_date
+        instance.data.pop("genes", None)
+        instance.data.pop("regions", None)
+        instance.data.pop("strs", None)
+        instance.data["signed_off"] = instance.signed_off_date
         return instance.data

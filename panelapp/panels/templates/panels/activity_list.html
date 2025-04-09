@@ -1,46 +1,47 @@
 {% extends "default.html" %}
 {% load qurl %}
-{% load staticfiles %}
+{% load static %}
 {% load panel_helpers %}
-{% load bootstrap3 %}
+{% load django_bootstrap5 %}
 
 {% block content %}
-  <h1 class="add-bottom-margin">
+  <h1 class="add-bottom-margin add-top-margin">
       {% block title %}Activity{% endblock %}
-      <a href="#" data-module="showhide" data-show=".form.activity-filter"><span class="fa fa-filter{% if filter_active %} text-primary{% else %} text-muted small{% endif %}"></span></a>
+      <a class="btn btn-lg" href="#" data-module="showhide" data-show=".form.activity-filter"><span class="fa fa-filter{% if filter_active %} text-primary{% else %} text-muted small{% endif %}"></span></a>
   </h1>
 
-  <form class="form activity-filter add-bottom-margin{% if not filter_active %} hidden{% endif %}">
+  <form class="form activity-filter add-bottom-margin{% if not filter_active %} d-none{% endif %}">
+    {% csrf_token %}
     <h4>Filter</h4>
     {% bootstrap_form filter_form %}
     <div>
-      <a href="{% url 'panels:activity' %}" class="btn btn-default">Cancel</a>
+      <a href="{% url 'panels:activity' %}" class="btn btn-outline-light-panelapp">Cancel</a>
       <button type="submit" class="btn btn-primary">Filter</button>
         {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-        <button type="submit" value="csv" name="format" class="btn btn-default">CSV Export</button>
+        <button type="submit" value="csv" name="format" class="btn btn-outline-light-panelapp">CSV Export</button>
         {% endif %}
     </div>
   </form>
-  
+
   <table class="table table-bordered" data-module="filterable-table">
-    <thead>
-      <tr class="table-header">
-        <th style="width: 10%">Date</th>
-        <th style="width: 25%">Panel</th>
-        <th style="width: 8%">Item</th>
+    <thead class="table-light">
+      <tr>
+        <th class="w-10">Date</th>
+        <th class="w-25">Panel</th>
+        <th class="w-8">Item</th>
         <th>Activity</th>
       </tr>
-      <tr class="if-no-js-hide table-header-secondary">
+      <tr>
         <td colspan="100">
-          <form>
+          <div>
             <label for="gene-filter" class="rm">Filter activities</label>
             <div class="input-group">
               <input id="gene-filter" type="text" class="form-control normal js-filter-table-input" placeholder="Filter activities">
-              <span class="input-group-addon js-filter-table-count" data-singular="action" data-plural="actions">
+              <span class="input-group-text js-filter-table-count" data-singular="action" data-plural="actions">
                 {{ activities|length }} actions
               </span>
             </div>
-          </form>
+          </div>
         </td>
       </tr>
     </thead>

@@ -25,25 +25,33 @@ import csv
 from datetime import datetime
 
 from django.contrib import messages
-from django.views.generic.base import View
-from django.views.generic import FormView
-from django.views.generic import DetailView
+from django.http import (
+    HttpResponse,
+    StreamingHttpResponse,
+)
 from django.shortcuts import redirect
-from django.urls import reverse_lazy
 from django.template.defaultfilters import pluralize
-from django.http import HttpResponse
-from django.http import StreamingHttpResponse
+from django.urls import reverse_lazy
+from django.views.generic import (
+    DetailView,
+    FormView,
+)
+from django.views.generic.base import View
 
 from panelapp.mixins import GELReviewerRequiredMixin
-from panels.forms import ComparePanelsForm
-from panels.forms import CopyReviewsForm
-
-from panels.models import GenePanel
-from panels.models import GenePanelSnapshot
-from panels.models import ProcessingRunCode
-from panels.models import HistoricalSnapshot
+from panels.forms import (
+    ComparePanelsForm,
+    CopyReviewsForm,
+)
 from panels.mixins import PanelMixin
+from panels.models import (
+    GenePanel,
+    GenePanelSnapshot,
+    HistoricalSnapshot,
+    ProcessingRunCode,
+)
 from panels.utils import remove_non_ascii
+
 from .entities import EchoWriter
 
 
@@ -152,9 +160,11 @@ class DownloadPanelTSVMixin(PanelMixin, DetailView):
                     ";".join(map(remove_non_ascii, self.object.level4title.omim)),
                     ";".join(map(remove_non_ascii, self.object.level4title.orphanet)),
                     ";".join(map(remove_non_ascii, self.object.level4title.hpo)),
-                    ";".join(map(remove_non_ascii, gpentry.publications))
-                    if gpentry.publications
-                    else "",
+                    (
+                        ";".join(map(remove_non_ascii, gpentry.publications))
+                        if gpentry.publications
+                        else ""
+                    ),
                     "",
                     str(gpentry.flagged),
                     str(gpentry.saved_gel_status),
@@ -205,9 +215,11 @@ class DownloadPanelTSVMixin(PanelMixin, DetailView):
                     ";".join(map(remove_non_ascii, self.object.level4title.omim)),
                     ";".join(map(remove_non_ascii, self.object.level4title.orphanet)),
                     ";".join(map(remove_non_ascii, self.object.level4title.hpo)),
-                    ";".join(map(remove_non_ascii, strentry.publications))
-                    if strentry.publications
-                    else "",
+                    (
+                        ";".join(map(remove_non_ascii, strentry.publications))
+                        if strentry.publications
+                        else ""
+                    ),
                     "",
                     str(strentry.flagged),
                     str(strentry.saved_gel_status),
@@ -215,18 +227,22 @@ class DownloadPanelTSVMixin(PanelMixin, DetailView):
                     str(version),
                     strentry.ready,
                     "",
-                    strentry.gene.get("ensembl_genes", {})
-                    .get("GRch37", {})
-                    .get("82", {})
-                    .get("ensembl_id", "-")
-                    if strentry.gene
-                    else "",
-                    strentry.gene.get("ensembl_genes", {})
-                    .get("GRch38", {})
-                    .get("90", {})
-                    .get("ensembl_id", "-")
-                    if strentry.gene
-                    else "",
+                    (
+                        strentry.gene.get("ensembl_genes", {})
+                        .get("GRch37", {})
+                        .get("82", {})
+                        .get("ensembl_id", "-")
+                        if strentry.gene
+                        else ""
+                    ),
+                    (
+                        strentry.gene.get("ensembl_genes", {})
+                        .get("GRch38", {})
+                        .get("90", {})
+                        .get("ensembl_id", "-")
+                        if strentry.gene
+                        else ""
+                    ),
                     strentry.gene.get("hgnc_id", "-") if strentry.gene else "",
                     strentry.chromosome,
                     strentry.position_37.lower if strentry.position_37 else "",
@@ -268,9 +284,11 @@ class DownloadPanelTSVMixin(PanelMixin, DetailView):
                     ";".join(map(remove_non_ascii, self.object.level4title.omim)),
                     ";".join(map(remove_non_ascii, self.object.level4title.orphanet)),
                     ";".join(map(remove_non_ascii, self.object.level4title.hpo)),
-                    ";".join(map(remove_non_ascii, region.publications))
-                    if region.publications
-                    else "",
+                    (
+                        ";".join(map(remove_non_ascii, region.publications))
+                        if region.publications
+                        else ""
+                    ),
                     "",
                     str(region.flagged),
                     str(region.saved_gel_status),
@@ -278,18 +296,22 @@ class DownloadPanelTSVMixin(PanelMixin, DetailView):
                     str(version),
                     region.ready,
                     "",
-                    region.gene.get("ensembl_genes", {})
-                    .get("GRch37", {})
-                    .get("82", {})
-                    .get("ensembl_id", "-")
-                    if region.gene
-                    else "",
-                    region.gene.get("ensembl_genes", {})
-                    .get("GRch38", {})
-                    .get("90", {})
-                    .get("ensembl_id", "-")
-                    if region.gene
-                    else "",
+                    (
+                        region.gene.get("ensembl_genes", {})
+                        .get("GRch37", {})
+                        .get("82", {})
+                        .get("ensembl_id", "-")
+                        if region.gene
+                        else ""
+                    ),
+                    (
+                        region.gene.get("ensembl_genes", {})
+                        .get("GRch38", {})
+                        .get("90", {})
+                        .get("ensembl_id", "-")
+                        if region.gene
+                        else ""
+                    ),
                     region.gene.get("hgnc_id", "-") if region.gene else "",
                     region.chromosome,
                     region.position_37.lower if region.position_37 else "",

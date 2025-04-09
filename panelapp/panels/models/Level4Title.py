@@ -21,8 +21,8 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.db import models
 from django.contrib.postgres.fields import ArrayField
+from django.db import models
 
 
 class Level4Title(models.Model):
@@ -36,6 +36,8 @@ class Level4Title(models.Model):
 
     def __str__(self):
         return str(self.name)
+
+    __hash__ = models.Model.__hash__
 
     def __eq__(self, other):
         if other == self.name:

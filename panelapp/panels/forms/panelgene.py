@@ -23,22 +23,34 @@
 ##
 """Contains a form which is used to add/edit a gene in a panel."""
 
+import logging
 from collections import OrderedDict
+
+from dal_select2.widgets import (
+    ModelSelect2,
+    ModelSelect2Multiple,
+    Select2Multiple,
+)
 from django import forms
-from .helpers import GELSimpleArrayField
-from dal_select2.widgets import ModelSelect2
-from dal_select2.widgets import Select2Multiple
-from dal_select2.widgets import ModelSelect2Multiple
+
 from panelapp.forms import Select2ListMultipleChoiceField
-from panels.models import Tag
-from panels.models import Gene
-from panels.models import Evidence
-from panels.models import Evaluation
-from panels.models import GenePanelEntrySnapshot
-from panels.models import GenePanel
+from panels.models import (
+    Evaluation,
+    Evidence,
+    Gene,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    Tag,
+)
+
+from .helpers import GELSimpleArrayField
+from .mixins import EntityFormMixin
+
+LOGGER = logging.getLogger(__name__)
 
 
-class PanelGeneForm(forms.ModelForm):
+class PanelGeneForm(EntityFormMixin, forms.ModelForm):
     """The goal for this form is to add a Gene to a Panel.
 
     How this works:
@@ -60,11 +72,18 @@ class PanelGeneForm(forms.ModelForm):
     6) Create new GenePanelEntrySnapshot with a link to the new GenePanelSnapshot
     """
 
+    # https://stackoverflow.com/questions/75249988/why-is-django-autocomplete-light-single-select-badly-styled-and-broken-when-mult
+    # https://github.com/yourlabs/django-autocomplete-light/issues/1318
     gene = forms.ModelChoiceField(
         label="Gene symbol",
         queryset=Gene.objects.filter(active=True),
         widget=ModelSelect2(
-            url="autocomplete-gene", attrs={"data-minimum-input-length": 1}
+            url="autocomplete-gene",
+            attrs={
+                "data-minimum-input-length": 1,
+                "data-theme": "bootstrap-5",
+                "data-testid": "gene-symbol",
+            },
         ),
     )
 
@@ -73,12 +92,19 @@ class PanelGeneForm(forms.ModelForm):
     source = Select2ListMultipleChoiceField(
         choice_list=Evidence.ALL_SOURCES,
         required=False,
-        widget=Select2Multiple(url="autocomplete-source"),
+        widget=Select2Multiple(
+            url="autocomplete-source",
+            attrs={
+                "data-testid": "source",
+            },
+        ),
     )
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all(),
         required=False,
-        widget=ModelSelect2Multiple(url="autocomplete-tags"),
+        widget=ModelSelect2Multiple(
+            url="autocomplete-tags",
+        ),
     )
 
     publications = GELSimpleArrayField(
@@ -106,6 +132,14 @@ class PanelGeneForm(forms.ModelForm):
         required=False,
     )
 
+    additional_panels = forms.ModelMultipleChoiceField(
+        queryset=GenePanelSnapshot.objects.only("panel__name", "pk"),
+        required=False,
+        widget=ModelSelect2Multiple(
+            url="autocomplete-simple-panels-all",
+        ),
+    )
+
     class Meta:
         model = GenePanelEntrySnapshot
         fields = (
@@ -114,12 +148,13 @@ class PanelGeneForm(forms.ModelForm):
             "penetrance",
             "publications",
             "phenotypes",
-            "transcript"
+            "transcript",
+            "additional_panels",
         )
 
     def __init__(self, *args, **kwargs):
         self.panel = kwargs.pop("panel")
-        self.request = kwargs.pop("request")
+        self.user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
 
         original_fields = self.fields
@@ -129,6 +164,18 @@ class PanelGeneForm(forms.ModelForm):
         if self.instance.pk:
             self.fields["gene_name"] = original_fields.get("gene_name")
         self.fields["source"] = original_fields.get("source")
+
+        # Fix for disappearing sources
+        # Select2ListMultipleChoiceField removes any values that don't belong in choices
+        # Any custom values are removed, including expert review
+        if self.initial and self.initial.get("source", []):
+            source_choices = set(self.fields["source"].choices)
+            source_choices.update(
+                [(val, val) for val in self.initial.get("source", [])]
+            )
+            self.fields["source"].choices = list(source_choices)
+            self.fields["source"].initial = self.initial.get("source", [])
+
         self.fields["mode_of_pathogenicity"] = original_fields.get(
             "mode_of_pathogenicity"
         )
@@ -137,25 +184,16 @@ class PanelGeneForm(forms.ModelForm):
         self.fields["penetrance"] = original_fields.get("penetrance")
         self.fields["publications"] = original_fields.get("publications")
         self.fields["phenotypes"] = original_fields.get("phenotypes")
-        if self.request.user.is_authenticated and self.request.user.reviewer.is_GEL():
+        if self.user.is_authenticated and self.user.reviewer.is_GEL():
             self.fields["tags"] = original_fields.get("tags")
-            self.fields['transcript'] = original_fields.get("transcript")
+            self.fields["transcript"] = original_fields.get("transcript")
+            self.fields["additional_panels"] = original_fields.get("additional_panels")
         if not self.instance.pk:
             self.fields["rating"] = original_fields.get("rating")
             self.fields["current_diagnostic"] = original_fields.get(
                 "current_diagnostic"
             )
             self.fields["comments"] = original_fields.get("comments")
-
-    def clean_source(self):
-        if len(self.cleaned_data["source"]) < 1:
-            raise forms.ValidationError("Please select a source")
-        return self.cleaned_data["source"]
-
-    def clean_moi(self):
-        if not self.cleaned_data["moi"]:
-            raise forms.ValidationError("Please select a mode of inheritance")
-        return self.cleaned_data["moi"]
 
     def clean_gene(self):
         """Check if gene exists in a panel if we add a new gene or change the gene"""
@@ -179,15 +217,26 @@ class PanelGeneForm(forms.ModelForm):
 
         return self.cleaned_data["gene"]
 
-    def save(self, *args, **kwargs):
-        """Don't save the original panel as we need to increment version first"""
-        return False
+    def clean_additional_panels(self):
+        gene_symbol = self.cleaned_data["gene"].gene_symbol
+
+        for panel in GenePanelSnapshot.objects.filter(
+            pk__in=self.cleaned_data["additional_panels"]
+        ):
+            if panel.has_gene(gene_symbol):
+                raise forms.ValidationError(
+                    "Entity is already on additional panel",
+                    code="gene_exists_in_additional_panel",
+                )
+        return self.cleaned_data["additional_panels"]
 
     def save_gene(self, *args, **kwargs):
         """Saves the gene, increments version and returns the gene back"""
 
         gene_data = self.cleaned_data
         gene_data["sources"] = gene_data.pop("source")
+
+        additional_panels = gene_data.pop("additional_panels", None)
 
         if gene_data.get("comments"):
             gene_data["comment"] = gene_data.pop("comments")
@@ -200,17 +249,29 @@ class PanelGeneForm(forms.ModelForm):
         new_gene_symbol = gene_data.get("gene").gene_symbol
 
         if self.initial and self.panel.has_gene(initial_gene_symbol):
-            self.panel = self.panel.increment_version()
-            self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
-            self.panel.update_gene(self.request.user, initial_gene_symbol, gene_data)
-            self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
-            return self.panel.get_gene(new_gene_symbol)
+            # When only copying entities don't create new version for the original one
+            if self.changed_data and self.changed_data != ["additional_panels"]:
+                self.panel = self.panel.increment_version()
+                self.panel.update_gene(self.user, initial_gene_symbol, gene_data)
+                self.panel = GenePanel.objects.get(pk=self.panel.panel.pk).active_panel
+            else:
+                LOGGER.info("Copying gene to other panel")
+
+            entity = self.panel.get_gene(new_gene_symbol)
         else:
             increment_version = (
-                self.request.user.is_authenticated
-                and self.request.user.reviewer.is_GEL()
+                self.user.is_authenticated and self.user.reviewer.is_GEL()
             )
-            gene = self.panel.add_gene(
-                self.request.user, new_gene_symbol, gene_data, increment_version
+            entity = self.panel.add_gene(
+                self.user, new_gene_symbol, gene_data, increment_version
             )
-            return gene
+
+        if additional_panels:
+            entity.copy_to_panels(
+                panels=additional_panels,
+                user=self.user,
+                entity_data=gene_data,
+                copy_data=bool(self.initial),
+            )
+
+        return entity

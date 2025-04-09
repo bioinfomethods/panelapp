@@ -25,24 +25,32 @@
 
 """
 from django.conf import settings
-from django.conf.urls import url
-from django.urls import path
-from django.conf.urls import include
 from django.contrib import admin
-from .views import Homepage
-from .views import HealthCheckView
-from .views import VersionView
-from .autocomplete import GeneAutocomplete
-from .autocomplete import SourceAutocomplete
-from .autocomplete import TagsAutocomplete
-from .autocomplete import SimplePanelsAutocomplete
-from .autocomplete import SimplePanelTypesAutocomplete
-
-
-from django.urls import re_path
-from rest_framework import permissions
-from drf_yasg.views import get_schema_view
+from django.urls import (
+    include,
+    path,
+    re_path,
+)
 from drf_yasg import openapi
+from drf_yasg.views import get_schema_view
+from rest_framework import permissions
+
+from .autocomplete import (
+    GeneAutocomplete,
+    SimpleAllPanelsAutocomplete,
+    SimplePanelTypesAutocomplete,
+    SimplePublicPanelsAutocomplete,
+    SourceAutocomplete,
+    TagsAutocomplete,
+)
+from .health.views.health_check_views import (
+    HealthCheck,
+    ping,
+)
+from .views import (
+    Homepage,
+    VersionView,
+)
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -55,7 +63,7 @@ schema_view = get_schema_view(
     patterns=[path("api/", include("api.urls"))],  # exclude old webservices
     validators=["flex", "ssv"],
     public=True,
-    permission_classes=(permissions.AllowAny,),  #  FIXME(Oleg) we need read only.
+    permission_classes=(permissions.AllowAny,),  # FIXME(Oleg) we need read only.
 )
 
 
@@ -63,6 +71,7 @@ urlpatterns = [
     path("", Homepage.as_view(), name="home"),
     path("accounts/", include("accounts.urls", namespace="accounts")),
     path("panels/", include("panels.urls", namespace="panels")),
+    path("releases/", include("releases.urls", namespace="releases")),
     path("crowdsourcing/", include("v1rewrites.urls", namespace="v1rewrites")),
     re_path(
         r"^api/docs(?P<format>\.json|\.yaml)$",
@@ -85,22 +94,31 @@ urlpatterns = [
     path("autocomplete/tags/", TagsAutocomplete.as_view(), name="autocomplete-tags"),
     path(
         "autocomplete/panels/simple/",
-        SimplePanelsAutocomplete.as_view(),
-        name="autocomplete-simple-panels",
+        SimplePublicPanelsAutocomplete.as_view(),
+        name="autocomplete-simple-panels-public",
+    ),
+    path(
+        "autocomplete/panels/all/",
+        SimpleAllPanelsAutocomplete.as_view(),
+        name="autocomplete-simple-panels-all",
     ),
     path(
         "autocomplete/panels/type/",
         SimplePanelTypesAutocomplete.as_view(),
         name="autocomplete-simple-panel-types",
     ),
-    path("health_check/", HealthCheckView.as_view(), name="health_check"),
     path("version/", VersionView.as_view(), name="version"),
+    path("health/1/", HealthCheck.as_view(), name="health-check"),
+    path("ping/1/", ping, name="ping"),
 ]
 
 if settings.DEBUG:
-    import debug_toolbar
+    if "debug_toolbar" in settings.INSTALLED_APPS:
+        import debug_toolbar
 
-    urlpatterns = [path("__debug__/", include(debug_toolbar.urls)), ] + urlpatterns
+        urlpatterns = [
+            path("__debug__/", include(debug_toolbar.urls)),
+        ] + urlpatterns
 
     from django.conf.urls.static import static
 

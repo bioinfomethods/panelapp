@@ -21,8 +21,8 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.utils.translation import gettext_lazy as _
 from django.contrib.postgres.forms import SimpleArrayField
+from django.utils.translation import gettext_lazy as _
 
 
 class GELSimpleArrayField(SimpleArrayField):

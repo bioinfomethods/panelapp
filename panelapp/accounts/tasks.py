@@ -21,11 +21,10 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.template.loader import render_to_string
-from django.contrib.sites.models import Site
-from django.conf import settings
-
 from celery import shared_task
+from django.conf import settings
+from django.contrib.sites.models import Site
+from django.template.loader import render_to_string
 
 from panelapp.tasks import send_email
 
@@ -58,7 +57,7 @@ def reviewer_confirmation_requset_email(user_id):
 
     ctx = {
         "user": user,
-        "link": "{}/{}/accounts/user/{}/actions/confirm_reviewer/".format(
+        "link": "{}/{}accounts/user/{}/actions/confirm_reviewer/".format(
             settings.PANEL_APP_BASE_URL, settings.ADMIN_URL, user.pk
         ),
         "settings": settings,

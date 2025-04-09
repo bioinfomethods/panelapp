@@ -31,12 +31,4 @@ def use_cognito(context):
     :param context:
     :return boolean:
     """
-    return {
-        "use_cognito": getattr(settings, "AWS_USE_COGNITO", False),
-    }
-
-
-def env_name(context):
-    return {
-        "env_name": getattr(settings, "ENV_NAME", "dev")
-    }
+    return {"use_cognito": getattr(settings, "AWS_USE_COGNITO", False)}

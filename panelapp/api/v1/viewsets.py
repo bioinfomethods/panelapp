@@ -21,34 +21,53 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+import logging
 from math import ceil
 
-from rest_framework import status, viewsets
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import permissions
-from panels.models import GenePanelSnapshot
-from panels.models import GenePanelEntrySnapshot
-from panels.models import HistoricalSnapshot
-from panels.models import STR
-from panels.models import Region
-from panels.models import Activity
 from django import forms
-from django.db.models import Q
-from django.db.models import ObjectDoesNotExist
-from django.utils.functional import cached_property
-from django_filters import rest_framework as filters
-from .serializers import PanelSerializer
-from .serializers import ActivitySerializer
-from .serializers import GeneSerializer
-from .serializers import STRSerializer
-from .serializers import EvaluationSerializer
-from .serializers import RegionSerializer
-from .serializers import EntitySerializer
-from .serializers import HistoricalSnapshotSerializer
+from django.db.models import (
+    ObjectDoesNotExist,
+    Q,
+)
 from django.http import Http404
+from django.utils.decorators import method_decorator
+from django.utils.functional import cached_property
+from django.views.decorators.cache import cache_page
+from django_filters import rest_framework as filters
+from rest_framework import (
+    permissions,
+    status,
+    viewsets,
+)
+from rest_framework.decorators import action
 from rest_framework.exceptions import APIException
-from panelapp.settings.base import REST_FRAMEWORK
+from rest_framework.response import Response
+
+from panelapp.settings.base import (
+    REST_FRAMEWORK,
+    SIGNEDOFF_CACHE_TTL,
+)
+from panels.models import (
+    STR,
+    Activity,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    HistoricalSnapshot,
+    Region,
+)
+
+from .serializers import (
+    ActivitySerializer,
+    EntitySerializer,
+    EvaluationSerializer,
+    GeneSerializer,
+    HistoricalSnapshotSerializer,
+    PanelSerializer,
+    RegionSerializer,
+    STRSerializer,
+)
+
 
 class ReadOnlyListViewset(
     viewsets.mixins.RetrieveModelMixin,
@@ -58,20 +77,18 @@ class ReadOnlyListViewset(
     pass
 
 
-CONFIDENCE_CHOICES = ((3, "Green"), (2, "Amber"), (1, "Red"), (0, "No List"))
+LOGGER = logging.getLogger(__name__)
+
+CONFIDENCE_CHOICES = (("3", "Green"), ("2", "Amber"), ("1", "Red"), ("0", "No List"))
 
 
 class Http400(Exception):
     pass
 
 
-class NumberChoices(filters.ChoiceFilter, filters.NumberFilter):
-    pass
-
-
 class EntityFilter(filters.FilterSet):
     entity_name = filters.BaseInFilter(field_name="entity_name", lookup_expr="in")
-    confidence_level = NumberChoices(
+    confidence_level = filters.ChoiceFilter(
         method="filter_confidence_level",
         choices=CONFIDENCE_CHOICES,
         help_text="Filter by confidence level: 0, 1, 2, 3",
@@ -118,7 +135,7 @@ class PanelsViewSet(ReadOnlyListViewset):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     lookup_value_regex = "[^/]+"
     serializer_class = PanelSerializer
-    filter_class = PanelsFilter
+    filterset_class = PanelsFilter
 
     def get_serializer(self, *args, **kwargs):
         if (
@@ -137,7 +154,7 @@ class PanelsViewSet(ReadOnlyListViewset):
         version = self.request.query_params.get("version", None)
         param = {}
         if version:
-            param.update({'all': True, 'deleted': True, 'internal': True})
+            param.update({"all": True, "deleted": True, "internal": True})
         obj = GenePanelSnapshot.objects.get_active_annotated(
             name=self.kwargs["pk"], **param
         ).first()
@@ -166,18 +183,19 @@ class PanelsViewSet(ReadOnlyListViewset):
                 )
 
             panel_id = self.kwargs["pk"]
-            id_kwarg = 'panel_id' if panel_id.isdigit() else 'panel__old_pk'
-            filter_kwargs = {
-                id_kwarg: panel_id
-            }
+            id_kwarg = "panel_id" if panel_id.isdigit() else "panel__old_pk"
+            filter_kwargs = {id_kwarg: panel_id}
 
             latest = GenePanelSnapshot.objects.filter(**filter_kwargs).first()
 
-            if str(latest.major_version) == major_version and str(latest.minor_version) == minor_version:
+            if (
+                str(latest.major_version) == major_version
+                and str(latest.minor_version) == minor_version
+            ):
                 return super().retrieve(request, *args, **kwargs)
 
-            filter_kwargs['major_version'] = major_version
-            filter_kwargs['minor_version'] = minor_version
+            filter_kwargs["major_version"] = major_version
+            filter_kwargs["minor_version"] = minor_version
 
             snap = HistoricalSnapshot.objects.filter(**filter_kwargs).first()
             if snap:
@@ -227,6 +245,7 @@ class EntityViewSet(viewsets.mixins.ListModelMixin, viewsets.GenericViewSet):
     lookup_field = "entity_name"
     lookup_url_kwarg = "entity_name"
     recent_version_only = False
+    lookup_value_regex = "[^/]+"
 
     def filter_list(self, obj):
         entity_name = self.request.query_params.get("entity_name")
@@ -249,7 +268,7 @@ class EntityViewSet(viewsets.mixins.ListModelMixin, viewsets.GenericViewSet):
     def paginate(self, obj):
         count = len(obj.data["genes"])
         start = 0
-        finish = REST_FRAMEWORK['PAGE_SIZE']
+        finish = REST_FRAMEWORK["PAGE_SIZE"]
         page = self.request.query_params.get("page", None)
         response = {
             "count": count,
@@ -299,23 +318,28 @@ class EntityViewSet(viewsets.mixins.ListModelMixin, viewsets.GenericViewSet):
                 )
 
             panel_id = self.kwargs["panel_pk"]
-            id_kwarg = 'panel_id' if panel_id.isdigit() else 'panel__old_pk'
-            filter_kwargs = {
-                id_kwarg: panel_id
-            }
+            id_kwarg = "panel_id" if panel_id.isdigit() else "panel__old_pk"
+            filter_kwargs = {id_kwarg: panel_id}
 
             latest = GenePanelSnapshot.objects.filter(**filter_kwargs).first()
 
-            if str(latest.major_version) == major_version and str(latest.minor_version) == minor_version:
+            if (
+                str(latest.major_version) == major_version
+                and str(latest.minor_version) == minor_version
+            ):
                 return super().list(request, *args, **kwargs)
 
             if self.recent_version_only:
-                raise Http400('Endpoint doesnt support version parameter')
+                raise Http400("Endpoint doesnt support version parameter")
 
-            obj = HistoricalSnapshot.objects.filter(**filter_kwargs).filter(
-                major_version=major_version,
-                minor_version=minor_version,
-            ).first()
+            obj = (
+                HistoricalSnapshot.objects.filter(**filter_kwargs)
+                .filter(
+                    major_version=major_version,
+                    minor_version=minor_version,
+                )
+                .first()
+            )
 
             if obj:
                 response = self.paginate(obj)
@@ -345,10 +369,13 @@ class EntityViewSet(viewsets.mixins.ListModelMixin, viewsets.GenericViewSet):
         if version:
             try:
                 major_version, minor_version = version.split(".")
-                if str(obj.major_version) == major_version and str(obj.minor_version) == minor_version:
+                if (
+                    str(obj.major_version) == major_version
+                    and str(obj.minor_version) == minor_version
+                ):
                     return obj
                 else:
-                    raise Http400('Endpoint doesnt support version parameter')
+                    raise Http400("Endpoint doesnt support version parameter")
             except ValueError:
                 raise APIException(
                     detail="Incorrect version supplied", code="incorrect_version"
@@ -360,7 +387,7 @@ class EntityViewSet(viewsets.mixins.ListModelMixin, viewsets.GenericViewSet):
 class GeneViewSet(EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = GeneSerializer
-    filter_class = EntityFilter
+    filterset_class = EntityFilter
     lookup_collection = "genes"
 
     def get_queryset(self):
@@ -384,7 +411,7 @@ class GeneEvaluationsViewSet(EntityViewSet):
 class STRViewSet(EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = STRSerializer
-    filter_class = EntityFilter
+    filterset_class = EntityFilter
     lookup_collection = "strs"
 
     def get_queryset(self):
@@ -409,7 +436,7 @@ class RegionViewSet(EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     filter_backends = (filters.DjangoFilterBackend,)
     serializer_class = RegionSerializer
-    filter_class = EntityFilter
+    filterset_class = EntityFilter
     lookup_collection = "regions"
 
     def get_queryset(self):
@@ -445,7 +472,8 @@ class EntitySearch(ReadOnlyListViewset):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     lookup_field = "entity_name"
     lookup_url_kwarg = "entity_name"
-    filter_class = EntitySearchFilter
+    filterset_class = EntitySearchFilter
+    lookup_value_regex = "[^/]+"
 
     @property
     def active_snapshot_ids(self):
@@ -537,7 +565,7 @@ class EntitySearchViewSet(EntitySearch):
 
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = EntitySerializer
-    filter_class = EntitySearchFilter
+    filterset_class = EntitySearchFilter
 
     @cached_property
     def snapshot_ids(self):
@@ -589,7 +617,7 @@ class EntitySearchViewSet(EntitySearch):
         )
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.get_queryset()
 
         page = self.paginate_queryset(queryset)
 
@@ -613,13 +641,96 @@ class EntitySearchViewSet(EntitySearch):
         return self.list(request, *args, **kwargs)
 
 
+SIGNEDOFF_DISPLAY_CHOICES = (
+    ("all", "all"),
+    ("latest", "latest"),
+)
+
+
+class SignedOffFilter(filters.FilterSet):
+    display = filters.ChoiceFilter(
+        choices=SIGNEDOFF_DISPLAY_CHOICES, method="filter_display"
+    )
+
+    class Meta:
+        model = HistoricalSnapshot
+        fields = [
+            "panel_id",
+            "display",
+        ]
+
+    def filter_display(self, queryset, name, value):
+        """No-op function, filtering happens in the queryset as
+        looks like there is no way to remove `distinct` from a
+        queryset once it's set. Distinct by panel_id is the
+        default behaviour.
+        """
+
+        return queryset
+
+
 class SignedOffPanelViewSet(ReadOnlyListViewset):
+    """Signed Off Panels Versions
+
+    By default only the latest versions on public panels are returned.
+
+    To get all public and retired panels use `display=all` URL parameter.
+    This also returns previous versions for the panels.
+
+    You can also filter by `panel_id` to return only the versions for a
+    specific panel. To get all versions for a panel use both `display=all`
+    and `panel_id` together.
+    """
+
     serializer_class = HistoricalSnapshotSerializer
+    filterset_class = SignedOffFilter
 
     def get_queryset(self):
-        return HistoricalSnapshot.objects.filter(signed_off_date__isnull=False)
+        qs = HistoricalSnapshot.objects.filter(signed_off_date__isnull=False).order_by(
+            "panel_id"
+        )
+
+        filter_kwargs = {
+            "panel__status__in": [
+                GenePanel.STATUS.public,
+            ]
+        }
+
+        display_all = self.request.GET.get("display", "latest") == "all"
+        if display_all:
+            filter_kwargs["panel__status__in"] = [
+                GenePanel.STATUS.public,
+                GenePanel.STATUS.retired,
+            ]
+
+        qs = qs.filter(**filter_kwargs)
+
+        if not display_all:
+            qs = qs.order_by("panel_id", "-major_version", "-minor_version").distinct(
+                "panel_id"
+            )
+
+        return qs
+
+    @method_decorator(cache_page(SIGNEDOFF_CACHE_TTL))
+    def dispatch(self, request, *args, **kwargs):
+        if SIGNEDOFF_CACHE_TTL != 0:
+            LOGGER.info("Caching: %s", request, extra={"timeout": SIGNEDOFF_CACHE_TTL})
+        else:
+            LOGGER.info("Uncached: %s", request)
+
+        return super().dispatch(request, *args, **kwargs)
 
     def retrieve(self, request, *args, **kwargs):
+        """!!! Deprecated - see notes
+
+        Instead, use list of signed off panels endpoint with `panel_id=<panel id>`
+        parameter to get the latest version, and then use
+        `/api/v1/panels/<panel_id>/?version=<major_version>.<minor_version>` to get
+        the panel data.
+
+        This endpoint will be removed in the second part of 2021.
+        """
         pk = self.kwargs["pk"]
         snap = self.get_queryset().filter(panel__pk=pk).first()
         if snap:

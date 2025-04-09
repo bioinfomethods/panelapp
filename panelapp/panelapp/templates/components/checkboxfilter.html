@@ -1,0 +1,19 @@
+<div id="{{ widget.id }}" class="checkboxfilter">
+  {% for checkbox in widget.checkboxes %}
+  <div class="form-check">
+    <label>
+      <input
+        name="{{ checkbox.name }}"
+        class="form-check-input"
+        type="checkbox"
+        value="{{ checkbox.value }}"
+        {% if checkbox.checked %}checked{% endif %}
+        {{ checkbox.htmx|safe }}
+      />
+      {{ checkbox.label }}
+    </label>
+  </div>
+  {% empty %}
+  No filters
+  {% endfor %}
+</div>

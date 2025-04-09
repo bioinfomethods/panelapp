@@ -1,0 +1,29 @@
+<table class="table table-bordered">
+  <thead class="table-light">
+    <tr>
+      {% include "components/sortable-table-header.html" with component=name_header only %}
+      <th>Deployment</th>
+      <th>Panels</th>
+      {% include "components/sortable-table-header.html" with component=created_header only %}
+    </tr>
+
+    <tr></tr>
+  </thead>
+
+  <tbody>
+    {% for release in releases %}
+    <tr>
+      <td>
+        <a href="{% url 'releases:detail' release.pk %}">{{ release.name }}</a>
+      </td>
+      <td>
+        <div class="d-flex align-items-center">
+          {% include "release/status.html" with release=release only %}
+        </div>
+      </td>
+      <td>{{ release.panel_count }}</td>
+      <td>{{ release.created }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>

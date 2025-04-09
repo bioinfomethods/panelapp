@@ -23,14 +23,35 @@
 ##
 from collections import OrderedDict
 from itertools import chain
-from django import forms
-from django.utils import timezone
+
 from dal_select2.widgets import ModelSelect2Multiple
-from panels.models import Level4Title
-from panels.models import GenePanel
-from panels.models import GenePanelSnapshot
-from panels.models import PanelType
-from panels.models import HistoricalSnapshot
+from django import forms
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+
+from panels.models import (
+    GenePanel,
+    GenePanelSnapshot,
+    HistoricalSnapshot,
+    Level4Title,
+    PanelType,
+)
+
+
+def version_validator(value):
+    """Raises ValidatorError if value is not in <major>.<minor> format"""
+
+    try:
+        major, minor = value.split(".")
+        int(major)
+        int(minor)
+    except:
+        raise ValidationError("Version is not in right format: <major>.<minor>")
+
+
+def signed_off_date_validator(value):
+    if timezone.now().date() < value:
+        raise ValidationError("Date should be today or in the past")
 
 
 class PanelForm(forms.ModelForm):
@@ -44,17 +65,43 @@ class PanelForm(forms.ModelForm):
     status = forms.ChoiceField(
         required=True, choices=GenePanel.STATUS, initial=GenePanel.STATUS.internal
     )
-    signed_off_version = forms.CharField(label="Signed Off Version", required=False)
-    signed_off_date = forms.DateField(label='Signed Off Date', required=False,
-                                      widget=forms.DateInput(attrs={"placeholder":"Signed Off Date in format dd/mm/yyyy"}))
+
+    # how signed off panels work:
+    # if you specify signed off version and date
+    #    this panel will be signed off
+    # if you specify signed off version without date
+    #    if that panel was signed off before - removed signed off date
+    #    if it wasn't signed off before - do nothing
+    # in the frontend, panels only reference the latest signed off version
+    # you can get previous versions via API and on GMS archive website.
+    signed_off_version = forms.CharField(
+        label="Signed Off Version",
+        required=False,
+        validators=[
+            version_validator,
+        ],
+    )
+    signed_off_date = forms.DateField(
+        label="Signed Off Date",
+        required=False,
+        widget=forms.DateInput(
+            attrs={"placeholder": "Signed Off Date in format dd/mm/yyyy"}
+        ),
+        validators=[
+            signed_off_date_validator,
+        ],
+    )
     child_panels = forms.ModelMultipleChoiceField(
         label="Child Panels",
         required=False,
-        queryset=GenePanelSnapshot.objects.get_active_annotated().exclude(
-            is_super_panel=True
-        ),
+        queryset=GenePanelSnapshot.objects.get_active_annotated(
+            all=True, internal=True, deleted=False, superpanels=False
+        ).exclude(is_super_panel=True, panel__status=GenePanel.STATUS.retired),
         widget=ModelSelect2Multiple(
-            url="autocomplete-simple-panels", attrs={"data-minimum-input-length": 3}
+            url="autocomplete-simple-panels-public",
+            attrs={
+                "data-minimum-input-length": 3,
+            },
         ),
     )
 
@@ -64,7 +111,9 @@ class PanelForm(forms.ModelForm):
         queryset=PanelType.objects.all(),
         widget=ModelSelect2Multiple(
             url="autocomplete-simple-panel-types",
-            attrs={"data-minimum-input-length": 1},
+            attrs={
+                "data-minimum-input-length": 1,
+            },
         ),
     )
 
@@ -98,9 +147,6 @@ class PanelForm(forms.ModelForm):
 
         if self.instance.pk:
             self.fields["status"].initial = self.instance.panel.status
-            self.fields["signed_off_version"].initial = '{}.{}'.format(self.instance.signed_off[0],
-                                                               self.instance.signed_off[1]) if self.instance.signed_off else None
-            self.fields["signed_off_date"].initial = self.instance.signed_off[2] if self.instance.signed_off else None
             if gel_curator:
                 self.fields[
                     "child_panels"
@@ -132,6 +178,27 @@ class PanelForm(forms.ModelForm):
 
     def clean_hpo(self):
         return self._clean_array(self.cleaned_data["hpo"])
+
+    def clean_signed_off_version(self):
+        signed_off_version = self.cleaned_data.get("signed_off_version")
+        if signed_off_version:
+            major_version, minor_version = map(int, signed_off_version.split("."))
+
+            # if version isn't current version, check it exists.
+            # if it's latest version the snapshot will be created on save
+            if signed_off_version != self.instance.version:
+                try:
+                    HistoricalSnapshot.objects.get(
+                        panel=self.instance.panel,
+                        major_version=major_version,
+                        minor_version=minor_version,
+                    )
+                except HistoricalSnapshot.DoesNotExist:
+                    raise ValidationError(
+                        f"Snapshot for version v{major_version}.{minor_version} doesn't exist"
+                    )
+
+            return major_version, minor_version
 
     def save(self, *args, **kwargs):
         new_level4 = Level4Title(
@@ -217,41 +284,15 @@ class PanelForm(forms.ModelForm):
                 panel.save()
                 self.instance._update_saved_stats(use_db=update_stats_superpanel)
 
-                if "signed_off_version" in self.changed_data or "signed_off_date" in self.changed_data:
-                    gene_panel = self.instance.panel
+                if "signed_off_version" in self.changed_data:
+                    signed_off_version = self.cleaned_data["signed_off_version"]
+                    major_version, minor_version = signed_off_version
 
-                    if not self.cleaned_data['signed_off_version'] and not self.cleaned_data['signed_off_date']:
-                        gene_panel.signed_off.signed_off_date = None
-                        gene_panel.signed_off.save()
-                        gene_panel.signed_off = None
-                        gene_panel.save()
-                        activities.append("Panel signed off version has been removed")
-                    else:
-                        version = self.cleaned_data["signed_off_version"]
-
-                        try:
-                            major_version, minor_version = version.split(".")
-                        except ValueError:
-                            raise forms.ValidationError("Signed off version incorrect format")
-
-                        snapshot = HistoricalSnapshot.objects.filter(panel=gene_panel,
-                                                                     major_version=int(major_version),
-                                                                     minor_version=int(minor_version)).first()
-                        if snapshot:
-                            HistoricalSnapshot.objects.filter(
-                                panel=self.instance.panel,
-                                signed_off_date__isnull=False).update(signed_off_date=None)
-
-                            if self.cleaned_data["signed_off_date"]:
-                                snapshot.signed_off_date = self.cleaned_data["signed_off_date"]
-                            else:
-                                snapshot.signed_off_date = timezone.now().date()
-                            snapshot.save()
-                            gene_panel.signed_off = snapshot
-                            gene_panel.save()
-                            activities.append("Panel version has been signed off")
-                        else:
-                            raise forms.ValidationError("Signed off version does not exist")
+                    signed_off_date = self.cleaned_data["signed_off_date"]
+                    signedoff_activities = self.instance.panel.update_signed_off_panel(
+                        signed_off_version, signed_off_date
+                    )
+                    activities.extend(signedoff_activities)
             else:
                 panel.save()
 

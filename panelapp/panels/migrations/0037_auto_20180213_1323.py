@@ -29,10 +29,14 @@ import django.contrib.postgres.fields
 import django.contrib.postgres.fields.jsonb
 import django.contrib.postgres.fields.ranges
 import django.core.serializers.json
-from django.db import migrations, models
 import django.db.models.deletion
 import django.utils.timezone
 import model_utils.fields
+from django.db import (
+    migrations,
+    models,
+)
+
 import panels.models.entity
 
 

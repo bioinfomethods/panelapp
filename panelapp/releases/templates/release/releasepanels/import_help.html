@@ -1,0 +1,26 @@
+{% extends "modals/modal_template.html" %}
+{% block id %}import_help{% endblock %}
+{% block title %}File Format{% endblock %}
+{% block text %}
+<h5>Requirements</h5>
+<ul>
+  <li>The import file must be in <strong>CSV</strong> format.</li>
+  <li>
+    The first line of the file must contain the headers
+    <strong>Panel ID</strong> and <strong>Promote</strong>.
+  </li>
+  <li>Values for <strong>Panel ID</strong> must be natural numbers and refer to an existing panel.</li>
+  <li>
+    Values for <strong>Promote</strong> must be either
+    <code>true</code> or <code>false</code>.
+  </li>
+</ul>
+<h5>Example</h5>
+
+<p>This is an example of a file that imports two panels; one to be promoted and the other not:</p>
+<pre>
+Panel ID,Promote
+1,true
+2,false
+</pre>
+{% endblock %}

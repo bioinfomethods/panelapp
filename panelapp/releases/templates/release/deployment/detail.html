@@ -1,0 +1,28 @@
+{% extends "default.html" %}
+{% load django_bootstrap5 %}
+{% block content %}
+
+<ol class="breadcrumb add-top-margin">
+  <li class="breadcrumb-item">
+    <a href="{% url 'releases:list' %}">Releases</a>
+  </li>
+  <li class="breadcrumb-item">
+    <a href="{% url 'releases:detail' release.pk %}">{{ release.name }}</a>
+  </li>
+  <li class="breadcrumb-item active">Deployment</li>
+</ol>
+
+<div
+  class="page-header add-top-margin border-bottom"
+  id="banner"
+>
+  <div class="d-flex gap-2 add-top-margin">
+    <h1><i class="fa fa-rocket"></i> {% block title %}Deployment{% endblock %}</h1>
+  </div>
+</div>
+
+<div id="actions" class="add-top-margin">
+  {% include "release/deployment/status.html" %}
+</div>
+
+{% endblock %}

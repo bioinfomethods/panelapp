@@ -25,7 +25,6 @@
 
 from django.db import migrations
 
-
 default_panel_types = {
     "rare-disease-test-directory": "Rare Disease Test Directory",
     "actionable": "Actionable",

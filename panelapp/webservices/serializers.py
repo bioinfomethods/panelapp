@@ -22,13 +22,16 @@
 ## under the License.
 ##
 import logging
+
 from rest_framework import serializers
 from rest_framework.exceptions import APIException
 
-from .utils import make_null
-from .utils import convert_moi
-from .utils import filter_empty
-from .utils import convert_gel_status
+from .utils import (
+    convert_gel_status,
+    convert_moi,
+    filter_empty,
+    make_null,
+)
 
 
 class EnsembleIdMixin:

@@ -1,5 +1,0 @@
-ARG BASE_IMAGE=panelapp-base
-FROM $BASE_IMAGE
-
-WORKDIR /app/panelapp
-ENTRYPOINT celery worker --app panelapp --task-events --concurrency 2 --quiet

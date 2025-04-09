@@ -1,9 +1,9 @@
-{% load bootstrap3 %}
+{% load django_bootstrap5 %}
 {% load panel_helpers %}
 
 <h3>Details</h3>
-<div class="panel panel-default panel-details">
-    <div class="panel-body">
+<div class="card add-bottom-margin panel-details">
+    <div class="card-body">
         <dl class="dl-separated">
             {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
                 <dt>GEL status</dt>
@@ -42,7 +42,14 @@
                     {% endfor %}
                 </ul>
                 {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-                    <a class="link-muted" href="{% url 'panels:clear_entity_sources' panel.panel_id entity_type entity_name %}" data-ajax="true" data-success="djangoAjaxHandler">Clear Sources</a>
+                    <a
+                        href="#"
+                        class="link-muted"
+                        hx-get="{% url 'panels:clear_entity_sources' panel.panel_id entity_type entity_name %}"
+                        hx-swap="none"
+                    >
+                        Clear Sources
+                    </a>
                 {% endif %}
             </dd>
             {% endif %}
@@ -57,7 +64,12 @@
                         {% endfor %}
                     </ul>
                     {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-                        <a href="{% url 'panels:clear_entity_phenotypes' panel.panel_id entity_type entity_name %}" class="link-muted" data-ajax="true" data-success="djangoAjaxHandler">
+                        <a
+                            href="#"
+                            class="link-muted"
+                            hx-get="{% url 'panels:clear_entity_phenotypes' panel.panel_id entity_type entity_name %}"
+                            hx-swap="none"
+                        >
                             Clear phenotypes
                         </a>
                     {% endif %}
@@ -93,7 +105,12 @@
                 </ul>
 
                 {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-                    <a href="{% url 'panels:clear_entity_publications' panel.panel_id entity_type entity_name %}" class="link-muted" data-ajax="true" data-success="djangoAjaxHandler">
+                    <a
+                        href="#"
+                        class="link-muted"
+                        hx-get="{% url 'panels:clear_entity_publications' panel.panel_id entity_type entity_name %}"
+                        hx-swap="none"
+                    >
                         Clear publications
                     </a>
                 {% endif %}
@@ -102,34 +119,28 @@
         </dl>
     </div>
   {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-  <div class="panel-footer">
-    <a href="{% url 'panels:edit_entity' panel.panel_id entity_type entity_name %}" class="btn btn-info" data-module="showhide" data-show=".edit-region-form" data-hide=".panel.panel-details">
+  <div class="card-footer">
+    <a href="{% url 'panels:edit_entity' panel.panel_id entity_type entity_name %}" class="btn btn-info" data-module="showhide" data-show=".edit-region-form" data-hide=".card.panel-details">
       <i class="fa fa-edit"></i> Edit Region
     </a>
   </div>
   {% endif %}
 </div>
 {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
-<form class="edit-region-form form row hidden" action="{% url 'panels:edit_entity' panel.panel_id entity_type entity_name %}#!details" method="post">
+<form class="edit-region-form form row d-none" action="{% url 'panels:edit_entity' panel.panel_id entity_type entity_name %}#!details" method="post">
   {% csrf_token %}
   <div class="col-md-12">
-    <div class="well">
+    <div class="card card-body bg-light">
       <fieldset>
-        <legend>Edit Region</legend>
+        <legend class="card-header add-bottom-margin">Edit Region</legend>
         {% for field in form_edit %}
           <div class="form-group">
-            {% if field.errors %}
-              {% for error in field.errors %}
-                <span class="label label-danger">{{ error|escape }}</span>
-              {% endfor %}
-            {% endif %}
-
             {% if field.name == "mode_of_pathogenicity" %}
-                {{ field.label_tag }} <a data-toggle="modal" data-target="#model_of_path" ><i class="fa fa-question-circle"></i></a>
+                {% bootstrap_label field.label_tag %} <a data-bs-toggle="modal" href="#model_of_path" ><i class="fa fa-question-circle"></i></a>
             {% elif field.name == "moi" %}
-                {{ field.label_tag }} <a data-toggle="modal" data-target="#moi" ><i class="fa fa-question-circle"></i></a>
+                {% bootstrap_label field.label_tag %} <a data-bs-toggle="modal" href="#moi" ><i class="fa fa-question-circle"></i></a>
             {% else %}
-                {{ field.label_tag }}
+                {% bootstrap_label field.label_tag %}
             {% endif %}
 
             {% if field.help_text %}
@@ -139,7 +150,7 @@
             {% bootstrap_field field show_label=False show_help=False %}
           </div>
         {% endfor %}
-        <a href="{{ entity.get_absolute_url }}" class="btn btn-default">Cancel</a>
+        <a href="{{ entity.get_absolute_url }}" class="btn btn-outline-light-panelapp">Cancel</a>
         <button type="submit" class="btn btn-primary">Save</button>
       </fieldset>
   </div>

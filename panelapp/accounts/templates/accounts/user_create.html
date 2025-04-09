@@ -1,16 +1,16 @@
 {% extends 'default_anonymous.html' %}
-{% load bootstrap3 %}
+{% load django_bootstrap5 %}
 
 {% block body %}
 <div class="container">
-  <div class="row">
+  <div class="row justify-content-center">
     <div class="col-md-6 col-md-offset-3">
-      <form class="login-panel panel panel-default add-top-margin" action="{% url 'accounts:register' %}" method="post">
+      <form class="login-panel card add-top-margin" action="{% url 'accounts:register' %}" method="post">
         {% csrf_token %}
-        <div class="panel-heading">
-          <h3 class="panel-title">Register</h3>
+        <div class="card-header">
+          <h3 class="card-title">Register</h3>
         </div>
-        <div class="panel-body">
+        <div class="card-body">
           <fieldset>
             {% for field in form %}
               <div class="form-group">
@@ -26,7 +26,7 @@
                 {% bootstrap_field field %}
               </div>
             {% endfor %}
-            <button type="submit" class="btn btn-primary btn-block">Register</button>
+            <button type="submit" class="btn btn-primary btn-block w-100">Register</button>
           </fieldset>
         </div>
       </form>

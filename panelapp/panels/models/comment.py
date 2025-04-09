@@ -23,6 +23,7 @@
 ##
 from django.db import models
 from model_utils.models import TimeStampedModel
+
 from accounts.models import User
 
 
@@ -41,6 +42,8 @@ class Comment(TimeStampedModel):
 
     def __str__(self):
         return "{}: {}".format(self.user.get_full_name(), self.comment[:30])
+
+    __hash__ = models.Model.__hash__
 
     def __eq__(self, other):
         if self.comment == other.comment:

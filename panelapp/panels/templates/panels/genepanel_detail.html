@@ -1,35 +1,39 @@
 {% extends "default.html" %}
-{% load staticfiles %}
-{% load bootstrap3 %}
+{% load static %}
+{% load django_bootstrap5 panel_helpers %}
 {% block header %}
-<script src="{% static 'django_ajax/js/jquery.ajax.min.js' %}"></script>
-<script src="{% static 'django_ajax/js/jquery.ajax-plugin.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'django_ajax/js/jquery.ajax.min.js' %}"></script>
+<script type="text/javascript" src="{% static 'django_ajax/js/jquery.ajax-plugin.min.js' %}"></script>
 {% endblock %}
 
 {% block body %}
 <div class="container">
-  <ol class="breadcrumb">
-      <li>
-          <a href="{% url 'panels:index' %}">Panels</a>
-      </li>
-      <li class="active">
-          {{ panel.level4title.name }}
-      </li>
-  </ol>
+  <nav aria-label="breadcrumb">
+    <ol class="breadcrumb add-top-margin">
+        <li class="breadcrumb-item">
+            <a href="{% url 'panels:index' %}">Panels</a>
+        </li>
+        <li class="breadcrumb-item active">
+            {{ panel.level4title.name }}
+        </li>
+    </ol>
+  </nav>
 
   {% if not panel.panel.is_public %}
   <div class="alert alert-danger" role="alert">This Panel is marked as {{ panel.panel.status|title }}</div>
   {% endif %}
 
-    {% if signed_off %}
-        <div class="alert alert-info" role="alert"><strong>{{ signed_off_message }}</strong></div>
+    {% with signed_off_panel=signed_off %}
+    {% if signed_off_panel %}
+        <div class="alert alert-info" role="alert"><strong>{% signed_off_panel_message signed_off_panel %}</strong></div>
     {% endif %}
+    {% endwith %}
 
   <div id="banner">
       <h1>
           {% block title %}{{ panel.level4title.name }} (Version {{ panel.major_version}}.{{ panel.minor_version}}){% endblock %}
       </h1>
-      <p class="lead">
+      <div class="lead" id="panel_metadata">
           {% if panel.level4title.level3title %}
               Level 3: {{ panel.level4title.level3title }}<br />
           {% endif %}
@@ -47,11 +51,17 @@
               <br />Panel types: {% for type in panel.panel.types.all %}{{ type.name }}{% if not forloop.last %}, {% endif %}{% endfor %}
           {% endif %}
           {% if signed_off %}
-             <br />Panel version {{ signed_off.major_version }}.{{ signed_off.minor_version }} has been signed off on {{ signed_off.signed_off_date }}
+              <br />Latest signed off version: {% signed_off_version panel_id=panel.panel_id major_version=signed_off.major_version minor_version=signed_off.minor_version %} ({{ signed_off.signed_off_date }})
+              <br />
+              <form action="{% url 'panels:download_old_panel_tsv' panel.panel.id %}" id="header_download_signedoff" method="post">{% csrf_token %}
+                  <input type="hidden" value="{{ signed_off.major_version }}.{{ signed_off.minor_version }}" name="panel_version" class="input form-control">
+                  <button type="submit" class="add-top-margin add-bottom-margin btn btn-primary">Download Latest Signed-Off Version</button>
+              </form>
+              {% if signed_off_previous_versions %}Previously signed off versions: {% for major_version, minor_version in signed_off_previous_versions %}{% signed_off_version panel_id=panel.panel_id major_version=major_version minor_version=minor_version %}{% if not forloop.last %}, {% endif %}{% endfor %}{% endif %}
           {% endif %}
 
           {% if panel.panel.old_pk %}<br />Previous code: {{ panel.panel.old_pk }}{% endif %}
-      </p>
+      </div>
   </div>
 
   <div class="row">
@@ -63,7 +73,7 @@
               <h3 class="remove-top-margin add-bottom-margin">{{ contributors|length }} reviewer{{ contributors|pluralize }}</h3>
               <ul class="list-group remove-bottom-margin">
               {% for contributor in contributors %}
-                  <li class="list-group-item">
+                  <li class="list-group-item reviewer-detail">
                       <p class="bold">{{ contributor.get_full_name }} ({{contributor.reviewer.affiliation}})</p>
 {% comment %}
                       <p class="text-muted">
@@ -82,14 +92,12 @@
   </div>
 
 {% with entities=panel.get_all_entities_extra %}
-  <h2 class="add-label-margin">{{ entities|length }} Entities</h2>
+  <h2 class="add-label-margin add-top-margin">{{ entities|length }} Entities</h2>
   <h3 class="text-muted normal remove-top-margin add-bottom-margin">{{ panel.stats.number_of_evaluated_entities }} reviewed{% if request.user.is_authenticated and request.user.reviewer.is_GEL %}, {{ panel.stats.number_of_ready_entities }} ready{% endif %}, {{ panel.stats.number_of_green_entities }} green</h3>
 
   <div data-module="sortable-table" data-default-key="entity">
       <div class="table-responsive" data-module="filterable-table">
-          <table class="table table-bordered table-hover" id="entities_table">
-            {% include "panels/entities_list_table.html" with is_super_panel=panel.is_super_panel %}
-          </table>
+        {% include "panels/entities_list_table.html" with is_super_panel=panel.is_super_panel %}
       </div>
   </div>
 {% endwith %}
@@ -105,7 +113,7 @@
 
   {% if not panel.is_super_panel and request.user.is_authenticated and request.user.reviewer.is_GEL %}
       <h3 class="add-top-margin">Promote to version {{ panel.major_version|add:"1" }}</h3>
-      <div class="well">
+      <div class="card card-body bg-light add-bottom-margin">
           <p>Promoting a panel will:</p>
           <ul>
               <li>email all reviewers, thanking them for their contribution</li>
@@ -117,11 +125,6 @@
               <fieldset>
                   {% for field in promote_panel_form %}
                       <div class="form-group">
-                          {% if field.errors %}
-                              {% for error in field.errors %}
-                                  <span class="label label-danger">{{ error|escape }}</span>
-                              {% endfor %}
-                          {% endif %}
                           {% bootstrap_field field %}
                       </div>
                   {% endfor %}
@@ -132,7 +135,7 @@
   {% endif %}
 
   <h2>Downloads</h2>
-  <div class="well">
+  <div class="card card-body bg-light add-bottom-margin">
     <h3 class="remove-top-margin">Download lists</h3>
     <ul>
       <li><a href="{% url 'panels:download_panel_tsv' panel.panel.id '01234' %}">Whole panel</a></li>
@@ -142,16 +145,15 @@
       <li><a href="{% url 'panels:download_panel_tsv' panel.panel.id '01' %}">Red list (low evidence)</a></li>
     </ul>
     <h3>Download Version</h3>
-      <div class="form-row">
-          <div class="col">
-            <div class="form-group">
-            <div class="inline-group">
-            <form class="form-inline" action="{% url 'panels:download_old_panel_tsv' panel.panel.id %}" method="post">
-            {% csrf_token %}
-            <input type="text" value="" placeholder="Panel version, for example 0.1", name="panel_version" class="input form-control">
-              <button type="submit" class="btn btn-primary">Download</button></form>
-            </div>
-            </div>
+      <div class="row">
+          <div class="col-md-3">
+            <form action="{% url 'panels:download_old_panel_tsv' panel.panel.id %}" method="post">
+              {% csrf_token %}
+              <div class="input-group">
+                <input class="form-control" type="text" value="" placeholder="Panel version, for example 0.1", name="panel_version">
+                <button class="btn btn-primary" type="submit" class="btn btn-primary">Download</button>
+              </div>
+            </form>
         </div>
     {% if signed_off %}
     <div class="col">
@@ -159,7 +161,7 @@
           <div class="inline-group">
               <form class="form" action="{% url 'panels:download_old_panel_tsv' panel.panel.id %}" method="post">{% csrf_token %}
               <input type="hidden" value="{{ signed_off.major_version }}.{{ signed_off.minor_version }}" name="panel_version" class="input form-control">
-              <button type="submit" class="btn btn-primary">Download Signed-Off Version</button>
+              <button type="submit" class="btn btn-primary">Download Latest Signed-Off Version</button>
               </form>
           </div>
         </div>

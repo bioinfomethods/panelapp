@@ -22,10 +22,14 @@
 ## under the License.
 ##
 import csv
+
 import djclick as click
 from django.db import transaction
-from panels.models import GenePanel
-from panels.models import PanelType
+
+from panels.models import (
+    GenePanel,
+    PanelType,
+)
 
 
 @click.command()

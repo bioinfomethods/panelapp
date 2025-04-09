@@ -23,23 +23,27 @@
 ##
 from django.contrib import admin
 from django_admin_listfilter_dropdown.filters import DropdownFilter
-from .models import Tag
-from .models import STR
-from .models import Gene
-from .models import Activity
-from .models import Level4Title
-from .models import Comment
-from .models import Evidence
-from .models import Evaluation
-from .models import TrackRecord
-from .models import GenePanel
-from .models import GenePanelSnapshot
-from .models import GenePanelEntrySnapshot
-from .models import UploadedGeneList
-from .models import UploadedPanelList
-from .models import UploadedReviewsList
-from .models import PanelType
-from .models import HistoricalSnapshot
+
+from .models import (
+    STR,
+    Activity,
+    Comment,
+    Evaluation,
+    Evidence,
+    Gene,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    HistoricalSnapshot,
+    Level4Title,
+    PanelType,
+    Tag,
+    TrackRecord,
+    UploadedGeneList,
+    UploadedPanelList,
+    UploadedReviewsList,
+)
+
 
 class TagAdmin(admin.ModelAdmin):
     list_display = ("name",)
@@ -130,9 +134,8 @@ class GenePanelAdmin(admin.ModelAdmin):
         "name",
     )
 
-    raw_id_fields = (
-        'signed_off',
-    )
+    raw_id_fields = ("signed_off",)
+
 
 class PanelTypeAdmin(admin.ModelAdmin):
     list_display = ("name", "slug")

@@ -22,13 +22,17 @@
 ## under the License.
 ##
 from copy import deepcopy
-from django.db import models
-from django.db.models import Q
+
 from django.core.serializers.json import DjangoJSONEncoder
-from django.contrib.postgres.fields import JSONField
+from django.db import models
+from django.db.models import (
+    JSONField,
+    Q,
+)
 from model_utils.models import TimeStampedModel
 
 from accounts.models import User
+
 from .genepanel import GenePanel
 
 

@@ -1,9 +1,9 @@
-{% load mathfilters %}
+{% load mathfilters panel_helpers %}
 
 <div class="table-responsive add-top-margin" data-module="sortable-table" data-default-key="panel">
   <table class="table table-bordered" data-module="filterable-table">
-      <thead>
-          <tr class="table-header">
+      <thead class="table-light">
+          <tr>
               <th
                   class="panel-column js-sortable-header sorted-column sorted-asc"
                   data-sort-key="panel"
@@ -32,17 +32,17 @@
               </th>
               <th>Actions</th>
           </tr>
-          <tr class="if-no-js-hide table-header-secondary">
+          <tr class="if-no-js-hide">
               <td colspan="100">
-                  <form>
+                  <div>
                       <label for="panel-filter" class="rm">Filter panels</label>
                       <div class="input-group">
                         <input autofocus id="panel-filter" type="text" class="form-control normal js-filter-table-input" placeholder="Filter panels">
-                        <span class="input-group-addon js-filter-table-count" data-singular="panel" data-plural="panels">
+                        <span class="input-group-text js-filter-table-count" data-singular="panel" data-plural="panels">
                           {{ panels|length }} panel{{panels|pluralize}}
                         </span>
                       </div>
-                  </form>
+                  </div>
               </td>
           </tr>
       </thead>
@@ -56,11 +56,11 @@
               data-version="{{ entry.major_version }}.{{ entry.minor_version }}"
           >
               <td>
-                  <h4 class="remove-top-margin" title="Level 4 title">
+                  <h5 class="remove-bottom-margin" title="Level 4 title">
                       <a href="{{ entry.get_absolute_url }}" class="js-open-on-submit">
                           {{ entry.panel.name }}
                       </a>
-                  </h4>
+                  </h5>
                   <p>
                       {% if entry.level4title.level3title %}
                           Level 3: {{ entry.level4title.level3title }}<br />
@@ -83,7 +83,7 @@
                 {%  endif %}
                 {% if entry.panel.signed_off_id %}
                     <strong>
-                    Signed Off v.{{ entry.signed_off.0 }}.{{ entry.signed_off.1 }} on {{ entry.signed_off.2 }}
+                    Latest signed off version: {% signed_off_version panel_id=entry.panel_id major_version=entry.signed_off_major_version minor_version=entry.signed_off_minor_version %} ({{ entry.signed_off_date }})
                     </strong>
                 {% endif %}
               </td>
@@ -108,25 +108,25 @@
                   {% endif %}
               </td>
               <td class="nowrap">
-                  <a href="{% url 'panels:download_panel_tsv' entry.panel.pk '01234' %}" class="btn btn-default btn-sm" title="Download TSV file of panel">
+                  <a href="{% url 'panels:download_panel_tsv' entry.panel.pk '01234' %}" class="btn btn-outline-light-panelapp btn-sm" title="Download TSV file of panel">
                     <i class="fa fa-download"></i>{% if not request.user.is_authenticated or request.user.is_authenticated and not request.user.reviewer.is_GEL %} Download {% endif %}
                   </a>
                   {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
                       {% if entry.panel.is_approved %}
-                          <a type="url" data-ajax="true" data-success="djangoAjaxHandler" href="{% url 'panels:reject_panel' entry.panel.id %}" class="btn btn-default btn-sm {% if not entry.panel.is_approved %} disabled {% endif %}" title="Reject panel">
+                          <a type="url" data-ajax="true" data-success="djangoAjaxHandler" data-testid="reject-panel-{{ entry.pk }}" href="{% url 'panels:reject_panel' entry.panel.id %}" class="btn btn-outline-light-panelapp btn-sm {% if not entry.panel.is_approved %} disabled {% endif %}" title="Reject panel">
                             <i class="fa fa-thumbs-down"></i> Reject
                           </a>
                       {% else %}
-                          <a type="url" data-ajax="true" data-success="djangoAjaxHandler" href="{% url 'panels:approve_panel' entry.panel.id %}" class="btn btn-default btn-sm" title="Approve panel">
+                          <a type="url" data-ajax="true" data-success="djangoAjaxHandler" data-testid="approve-panel-{{ entry.pk }}" href="{% url 'panels:approve_panel' entry.panel.id %}" class="btn btn-outline-light-panelapp btn-sm" title="Approve panel">
                               <i class="fa fa-thumbs-up"></i> Approve
                           </a>
                       {% endif %}
 
-                      <a type="url" href="{% url 'panels:delete_panel' entry.panel.id %}" class="btn btn-default btn-sm hidden delete_{{ entry.pk }}" data-ajax="true" data-success="djangoAjaxHandler" title="Delete panel">
+                      <a type="url" href="{% url 'panels:delete_panel' entry.panel.id %}" class="btn btn-outline-light-panelapp btn-sm d-none delete_{{ entry.pk }}" data-ajax="true" data-success="djangoAjaxHandler" data-testid="delete-panel-{{ entry.pk }}" title="Delete panel">
                         <i class="fa fa-trash"></i>
                       </a>
-                      <a href="#lock_{{ entry.pk }}" class="lock_{{ entry.pk }} btn btn-default btn-sm hidden" data-module="showhide" data-show="a.btn.unlock_{{ entry.pk }}" data-hide="a.btn.lock_{{ entry.pk }}, a.btn.delete_{{ entry.pk }}" title="Lock panel"> <i class="fa fa-lock fa-lg"></i></a>
-                      <a href="#unlock_{{ entry.pk }}" class="unlock_{{ entry.pk }} btn btn-default btn-sm" data-module="showhide" data-show="a.btn.lock_{{ entry.pk }}, a.btn.delete_{{ entry.pk }}" data-hide="a.btn.unlock_{{ entry.pk }}" title="Unlock panel for editing"> <i class="fa fa-unlock fa-lg"></i></a>
+                      <a href="#lock_{{ entry.pk }}" class="lock_{{ entry.pk }} btn btn-outline-light-panelapp btn-sm d-none" data-module="showhide" data-show="a.btn.unlock_{{ entry.pk }}" data-hide="a.btn.lock_{{ entry.pk }}, a.btn.delete_{{ entry.pk }}" data-testid="lock-panel-{{ entry.pk }}" title="Lock panel"> <i class="fa fa-lock fa-lg"></i></a>
+                      <a href="#unlock_{{ entry.pk }}" class="unlock_{{ entry.pk }} btn btn-outline-light-panelapp btn-sm" data-module="showhide" data-show="a.btn.lock_{{ entry.pk }}, a.btn.delete_{{ entry.pk }}" data-hide="a.btn.unlock_{{ entry.pk }}" data-testid="unlock-panel-{{ entry.pk }}" title="Unlock panel for editing"> <i class="fa fa-unlock fa-lg"></i></a>
                   {% endif %}
               </td>
           </tr>

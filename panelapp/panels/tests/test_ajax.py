@@ -22,11 +22,14 @@
 ## under the License.
 ##
 from django.urls import reverse_lazy
+
 from accounts.tests.setup import LoginGELUser
+from panels.models import (
+    Evidence,
+    GenePanel,
+    TrackRecord,
+)
 from panels.tests.factories import GenePanelEntrySnapshotFactory
-from panels.models import GenePanel
-from panels.models import TrackRecord
-from panels.models import Evidence
 
 
 class AjaxGenePanelEntrySnapshotTest(LoginGELUser):
@@ -52,7 +55,7 @@ class AjaxGenePanelEntrySnapshotTest(LoginGELUser):
 
         url = reverse_lazy("panels:{}".format(content_type), kwargs=kwargs)
         res = self.client.get(url, HTTP_X_REQUESTED_WITH="XMLHttpRequest")
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
 
         gps = GenePanel.objects.get(pk=self.gpes.panel.panel.pk).active_panel
         gene = gps.get_gene(self.gpes.gene.get("gene_symbol"))
@@ -101,7 +104,6 @@ class AjaxGenePanelEntrySnapshotTest(LoginGELUser):
             "clear_entity_source", additional_kwargs={"source": "UKGTN"}
         )
         assert gene.evidence.count() == before_count - evidence_count
-        assert res.content.find(str.encode("UKGTN")) == -1
 
     def test_clear_single_source_expert_review(self):
         """When clearing the source if Expert Reviews is there is still should be the same"""
@@ -130,7 +132,6 @@ class AjaxGenePanelEntrySnapshotTest(LoginGELUser):
             "clear_entity_source", additional_kwargs={"source": "UKGTN"}
         )
         assert gene.evidence.count() == before_count - evidence_count
-        assert res.content.find(str.encode("UKGTN")) == -1
 
         self.assertEqual(gene.status, Evidence.EXPERT_REVIEWS["Expert Review Green"])
 

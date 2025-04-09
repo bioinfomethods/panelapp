@@ -34,10 +34,15 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
-import panelapp
-import dj_database_url
 import urllib.parse
+from datetime import timedelta
+
+import dj_database_url
+from celery.schedules import crontab
 from django.contrib.messages import constants as message_constants
+
+import panelapp
+from panelapp.content_security_policy import default as csp_default
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(
@@ -92,7 +97,7 @@ DJANGO_APPS = [
 CUSTOM_APPS = [
     "markdownx",
     "markdown_deux",
-    "bootstrap3",
+    "django_bootstrap5",
     "django_object_actions",
     "mathfilters",
     "django_ajax",
@@ -102,9 +107,20 @@ CUSTOM_APPS = [
     "drf_yasg",
     "qurl_templatetag",
     "django_filters",
+    "webpack_loader",
+    "csp",
+    "django_htmx",
 ]
 
-PROJECT_APPS = ["panelapp", "accounts", "panels", "webservices", "v1rewrites", "api"]
+PROJECT_APPS = [
+    "panelapp",
+    "accounts",
+    "panels",
+    "webservices",
+    "v1rewrites",
+    "api",
+    "releases",
+]
 
 INSTALLED_APPS = DJANGO_APPS + CUSTOM_APPS + PROJECT_APPS
 
@@ -118,6 +134,8 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "csp.middleware.CSPMiddleware",
+    "django_htmx.middleware.HtmxMiddleware",
 ]
 
 ROOT_URLCONF = "panelapp.urls"
@@ -134,8 +152,8 @@ TEMPLATES = [
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
                 "panelapp.context_processors.use_cognito",
-                "panelapp.context_processors.env_name",
-            ]
+                "csp.context_processors.nonce",
+            ],
         },
     }
 ]
@@ -155,9 +173,17 @@ DATABASE_PORT = os.getenv("DATABASE_PORT", "5324")
 DATABASE_NAME = os.getenv("DATABASE_NAME", "panelapp")
 DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    f"postgres://{DATABASE_USER}:{urllib.parse.quote(DATABASE_PASSWORD,safe='')}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
-    if DATABASE_USER and DATABASE_PASSWORD and DATABASE_HOST else None )
-DATABASES = {"default": dj_database_url.parse(DATABASE_URL,engine="django.db.backends.postgresql")}
+    (
+        f"postgres://{DATABASE_USER}:{urllib.parse.quote(DATABASE_PASSWORD, safe='')}@{DATABASE_HOST}:{DATABASE_PORT}/{DATABASE_NAME}"
+        if DATABASE_USER and DATABASE_PASSWORD and DATABASE_HOST
+        else None
+    ),
+)
+DATABASES = {
+    "default": dj_database_url.parse(
+        DATABASE_URL, engine="django.db.backends.postgresql"
+    )
+}
 
 
 # Admin
@@ -172,15 +198,82 @@ LOGOUT_REDIRECT_URL = os.getenv("LOGOUT_REDIRECT_URL", "accounts:login")
 
 # Logging
 
+DJANGO_LOG_LEVEL = os.getenv("DJANGO_LOG_LEVEL", "INFO").upper()
+APP_LOG_LEVEL = os.getenv("APP_LOG_LEVEL", "INFO").upper()
+
+CELERY_WORKER_HIJACK_ROOT_LOGGER = False  # no.
+LOG_FORMATTER_VALUES = [
+    "asctime",
+    "filename",
+    "levelname",
+    "lineno",
+    "module",
+    "message",
+    "name",
+    "pathname",
+    "dd.trace_id",
+    "dd.span_id",
+    "task_id",
+    "task_name",
+]
+
+LOG_FORMAT = " ".join(["%({0:s})".format(name) for name in LOG_FORMATTER_VALUES])
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "handlers": {"console": {"class": "logging.StreamHandler"}},
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+        },
+    },
+    "formatters": {
+        "json": {
+            "()": "panelapp.logs.TaskFormatter",
+            "fmt": LOG_FORMAT,
+            "datefmt": "%Y-%m-%dT%H:%M:%SZ",
+        },
+    },
     "loggers": {
-        "django": {
+        # all other apps
+        "": {
             "handlers": ["console"],
-            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
-        }
+            "level": DJANGO_LOG_LEVEL,
+        },
+        # app logs
+        "panelapp": {
+            "handlers": ["console"],
+            "level": APP_LOG_LEVEL,
+            "propagate": False,
+        },
+        "panels": {"handlers": ["console"], "level": APP_LOG_LEVEL, "propagate": False},
+        "api": {"handlers": ["console"], "level": APP_LOG_LEVEL, "propagate": False},
+        "webservices": {
+            "handlers": ["console"],
+            "level": APP_LOG_LEVEL,
+            "propagate": False,
+        },
+        "accounts": {
+            "handlers": ["console"],
+            "level": APP_LOG_LEVEL,
+            "propagate": False,
+        },
+        "releases": {
+            "handlers": ["console"],
+            "level": APP_LOG_LEVEL,
+            "propagate": False,
+        },
+        # celery tasks logging
+        "celery.task": {
+            "handlers": ["console"],
+            "level": APP_LOG_LEVEL,
+            "propagate": False,
+        },
+        # these create too much noise if set to DEBUG level
+        "amqp": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "kombu.common": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "celery": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "ddtrace": {"handlers": ["console"], "level": "INFO", "propagate": False},
     },
 }
 
@@ -214,8 +307,31 @@ USE_TZ = True
 STATIC_URL = "/static/"
 STATIC_ROOT = os.getenv("STATIC_ROOT", os.path.join(BASE_DIR, "_staticfiles"))
 
+STATICFILES_DIRS = [os.getenv("STATICFILES_DIRS", str(os.path.join(BASE_DIR, "dist")))]
+
 MEDIA_URL = "/media/"
 MEDIA_ROOT = os.getenv("MEDIA_ROOT", os.path.join(BASE_DIR, "_mediafiles"))
+
+# django-webpack-loader
+# https://pypi.org/project/django-webpack-loader/
+WEBPACK_LOADER = {
+    "DEFAULT": {
+        "BUNDLE_DIR_NAME": ".",
+        "CACHE": not DEBUG,
+        "STATS_FILE": os.getenv(
+            "WEBPACK_LOADER_STATS_FILE", os.path.join(BASE_DIR, "webpack-stats.json")
+        ),
+        "POLL_INTERVAL": 0.1,
+        "IGNORE": [r".+\.hot-update.js", r".+\.map"],
+    }
+}
+
+# Session
+
+# https://docs.djangoproject.com/en/dev/ref/settings/#session-cookie-age
+SESSION_COOKIE_AGE = int(
+    os.getenv("SESSION_COOKIE_AGE", timedelta(weeks=2).total_seconds())
+)
 
 # Random
 MESSAGE_TAGS = {
@@ -234,24 +350,28 @@ MARKDOWN_DEUX_STYLES = {
     "default": {"extras": {"wiki-tables": True}, "safe_mode": "escape"}
 }
 
-HEALTH_ACCESS_TOKEN_LOCATION = os.getenv("HEALTH_ACCESS_TOKEN_LOCATION", None)
-HEALTH_CHECK_TOKEN = None
-if HEALTH_ACCESS_TOKEN_LOCATION and os.path.isfile(HEALTH_ACCESS_TOKEN_LOCATION):
-    with open(HEALTH_ACCESS_TOKEN_LOCATION, "r") as f:
-        HEALTH_CHECK_TOKEN = f.readline().strip()
-
-HEALTH_MAINTENANCE_LOCATION = os.getenv("HEALTH_MAINTENANCE_LOCATION", None)
-
-HEALTH_CHECK_SERVICES = os.getenv(
-    "HEALTH_CHECK_SERVICES", "database,rabbitmq,email,celery,maintenance"
-).split(",")
-
 # CORS headers support
 CORS_ORIGIN_ALLOW_ALL = True
 CORS_URLS_REGEX = r"^/(WebServices|api/v1)/.*$"
 CORS_ALLOW_METHODS = ("GET",)
 
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "pyamqp://localhost:5672/")
+
+# Celery Beat Scheduler settings
+CELERY_BEAT_SCHEDULE = {}
+
+# specify celery beat tasks you want to run via env variables
+ACTIVE_SCHEDULED_TASKS = os.getenv("ACTIVE_SCHEDULED_TASKS", "moi-check").split(";")
+if "moi-check" in ACTIVE_SCHEDULED_TASKS:
+    CELERY_BEAT_SCHEDULE["moi-check"] = {
+        "task": "panels.tasks.moi_checks.moi_check",
+        "schedule": crontab(
+            hour=os.getenv("MOI_CHECK_HOUR", 6),
+            minute=os.getenv("MOI_CHECK_MINUTE", 30),
+            day_of_week=os.getenv("MOI_CHECK_DAY_OF_WEEK", "sun"),
+        ),
+        "options": {"queue": "panelapp"},
+    }
 
 PACKAGE_VERSION = panelapp.__version__
 
@@ -288,4 +408,27 @@ SWAGGER_SETTINGS = {
 
 DEFAULT_PANEL_TYPES = os.getenv("DEFAULT_PANEL_TYPES", "rare-disease-100k").split(",")
 
-SIGNED_OFF_MESSAGE = "This Panel has been signed off for the GMS"
+OMIM_API_KEY = os.getenv("OMIM_API_KEY", None)
+
+SIGNED_OFF_MESSAGE = "The latest signed off version for the GMS is {version}. The current version, shown here, may differ from the signed-off version."
+SIGNED_OFF_ARCHIVE_BASE_URL = os.getenv("SIGNED_OFF_ARCHIVE_BASE_URL", None)
+
+# Health checks
+HEALTH_CHECK_SERVICE_NAME = "panelapp"
+HEALTH_CHECK_CACHE_SECONDS = 3
+HEALTH_CHECK_TIMEOUT = 3
+HEALTH_CHECK_TOKEN = os.getenv("HEALTH_CHECK_TOKEN", "panelapp-token")
+
+HEALTH_CHECK_CRITICAL = os.getenv("HEALTH_CHECK_CRITICAL", "database,sqs,email").split(
+    ","
+)
+
+HEALTH_CHECKS = os.getenv("HEALTH_CHECKS", "database,sqs,email").split(",")
+
+# Caching timeout on API 'signedoff' endpoint
+SIGNEDOFF_CACHE_TTL = os.getenv("SIGNEDOFF_CACHE_TTL", 60 * 15)
+
+BANNER = os.getenv("PANELAPP_BANNER", "").strip()
+
+# https://django-csp.readthedocs.io/en/latest/index.html
+CONTENT_SECURITY_POLICY = csp_default()

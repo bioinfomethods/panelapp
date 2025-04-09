@@ -1,15 +1,22 @@
-{% load bootstrap3 %}
+{% load django_bootstrap5 %}
 <h4 class="add-bottom-margin">Tags</h4>
-<div class="panel panel-default review-table" data-module="ajax-form">
-  <form data-module="tag-input" data-ajax-action="{% url 'panels:update_entity_tags' panel.panel_id entity_type entity_name %}" action="{% url 'panels:update_entity_tags' panel.panel_id entity_type entity_name %}#!review" method="post" class="form panel-body">
-    {% csrf_token %}
+<div class="card card-body review-table">
+  <form class="form">
     {% for field in edit_entity_tags_form %}
       <span class="rm">{{ field.label_tag }}</span>
       {% bootstrap_field field show_label=False %}
     {% endfor %}
     {% if updated %}
-      <p class="text-muted js-tag-saved-status" style="margin-top: 5px">Saved at {{ updated }}</p>
+      <p class="text-muted js-tag-saved-status add-top-margin">Saved at {{ updated }}</p>
     {% endif %}
-    <input type="submit" class="btn btn-info add-top-margin" value="Save changes">
+    <button
+      type="button"
+      class="btn btn-info add-top-margin"
+      hx-post="{% url 'panels:update_entity_tags' entity.panel.panel_id entity_type entity_name %}"
+      hx-swap="none"
+      hx-disabled-elt="this"
+    >
+      {% include "components/button_loading_content.html" with text="Save changes" %}
+    </button>
   </form>
 </div>

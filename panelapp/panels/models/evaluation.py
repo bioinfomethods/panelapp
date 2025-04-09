@@ -21,12 +21,14 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from django.db import models
 from django.contrib.postgres.fields import ArrayField
-from model_utils.models import TimeStampedModel
+from django.db import models
 from model_utils import Choices
+from model_utils.models import TimeStampedModel
 
 from accounts.models import User
+from panels.enums import MODE_OF_INHERITANCE_VALID_CHOICES
+
 from .comment import Comment
 
 
@@ -47,45 +49,7 @@ class Evaluation(TimeStampedModel):
 
     MODES_OF_INHERITANCE = Choices(
         ("", "Provide a mode of inheritance"),
-        (
-            "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
-            "MONOALLELIC, autosomal or pseudoautosomal, NOT imprinted",
-        ),  # noqa
-        (
-            "MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
-            "MONOALLELIC, autosomal or pseudoautosomal, maternally imprinted (paternal allele expressed)",
-        ),  # noqa
-        (
-            "MONOALLELIC, autosomal or pseudoautosomal, paternally imprinted (maternal allele expressed)",
-            "MONOALLELIC, autosomal or pseudoautosomal, paternally imprinted (maternal allele expressed)",
-        ),  # noqa
-        (
-            "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
-            "MONOALLELIC, autosomal or pseudoautosomal, imprinted status unknown",
-        ),  # noqa
-        (
-            "BIALLELIC, autosomal or pseudoautosomal",
-            "BIALLELIC, autosomal or pseudoautosomal",
-        ),
-        (
-            "BOTH monoallelic and biallelic, autosomal or pseudoautosomal",
-            "BOTH monoallelic and biallelic, autosomal or pseudoautosomal",
-        ),  # noqa
-        (
-            "BOTH monoallelic and biallelic (but BIALLELIC mutations cause a more SEVERE disease form), autosomal or pseudoautosomal",
-            "BOTH monoallelic and biallelic (but BIALLELIC mutations cause a more SEVERE disease form), autosomal or pseudoautosomal",
-        ),  # noqa
-        (
-            "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
-            "X-LINKED: hemizygous mutation in males, biallelic mutations in females",
-        ),  # noqa
-        (
-            "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
-            "X-LINKED: hemizygous mutation in males, monoallelic mutations in females may cause disease (may be less severe, later onset than males)",
-        ),  # noqa
-        ("MITOCHONDRIAL", "MITOCHONDRIAL"),
-        ("Unknown", "Unknown"),
-        ("Other", "Other - please specifiy in evaluation comments"),
+        *MODE_OF_INHERITANCE_VALID_CHOICES,
     )
 
     MODES_OF_PATHOGENICITY = Choices(
@@ -112,13 +76,14 @@ class Evaluation(TimeStampedModel):
         max_length=255,
     )
     current_diagnostic = models.BooleanField(default=False, blank=True)
-    clinically_relevant = models.NullBooleanField(
+    clinically_relevant = models.BooleanField(
         default=False,
         blank=True,
         null=True,
         help_text="Interruptions in the repeated sequence are reported as part of standard diagnostic practise",
     )
     version = models.CharField(null=True, blank=True, max_length=255)
+    original_panel = models.CharField(default="", blank=True, max_length=255)
     comments = models.ManyToManyField(Comment)
     last_updated = models.DateTimeField(null=True, blank=True)
 

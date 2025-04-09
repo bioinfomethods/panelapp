@@ -29,17 +29,36 @@
 
 import os
 
-
-for k,v in os.environ.items():
+for k, v in os.environ.items():
     if k.startswith("GUNICORN_"):
-        key = k.split('_', 1)[1].lower()
+        key = k.split("_", 1)[1].lower()
         locals()[key] = v
 
+
 # Logging
+DJANGO_LOG_LEVEL = os.getenv("DJANGO_LOG_LEVEL", "INFO").upper()
+APP_LOG_LEVEL = os.getenv("APP_LOG_LEVEL", "INFO").upper()
+
+LOG_FORMATTER_VALUES = [
+    "asctime",
+    "filename",
+    "levelname",
+    "lineno",
+    "module",
+    "message",
+    "name",
+    "pathname",
+    "dd.trace_id",
+    "dd.span_id",
+    "task_id",
+    "task_name",
+]
+
+LOG_FORMAT = " ".join(["%({0:s})".format(name) for name in LOG_FORMATTER_VALUES])
 
 logconfig_dict = {
-    'version': 1,
-    'disable_existing_loggers': False,
+    "version": 1,
+    "disable_existing_loggers": False,
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
@@ -48,19 +67,61 @@ logconfig_dict = {
     },
     "formatters": {
         "json": {
-            "class": "simple_json_log_formatter.SimpleJsonFormatter",
+            "()": "panelapp.logs.TaskFormatter",
+            "fmt": LOG_FORMAT,
+            "datefmt": "%Y-%m-%dT%H:%M:%SZ",
         },
     },
-    "loggers" : {
-        "root" : {
+    "loggers": {
+        "": {
+            "handlers": ["console"],
+            "level": DJANGO_LOG_LEVEL,
+        },
+        "root": {
             "handlers": ["console"],
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
         },
+        # app loggers
+        "panelapp": {
+            "handlers": ["console"],
+            "level": APP_LOG_LEVEL,
+            "propagate": False,
+        },
+        "panels": {"handlers": ["console"], "level": APP_LOG_LEVEL, "propagate": False},
+        "api": {"handlers": ["console"], "level": APP_LOG_LEVEL, "propagate": False},
+        "webservices": {
+            "handlers": ["console"],
+            "level": APP_LOG_LEVEL,
+            "propagate": False,
+        },
+        "accounts": {
+            "handlers": ["console"],
+            "level": APP_LOG_LEVEL,
+            "propagate": False,
+        },
+        # other
         "gunicorn.error": {
             "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
             "handlers": ["console"],
             "propagate": 1,
-            "qualname": "gunicorn.error"
+            "qualname": "gunicorn.error",
         },
-    }
+        "gunicorn.access": {
+            "level": os.getenv("DJANGO_LOG_LEVEL", "INFO"),
+            "handlers": ["console"],
+            "propagate": 1,
+            "qualname": "gunicorn.access",
+        },
+        # celery tasks logging
+        "celery.task": {
+            "handlers": ["console"],
+            "level": APP_LOG_LEVEL,
+            "propagate": False,
+        },
+        # these create too much noise if set to DEBUG level
+        "amqp": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "kombu.common": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "celery": {"handlers": ["console"], "level": "INFO", "propagate": False},
+        "ddtrace": {"handlers": ["console"], "level": "INFO", "propagate": False},
+    },
 }

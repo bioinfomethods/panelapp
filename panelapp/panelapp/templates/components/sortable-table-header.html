@@ -1,0 +1,12 @@
+<th
+  class="sortable"
+  hx-get="{{ component.hx_get }}"
+  hx-include="{{ component.hx_include }}"
+  hx-vals='{{ component.hx_vals }}'
+  hx-swap="none"
+  >
+  {{ component.field|capfirst }}
+  {% if component.sort %}
+    <i class="fa {% if component.sort == 'desc' %}fa-arrow-down{% else %}fa-arrow-up{% endif %} d-inline-block"></i>
+  {% endif %}
+</th>

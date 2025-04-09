@@ -21,8 +21,13 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from __future__ import absolute_import, unicode_literals
+from __future__ import (
+    absolute_import,
+    unicode_literals,
+)
+
 import os
+
 from celery import Celery
 from celery.signals import setup_logging
 
@@ -32,11 +37,15 @@ app = Celery("panelapp")
 
 app.config_from_object("django.conf:settings", namespace="CELERY")
 
+
 # Celery uses Django logging configuration
 @setup_logging.connect
 def config_loggers(*args, **kwags):
     from logging.config import dictConfig
+
     from django.conf import settings
+
     dictConfig(settings.LOGGING)
+
 
 app.autodiscover_tasks()

@@ -21,14 +21,21 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+
+from dal_select2.views import (
+    Select2ListView,
+    Select2QuerySetView,
+)
 from django.db.models import Q
-from dal_select2.views import Select2QuerySetView
-from dal_select2.views import Select2ListView
-from panels.models import Gene
-from panels.models import Evidence
-from panels.models import Tag
-from panels.models import GenePanelSnapshot
-from panels.models import PanelType
+
+from panels.models import (
+    Evidence,
+    Gene,
+    GenePanel,
+    GenePanelSnapshot,
+    PanelType,
+    Tag,
+)
 
 
 class GeneAutocomplete(Select2QuerySetView):
@@ -60,11 +67,31 @@ class TagsAutocomplete(Select2QuerySetView):
         return qs
 
 
-class SimplePanelsAutocomplete(Select2QuerySetView):
+class SimplePublicPanelsAutocomplete(Select2QuerySetView):
     def get_queryset(self):
         qs = GenePanelSnapshot.objects.get_active_annotated(
-            internal=False, deleted=False
-        ).exclude(is_super_panel=True)
+            all=False, superpanels=False
+        )
+
+        if self.q:
+            qs = qs.filter(
+                Q(panel__name__icontains=self.q) | Q(panel__name__icontains=self.q)
+            )
+
+        return qs
+
+
+class SimpleAllPanelsAutocomplete(Select2QuerySetView):
+    """Return public and internal panels.
+
+    Excludes deleted and retired panels.
+
+    Used for copying entities to other panels."""
+
+    def get_queryset(self):
+        qs = GenePanelSnapshot.objects.get_active_annotated(
+            all=True, internal=True, deleted=False, superpanels=False
+        ).exclude(panel__status=GenePanel.STATUS.retired)
 
         if self.q:
             qs = qs.filter(

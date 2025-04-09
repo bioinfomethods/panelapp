@@ -21,26 +21,32 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-import factory
+from random import (
+    choice,
+    randint,
+)
 from uuid import uuid1
-from random import randint
-from random import choice
-from panels.models import Gene
-from panels.models import GenePanelEntrySnapshot
-from panels.models import Evidence
-from panels.models import Evaluation
-from panels.models import TrackRecord
-from panels.models import Tag
-from panels.models import Comment
-from panels.models import Level4Title
-from panels.models import GenePanel
-from panels.models import GenePanelSnapshot
-from panels.models import STR
-from panels.models import Region
-from panels.models import PanelType
+
+import factory
+from faker import Faker
 from psycopg2.extras import NumericRange
 
-from faker import Faker
+from panels.models import (
+    STR,
+    Comment,
+    Evaluation,
+    Evidence,
+    Gene,
+    GenePanel,
+    GenePanelEntrySnapshot,
+    GenePanelSnapshot,
+    Level4Title,
+    PanelType,
+    Region,
+    Tag,
+    TrackRecord,
+)
+from panels.models.historical_snapshot import HistoricalSnapshot
 
 fake = Faker()
 
@@ -88,7 +94,7 @@ class GenePanelFactory(factory.django.DjangoModelFactory):
         lambda x: fake.sentence(nb_words=6, variable_nb_words=True).strip(".")
     )
     genepanelsnapshot = factory.RelatedFactory(GenePanelSnapshotFactory)
-    old_pk = '553f9696bb5a1616e5ed41e3'
+    old_pk = "553f9696bb5a1616e5ed41e3"
 
 
 class PanelTypeFactory(factory.django.DjangoModelFactory):
@@ -104,8 +110,9 @@ class GeneFactory(factory.django.DjangoModelFactory):
         model = Gene
 
     gene_symbol = factory.LazyAttribute(
-        lambda g: factory.Faker("md5").evaluate(0, 0, 0)[:7]
+        lambda g: factory.Faker("md5").evaluate(0, 0, {"locale": None})[:7]
     )
+    gene_name = "gene_name"
     ensembl_genes = {}
 
 
@@ -164,7 +171,7 @@ class GenePanelEntrySnapshotFactory(factory.django.DjangoModelFactory):
         if not create:
             return
 
-        if not evaluations:
+        if evaluations is None:
             evaluations = EvaluationFactory.create_batch(4)
 
         for evaluation in evaluations:
@@ -239,7 +246,7 @@ class STRFactory(factory.django.DjangoModelFactory):
         if not create:
             return
 
-        if not evaluations:
+        if evaluations is None:
             evaluations = EvaluationFactory.create_batch(4)
 
         for evaluation in evaluations:
@@ -263,13 +270,10 @@ class STRFactory(factory.django.DjangoModelFactory):
         if not create:
             return
 
-        evidences = extracted
-        if not extracted:
-            evidences = EvidenceFactory.create_batch(4)
-
-        for evidence in evidences:
-            if evidence:
-                self.evidence.add(evidence)
+        if extracted:
+            for evidence in extracted:
+                if evidence:
+                    self.evidence.add(evidence)
 
     @factory.post_generation
     def stats(self, create, stats, **kwargs):
@@ -314,7 +318,7 @@ class RegionFactory(factory.django.DjangoModelFactory):
         if not create:
             return
 
-        if not evaluations:
+        if evaluations is None:
             evaluations = EvaluationFactory.create_batch(4)
 
         for evaluation in evaluations:
@@ -340,3 +344,16 @@ class RegionFactory(factory.django.DjangoModelFactory):
             return
 
         self.panel._update_saved_stats()
+
+
+class HistoricalSnapshotFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = HistoricalSnapshot
+
+    panel = factory.SubFactory(GenePanelFactory)
+    major_version = 0
+    minor_version = 0
+    reason = None
+    schema_version = ""
+    data = "{}"
+    signed_off_date = None

@@ -22,15 +22,19 @@
 ## under the License.
 ##
 
-from django.core.paginator import Paginator
-from django.db.models import Count, Q
-
 import djclick as click
+from django.core.paginator import Paginator
+from django.db.models import (
+    Count,
+    Q,
+)
 
-from panels.models import Evaluation
-from panels.models import Evidence
-from panels.models import TrackRecord
-from panels.models import Comment
+from panels.models import (
+    Comment,
+    Evaluation,
+    Evidence,
+    TrackRecord,
+)
 
 
 @click.command()
@@ -43,21 +47,23 @@ def command():
     """
 
     for model_type in [Evidence, TrackRecord, Evaluation, Comment]:
-        qs = model_type.objects\
-            .annotate(g_count=Count('genepanelentrysnapshot'), s_count=Count('str'), r_count=Count('region'))\
-            .exclude(Q(g_count__gt=0) | Q(s_count__gt=0) | Q(r_count__gt=0))
+        qs = model_type.objects.annotate(
+            g_count=Count("genepanelentrysnapshot"),
+            s_count=Count("str"),
+            r_count=Count("region"),
+        ).exclude(Q(g_count__gt=0) | Q(s_count__gt=0) | Q(r_count__gt=0))
 
         if model_type == Comment:
-            qs = qs.annotate(e_count=Count('evaluation')).exclude(e_count__gt=0)
+            qs = qs.annotate(e_count=Count("evaluation")).exclude(e_count__gt=0)
 
-        items = qs.order_by('pk').values_list('pk', flat=True)
+        items = qs.order_by("pk").values_list("pk", flat=True)
         items_pks = list(items)
 
         total = 0
         for page in chunked_iterator(items_pks):
-            model_type.objects.filter(pk__in=page).only('pk').delete()
+            model_type.objects.filter(pk__in=page).only("pk").delete()
             total = total + len(page)
-            click.echo('{} Deleted: {}'.format(model_type, len(page)))
+            click.echo("{} Deleted: {}".format(model_type, len(page)))
 
 
 def chunked_iterator(queryset, chunk_size=50000):

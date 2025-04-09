@@ -24,10 +24,12 @@
 from django.contrib import admin
 from django.contrib.sites.models import Site
 from markdownx.admin import MarkdownxModelAdmin
-from .models import HomeText
-from .models import Image
-from .models import File
 
+from .models import (
+    File,
+    HomeText,
+    Image,
+)
 
 admin.site.site_header = "PanelApp administration"
 

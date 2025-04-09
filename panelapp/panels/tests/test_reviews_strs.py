@@ -23,19 +23,25 @@
 ##
 import os
 from random import randint
+
+import pytest
 from django.urls import reverse_lazy
 from django.utils import timezone
 from faker import Factory
-from accounts.tests.setup import LoginGELUser
-from panels.models import GenePanel
-from panels.models import Comment
-from panels.models import Evaluation
-from panels.tests.factories import TagFactory
-from panels.tests.factories import STRFactory
-from panels.tests.factories import GeneFactory
-from panels.tests.factories import GenePanelSnapshotFactory
-from panels.tests.factories import GenePanelEntrySnapshotFactory
 
+from accounts.tests.setup import LoginGELUser
+from panels.models import (
+    Comment,
+    Evaluation,
+    GenePanel,
+)
+from panels.tests.factories import (
+    GeneFactory,
+    GenePanelEntrySnapshotFactory,
+    GenePanelSnapshotFactory,
+    STRFactory,
+    TagFactory,
+)
 
 fake = Factory.create()
 
@@ -294,12 +300,14 @@ class STRReviewTest(LoginGELUser):
         tag2 = TagFactory()
 
         res = self.client.post(
-            url, {"tags": [tag1.pk, tag2.pk]}, HTTP_X_REQUESTED_WITH="XMLHttpRequest"
+            url,
+            {"tags-tags": [tag1.pk, tag2.pk]},
+            HTTP_X_REQUESTED_WITH="XMLHttpRequest",
         )
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert gene.tags.count() == 2
         assert current_version == str_item.panel.panel.active_panel.version
 
@@ -322,7 +330,7 @@ class STRReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 1
         assert gene.moi == moi[1]
         assert gene.panel.version != str_item.panel.version
@@ -347,7 +355,7 @@ class STRReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 1
         assert gene.phenotypes == phenotypes_array
         assert gene.panel.version != str_item.panel.version
@@ -372,7 +380,7 @@ class STRReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 1
         assert gene.publications == publications_array
         assert gene.panel.version != str_item.panel.version
@@ -421,7 +429,7 @@ class STRReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 1
         assert res.content.find(str.encode(data["comment"])) != -1
         assert gene.saved_gel_status == new_status
@@ -433,7 +441,7 @@ class STRReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert (
             Comment.objects.count() == 2
         )  # FIXME old comments are deleted even for the current object...
@@ -446,7 +454,7 @@ class STRReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 3
         assert gene.saved_gel_status == new_status
 
@@ -457,7 +465,7 @@ class STRReviewTest(LoginGELUser):
         gene = GenePanel.objects.get(pk=str_item.panel.panel.pk).active_panel.get_str(
             str_item.name
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert Comment.objects.count() == 4
         assert gene.saved_gel_status == new_status
         assert gene.panel.version != str_item.panel.version
@@ -510,7 +518,7 @@ class STRReviewTest(LoginGELUser):
         last_gene = GenePanel.objects.get(
             pk=str_item.panel.panel.pk
         ).active_panel.get_str(str_item.name)
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert last_gene.is_reviewd_by_user(self.gel_user) is False
         assert gene.panel.version == last_gene.panel.version
 
@@ -560,7 +568,7 @@ class STRReviewTest(LoginGELUser):
         res = self.client.get(
             delete_comment_url, HTTP_X_REQUESTED_WITH="XMLHttpRequest"
         )
-        assert res.json().get("status") == 200
+        assert res.status_code == 200
         assert evaluation.comments.count() == 0
         assert res.content.find(str.encode("Your review")) != -1
         assert current_version == str_item.panel.panel.active_panel.version
@@ -643,3 +651,99 @@ class STRReviewTest(LoginGELUser):
         )
         r = self.client.get(url)
         self.assertEqual(r.status_code, 200)
+
+
+@pytest.mark.django_db
+def test_delete_other_user_comment(client, curator_user, other_curator_user):
+    str_ = STRFactory(evaluation=[])
+
+    client.login(username=curator_user.username, password="pass")
+
+    client.post(
+        reverse_lazy(
+            "panels:review_entity",
+            kwargs={
+                "pk": str_.panel.panel.pk,
+                "entity_type": "str",
+                "entity_name": str_.name,
+            },
+        ),
+        {
+            "rating": Evaluation.RATINGS.AMBER,
+            "current_diagnostic": True,
+            "comments": "testing",
+            "moi": list(Evaluation.MODES_OF_INHERITANCE)[1][0],
+            "mode_of_pathogenicity": list(Evaluation.MODES_OF_PATHOGENICITY)[1][0],
+        },
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    str_ = GenePanel.objects.get(pk=str_.panel.panel.pk).active_panel.get_str(str_.name)
+    evaluation = str_.evaluation.get(user=curator_user)
+
+    client.login(username=other_curator_user.username, password="pass")
+
+    res = client.get(
+        reverse_lazy(
+            "panels:delete_comment_by_user",
+            kwargs={
+                "pk": str_.panel.panel.pk,
+                "entity_type": "str",
+                "entity_name": str_.name,
+                "comment_pk": evaluation.comments.first().pk,
+            },
+        ),
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    assert res.status_code == 403
+
+    assert str_.evaluation.get().comments.count() == 1
+
+
+@pytest.mark.django_db
+def test_delete_other_user_review(client, curator_user, other_curator_user):
+    str_ = STRFactory(evaluation=[])
+
+    client.login(username=curator_user.username, password="pass")
+
+    client.post(
+        reverse_lazy(
+            "panels:review_entity",
+            kwargs={
+                "pk": str_.panel.panel.pk,
+                "entity_type": "str",
+                "entity_name": str_.name,
+            },
+        ),
+        {
+            "rating": Evaluation.RATINGS.AMBER,
+            "current_diagnostic": True,
+            "comments": "testing",
+            "moi": list(Evaluation.MODES_OF_INHERITANCE)[1][0],
+            "mode_of_pathogenicity": list(Evaluation.MODES_OF_PATHOGENICITY)[1][0],
+        },
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    str_ = GenePanel.objects.get(pk=str_.panel.panel.pk).active_panel.get_str(str_.name)
+    evaluation = str_.evaluation.get(user=curator_user)
+
+    client.login(username=other_curator_user.username, password="pass")
+
+    res = client.get(
+        reverse_lazy(
+            "panels:delete_evaluation_by_user",
+            kwargs={
+                "pk": str_.panel.panel.pk,
+                "entity_type": "str",
+                "entity_name": str_.name,
+                "evaluation_pk": evaluation.pk,
+            },
+        ),
+        HTTP_X_REQUESTED_WITH="XMLHttpRequest",
+    )
+
+    assert res.status_code == 403
+
+    assert str_.evaluation.count() == 1

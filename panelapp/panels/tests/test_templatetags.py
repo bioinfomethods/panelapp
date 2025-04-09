@@ -22,13 +22,20 @@
 ## under the License.
 ##
 from django.test import TransactionTestCase
-from panels.templatetags.panel_helpers import pubmed_link
-from panels.templatetags.panel_helpers import evaluation_rating_class
-from panels.templatetags.panel_helpers import human_issue_type
-from panels.models import Evaluation
-from panels.models import TrackRecord
-from panels.tests.factories import EvaluationFactory
-from panels.tests.factories import TrackRecordFactory
+
+from panels.models import (
+    Evaluation,
+    TrackRecord,
+)
+from panels.templatetags.panel_helpers import (
+    evaluation_rating_class,
+    human_issue_type,
+    pubmed_link,
+)
+from panels.tests.factories import (
+    EvaluationFactory,
+    TrackRecordFactory,
+)
 
 
 class TestTemplatetags(TransactionTestCase):

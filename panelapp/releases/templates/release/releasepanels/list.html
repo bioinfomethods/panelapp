@@ -1,0 +1,68 @@
+{% extends "default.html" %}
+{% load django_bootstrap5 %}
+{% block content %}
+
+<div class="px-2">
+  <ol class="breadcrumb add-top-margin">
+    <li class="breadcrumb-item">
+        <a href="{% url 'releases:list' %}">Releases</a>
+    </li>
+    <li class="breadcrumb-item">
+        <a href="{% url 'releases:detail' release.pk %}">{{ release.name }}</a>
+    </li>
+    <li class="breadcrumb-item active">
+        Panels
+    </li>
+  </ol>
+
+  <div
+    class="page-header add-top-margin border-bottom"
+    id="banner"
+  >
+    <div class="d-flex gap-2 add-top-margin">
+      <h1>{% block title %}Release Panels{% endblock %}</h1>
+    </div>
+  </div>
+
+  <div id="actions" class="add-top-margin">
+    <span
+      class="d-inline-block"
+      {% if release.deployment %}
+      data-bs-title="Release is deployed"
+      data-bs-delay='{"show": 150}'
+      {% else %}
+      data-bs-title="Import panels for the release"
+      data-bs-delay='{"show": 600}'
+      {% endif %}
+      data-bs-toggle="tooltip"
+    >
+      <a
+        class="btn btn-outline-light-panelapp {% if release.deployment %}disabled{% endif %}"
+        href="{% url 'releases:releasepanel-import' release.pk %}"
+        {% if release.deployment %}aria-disabled="true"{% endif %}
+      ><i class="fa fa-upload"></i> Import</a>
+    </span>
+    <span
+      class="d-inline-block"
+      data-bs-title="Export panels report with signed off versions"
+      data-bs-delay='{"show": 600}'
+      data-bs-toggle="tooltip"
+    >
+      <a
+        class="btn btn-outline-light-panelapp"
+        href="{% url 'releases:releasepanel-export' release.pk %}"
+      ><i class="fa fa-download"></i> Export</a>
+    </span>
+  </div>
+
+  <div class="add-top-margin">
+    <form>
+      <div class="d-flex gap-2 add-top-margin add-bottom-margin">
+        <div class="flex-fill">
+          {% include "release/releasepanels/paged.html" %}
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

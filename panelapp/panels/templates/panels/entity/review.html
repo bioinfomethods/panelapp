@@ -1,4 +1,4 @@
-{% load bootstrap3 %}
+{% load django_bootstrap5 %}
 {% load panel_helpers %}
 <h3 class="remove-bottom-margin">Review feedback</h3>
 <p class="lead">{{ entity.evaluation.all|length }} review{{ entity.evaluation.all|pluralize }}</p>
@@ -79,10 +79,10 @@
               </tr>
             {% endif %}
         {% endfor %}
-        <tr class="warning">
-          <td style="width: 40%">Current</td>
-          <td style="width: 60%" data-module="toggle">
-            <div data-module="ajax-form">
+        <tr>
+          <td class="bg-review w-40">Current</td>
+          <td class="bg-review w-60" data-module="toggle">
+            <div>
               {% if part == "Rating" %}
                 <div id="part-rating">
                   {% include "panels/entity/review/part_rating.html" %}
@@ -118,9 +118,17 @@
 
 {% if entity.ready %}
   <h3 class="add-top-margin">Mark {{ entity.label }} as not ready</h3>
-  <form action="{% url 'panels:mark_entity_as_not_ready' panel.panel_id entity_type entity_name %}#!review" method="post" class="add-top-margin well form">
-    {% csrf_token %}
-    <input type="submit" class="btn btn-default" value="Mark as not ready">
+  <form class="add-top-margin add-bottom-margin card form">
+    <button
+      type="button"
+      class="btn"
+      value="Mark as not ready"
+      hx-post="{% url 'panels:mark_entity_as_not_ready' panel.panel_id entity_type entity_name %}"
+      hx-swap="none"
+      hx-disabled-elt="this"
+    >
+      {% include "components/button_loading_content.html" with text="Mark as not ready" %}
+    </button>
   </form>
 {% else %}
   <h3 class="add-top-margin">Mark {{ entity.label }} as ready</h3>
@@ -132,22 +140,23 @@
       <li>been updated based on valid feedback or curated evidence</li>
     </ul>
   </div>
-  <div class="well">
-    <form action="{% url 'panels:mark_entity_as_ready' panel.panel_id entity_type entity_name %}#!review" method="post" class="form">
-      {% csrf_token %}
+  <div class="card card-body bg-light add-bottom-margin">
+    <form class="form">
       <fieldset>
         {% for field in entity_ready_form %}
           <div class="form-group">
-            {% if field.errors %}
-              {% for error in field.errors %}
-                <span class="label label-danger">{{ error|escape }}</span>
-              {% endfor %}
-            {% endif %}
-            {{ field.label_tag }}
-            {% bootstrap_field field show_label=False %}
+            {% bootstrap_field field %}
           </div>
         {% endfor %}
-        <input type="submit" class="btn btn-info" value="Mark as ready">
+        <button
+          type="button"
+          class="btn btn-info"
+          hx-post="{% url 'panels:mark_entity_as_ready' panel.panel_id entity_type entity_name %}"
+          hx-swap="none"
+          hx-disabled-elt="this"
+        >
+          {% include "components/button_loading_content.html" with text="Mark as ready" %}
+        </button>
       </fieldset>
     </form>
   </div>

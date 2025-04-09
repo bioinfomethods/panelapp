@@ -21,30 +21,26 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+from django.contrib.postgres.fields import ArrayField
+from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models
-from model_utils import Choices
-from django.db.models import Count
 from django.db.models import Subquery
 from django.db.models import Value as V
 from django.urls import reverse
-
-from django.core.serializers.json import DjangoJSONEncoder
-from django.contrib.postgres.fields import JSONField
-from django.contrib.postgres.fields import ArrayField
-from django.contrib.postgres.fields import IntegerRangeField
-
 from model_utils.models import TimeStampedModel
 
+from .comment import Comment
+from .entity import (
+    AbstractEntity,
+    EntityManager,
+)
+from .evaluation import Evaluation
+from .evidence import Evidence
 from .gene import Gene
 from .genepanel import GenePanel
-from .evidence import Evidence
-from .evaluation import Evaluation
-from .trackrecord import TrackRecord
-from .comment import Comment
-from .tag import Tag
 from .genepanelsnapshot import GenePanelSnapshot
-from .entity import AbstractEntity
-from .entity import EntityManager
+from .tag import Tag
+from .trackrecord import TrackRecord
 
 
 class GenePanelEntrySnapshotManager(EntityManager):
@@ -134,7 +130,7 @@ class GenePanelEntrySnapshot(AbstractEntity, TimeStampedModel):
         ]
 
     panel = models.ForeignKey(GenePanelSnapshot, on_delete=models.CASCADE)
-    gene = JSONField(encoder=DjangoJSONEncoder)  # copy data from Gene.dict_tr
+    gene = models.JSONField(encoder=DjangoJSONEncoder)  # copy data from Gene.dict_tr
     gene_core = models.ForeignKey(
         Gene, on_delete=models.PROTECT
     )  # reference to the original Gene
@@ -159,7 +155,9 @@ class GenePanelEntrySnapshot(AbstractEntity, TimeStampedModel):
     saved_gel_status = models.IntegerField(
         null=True, db_index=True
     )  # this should be enum red, green, etc
-    transcript = ArrayField(models.CharField(max_length=255, blank=True, null=True), blank=True, null=True)
+    transcript = ArrayField(
+        models.CharField(max_length=255, blank=True, null=True), blank=True, null=True
+    )
 
     objects = GenePanelEntrySnapshotManager()
 
@@ -214,7 +212,7 @@ class GenePanelEntrySnapshot(AbstractEntity, TimeStampedModel):
             "gene": self.gene_core,
             "gene_json": self.gene,
             "gene_name": self.gene.get("gene_name"),
-            "source": [e.name for e in self.evidence.all() if e.is_GEL],
+            "source": list(self.evidence.values_list("name", flat=True)),
             "tags": self.tags.all(),
             "publications": self.publications,
             "phenotypes": self.phenotypes,

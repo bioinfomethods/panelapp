@@ -1,0 +1,178 @@
+volumes:
+  local_postgres_data: {}
+
+services:
+  playwright:
+    image: mcr.microsoft.com/playwright:v1.50.1-jammy
+    volumes:
+      - ../tests/:/work/tests/
+      - ../frontend/:/work/frontend/
+      - ../package.json:/work/package.json
+      - ../package-lock.json:/work/package-lock.json
+      - ../tsconfig.json:/work/tsconfig.json
+      - ../playwright.config.ts:/work/playwright.config.ts
+      - ../playwright-ct.config.ts:/work/playwright-ct.config.ts
+      - ../playwright/index.html:/work/playwright/index.html
+      - ../playwright/index.ts:/work/playwright/index.ts
+      - ../webpack.common.js:/work/webpack.common.js
+      - ../webpack.prod.js:/work/webpack.prod.js
+
+    working_dir: /work/
+    environment:
+      BASE_URL: http://web:8000
+      TEST_Curator: changeme
+      TEST_Reviewer: changeme
+
+  localstack:
+    image: localstack/localstack:3.1.0
+    ports:
+      - "127.0.0.1:4566:4566"            # LocalStack Gateway
+      - "127.0.0.1:4510-4559:4510-4559"  # external services port range
+    environment:
+      - EXTRA_CORS_ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080,http://web:8000
+      - MAIN_CONTAINER_NAME=localstack
+      - SERVICES=sqs,s3,ses
+      - LOCALSTACK_HOST=localstack
+      - DEBUG=${DEBUG- }
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      # Make S3 bucket persistent
+      - PERSISTENCE=1
+#      - DATA_DIR=${DATA_DIR- }
+    volumes:
+      - "${TMPDIR:-/tmp/localstack}:/var/lib/localstack"
+      - "/var/run/docker.sock:/var/run/docker.sock"
+
+  db:
+    image: postgres:14.7
+    ports:
+      - "5432:5432"
+    volumes:
+      - local_postgres_data:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_PASSWORD=secret
+      - POSTGRES_USER=panelapp
+      - POSTGRES_DB=panelapp
+    command: ["postgres", "-c", "log_statement=all", "-c", "work_mem=256MB"]
+
+  web:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+      target: dev
+    image: panelapp
+    restart: on-failure
+    volumes:
+      - ../panelapp:/app/panelapp
+#      - /tmp/panelapp_static:/static
+#      - /tmp/panelapp_media:/media
+    ports:
+      - "8080:8000"
+    depends_on:
+      - db
+#      - rabbitmq
+      - localstack
+    environment:
+#      - DATABASE_URL=postgres://panelapp:secret@db:5432/panelapp
+      - DATABASE_USER=panelapp
+      - DATABASE_PASSWORD=secret
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=panelapp
+      - PYTHONUNBUFFERED=1
+      - DJANGO_SETTINGS_MODULE=panelapp.settings.docker-dev
+      - DJANGO_LOG_LEVEL=DEBUG
+      - HEALTH_ACCESS_TOKEN_LOCATION=/app/health_token
+      - ALLOWED_HOSTS=localhost;web
+      - AWS_REGION=eu-west-2
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+      - USE_S3=TRUE
+      - AWS_S3_STATICFILES_BUCKET_NAME=static-bucket
+      - AWS_STATICFILES_LOCATION=static
+      - AWS_S3_MEDIAFILES_BUCKET_NAME=media-bucket
+      - AWS_MEDIAFILES_LOCATION=media
+#      - STATIC_ROOT=/static
+#      - MEDIA_ROOT=/media
+      - USE_SQS=TRUE
+      - CELERY_BROKER_URL=sqs://@localstack:4566
+#      - CELERY_BROKER_URL=amqp://rabbitmq/panelapp
+    command: manage runserver_plus
+
+  worker:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+      target: dev
+    image: panelapp
+    restart: on-failure
+    volumes:
+      - ../panelapp:/app/panelapp
+#      - /tmp/panelapp_static:/static
+#      - /tmp/panelapp_media:/media
+    ports: []
+    depends_on:
+      - db
+#      - rabbitmq
+    environment:
+#      - DATABASE_URL=postgres://panelapp:secret@db:5432/panelapp
+      - DATABASE_USER=panelapp
+      - DATABASE_PASSWORD=secret
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=panelapp
+      - DJANGO_SETTINGS_MODULE=panelapp.settings.docker-dev
+      - HEALTH_ACCESS_TOKEN_LOCATION=/app/health_token
+      - ALLOWED_HOSTS=localhost;web
+#      - MEDIA_ROOT=/media
+      - AWS_REGION=eu-west-2
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+      - USE_S3=TRUE
+      - AWS_S3_MEDIAFILES_BUCKET_NAME=media-bucket
+      - AWS_MEDIAFILES_LOCATION=media
+      - USE_SQS=TRUE
+      - CELERY_BROKER_URL=sqs://@localstack:4566
+#      - CELERY_BROKER_URL=amqp://rabbitmq/panelapp
+    command: celery --app panelapp worker --task-events --concurrency 1 --loglevel INFO
+
+  beat:
+    build:
+      context: ../
+      dockerfile: ./docker/Dockerfile
+      target: dev
+    image: panelapp
+    restart: on-failure
+    volumes:
+      - ../panelapp:/app/panelapp
+#      - /tmp/panelapp_static:/static
+#      - /tmp/panelapp_media:/media
+    ports: []
+    depends_on:
+      - db
+#      - rabbitmq
+    environment:
+#      - DATABASE_URL=postgres://panelapp:secret@db:5432/panelapp
+      - DATABASE_USER=panelapp
+      - DATABASE_PASSWORD=secret
+      - DATABASE_HOST=db
+      - DATABASE_PORT=5432
+      - DATABASE_NAME=panelapp
+      - DJANGO_SETTINGS_MODULE=panelapp.settings.docker-dev
+      - HEALTH_ACCESS_TOKEN_LOCATION=/app/health_token
+      - ALLOWED_HOSTS=localhost;web
+#      - MEDIA_ROOT=/media
+      - AWS_REGION=eu-west-2
+      - AWS_ACCESS_KEY_ID=dummy
+      - AWS_SECRET_ACCESS_KEY=dummy
+      - USE_S3=TRUE
+      - AWS_S3_MEDIAFILES_BUCKET_NAME=media-bucket
+      - AWS_MEDIAFILES_LOCATION=media
+      - USE_SQS=TRUE
+      - CELERY_BROKER_URL=sqs://@localstack:4566
+#      - CELERY_BROKER_URL=amqp://rabbitmq/panelapp
+    command: celery --app panelapp beat --loglevel INFO --pidfile=
+
+#  rabbitmq:
+#    image: rabbitmq
+#    environment:
+#      - RABBITMQ_DEFAULT_VHOST=panelapp

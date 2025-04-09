@@ -21,22 +21,29 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-from base64 import b64decode, b64encode
-from django.db import models
-from django.contrib.auth.models import AbstractUser
-from django.contrib.auth.models import BaseUserManager
-from django.core import signing
+from base64 import (
+    b64decode,
+    b64encode,
+)
+
 from django.conf import settings
-from django.urls import reverse
+from django.contrib.auth.models import (
+    AbstractUser,
+    BaseUserManager,
+)
+from django.core import signing
+from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from rest_framework.authtoken.models import Token
-
+from django.urls import reverse
 from model_utils import Choices
 from model_utils.models import TimeStampedModel
+from rest_framework.authtoken.models import Token
 
-from .tasks import revierwer_confirmed_email
-from .tasks import send_verification_email
+from .tasks import (
+    revierwer_confirmed_email,
+    send_verification_email,
+)
 
 
 class UserManager(BaseUserManager):

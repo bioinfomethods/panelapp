@@ -1,5 +1,5 @@
 {% extends "default.html" %}
-{% load staticfiles %}
+{% load static %}
 {% load panel_helpers %}
 
 {% block content %}
@@ -18,16 +18,16 @@
 
     <div class="table-responsive">
         <table class="table table-bordered" data-module="filterable-table">
-            <thead>
-                <tr class="table-header">
+            <thead class="table-light">
+                <tr>
                     <th>Gene</th>
-                    <th style="width: 43%">
+                    <th class="w-43">
                         Reviews to be copied<br />
                         <a href="{% url 'panels:detail' panel_1.panel_id %}">
                             {{ panel_1.level4title.name }}
                         </a>
                     </th>
-                    <th style="width: 43%">
+                    <th class="w-43">
                         Existing reviews<br />
                         <a href="{% url 'panels:detail' panel_2.panel_id %}">
                             {{ panel_2.level4title.name }}
@@ -65,8 +65,8 @@
                     </tr>
                 {% endfor %}
             </tbody>
-            <tfoot>
-                <tr class="table-header">
+            <tfoot class="table-light">
+                <tr>
                     <td colspan="3" class="text-center">
                         <form class="add-top-margin add-bottom-margin" action="{% url 'panels:copy_reviews' panel_1.panel_id panel_2.panel_id %}" method="post">
                             {% csrf_token %}

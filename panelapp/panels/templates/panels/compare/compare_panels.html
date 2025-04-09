@@ -1,17 +1,17 @@
 {% extends "default.html" %}
-{% load staticfiles %}
+{% load static %}
 {% load panel_helpers %}
 {% block content %}
 
-  <ol class="breadcrumb">
-    <li>
+  <ol class="breadcrumb add-top-margin">
+    <li class="breadcrumb-item">
       <a href="{% url 'panels:index' %}">Panels</a>
     </li>
-    <li class="active">Compare panels</li>
+    <li class="breadcrumb-item active">Compare panels</li>
   </ol>
 
   <h1>
-    <p class="text-muted normal add-label-margin" style="font-size: 18px">Comparing panels</p>
+    <p class="text-muted normal add-label-margin fs-5">Comparing panels</p>
     {% block title %}“{{ panel_1.level4title.name }}” and “{{ panel_2.level4title.name }}”{% endblock %}
   </h1>
 
@@ -22,15 +22,15 @@
   {% if panel_1 and panel_2 %}
   <div class="table-responsive add-top-margin">
     <table class="table table-bordered" data-module="filterable-table">
-      <thead>
+      <thead class="table-light">
         {% include "panels/compare/compare_table_heading.html" %}
-        <tr class="if-no-js-hide table-header-secondary">
+        <tr class="if-no-js-hide">
           <td colspan="100">
             <form>
               <label for="panel-filter" class="rm">Filter genes</label>
               <div class="input-group">
                 <input id="panel-filter" type="text" class="form-control normal js-filter-table-input" placeholder="Filter genes">
-                <span class="input-group-addon js-filter-table-count" data-singular="gene" data-plural="genes">
+                <span class="input-group-text js-filter-table-count" data-singular="gene" data-plural="genes">
                   0 genes
                 </span>
               <div>
@@ -41,10 +41,10 @@
       <tbody>
         {% for gene in comparison %}
           <tr>
-            <td class="text-right">
+            <td class="text-end">
               {% if gene.1 %}
                 <h4 class="remove-top-margin remove-bottom-margin">
-                  <span style="font-size: 16px" class="gel-banner {{ gene.1|gene_list_class }}" title="{{ gene.1|gene_list_name }}">
+                  <span class="fs-6 gel-banner {{ gene.1|gene_list_class }}" title="{{ gene.1|gene_list_name }}">
                     {{ gene.1|gene_list_short_name }}
                   </span> <a href="{% url 'panels:evaluation' gene.1.panel.panel_id 'gene' gene.0 %}" class="link-inherit gel-text {{ gene.1|gene_list_class }} js-open-on-submit">{{ gene.0 }}</a>
                 </h4>
@@ -59,7 +59,7 @@
             <td>
               {% if gene.2 %}
                 <h4 class="remove-top-margin remove-bottom-margin">
-                  <a href="{% url 'panels:evaluation' gene.2.panel.panel_id 'gene' gene.0 %}" class="link-inherit gel-text {{ gene.2|gene_list_class }} js-open-on-submit">{{ gene.0 }}</a> <span style="font-size: 12px" class="gel-banner {{ gene.2|gene_list_class }}" title="{{ gene.2|gene_list_name }}">
+                  <a href="{% url 'panels:evaluation' gene.2.panel.panel_id 'gene' gene.0 %}" class="link-inherit gel-text {{ gene.2|gene_list_class }} js-open-on-submit">{{ gene.0 }}</a> <span class="fs-6 gel-banner {{ gene.2|gene_list_class }}" title="{{ gene.2|gene_list_name }}">
                     {{ gene.2|gene_list_short_name }}
                   </span>
                 </h4>
