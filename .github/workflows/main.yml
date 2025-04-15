@@ -3,9 +3,7 @@ name: Main workflow, test and deploy to AWS
 on:
   push:
     branches:
-      - main
-      - roo
-      - develop
+      - feat-genomicsengland-upstream
 
 permissions:
   id-token: write
@@ -23,19 +21,9 @@ jobs:
         shell: bash
         run: |
           echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
-          echo "CI_SHA_SHORT=$CI_SHA_SHORT"
-          if [ "$CI_ACTION_REF_NAME_SLUG" == "main" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "master" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "roo" ]; then
-            echo "env_name=prod" >> "$GITHUB_OUTPUT"
-            echo "github_actions_environment=prod" >> "$GITHUB_OUTPUT"
-          elif [ "$CI_ACTION_REF_NAME_SLUG" == "develop" ]; then
-            # FIXME: Only temporarily
-            echo "env_name=prod" >> "$GITHUB_OUTPUT"
-            echo "github_actions_environment=mcri-vcgs-prod" >> "$GITHUB_OUTPUT"
-          else
-            echo "env_name=test" >> "$GITHUB_OUTPUT"
-            echo "github_actions_environment=test" >> "$GITHUB_OUTPUT"
-          fi
-          echo "env_name=$env_name"
+          echo "CI_SHA_SHORT=$CI_SHA_SHORT" >> $GITHUB_OUTPUT
+          echo "github_actions_environment=mcri-vcgs-staging" >> "$GITHUB_OUTPUT"
+          echo "env_name=staging" >> "$GITHUB_OUTPUT"
           echo "GITHUB_OUTPUT=$GITHUB_OUTPUT"
 
       - name: Log outputs
@@ -47,18 +35,20 @@ jobs:
 
     outputs:
       env_name: ${{ steps.init_env.outputs.env_name }}
+      CI_SHA_SHORT: ${{ steps.init_env.outputs.CI_SHA_SHORT }}
       github_actions_environment: ${{ steps.init_env.outputs.github_actions_environment }}
 
   tests:
     needs: init
+    if: "!contains(github.event.head_commit.message, '[skip tests]')"
     environment: ${{ needs.init.outputs.github_actions_environment }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [ 3.9 ]
+        python-version: [ 3.11 ]
     services:
       postgres:
-        image: postgres:13
+        image: postgres:14.7
         env:
           POSTGRES_DB: panelapp
           POSTGRES_USER: panelapp
@@ -77,6 +67,9 @@ jobs:
       DATABASE_URL: postgres://panelapp:secret@localhost:5432/panelapp
       DJANGO_SETTINGS_MODULE: panelapp.settings.test
       DJANGO_LOG_LEVEL: INFO
+      POETRY_VERSION: 1.8.5
+      POETRY_PLUGIN_BUNDLE_VERSION: 1.5.0
+
     steps:
       - name: GitHub Environment Variables Action
         uses: FranzDiebold/github-env-vars-action@v2.8.0
@@ -87,21 +80,46 @@ jobs:
           submodules: 'recursive'
 
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
-          sudo apt-get install -y libpq-dev gcc python3-dev
-          pip install pip==23.3.2
-          pip install .[dev,tests]
-          pip install pytest pytest-runner
+          sudo apt-get update
+          sudo apt-get install -y \
+            git curl libjpeg-dev zlib1g-dev gcc libpq-dev \
+            libcurl4-openssl-dev libffi-dev build-essential python3-dev \
+            linux-headers-generic libyaml-dev
+
+      - name: Install Poetry & Run tests
+        run: |
+          python -m venv .poetry
+          source .poetry/bin/activate
+          pip install poetry==${{ env.POETRY_VERSION }}
+
+      - name: Add Poetry Plugin
+        run: |
+          source .poetry/bin/activate && poetry lock --no-update
+          poetry self add poetry-plugin-bundle==${{ env.POETRY_PLUGIN_BUNDLE_VERSION }}
+
+      - name: Check Poetry Plugins & Lock
+        run: |
+          source .poetry/bin/activate && poetry lock --no-update
+          poetry self show plugins
+          poetry lock --no-update
+
+      - name: Install dependencies
+        run: |
+          source .poetry/bin/activate && poetry lock --no-update
+          poetry install --no-root --only main,test -vvv
 
       - name: Run tests
-        run: pytest
+        run: |
+          source .poetry/bin/activate && poetry lock --no-update
+          poetry run pytest --cov-report term --cov-report xml
 
   build:
     needs: init
@@ -135,64 +153,63 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
+      - name: Debug workspace structure
+        run: |
+          echo "Current directory: $(pwd)"
+          echo "Contents: "
+          ls -R
+
       - name: Build, tag, and push image to Amazon ECR
         id: build_image
         shell: bash
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         run: |
-          export PACKAGE_NAME=$(python setup.py --name)
-          export BASE_REPO_NAME="${PACKAGE_NAME}_base_${{needs.init.outputs.env_name}}"
-          export WEB_REPO_NAME="${PACKAGE_NAME}_web_${{needs.init.outputs.env_name}}"
-          export WORKER_REPO_NAME="${PACKAGE_NAME}_worker_${{needs.init.outputs.env_name}}"
-          echo "AWS_REGION=$AWS_REGION"
-          echo "PACKAGE_NAME=$PACKAGE_NAME, BASE_REPO_NAME=$BASE_REPO_NAME, WEB_REPO_NAME=$WEB_REPO_NAME, WORKER_REPO_NAME=$WORKER_REPO_NAME"
-          echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
-          echo "CI_SHA_SHORT=$CI_SHA_SHORT"
+          export IMAGE_TAG="$CI_SHA_SHORT"
+          export BASE_REPO_NAME="panelapp_base_${{ needs.init.outputs.env_name }}"
+          export WEB_REPO_NAME="panelapp_web_${{ needs.init.outputs.env_name }}"
+          export WORKER_REPO_NAME="panelapp_worker_${{ needs.init.outputs.env_name }}"
 
-          docker build -t "$ECR_REGISTRY/$BASE_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" --file ./docker/cloud/Dockerfile-base .
-          docker tag "$ECR_REGISTRY/$BASE_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$BASE_REPO_NAME:$CI_SHA_SHORT"
-          docker push "$ECR_REGISTRY/$BASE_REPO_NAME:$CI_ACTION_REF_NAME_SLUG"
-          docker push "$ECR_REGISTRY/$BASE_REPO_NAME:$CI_SHA_SHORT"
+          echo "Building and pushing base image..."
+          docker build \
+            --file docker/Dockerfile \
+            --target base \
+            --build-arg python_base=python:3.11.9-alpine3.19 \
+            --build-arg node_base=node:20.14.0-alpine3.19 \
+            --tag "$ECR_REGISTRY/$BASE_REPO_NAME:$IMAGE_TAG" .
+          docker push "$ECR_REGISTRY/$BASE_REPO_NAME:$IMAGE_TAG"
 
-          # if [ "${{ needs.init.outputs.env_name }}" != "prod" ]; then
-            echo "Tagging latest base image for non-prod environment"
-            docker tag "$ECR_REGISTRY/$BASE_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$BASE_REPO_NAME:latest"
+          echo "Building and pushing web image..."
+          docker build \
+            --file docker/Dockerfile \
+            --target prod \
+            --build-arg BASE_IMAGE="$ECR_REGISTRY/$BASE_REPO_NAME:$IMAGE_TAG" \
+            --tag "$ECR_REGISTRY/$WEB_REPO_NAME:$IMAGE_TAG" .
+          docker push "$ECR_REGISTRY/$WEB_REPO_NAME:$IMAGE_TAG"
+
+          echo "Building and pushing worker image..."
+          docker build \
+            --file docker/Dockerfile \
+            --target prod \
+            --build-arg BASE_IMAGE="$ECR_REGISTRY/$BASE_REPO_NAME:$IMAGE_TAG" \
+            --tag "$ECR_REGISTRY/$WORKER_REPO_NAME:$IMAGE_TAG" .
+          docker push "$ECR_REGISTRY/$WORKER_REPO_NAME:$IMAGE_TAG"
+
+          # Optionally push 'latest' tag for non-prod
+          if [ "${{ needs.init.outputs.env_name }}" != "prod" ]; then
+            docker tag "$ECR_REGISTRY/$BASE_REPO_NAME:$IMAGE_TAG" "$ECR_REGISTRY/$BASE_REPO_NAME:latest"
+            docker tag "$ECR_REGISTRY/$WEB_REPO_NAME:$IMAGE_TAG" "$ECR_REGISTRY/$WEB_REPO_NAME:latest"
+            docker tag "$ECR_REGISTRY/$WORKER_REPO_NAME:$IMAGE_TAG" "$ECR_REGISTRY/$WORKER_REPO_NAME:latest"
+
             docker push "$ECR_REGISTRY/$BASE_REPO_NAME:latest"
-          # fi
-
-          # if [ "${{ needs.init.outputs.env_name }}" != "prod" ]; then
-            echo "Tagging latest base image for non-prod environment"
-            docker tag "$ECR_REGISTRY/$BASE_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$BASE_REPO_NAME:latest"
-            docker push "$ECR_REGISTRY/$BASE_REPO_NAME:latest"
-          # fi
-
-          docker build -t "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" --build-arg "BASE_IMAGE=$ECR_REGISTRY/$BASE_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" --file ./docker/cloud/Dockerfile-web .
-          docker tag "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_SHA_SHORT"
-          docker push "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG"
-          docker push "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_SHA_SHORT"
-
-          # if [ "${{ needs.init.outputs.env_name }}" != "prod" ]; then
-            echo "Tagging latest web image for non-prod environment"
-            docker tag "$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$WEB_REPO_NAME:latest"
             docker push "$ECR_REGISTRY/$WEB_REPO_NAME:latest"
-          # fi
-
-          echo "web_image=$ECR_REGISTRY/$WEB_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" >> "$GITHUB_OUTPUT"
-
-          docker build -t "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" --build-arg "BASE_IMAGE=$ECR_REGISTRY/$BASE_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" --file ./docker/cloud/Dockerfile-worker .
-          docker tag "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_SHA_SHORT"
-          docker push "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG"
-          docker push "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_SHA_SHORT"
-
-          # if [ "${{ needs.init.outputs.env_name }}" != "prod" ]; then
-            echo "Tagging latest worker image for non-prod environment"
-            docker tag "$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" "$ECR_REGISTRY/$WORKER_REPO_NAME:latest"
             docker push "$ECR_REGISTRY/$WORKER_REPO_NAME:latest"
-          # fi
-          echo "worker_image=$ECR_REGISTRY/$WORKER_REPO_NAME:$CI_ACTION_REF_NAME_SLUG" >> "$GITHUB_OUTPUT"
+          fi
+
+          echo "web_image=$ECR_REGISTRY/$WEB_REPO_NAME:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+          echo "worker_image=$ECR_REGISTRY/$WORKER_REPO_NAME:$IMAGE_TAG" >> "$GITHUB_OUTPUT"
+
     outputs:
-      base_image: ${{ steps.build_image.outputs.base_image }}
       web_image: ${{ steps.build_image.outputs.web_image }}
       worker_image: ${{ steps.build_image.outputs.worker_image }}
 
@@ -218,6 +235,7 @@ jobs:
       TF_VAR_terraform_infra_state_s3_bucket: ${{ vars.TERRAFORM_INFRA_STATE_S3_BUCKET }}
       TF_VAR_terraform_shared_state_s3_bucket: ${{ vars.TERRAFORM_SHARED_STATE_S3_BUCKET }}
       TF_VAR_cognito_suffix: ${{ vars.COGNITO_SUFFIX }}
+      TF_VAR_image_tag: ${{ needs.init.outputs.CI_SHA_SHORT }}
 
     steps:
       - name: GitHub Environment Variables Action
@@ -265,15 +283,28 @@ jobs:
           cd infra/terraform/panelapp
           terraform validate -no-color
 
-      - name: Deploy web
+      - name: Terraform Plan ECS task defs
         run: |
-          export WORKING_DIR=$(pwd)
-          export TF_VAR_image_tag="$CI_SHA_SHORT"
           cd infra/terraform/panelapp
-          terraform apply -auto-approve -target=aws_ecs_service.panelapp_web -target=aws_ecs_task_definition.panelapp_web -target=aws_ecs_service.panelapp_worker -target=aws_ecs_task_definition.panelapp_worker
-          cd $WORKING_DIR
+          terraform plan \
+            -target=aws_ecs_task_definition.panelapp_web \
+            -target=aws_ecs_service.panelapp_web \
+            -target=aws_ecs_task_definition.panelapp_worker \
+            -target=aws_ecs_service.panelapp_worker
+
+      - name: Terraform Apply ECS task defs
+        run: |
+          cd infra/terraform/panelapp
+          terraform apply -auto-approve \
+            -target=aws_ecs_task_definition.panelapp_web \
+            -target=aws_ecs_service.panelapp_web \
+            -target=aws_ecs_task_definition.panelapp_worker \
+            -target=aws_ecs_service.panelapp_worker
+
+
+      - name: Run migrations & collectstatic
+        run: |
           pip install boto3 argparse
+          python3 infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-${{ needs.init.outputs.env_name }} -panelapp
           sleep 30
-          python3 infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-${{needs.init.outputs.env_name}} -panelapp
-          sleep 30
-          python3 infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-${{needs.init.outputs.env_name}} -panelapp
+          python3 infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-${{ needs.init.outputs.env_name }} -panelapp
