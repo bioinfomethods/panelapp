@@ -84,5 +84,5 @@ FROM base AS prod
 COPY --chown=app:app --from=backend_build_prod /venv /venv
 
 # FIXME
-COPY --chown=app:app ./manage.py /app/manage.py
+COPY --chown=app:app ./panelapp/manage.py /app/manage.py
 COPY --chown=app:app ./panelapp /app/panelapp
