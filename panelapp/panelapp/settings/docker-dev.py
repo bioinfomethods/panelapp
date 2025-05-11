@@ -26,6 +26,9 @@
 
 import socket  # Needed to display django debug toolbar from docker container
 
+import ddtrace
+ddtrace.tracer.enabled = False
+
 from panelapp.content_security_policy import aws as csp_aws
 
 from .base import *  # noqa
