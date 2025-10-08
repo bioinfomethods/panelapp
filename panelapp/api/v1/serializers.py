@@ -77,6 +77,7 @@ class PanelSerializer(serializers.ModelSerializer):
             "name",
             "disease_group",
             "disease_sub_group",
+            "description",
             "status",
             "version",
             "version_created",
@@ -91,6 +92,7 @@ class PanelSerializer(serializers.ModelSerializer):
     name = serializers.StringRelatedField(source="level4title.name")
     disease_group = serializers.StringRelatedField(source="level4title.level2title")
     disease_sub_group = serializers.StringRelatedField(source="level4title.level3title")
+    description = serializers.CharField(source="level4title.description", read_only=True)
     status = serializers.StringRelatedField(source="panel.status")
     version = serializers.CharField(read_only=True)
     version_created = serializers.DateTimeField(source="created", read_only=True)

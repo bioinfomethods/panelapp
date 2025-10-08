@@ -205,6 +205,17 @@ class TestAPIV1(LoginExternalUser):
         ).json()
         self.assertEqual(r["version_created"], current_time)
 
+    def test_panel_description_in_response(self):
+        r = self.client.get(
+            reverse_lazy("api:v1:panels-detail", args=(self.gpes.panel.panel.pk,))
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertIn("description", r.json())
+        self.assertEqual(
+            r.json()["description"],
+            self.gpes.panel.level4title.description
+        )
+
     def test_get_search_gene(self):
         url = reverse_lazy(
             "api:v1:genes-detail", args=(self.gpes.gene_core.gene_symbol,)
