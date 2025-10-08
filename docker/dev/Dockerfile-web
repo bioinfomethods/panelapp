@@ -1,5 +1,8 @@
 FROM python:3.9-bullseye
 
+COPY README* *build.d /build.d/
+RUN bash -c 'for i in $(ls /build.d/*.sh 2>/dev/null | sort) ; do source $i ; done'
+
 RUN mkdir -p /app/panelapp
 
 COPY ./panelapp /app/panelapp
