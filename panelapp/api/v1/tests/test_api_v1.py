@@ -493,6 +493,14 @@ class TestAPIV1(LoginExternalUser):
             list(sorted(r.json()["genes"], key=lambda x: x.get("gene_symbol"))),
         )
 
+        # Test child_panel_ids field
+        self.assertIn("child_panel_ids", r.json())
+        self.assertEqual(r.json()["child_panel_ids"], [self.gps_public.panel.pk])
+
+        # Test regular panel has empty child_panel_ids
+        self.assertIn("child_panel_ids", r_direct.json())
+        self.assertEqual(r_direct.json()["child_panel_ids"], [])
+
     def test_evaluations(self):
         r = self.client.get(
             reverse_lazy(
