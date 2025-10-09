@@ -25,7 +25,6 @@
 
 """
 from django.conf import settings
-from django.conf.urls import url
 from django.urls import path
 from django.conf.urls import include
 from django.contrib import admin
@@ -37,6 +36,7 @@ from .autocomplete import SourceAutocomplete
 from .autocomplete import TagsAutocomplete
 from .autocomplete import SimplePanelsAutocomplete
 from .autocomplete import SimplePanelTypesAutocomplete
+from .autocomplete import PanelsWithoutGeneAutocomplete
 
 
 from django.urls import re_path
@@ -87,6 +87,11 @@ urlpatterns = [
         "autocomplete/panels/simple/",
         SimplePanelsAutocomplete.as_view(),
         name="autocomplete-simple-panels",
+    ),
+    path(
+        "autocomplete/panels/without-gene/",
+        PanelsWithoutGeneAutocomplete.as_view(),
+        name="autocomplete-panels-without-gene",
     ),
     path(
         "autocomplete/panels/type/",

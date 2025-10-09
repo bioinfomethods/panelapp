@@ -50,6 +50,7 @@ from .views import CopyReviewsView
 from .views import DownloadAllGenes
 from .views import DownloadAllPanels
 from .views import ActivityListView
+from .views import CopyGeneView
 from .views import DownloadAllSTRs
 from .views import DownloadAllRegions
 from .views import GeneDetailRedirectView
@@ -137,6 +138,11 @@ urlpatterns = [
         ),
         GenePanelSpanshotView.as_view(),
         name="evaluation",
+    ),
+    url(
+        r"^(?P<pk>[0-9]+)/gene/(?P<gene_symbol>[\w\-]+)/copy$",
+        CopyGeneView.as_view(),
+        name="copy_gene_from_panel",
     ),
     url(
         r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/edit$".format(
