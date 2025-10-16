@@ -96,6 +96,9 @@ class GenePanelEntrySnapshotManager(EntityManager):
 
         return (
             qs.annotate(
+                number_of_reviewers=models.Count("evaluation__user", distinct=True),
+                number_of_evaluated_genes=models.Count("evaluation"),
+                number_of_evaluated_entities=models.Count("evaluation"),
                 entity_type=V("gene", output_field=models.CharField()),
                 entity_name=models.F("gene_core__gene_symbol"),
             )
