@@ -60,7 +60,7 @@
                                 {% endif %}
                             </label>
                             <div class="panel panel-default" style="margin-left: 20px; margin-bottom: 15px;">
-                                {% include "panels/entity/entity_evaluation.html" with panel=source_panel entity=source_gene_entry %}
+                                {% include "panels/entity/entity_evaluation.html" with panel=source_panel entity=source_gene_entry entity_type='gene' entity_name=gene_symbol %}
                             </div>
                         {% endfor %}
                     {% else %}

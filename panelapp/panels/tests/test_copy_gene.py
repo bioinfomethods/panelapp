@@ -8,6 +8,7 @@ from panels.tests.factories import (
     GenePanelSnapshotFactory,
     GenePanelEntrySnapshotFactory,
     EvaluationFactory,
+    CommentFactory,
 )
 from panels.forms import CopyGeneForm
 
@@ -175,6 +176,37 @@ class CopyGeneTest(LoginGELUser):
         self.assertIn("form", response.context)
         self.assertEqual(response.context["gene_symbol"], gene.gene_symbol)
         self.assertEqual(response.context["source_panel"].pk, panel.pk)
+
+    def test_copy_gene_view_with_user_comments(self):
+        """Test GET request to copy gene view when logged-in user has comments on reviews.
+
+        This tests the fix for a bug where the template would fail with NoReverseMatch
+        when trying to render edit/delete comment links because entity_name wasn't
+        passed to the included entity_evaluation.html template.
+        """
+        gene = GeneFactory()
+        panel = GenePanelSnapshotFactory()
+        gene_entry = GenePanelEntrySnapshotFactory.create(gene_core=gene, panel=panel)
+
+        # Create an evaluation from the logged-in user with a comment
+        evaluation = EvaluationFactory(user=self.gel_user)
+        gene_entry.evaluation.add(evaluation)
+
+        # Add a comment to the evaluation
+        comment = CommentFactory(user=self.gel_user)
+        evaluation.comments.add(comment)
+
+        url = reverse_lazy(
+            "panels:copy_gene_from_panel",
+            kwargs={"pk": panel.panel.pk, "gene_symbol": gene.gene_symbol},
+        )
+        response = self.client.get(url)
+
+        # Should render successfully without NoReverseMatch error
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("form", response.context)
+        # Verify the review and comment are shown in the response
+        self.assertContains(response, comment.comment)
 
     def test_copy_gene_view_post_success(self):
         """Test successful POST to copy gene view."""
