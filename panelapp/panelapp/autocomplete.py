@@ -97,7 +97,7 @@ class PanelsWithoutGeneAutocomplete(Select2QuerySetView):
 
         # Get all active panels with annotations (needed for is_super_panel)
         qs = GenePanelSnapshot.objects.get_active_annotated(
-            internal=is_admin, deleted=False
+            all=is_admin, internal=is_admin, deleted=False
         ).exclude(is_super_panel=True)
 
         # If gene_symbol is provided, filter out panels that already have this gene
