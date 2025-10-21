@@ -84,6 +84,12 @@
             {% with shared_panels=sharing_panels %}
                 {{ entity.gene.gene_symbol }} is in <a href="{% url 'panels:entity_detail' entity.gene.gene_symbol %}">{{ shared_panels|length }} panel{{ shared_panels|pluralize }}</a>
             {% endwith %}
+            {% if request.user.is_authenticated and request.user.reviewer.is_GEL and entity.is_gene %}
+                <br />
+                <a href="{% url 'panels:copy_gene_from_panel' pk=view.panel.pk gene_symbol=entity.gene.gene_symbol %}" class="btn btn-primary btn-sm">
+                  <i class="fa fa-copy"></i> Copy to other panels
+                </a>
+            {% endif %}
             {% endif %}
         </div>
 

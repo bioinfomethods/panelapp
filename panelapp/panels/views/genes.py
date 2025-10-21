@@ -37,6 +37,7 @@ from django.http import StreamingHttpResponse
 from panelapp.mixins import GELReviewerRequiredMixin
 from panels.forms import ComparePanelsForm
 from panels.forms import CopyReviewsForm
+from panels.forms import CopyGeneForm
 
 from panels.models import GenePanel
 from panels.models import GenePanelSnapshot
@@ -660,3 +661,50 @@ class DownloadAllGenes(GELReviewerRequiredMixin, View):
         )
         response["Content-Disposition"] = attachment
         return response
+
+
+class CopyGeneView(GELReviewerRequiredMixin, FormView):
+    template_name = "panels/copy_gene.html"
+    form_class = CopyGeneForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["gene_symbol"] = self.kwargs["gene_symbol"]
+        kwargs["user"] = self.request.user
+        kwargs["source_panel_id"] = self.kwargs["pk"]
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["gene_symbol"] = self.kwargs["gene_symbol"]
+        ctx["source_panel"] = source_panel = GenePanel.objects.get_panel(
+            pk=str(self.kwargs["pk"])
+        ).active_panel
+        ctx["source_gene_entry"] = source_panel.get_gene(
+            self.kwargs["gene_symbol"], prefetch_extra=True
+        )
+        ctx["entity_type"] = "gene"
+        return ctx
+
+    def form_valid(self, form):
+        try:
+            form.copy_gene_to_panels()
+            panel_count = len(form.cleaned_data["target_panels"])
+            msg = "Successfully copied gene {} to {} panel{}".format(
+                self.kwargs["gene_symbol"],
+                panel_count,
+                pluralize(panel_count),
+            )
+            messages.success(self.request, msg)
+        except Exception as e:
+            messages.error(
+                self.request,
+                f"Failed to copy gene: {e}",
+            )
+
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "panels:entity_detail", kwargs={"slug": self.kwargs["gene_symbol"]}
+        )

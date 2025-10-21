@@ -39,6 +39,7 @@ from .genes import ComparePanelsView
 from .genes import CompareGeneView
 from .genes import CopyReviewsView
 from .genes import DownloadAllGenes
+from .genes import CopyGeneView
 from .entities import EntityReviewView
 from .entities import PanelEditEntityView
 from .entities import PanelAddEntityView
