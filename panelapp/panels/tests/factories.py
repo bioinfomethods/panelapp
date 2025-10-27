@@ -113,7 +113,7 @@ class EvidenceFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Evidence
 
-    name = factory.LazyAttribute(lambda n: Evidence.ALL_SOURCES[randint(0, 9)])
+    name = factory.LazyAttribute(lambda n: choice(Evidence.DROPDOWN_SOURCES))
     rating = 5
     comment = ""
     reviewer = factory.SubFactory("accounts.tests.factories.ReviewerFactory")

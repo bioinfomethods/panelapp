@@ -124,7 +124,7 @@ def random_str_data(data_str):
         "normal_repeats": random.randint(1, 5),
         "pathogenic_repeats": random.randint(6, 15),
         "gene": data_str.gene_core if hasattr(data_str, "gene_core") else None,
-        "sources": [Evidence.ALL_SOURCES[random.randint(0, 9)]],
+        "sources": [random.choice(Evidence.DROPDOWN_SOURCES)],
         "publications": get_random_sentences(),
         "phenotypes": get_random_sentences(),
         "rating": random.choice(
@@ -139,7 +139,7 @@ def random_str_data(data_str):
 
 def random_evaluation_data(user):
     return {
-        "source": [Evidence.ALL_SOURCES[random.randint(0, 9)]],
+        "source": [random.choice(Evidence.DROPDOWN_SOURCES)],
         "phenotypes": get_random_sentences(),
         "publications": [],
         "rating": random.choice(

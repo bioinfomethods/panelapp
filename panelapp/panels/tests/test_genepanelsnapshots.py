@@ -137,7 +137,7 @@ class GenePanelSnapshotTest(LoginGELUser):
         )
         gene_data = {
             "gene": gene.pk,
-            "source": Evidence.ALL_SOURCES[randint(0, 11)],
+            "source": choice(Evidence.DROPDOWN_SOURCES),
             "tags": [TagFactory().pk],
             "publications": "{};{};{}".format(*fake.sentences(nb=3)),
             "phenotypes": "{};{};{}".format(*fake.sentences(nb=3)),
@@ -215,7 +215,7 @@ class GenePanelSnapshotTest(LoginGELUser):
         publication = gpes.publications[0]
         phenotype = gpes.publications[1]
 
-        new_evidence = Evidence.ALL_SOURCES[randint(0, 9)]
+        new_evidence = choice(Evidence.DROPDOWN_SOURCES)
         original_evidences = set([ev.name for ev in gpes.evidence.all()])
         original_evidences.add(new_evidence)
 
@@ -606,7 +606,7 @@ class GenePanelSnapshotTest(LoginGELUser):
         gene_data = {
             "gene": new_gene.pk,
             "gene_name": "Other name",
-            "source": set([source, Evidence.ALL_SOURCES[randint(0, 9)]]),
+            "source": set([source, choice(Evidence.DROPDOWN_SOURCES)]),
             "tags": [TagFactory().pk] + [tag.pk for tag in gpes.tags.all()],
             "publications": ";".join([publication, fake.sentence()]),
             "phenotypes": ";".join([phenotype, fake.sentence(), fake.sentence()]),
@@ -652,7 +652,7 @@ class GenePanelSnapshotTest(LoginGELUser):
             "required_overlap_percentage": randint(0, 100),
             "gene": region.gene_core.pk,
             "gene_name": "Other name",
-            "source": set([source, Evidence.ALL_SOURCES[randint(0, 9)]]),
+            "source": set([source, choice(Evidence.DROPDOWN_SOURCES)]),
             "tags": [TagFactory().pk] + [tag.name for tag in region.tags.all()],
             "publications": ";".join([publication, fake.sentence()]),
             "phenotypes": ";".join([phenotype, fake.sentence(), fake.sentence()]),

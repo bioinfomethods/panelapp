@@ -22,7 +22,7 @@
 ## under the License.
 ##
 import os
-from random import randint
+from random import randint, choice
 from django.core import mail
 from django.test import Client
 from django.urls import reverse_lazy
@@ -97,7 +97,7 @@ class STRTest(LoginGELUser):
             "normal_repeats": "2",
             "pathogenic_repeats": "5",
             "gene": gene.pk,
-            "source": Evidence.ALL_SOURCES[randint(0, 9)],
+            "source": choice(Evidence.DROPDOWN_SOURCES),
             "tags": [TagFactory().pk],
             "publications": "{};{};{}".format(*fake.sentences(nb=3)),
             "phenotypes": "{};{};{}".format(*fake.sentences(nb=3)),
@@ -144,7 +144,7 @@ class STRTest(LoginGELUser):
             "repeated_sequence": "ATAT",
             "normal_repeats": "2",
             "pathogenic_repeats": "5",
-            "source": Evidence.ALL_SOURCES[randint(0, 9)],
+            "source": choice(Evidence.DROPDOWN_SOURCES),
             "tags": [TagFactory().pk],
             "publications": "{};{};{}".format(*fake.sentences(nb=3)),
             "phenotypes": "{};{};{}".format(*fake.sentences(nb=3)),
@@ -230,7 +230,7 @@ class STRTest(LoginGELUser):
         publication = str_item.publications[0]
         phenotype = str_item.publications[1]
 
-        new_evidence = Evidence.ALL_SOURCES[randint(0, 9)]
+        new_evidence = choice(Evidence.DROPDOWN_SOURCES)
         original_evidences = set([ev.name for ev in str_item.evidence.all()])
         original_evidences.add(new_evidence)
 
@@ -284,7 +284,7 @@ class STRTest(LoginGELUser):
         publication = str_item.publications[0]
         phenotype = str_item.publications[1]
 
-        new_evidence = Evidence.ALL_SOURCES[randint(0, 9)]
+        new_evidence = choice(Evidence.DROPDOWN_SOURCES)
         original_evidences = set([ev.name for ev in str_item.evidence.all()])
         original_evidences.add(new_evidence)
 
@@ -333,7 +333,7 @@ class STRTest(LoginGELUser):
         publication = str_item.publications[0]
         phenotype = str_item.publications[1]
 
-        new_evidence = Evidence.ALL_SOURCES[randint(0, 9)]
+        new_evidence = choice(Evidence.DROPDOWN_SOURCES)
         original_evidences = set([ev.name for ev in str_item.evidence.all()])
         original_evidences.add(new_evidence)
 
@@ -383,7 +383,7 @@ class STRTest(LoginGELUser):
         publication = str_item.publications[0]
         phenotype = str_item.publications[1]
 
-        new_evidence = Evidence.ALL_SOURCES[randint(0, 9)]
+        new_evidence = choice(Evidence.DROPDOWN_SOURCES)
         original_evidences = set([ev.name for ev in str_item.evidence.all()])
         original_evidences.add(new_evidence)
 
@@ -746,7 +746,7 @@ class STRTest(LoginGELUser):
             "pathogenic_repeats": "5",
             "gene": str_item.gene_core.pk,
             "gene_name": "Other name",
-            "source": set([source, Evidence.ALL_SOURCES[randint(0, 9)]]),
+            "source": set([source, choice(Evidence.DROPDOWN_SOURCES)]),
             "tags": [TagFactory().pk] + [tag.pk for tag in str_item.tags.all()],
             "publications": ";".join([publication, fake.sentence()]),
             "phenotypes": ";".join([phenotype, fake.sentence(), fake.sentence()]),
