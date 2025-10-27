@@ -108,7 +108,7 @@ class RegionManager(EntityManager):
         return (
             qs.annotate(
                 number_of_reviewers=Count("evaluation__user", distinct=True),
-                number_of_evaluations=Count("evaluation"),
+                number_of_evaluations=Count("evaluation", distinct=True),
                 entity_type=V("region", output_field=models.CharField()),
                 entity_name=models.F("name"),
             )
