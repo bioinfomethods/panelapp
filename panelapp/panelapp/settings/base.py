@@ -202,7 +202,11 @@ AUTH_PASSWORD_VALIDATORS = [
 # https://docs.djangoproject.com/en/1.11/topics/i18n/
 
 LANGUAGE_CODE = "en-gb"
-TIME_ZONE = "UTC"
+# TIME_ZONE controls display and form input interpretation.
+# With USE_TZ = True, all datetimes are stored in UTC in the database with explicit
+# timezone info. This setting only affects how those UTC timestamps are displayed
+# and how datetime inputs are interpreted - it does NOT reinterpret existing data.
+TIME_ZONE = "Australia/Sydney"
 USE_I18N = True
 USE_L10N = True
 USE_TZ = True

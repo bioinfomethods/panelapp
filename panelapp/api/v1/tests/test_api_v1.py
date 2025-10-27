@@ -21,6 +21,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+from datetime import datetime
 from django.test import TestCase
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -194,16 +195,18 @@ class TestAPIV1(LoginExternalUser):
         res = self.client.get(url)
         # find gps panel
         title = self.gps_public.level4title.name
-        current_time = (
-            str(self.gps_public.created).replace("+00:00", "Z").replace(" ", "T")
-        )
+        expected_time = self.gps_public.created
         gps_panel = [r for r in res.json()["results"] if r["name"] == title][0]
-        self.assertEqual(gps_panel["version_created"], current_time)
+        # Parse ISO 8601 timestamp and compare as datetime objects
+        # Replace "Z" with "+00:00" for Python 3.9 compatibility
+        api_time = datetime.fromisoformat(gps_panel["version_created"].replace("Z", "+00:00"))
+        self.assertEqual(api_time, expected_time)
 
         r = self.client.get(
             reverse_lazy("api:v1:panels-detail", args=(gps_panel["id"],))
         ).json()
-        self.assertEqual(r["version_created"], current_time)
+        api_time_detail = datetime.fromisoformat(r["version_created"].replace("Z", "+00:00"))
+        self.assertEqual(api_time_detail, expected_time)
 
     def test_panel_description_in_response(self):
         r = self.client.get(

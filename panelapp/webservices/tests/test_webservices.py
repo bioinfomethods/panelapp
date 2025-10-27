@@ -21,6 +21,7 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
+from datetime import datetime
 from django.test import TransactionTestCase
 from django.urls import reverse_lazy
 from panels.models import GenePanel
@@ -207,16 +208,18 @@ class TestWebservices(TransactionTestCase):
         res = self.client.get("{}?Types=all".format(url))
         # find gps panel
         title = self.gps_public.panel.name
-        current_time = (
-            str(self.gps_public.created).replace("+00:00", "Z").replace(" ", "T")
-        )
+        expected_time = self.gps_public.created
         gps_panel = [r for r in res.json()["result"] if r["Name"] == title][0]
-        self.assertEqual(gps_panel["CurrentCreated"], current_time)
+        # Parse ISO 8601 timestamp and compare as datetime objects
+        # Replace "Z" with "+00:00" for Python 3.9 compatibility
+        api_time = datetime.fromisoformat(gps_panel["CurrentCreated"].replace("Z", "+00:00"))
+        self.assertEqual(api_time, expected_time)
 
         r = self.client.get(
             reverse_lazy("webservices:get_panel", args=(self.gps_public.panel.name,))
         ).json()
-        self.assertEqual(r["result"]["Created"], current_time)
+        api_time_detail = datetime.fromisoformat(r["result"]["Created"].replace("Z", "+00:00"))
+        self.assertEqual(api_time_detail, expected_time)
 
     def test_get_search_gene(self):
         url = reverse_lazy(
