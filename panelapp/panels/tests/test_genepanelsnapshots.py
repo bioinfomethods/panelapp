@@ -24,6 +24,8 @@
 from random import randint
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.db.models import Q
+from django.contrib.postgres.aggregates import ArrayAgg
 from faker import Factory
 from random import choice
 from accounts.tests.setup import LoginGELUser
@@ -698,3 +700,47 @@ class GenePanelSnapshotTest(LoginGELUser):
 
         new_ap = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel
         assert new_ap.get_gene(gene_symbol).transcript == ["2383bnb"]
+
+    def test_review_count_with_superpanels_annotation(self):
+        """Test that review counts remain accurate when querying with superpanel annotations.
+
+        This test ensures that adding superpanels doesn't inflate the review count
+        due to JOIN Cartesian products. Previously, a gene with 4 reviews in 4
+        superpanels would incorrectly show 16 reviews (4 × 4).
+        """
+        # Create a gene entry with 4 evaluations (factory default)
+        gene_entry = GenePanelEntrySnapshotFactory()
+        child_panel = gene_entry.panel
+        self.assertEqual(gene_entry.evaluation.count(), 4)
+
+        # Create 4 superpanels and link them to the child panel
+        superpanels = []
+        for i in range(4):
+            parent = GenePanelSnapshotFactory()
+            parent.child_panels.set([child_panel])
+            parent._update_saved_stats()
+            superpanels.append(parent)
+
+        # Query the gene using the same pattern as the EntityDetailView
+        # (with superpanels_names annotation that causes JOINs)
+        statuses = [GenePanel.STATUS.public, GenePanel.STATUS.promoted]
+        gps_pks = [child_panel.pk] + [sp.pk for sp in superpanels]
+
+        entries = GenePanelEntrySnapshot.objects.get_gene_panels(
+            gene_entry.gene_core.gene_symbol, pks=gps_pks
+        ).annotate(
+            superpanels_names=ArrayAgg(
+                "panel__genepanelsnapshot__level4title__name",
+                filter=Q(panel__genepanelsnapshot__panel__status__in=statuses),
+                distinct=True
+            )
+        ).filter(id=gene_entry.id)
+
+        entry = entries.first()
+
+        # Assert that the review count is still 4, not inflated to 16
+        self.assertEqual(entry.number_of_evaluated_entities, 4)
+        self.assertEqual(entry.number_of_evaluated_genes, 4)
+
+        # Also verify the superpanels were actually found
+        self.assertIsNotNone(entry.superpanels_names)

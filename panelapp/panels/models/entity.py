@@ -80,7 +80,7 @@ class EntityManager(Manager):
         return (
             qs.annotate(
                 number_of_reviewers=Count("evaluation__user", distinct=True),
-                number_of_evaluated_entities=Count("evaluation"),
+                number_of_evaluated_entities=Count("evaluation", distinct=True),
                 number_of_entities=Count("pk"),
             )
             .prefetch_related(
