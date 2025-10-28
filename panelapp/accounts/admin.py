@@ -149,10 +149,19 @@ class UserAdmin(DjangoObjectActions, BaseUserAdmin):
 
     inlines = [ReviewerInline]
 
+    def get_inlines(self, request, obj):
+        """Only show ReviewerInline when editing existing users, not when adding new ones."""
+        if obj is None:
+            return []
+        return self.inlines
+
     def get_fieldsets(self, request, obj=None):
         """
         Hook for specifying fieldsets.
         """
+        # When adding a new user (obj is None), use add_fieldsets
+        if obj is None:
+            return self.add_fieldsets
 
         if request.user.is_superuser:
             return self.superuser_fieldsets
