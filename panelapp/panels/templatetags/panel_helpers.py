@@ -161,3 +161,26 @@ def human_variant_types(variant_type):
     from panels.models import Region
 
     return Region.VARIANT_TYPES[variant_type]
+
+
+@register.filter(name='render_comment_markdown')
+def render_comment_markdown_filter(text):
+    """
+    Template filter to render comment as Markdown with sanitization.
+
+    Usage: {{ comment.comment|render_comment_markdown }}
+
+    Replaces the old pattern of:
+        {{ comment.comment|linebreaksbr|urlize }}
+
+    With Markdown rendering that handles:
+    - Line breaks (via nl2br extension)
+    - URL auto-linking (via Markdown)
+    - Tables, formatting, embedded HTML
+    - Proper sanitization
+    """
+    from panels.markdown_renderer import render_comment_markdown
+    from django.utils.safestring import mark_safe
+
+    safe_html = render_comment_markdown(text)
+    return mark_safe(safe_html)

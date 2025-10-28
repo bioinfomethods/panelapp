@@ -238,6 +238,16 @@ MARKDOWN_DEUX_STYLES = {
     "default": {"extras": {"wiki-tables": True}, "safe_mode": "escape"}
 }
 
+# Markdownx configuration
+# Use our custom markdown renderer (same as display rendering)
+MARKDOWNX_MARKDOWNIFY_FUNCTION = "panels.markdown_renderer.render_comment_markdown"
+
+# Editor settings
+MARKDOWNX_EDITOR_RESIZABLE = True
+
+# Disable image uploads for now (not needed for gene reviews)
+MARKDOWNX_UPLOAD_URLS_PATH = None
+
 HEALTH_ACCESS_TOKEN_LOCATION = os.getenv("HEALTH_ACCESS_TOKEN_LOCATION", None)
 HEALTH_CHECK_TOKEN = None
 if HEALTH_ACCESS_TOKEN_LOCATION and os.path.isfile(HEALTH_ACCESS_TOKEN_LOCATION):

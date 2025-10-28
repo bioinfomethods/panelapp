@@ -24,6 +24,7 @@
 from collections import OrderedDict
 from django import forms
 from django.contrib.postgres.forms import SimpleArrayField
+from markdownx.fields import MarkdownxFormField
 from panels.models import Evaluation
 
 
@@ -54,7 +55,7 @@ class RegionReviewForm(forms.ModelForm):
         required=False,
         help_text="Interruptions in the repeated sequence are reported as part of standard diagnostic practice",
     )
-    comments = forms.CharField(widget=forms.Textarea, required=False)
+    comments = MarkdownxFormField(required=False)
 
     def __init__(self, *args, **kwargs):
         self.panel = kwargs.pop("panel")

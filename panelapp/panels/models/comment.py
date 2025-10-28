@@ -22,13 +22,14 @@
 ## under the License.
 ##
 from django.db import models
+from markdownx.models import MarkdownxField
 from model_utils.models import TimeStampedModel
 from accounts.models import User
 
 
 class Comment(TimeStampedModel):
     user = models.ForeignKey(User, on_delete=models.PROTECT, null=True)
-    comment = models.TextField()
+    comment = MarkdownxField()
     flagged = models.BooleanField(default=False)
     last_updated = models.DateTimeField(null=True, blank=True)
     version = models.CharField(null=True, blank=True, max_length=255)

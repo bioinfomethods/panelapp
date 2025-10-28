@@ -23,6 +23,7 @@
 ##
 from collections import OrderedDict
 from django import forms
+from markdownx.fields import MarkdownxFormField
 from .helpers import GELSimpleArrayField
 from panels.models import Evaluation
 
@@ -49,7 +50,7 @@ class GeneReviewForm(forms.ModelForm):
         choices=[("", "Provide rating")] + Evaluation.RATINGS, required=False
     )
     current_diagnostic = forms.BooleanField(required=False)
-    comments = forms.CharField(widget=forms.Textarea, required=False)
+    comments = MarkdownxFormField(required=False)
 
     def __init__(self, *args, **kwargs):
         self.panel = kwargs.pop("panel")

@@ -22,6 +22,7 @@
 ## under the License.
 ##
 from django import forms
+from markdownx.fields import MarkdownxFormField
 from .gene import UpdateGeneTagsForm
 from .gene import UpdateGeneMOPForm
 from .gene import UpdateGeneMOIForm
@@ -42,4 +43,4 @@ from .region import UpdateRegionRatingForm
 
 
 class EditCommentForm(forms.Form):
-    comment = forms.CharField(widget=forms.Textarea)
+    comment = MarkdownxFormField()

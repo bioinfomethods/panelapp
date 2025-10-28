@@ -3,6 +3,10 @@
 {% load staticfiles %}
 {% load bootstrap3 %}
 
+{% block header %}
+{{ form.media }}
+{% endblock %}
+
 {% block content %}
 <ol class="breadcrumb">
     <li>
@@ -64,7 +68,6 @@
             </div>
         </div>
     </form>
-    {{ form.media }}
     {% block modals %}
         {% include "panels/modals/rating.html" %}
         {% include "panels/modals/mode_of_path.html" %}
