@@ -45,7 +45,7 @@ class GeneAutocomplete(Select2QuerySetView):
 
 class SourceAutocomplete(Select2ListView):
     def get_list(self):
-        return Evidence.ALL_SOURCES
+        return Evidence.DROPDOWN_SOURCES
 
 
 class TagsAutocomplete(Select2QuerySetView):

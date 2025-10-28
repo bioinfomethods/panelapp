@@ -32,6 +32,7 @@ class Evidence(TimeStampedModel):
         ordering = ["-created"]
         indexes = [models.Index(fields=["name"]), models.Index(fields=["rating"])]
 
+    # High confidence sources used for evidence status calculation
     HIGH_CONFIDENCE_SOURCES = [
         "Radboud University Medical Center, Nijmegen",
         "Illumina TruGenome Clinical Sequencing Services",
@@ -39,6 +40,7 @@ class Evidence(TimeStampedModel):
         "UKGTN",
     ]
 
+    # Legacy sources - kept for backward compatibility with existing data
     OTHER_SOURCES = [
         "Other",
         "Expert list",
@@ -50,7 +52,15 @@ class Evidence(TimeStampedModel):
         "ClinGen",
     ]
 
-    ALL_SOURCES = HIGH_CONFIDENCE_SOURCES + OTHER_SOURCES
+    # Sources available in the dropdown menu for new entries
+    DROPDOWN_SOURCES = [
+        "Expert List",
+        "Expert Review",
+        "Literature",
+        "ClinGen",
+        "Genomics England PanelApp",
+        "Other",
+    ]
 
     EXPERT_REVIEWS = {
         "Expert Review Green": 3,

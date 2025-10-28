@@ -71,7 +71,7 @@ class PanelGeneForm(forms.ModelForm):
     gene_name = forms.CharField()
 
     source = Select2ListMultipleChoiceField(
-        choice_list=Evidence.ALL_SOURCES,
+        choice_list=Evidence.DROPDOWN_SOURCES,
         required=False,
         widget=Select2Multiple(url="autocomplete-source"),
     )
