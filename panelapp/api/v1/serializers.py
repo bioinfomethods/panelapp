@@ -30,6 +30,9 @@ from panels.models import Activity
 from panels.models import Evaluation
 from panels.models import PanelType
 from panels.models import HistoricalSnapshot
+from panels.models import Gene
+from panels.models import Evidence
+from panels.models import Tag
 
 
 class NonEmptyItemsListField(serializers.ListField):
@@ -361,3 +364,196 @@ class HistoricalSnapshotSerializer(serializers.ModelSerializer):
         instance.data.pop('strs', None)
         instance.data['signed_off'] = instance.signed_off_date
         return instance.data
+
+
+class GeneAddSerializer(serializers.Serializer):
+    """
+    Serializer for adding a gene to a panel (minimal, no review).
+
+    This creates a GenePanelEntrySnapshot with metadata but does NOT
+    create an Evaluation record.
+    """
+
+    # Required fields
+    gene_symbol = serializers.CharField(
+        required=True,
+        help_text="Gene symbol (e.g., 'BRCA1')"
+    )
+    sources = serializers.ListField(
+        child=serializers.ChoiceField(choices=Evidence.DROPDOWN_SOURCES),
+        min_length=1,
+        required=True,
+        help_text="At least one source required"
+    )
+    moi = serializers.ChoiceField(
+        choices=Evaluation.MODES_OF_INHERITANCE,
+        required=True,
+        help_text="Mode of inheritance"
+    )
+
+    # Optional metadata fields
+    mode_of_pathogenicity = serializers.ChoiceField(
+        choices=Evaluation.MODES_OF_PATHOGENICITY,
+        required=False,
+        allow_null=True,
+        allow_blank=True
+    )
+    penetrance = serializers.ChoiceField(
+        choices=GenePanelEntrySnapshot.PENETRANCE,
+        required=False,
+        allow_null=True,
+        allow_blank=True
+    )
+    publications = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        help_text="List of PMIDs"
+    )
+    phenotypes = serializers.ListField(
+        child=serializers.CharField(),
+        required=False
+    )
+    transcript = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        help_text="Transcript IDs (GEL users only)"
+    )
+    tags = serializers.ListField(
+        child=serializers.IntegerField(),
+        required=False,
+        help_text="Tag IDs (GEL users only)"
+    )
+
+    def validate_gene_symbol(self, value):
+        """Check if gene exists in reference database and is active"""
+        try:
+            gene = Gene.objects.get(gene_symbol=value)
+            if not gene.active:
+                raise serializers.ValidationError(
+                    f"Gene '{value}' is not active in the reference database"
+                )
+        except Gene.DoesNotExist:
+            raise serializers.ValidationError(
+                f"Gene '{value}' not found in reference database"
+            )
+        return value
+
+    def validate_tags(self, value):
+        """Validate tags: GEL only, IDs must exist"""
+        if value:
+            request = self.context.get('request')
+            if not (request and request.user.is_authenticated and request.user.reviewer.is_GEL()):
+                raise serializers.ValidationError(
+                    "Only GEL users can assign tags"
+                )
+            # Validate tag IDs exist
+            existing_ids = set(Tag.objects.filter(pk__in=value).values_list('pk', flat=True))
+            provided_ids = set(value)
+            if existing_ids != provided_ids:
+                invalid_ids = provided_ids - existing_ids
+                raise serializers.ValidationError(
+                    f"Invalid tag IDs: {', '.join(map(str, invalid_ids))}"
+                )
+        return value
+
+    def validate_transcript(self, value):
+        """Only GEL users can add transcript info"""
+        if value:
+            request = self.context.get('request')
+            if not (request and request.user.is_authenticated and request.user.reviewer.is_GEL()):
+                raise serializers.ValidationError(
+                    "Only GEL users can add transcript information"
+                )
+        return value
+
+    def validate(self, data):
+        """Check if gene already exists in panel"""
+        panel = self.context.get('panel')
+        gene_symbol = data['gene_symbol']
+
+        if not panel:
+            raise serializers.ValidationError("Panel context is required")
+
+        if panel.has_gene(gene_symbol):
+            raise serializers.ValidationError({
+                'gene_symbol': f"Gene '{gene_symbol}' already exists in this panel"
+            })
+
+        return data
+
+
+class GeneReviewSerializer(serializers.Serializer):
+    """
+    Serializer for submitting a review/evaluation for a gene in a panel.
+
+    This creates an Evaluation record linked to an existing GenePanelEntrySnapshot.
+    Does NOT modify the gene entry's metadata.
+    """
+
+    # All fields optional, but at least one should be provided
+    rating = serializers.ChoiceField(
+        choices=Evaluation.RATINGS,
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+        help_text="GREEN, AMBER, or RED"
+    )
+    comments = serializers.CharField(
+        required=False,
+        allow_blank=True,
+        help_text="Review comments"
+    )
+    moi = serializers.ChoiceField(
+        choices=Evaluation.MODES_OF_INHERITANCE,
+        required=False,
+        allow_null=True,
+        allow_blank=True,
+        help_text="Reviewer's opinion on mode of inheritance"
+    )
+    mode_of_pathogenicity = serializers.ChoiceField(
+        choices=Evaluation.MODES_OF_PATHOGENICITY,
+        required=False,
+        allow_null=True,
+        allow_blank=True
+    )
+    publications = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        help_text="Supporting PMIDs for this review"
+    )
+    phenotypes = serializers.ListField(
+        child=serializers.CharField(),
+        required=False,
+        help_text="Associated phenotypes for this review"
+    )
+    current_diagnostic = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text="Whether this is currently used diagnostically"
+    )
+    clinically_relevant = serializers.BooleanField(
+        required=False,
+        default=False,
+        help_text="For STRs: whether interruptions are clinically relevant"
+    )
+
+    def validate(self, data):
+        """Require at least one field to have a meaningful value"""
+        # Check if any field has a meaningful value
+        has_data = any([
+            data.get('rating'),
+            data.get('comments'),
+            data.get('moi'),
+            data.get('mode_of_pathogenicity'),
+            data.get('publications'),
+            data.get('phenotypes'),
+            data.get('current_diagnostic'),
+            data.get('clinically_relevant'),
+        ])
+
+        if not has_data:
+            raise serializers.ValidationError(
+                "At least one review field must be provided"
+            )
+
+        return data

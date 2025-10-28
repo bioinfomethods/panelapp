@@ -33,9 +33,15 @@ from panels.models import HistoricalSnapshot
 from panels.models import STR
 from panels.models import Region
 from panels.models import Activity
+from panels.models import Gene
+from panels.models import Tag
+from panels.models import Evaluation
+from panels.models import Comment
 from django import forms
 from django.db.models import Q
 from django.db.models import ObjectDoesNotExist
+from django.db.models import Value
+from django.db import models
 from django.utils.functional import cached_property
 from django_filters import rest_framework as filters
 from .serializers import PanelSerializer
@@ -46,9 +52,14 @@ from .serializers import EvaluationSerializer
 from .serializers import RegionSerializer
 from .serializers import EntitySerializer
 from .serializers import HistoricalSnapshotSerializer
+from .serializers import GeneAddSerializer
+from .serializers import GeneReviewSerializer
 from django.http import Http404
 from rest_framework.exceptions import APIException
 from panelapp.settings.base import REST_FRAMEWORK
+from api.permissions import IsVerifiedReviewerOrReadOnly
+from drf_spectacular.utils import extend_schema, OpenApiParameter, OpenApiExample
+from drf_spectacular.types import OpenApiTypes
 
 class ReadOnlyListViewset(
     viewsets.mixins.RetrieveModelMixin,
@@ -357,14 +368,126 @@ class EntityViewSet(viewsets.mixins.ListModelMixin, viewsets.GenericViewSet):
             return obj
 
 
-class GeneViewSet(EntityViewSet):
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+class GeneViewSet(EntityViewSet, viewsets.mixins.CreateModelMixin):
+    permission_classes = (IsVerifiedReviewerOrReadOnly,)
     serializer_class = GeneSerializer
     filter_class = EntityFilter
     lookup_collection = "genes"
 
     def get_queryset(self):
         return self.get_panel().get_all_genes.prefetch_related("evidence", "tags")
+
+    def get_serializer_class(self):
+        """Use GeneAddSerializer for POST, GeneSerializer for GET"""
+        if self.action == 'create':
+            return GeneAddSerializer
+        return GeneSerializer
+
+    def get_serializer_context(self):
+        """Add panel to context for validation during POST"""
+        context = super().get_serializer_context()
+        if self.action == 'create':
+            context['panel'] = self.get_panel()
+        return context
+
+    @extend_schema(
+        operation_id='panels_genes_create',
+        summary='Add gene to panel',
+        description="""
+        Add an existing gene to a panel with minimal metadata, WITHOUT creating a review.
+
+        **Required fields:**
+        - gene_symbol: Must exist in the gene reference database
+        - moi: Mode of inheritance
+        - sources: At least one evidence source
+
+        **Optional fields:**
+        - penetrance, mode_of_pathogenicity, publications, phenotypes
+        - transcript, tags (GEL users only)
+
+        **Behavior:**
+        - GEL users: Increments panel version, gene not flagged, can assign tags/transcript
+        - Non-GEL verified reviewers: No version increment, gene flagged, cannot assign tags/transcript
+        - Creates GenePanelEntrySnapshot and Evidence records
+        - Does NOT create Evaluation (no review)
+        """,
+        request=GeneAddSerializer,
+        responses={
+            201: GeneSerializer,
+            400: OpenApiTypes.OBJECT,
+            403: OpenApiTypes.OBJECT,
+            404: OpenApiTypes.OBJECT,
+        },
+        examples=[
+            OpenApiExample(
+                'Minimal gene addition',
+                value={
+                    'gene_symbol': 'DMD',
+                    'moi': 'X-LINKED: hemizygous mutation in males, biallelic mutations in females',
+                    'sources': ['Expert Review', 'Literature']
+                },
+                request_only=True,
+            ),
+            OpenApiExample(
+                'Gene addition with metadata',
+                value={
+                    'gene_symbol': 'CFTR',
+                    'moi': 'BIALLELIC, autosomal or pseudoautosomal',
+                    'sources': ['Expert Review'],
+                    'penetrance': 'Complete',
+                    'mode_of_pathogenicity': 'Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments',
+                    'publications': ['12345678'],
+                    'phenotypes': ['Cystic fibrosis']
+                },
+                request_only=True,
+            ),
+        ],
+        tags=['Panels'],
+    )
+    def create(self, request, *args, **kwargs):
+        """Add a gene to the panel"""
+        panel = self.get_panel()
+
+        # Validate request data
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        # Prepare data for panel.add_gene()
+        data = serializer.validated_data.copy()
+        gene_symbol = data.pop('gene_symbol')
+
+        # Convert tag IDs to Tag queryset (if provided)
+        if 'tags' in data and data['tags']:
+            data['tags'] = Tag.objects.filter(pk__in=data['tags'])
+
+        # Determine if version should be incremented
+        increment_version = request.user.is_authenticated and request.user.reviewer.is_GEL()
+
+        # Add the gene using existing business logic
+        gene_entry = panel.add_gene(
+            user=request.user,
+            gene_symbol=gene_symbol,
+            gene_data=data,
+            increment_version=increment_version,
+        )
+
+        if gene_entry is False:
+            return Response(
+                {'gene_symbol': f"Gene '{gene_symbol}' already exists in this panel"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Refetch the gene entry with proper annotations for serialization
+        gene_entry_annotated = GenePanelEntrySnapshot.objects.filter(
+            pk=gene_entry.pk
+        ).annotate(
+            entity_type=Value("gene", output_field=models.CharField()),
+            entity_name=models.F("gene_core__gene_symbol"),
+        ).first()
+
+        # Return the created gene entry
+        response_serializer = GeneSerializer(gene_entry_annotated)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class GeneEvaluationsViewSet(EntityViewSet):
@@ -627,3 +750,150 @@ class SignedOffPanelViewSet(ReadOnlyListViewset):
             return Response(json)
         else:
             raise Http404
+
+
+class GeneReviewViewSet(viewsets.GenericViewSet, viewsets.mixins.CreateModelMixin):
+    """
+    ViewSet for submitting reviews/evaluations for genes in panels.
+
+    POST /api/v1/panels/{panel_id}/genes/{gene_symbol}/reviews/ - Submit review
+
+    Only supports POST (create). Does not support GET/PUT/DELETE.
+    Requires verified reviewer permission.
+    """
+
+    permission_classes = (IsVerifiedReviewerOrReadOnly,)
+    serializer_class = GeneReviewSerializer
+
+    @extend_schema(
+        operation_id='panels_genes_reviews_create',
+        summary='Submit review for gene',
+        description="""
+        Submit a review/evaluation for a gene that's already in the panel.
+
+        **All fields are optional, but at least one must be provided:**
+        - rating: GREEN, AMBER, or RED
+        - comments: Review comments
+        - moi: Reviewer's opinion on mode of inheritance
+        - mode_of_pathogenicity
+        - publications: Supporting PMIDs
+        - phenotypes: Associated phenotypes
+        - current_diagnostic: Boolean
+        - clinically_relevant: Boolean (primarily for STRs)
+
+        **Behavior:**
+        - Creates Evaluation record linked to the gene entry
+        - Creates Comment record if comments provided
+        - Does NOT modify GenePanelEntrySnapshot metadata
+        - Does NOT increment panel version
+        - Multiple reviews allowed (same or different users)
+        """,
+        parameters=[
+            OpenApiParameter(
+                name='panel_pk',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Panel ID or old_pk'
+            ),
+            OpenApiParameter(
+                name='gene_symbol',
+                type=OpenApiTypes.STR,
+                location=OpenApiParameter.PATH,
+                description='Gene symbol'
+            ),
+        ],
+        request=GeneReviewSerializer,
+        responses={
+            201: EvaluationSerializer,
+            400: OpenApiTypes.OBJECT,
+            403: OpenApiTypes.OBJECT,
+            404: OpenApiTypes.OBJECT,
+        },
+        examples=[
+            OpenApiExample(
+                'Simple review with rating',
+                value={
+                    'rating': 'GREEN',
+                    'comments': 'Well-established gene-disease association for Duchenne muscular dystrophy'
+                },
+                request_only=True,
+            ),
+            OpenApiExample(
+                'Detailed review',
+                value={
+                    'rating': 'GREEN',
+                    'comments': 'Strong evidence from multiple sources for role in primary ciliary dyskinesia',
+                    'moi': 'BIALLELIC, autosomal or pseudoautosomal',
+                    'mode_of_pathogenicity': 'Loss-of-function variants (as defined in pop up message) DO NOT cause this phenotype - please provide details in the comments',
+                    'publications': ['87654321', '11223344'],
+                    'phenotypes': ['Primary ciliary dyskinesia', 'Kartagener syndrome'],
+                    'current_diagnostic': True
+                },
+                request_only=True,
+            ),
+        ],
+        tags=['Panels'],
+    )
+    def create(self, request, *args, **kwargs):
+        """
+        Submit a review for the gene.
+
+        This creates an Evaluation record linked to the existing
+        GenePanelEntrySnapshot. Does NOT modify the gene entry's metadata.
+        Does NOT increment panel version.
+        """
+        gene_entry, panel = self.get_gene_entry()
+
+        # Validate request data
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        data = serializer.validated_data
+
+        # Create Evaluation record
+        evaluation = Evaluation.objects.create(
+            user=request.user,
+            rating=data.get('rating', ''),
+            mode_of_pathogenicity=data.get('mode_of_pathogenicity', ''),
+            phenotypes=data.get('phenotypes'),
+            publications=data.get('publications'),
+            moi=data.get('moi', ''),
+            current_diagnostic=data.get('current_diagnostic', False),
+            clinically_relevant=data.get('clinically_relevant', False),
+            version=panel.version,
+        )
+
+        # Add comment if provided
+        if data.get('comments'):
+            comment = Comment.objects.create(user=request.user, comment=data['comments'])
+            evaluation.comments.add(comment)
+
+        # Link evaluation to gene entry
+        gene_entry.evaluation.add(evaluation)
+
+        # Return the created evaluation
+        response_serializer = EvaluationSerializer(evaluation)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+    def get_gene_entry(self):
+        """
+        Get the gene entry from panel.
+        Returns (gene_entry, panel) tuple.
+        Raises 404 if panel or gene not found.
+        """
+        panel_id = self.kwargs['panel_pk']
+        gene_symbol = self.kwargs['gene_entity_name']
+
+        # Get panel
+        panel = GenePanelSnapshot.objects.get_active_annotated(name=panel_id).first()
+
+        if not panel:
+            raise Http404(f"Panel '{panel_id}' not found")
+
+        # Get gene entry in panel
+        try:
+            gene_entry = panel.get_gene(gene_symbol)
+        except GenePanelEntrySnapshot.DoesNotExist:
+            raise Http404(f"Gene '{gene_symbol}' not found in panel '{panel_id}'")
+
+        return gene_entry, panel

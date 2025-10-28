@@ -29,3 +29,27 @@ class ReadOnlyPermissions(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return request.method in permissions.SAFE_METHODS
+
+
+class IsVerifiedReviewerOrReadOnly(permissions.BasePermission):
+    """
+    Permission class for verified reviewers.
+    Allows public reads, requires verified reviewer for writes.
+    """
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user.is_authenticated and request.user.reviewer.is_verified()
+
+
+class IsGELReviewerOrReadOnly(permissions.BasePermission):
+    """
+    Permission class for GEL reviewers only.
+    Allows public reads, requires GEL reviewer for writes.
+    """
+
+    def has_permission(self, request, view):
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        return request.user.is_authenticated and request.user.reviewer.is_GEL()
