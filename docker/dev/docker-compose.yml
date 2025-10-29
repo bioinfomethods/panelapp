@@ -1,7 +1,10 @@
 services:
 
   localstack:
-    image: localstack/localstack
+    # Pinned to 0.11.5 (last version with separate ports 4572/4576) for compatibility with
+    # old Python dependencies (Celery 4.4.7, Kombu 4.6.11, boto3 1.9.147 from 2019-2020).
+    # LocalStack 0.12+ uses unified gateway on port 4566 which these old libs don't support.
+    image: localstack/localstack:0.11.5
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range

@@ -129,11 +129,22 @@ USE_SQS = os.getenv('USE_SQS') == 'TRUE'
 if USE_SQS:  # Use SQS as message broker
 
     CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "sqs://@localstack:4576")
-    BROKER_TRANSPORT_OPTIONS = {
-        'region': AWS_REGION,  # FIXME Is Kombo/Boto3 ignoring the region and always using us-east-1?
+    CELERY_BROKER_TRANSPORT_OPTIONS = {
+        'region': AWS_REGION,
         'polling_interval': 1,      # seconds
         'visibility_timeout': 360,  # seconds
     }
 
 else:  # Use RabbitMQ as message broker
     CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "pyamqp://localhost:5672/")
+
+
+# Enhanced logging for local dev to see Celery task execution
+LOGGING['loggers']['celery'] = {
+    'handlers': ['console'],
+    'level': 'INFO',
+}
+LOGGING['loggers']['celery.worker'] = {
+    'handlers': ['console'],
+    'level': 'INFO',
+}
