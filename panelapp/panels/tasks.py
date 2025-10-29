@@ -225,3 +225,95 @@ def background_copy_reviews(user_pk, gene_symbols, panel_from_pk, panel_to_pk):
         message = "There was an error copying the reviews"
 
     send_email.delay(user.email, subject, "{}\n\n----\nPanelApp".format(message))
+
+
+@shared_task
+def background_copy_gene(user_pk, gene_symbol, source_panel_pk, target_panel_pks, selected_review_user_ids):
+    """Copy a gene from source panel to multiple target panels in the background.
+
+    This task performs the gene copying operation asynchronously to avoid
+    timeouts when copying to many panels. Unlike other background tasks,
+    this uses optimistic UI - no email notification is sent on completion.
+
+    All operations are atomic - either all panels are updated or none are.
+
+    Args:
+        user_pk: Primary key of the user performing the copy
+        gene_symbol: Symbol of the gene to copy
+        source_panel_pk: Primary key of the source panel
+        target_panel_pks: List of primary keys of target panels
+        selected_review_user_ids: List of user IDs whose reviews should be copied
+    """
+    from accounts.models import User
+    from panels.models import GenePanelSnapshot, GenePanel
+
+    try:
+        user = User.objects.get(pk=user_pk)
+
+        # Get source panel
+        source_panel = GenePanelSnapshot.objects.get(pk=source_panel_pk)
+
+        # Get the gene entry from source panel with all metadata
+        source_gene_entry = source_panel.get_gene(gene_symbol, prefetch_extra=True)
+
+        # Build gene_data dict with all metadata from source
+        gene_data = {
+            "moi": source_gene_entry.moi,
+            "penetrance": source_gene_entry.penetrance,
+            "publications": source_gene_entry.publications,
+            "phenotypes": source_gene_entry.phenotypes,
+            "mode_of_pathogenicity": source_gene_entry.mode_of_pathogenicity,
+            "transcript": source_gene_entry.transcript,
+            "sources": [ev.name for ev in source_gene_entry.evidence.all()],
+            "tags": [tag.pk for tag in source_gene_entry.tags.all()],
+        }
+
+        # Convert review user IDs to integers
+        user_ids_as_ints = [int(uid) for uid in selected_review_user_ids]
+
+        # Wrap entire operation in atomic transaction - all or nothing
+        with transaction.atomic():
+            # Copy to each target panel
+            for target_panel_pk in target_panel_pks:
+                # Get the fresh active panel
+                target_panel_snapshot = GenePanelSnapshot.objects.get(pk=target_panel_pk)
+                target_panel = GenePanel.objects.get_panel(
+                    pk=str(target_panel_snapshot.panel.pk)
+                ).active_panel
+
+                # Add the gene with all metadata
+                new_gene_entry = target_panel.add_gene(
+                    user=user,
+                    gene_symbol=gene_symbol,
+                    gene_data=gene_data,
+                    increment_version=True,
+                )
+
+                if not new_gene_entry:
+                    raise Exception(
+                        f"Failed to add gene {gene_symbol} to panel {target_panel.panel.name}"
+                    )
+
+                # Copy selected reviews to the new gene
+                new_gene_entry.copy_reviews_to_new_gene(
+                    source_gene_entry=source_gene_entry,
+                    source_panel_name=source_panel.panel.name,
+                    user_ids_to_copy=user_ids_as_ints,
+                )
+
+                # Add activity log
+                target_panel.add_activity(
+                    user,
+                    f"Copied gene {gene_symbol} from panel {source_panel.panel.name}",
+                )
+
+        logging.info(
+            f"Successfully copied gene {gene_symbol} to {len(target_panel_pks)} panel(s) "
+            f"(user: {user.username})"
+        )
+
+    except Exception as e:
+        logging.error(
+            f"Error copying gene {gene_symbol} in background: {e}",
+            exc_info=True
+        )
