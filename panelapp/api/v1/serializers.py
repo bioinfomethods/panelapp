@@ -107,7 +107,7 @@ class PanelSerializer(serializers.ModelSerializer):
 
     def get_child_panel_ids(self, obj):
         """Return list of child panel IDs for super panels."""
-        return list(obj.child_panels.values_list('panel_id', flat=True))
+        return [cp.panel_id for cp in obj.child_panels.all()]
 
     def __init__(self, *args, **kwargs):
         self.include_entities = False
