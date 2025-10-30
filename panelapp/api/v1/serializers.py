@@ -84,7 +84,6 @@ class PanelSerializer(serializers.ModelSerializer):
             "relevant_disorders",
             "stats",
             "types",
-            "child_panel_ids",
         )
         depth = 1
 
@@ -103,11 +102,6 @@ class PanelSerializer(serializers.ModelSerializer):
         read_only=True,
     )
     types = PanelTypeSerializer(source="panel.types", read_only=True, many=True)
-    child_panel_ids = serializers.SerializerMethodField()
-
-    def get_child_panel_ids(self, obj):
-        """Return list of child panel IDs for super panels."""
-        return list(obj.child_panels.values_list('panel_id', flat=True))
 
     def __init__(self, *args, **kwargs):
         self.include_entities = False
