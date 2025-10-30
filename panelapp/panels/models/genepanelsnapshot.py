@@ -857,7 +857,7 @@ class GenePanelSnapshot(TimeStampedModel):
                 entity_type=V("gene", output_field=models.CharField()),
                 entity_name=models.F("gene_core__gene_symbol"),
             )
-            .prefetch_related("evidence", "tags", "panel__panel__types",)
+            .prefetch_related("evidence", "tags", "panel__panel__types", "panel__child_panels",)
         )
 
         if self.is_super_panel:
@@ -900,7 +900,7 @@ class GenePanelSnapshot(TimeStampedModel):
                 entity_type=V("str", output_field=models.CharField()),
                 entity_name=models.F("name"),
             )
-            .prefetch_related("evidence", "tags", "panel__panel__types",)
+            .prefetch_related("evidence", "tags", "panel__panel__types", "panel__child_panels",)
         )
 
         if self.is_super_panel:
@@ -943,7 +943,7 @@ class GenePanelSnapshot(TimeStampedModel):
                 entity_type=V("region", output_field=models.CharField()),
                 entity_name=models.F("name"),
             )
-            .prefetch_related("evidence", "tags", "panel__panel__types")
+            .prefetch_related("evidence", "tags", "panel__panel__types", "panel__child_panels")
         )
 
         if self.is_super_panel:
