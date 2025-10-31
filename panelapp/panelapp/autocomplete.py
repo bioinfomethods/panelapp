@@ -82,35 +82,3 @@ class SimplePanelTypesAutocomplete(Select2QuerySetView):
             qs = qs.filter(Q(name__icontains=self.q) | Q(name__icontains=self.q))
 
         return qs
-
-
-class PanelsWithoutGeneAutocomplete(Select2QuerySetView):
-    """Autocomplete for panels that don't contain a specific gene.
-
-    Expects 'gene_symbol' to be forwarded from the form.
-    """
-    def get_queryset(self):
-        gene_symbol = self.forwarded.get('gene_symbol_hidden', None)
-
-        # Determine if user has admin access
-        is_admin = self.request.user.is_authenticated and self.request.user.reviewer.is_GEL()
-
-        # Get all active panels with annotations (needed for is_super_panel)
-        qs = GenePanelSnapshot.objects.get_active_annotated(
-            all=is_admin, internal=is_admin, deleted=False
-        ).exclude(is_super_panel=True)
-
-        # If gene_symbol is provided, filter out panels that already have this gene
-        if gene_symbol:
-            panels_with_gene = GenePanelSnapshot.objects.get_shared_panels(
-                gene_symbol, all=is_admin, internal=is_admin
-            )
-            qs = qs.exclude(pk__in=panels_with_gene.values_list('pk', flat=True))
-
-        # Apply search query
-        if self.q:
-            qs = qs.filter(
-                Q(panel__name__icontains=self.q) | Q(panel__name__icontains=self.q)
-            )
-
-        return qs

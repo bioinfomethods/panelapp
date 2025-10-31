@@ -281,31 +281,32 @@ def background_copy_gene(user_pk, gene_symbol, source_panel_pk, target_panel_pks
                     pk=str(target_panel_snapshot.panel.pk)
                 ).active_panel
 
-                # Add the gene with all metadata
-                new_gene_entry = target_panel.add_gene(
-                    user=user,
-                    gene_symbol=gene_symbol,
-                    gene_data=gene_data,
-                    increment_version=True,
-                )
-
-                if not new_gene_entry:
-                    raise Exception(
-                        f"Failed to add gene {gene_symbol} to panel {target_panel.panel.name}"
+                # Check if gene already exists
+                if target_panel.has_gene(gene_symbol):
+                    # Gene exists - increment version and get gene from new version
+                    target_panel = target_panel.increment_version()
+                    gene_entry = target_panel.get_gene(gene_symbol)
+                    activity_msg = f"Added reviews for gene {gene_symbol} from panel {source_panel.panel.name}"
+                else:
+                    # Add the gene with all metadata (increments version internally)
+                    gene_entry = target_panel.add_gene(
+                        user=user,
+                        gene_symbol=gene_symbol,
+                        gene_data=gene_data,
+                        increment_version=True,
                     )
+                    # Note: target_panel still refers to old version, but gene_entry.panel is the new one
+                    activity_msg = f"Copied gene {gene_symbol} from panel {source_panel.panel.name}"
 
-                # Copy selected reviews to the new gene
-                new_gene_entry.copy_reviews_to_new_gene(
+                # Copy selected reviews, skipping existing evaluators
+                gene_entry.copy_reviews_to_new_gene(
                     source_gene_entry=source_gene_entry,
                     source_panel_name=source_panel.panel.name,
                     user_ids_to_copy=user_ids_as_ints,
                 )
 
-                # Add activity log
-                target_panel.add_activity(
-                    user,
-                    f"Copied gene {gene_symbol} from panel {source_panel.panel.name}",
-                )
+                # Add activity log (use gene_entry.panel to get the correct version)
+                gene_entry.panel.add_activity(user, activity_msg)
 
         logging.info(
             f"Successfully copied gene {gene_symbol} to {len(target_panel_pks)} panel(s) "
@@ -317,3 +318,4 @@ def background_copy_gene(user_pk, gene_symbol, source_panel_pk, target_panel_pks
             f"Error copying gene {gene_symbol} in background: {e}",
             exc_info=True
         )
+        raise
