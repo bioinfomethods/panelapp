@@ -1,9 +1,9 @@
 """Form for copying a gene to multiple panels."""
 
 from django import forms
-from django.db import transaction
 from dal_select2.widgets import ModelSelect2Multiple
 from panels.models import GenePanelSnapshot, GenePanel
+from panels.tasks import background_copy_gene
 
 
 class CopyGeneForm(forms.Form):
@@ -119,6 +119,9 @@ class CopyGeneForm(forms.Form):
     def copy_gene_to_panels(self):
         """Copy the gene from source panel to all target panels.
 
+        Queues a background task to perform the copy operation asynchronously
+        to avoid timeouts when copying to many panels.
+
         All operations are performed atomically - either all panels are updated
         or none are (all-or-nothing transaction). If any panel fails, an
         exception is raised and all changes are rolled back.
@@ -126,59 +129,14 @@ class CopyGeneForm(forms.Form):
         target_panels = self.cleaned_data["target_panels"]
         selected_review_user_ids = self.cleaned_data.get("reviews_to_copy", [])
 
-        # Get the gene entry from source panel with all metadata
-        source_gene_entry = self.source_panel.get_gene(
-            self.gene_symbol, prefetch_extra=True
+        # Extract PKs for serializable parameters
+        target_panel_pks = [panel.pk for panel in target_panels]
+
+        # Queue background task
+        background_copy_gene.delay(
+            user_pk=self.user.pk,
+            gene_symbol=self.gene_symbol,
+            source_panel_pk=self.source_panel.pk,
+            target_panel_pks=target_panel_pks,
+            selected_review_user_ids=selected_review_user_ids,
         )
-
-        # Build gene_data dict with all metadata from source
-        # Note: Don't include rating/comment here - reviews are copied separately
-        gene_data = {
-            "moi": source_gene_entry.moi,
-            "penetrance": source_gene_entry.penetrance,
-            "publications": source_gene_entry.publications,
-            "phenotypes": source_gene_entry.phenotypes,
-            "mode_of_pathogenicity": source_gene_entry.mode_of_pathogenicity,
-            "transcript": source_gene_entry.transcript,
-            "sources": [ev.name for ev in source_gene_entry.evidence.all()],
-            "tags": [tag.pk for tag in source_gene_entry.tags.all()],
-        }
-
-        # Wrap entire operation in atomic transaction - all or nothing
-        with transaction.atomic():
-            # Copy to each target panel
-            for target_panel_snapshot in target_panels:
-                # Get the fresh active panel (in case it was incremented)
-                target_panel = GenePanel.objects.get_panel(
-                    pk=str(target_panel_snapshot.panel.pk)
-                ).active_panel
-
-                # Add the gene with all metadata
-                new_gene_entry = target_panel.add_gene(
-                    user=self.user,
-                    gene_symbol=self.gene_symbol,
-                    gene_data=gene_data,
-                    increment_version=True,
-                )
-
-                if not new_gene_entry:
-                    # This shouldn't happen since we validated in clean(),
-                    # but if it does, raise to rollback the transaction
-                    raise forms.ValidationError(
-                        f"Failed to add gene to panel {target_panel.panel.name}"
-                    )
-
-                # Copy selected reviews to the new gene
-                user_ids_as_ints = [int(uid) for uid in selected_review_user_ids]
-                new_gene_entry.copy_reviews_to_new_gene(
-                    source_gene_entry=source_gene_entry,
-                    source_panel_name=self.source_panel.panel.name,
-                    user_ids_to_copy=user_ids_as_ints,
-                )
-
-                # Add activity log
-                target_panel.add_activity(
-                    self.user,
-                    f"Copied gene {self.gene_symbol} from panel "
-                    f"{self.source_panel.panel.name}",
-                )

@@ -687,20 +687,13 @@ class CopyGeneView(GELReviewerRequiredMixin, FormView):
         return ctx
 
     def form_valid(self, form):
-        try:
-            form.copy_gene_to_panels()
-            panel_count = len(form.cleaned_data["target_panels"])
-            msg = "Successfully copied gene {} to {} panel{}".format(
-                self.kwargs["gene_symbol"],
-                panel_count,
-                pluralize(panel_count),
-            )
-            messages.success(self.request, msg)
-        except Exception as e:
-            messages.error(
-                self.request,
-                f"Failed to copy gene: {e}",
-            )
+        form.copy_gene_to_panels()
+        panel_count = len(form.cleaned_data["target_panels"])
+        msg = "Gene copy initiated for {} panel{}. The operation is processing in the background.".format(
+            panel_count,
+            pluralize(panel_count),
+        )
+        messages.success(self.request, msg)
 
         return redirect(self.get_success_url())
 
