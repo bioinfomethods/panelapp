@@ -21,15 +21,17 @@ class CopyGeneTest(LoginGELUser):
         gene = GeneFactory()
 
         # Create source panel with gene
-        source_panel = GenePanelSnapshotFactory()
-        source_entry = GenePanelEntrySnapshotFactory.create(gene_core=gene, panel=source_panel)
+        source_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        source_entry = GenePanelEntrySnapshotFactory.create(
+            gene_core=gene, panel=source_panel
+        )
 
         # Add evaluation
         eval1 = EvaluationFactory(user=self.gel_user)
         source_entry.evaluation.add(eval1)
 
         # Create target panel without gene
-        target_panel = GenePanelSnapshotFactory()
+        target_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
 
         form = CopyGeneForm(
             data={
@@ -46,8 +48,10 @@ class CopyGeneTest(LoginGELUser):
     def test_copy_gene_form_requires_target_panels(self):
         """Test that form requires at least one target panel."""
         gene = GeneFactory()
-        source_panel = GenePanelSnapshotFactory()
-        source_entry = GenePanelEntrySnapshotFactory.create(gene_core=gene, panel=source_panel)
+        source_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        source_entry = GenePanelEntrySnapshotFactory.create(
+            gene_core=gene, panel=source_panel
+        )
 
         # Add evaluation
         eval1 = EvaluationFactory(user=self.gel_user)
@@ -69,15 +73,17 @@ class CopyGeneTest(LoginGELUser):
     def test_copy_gene_form_requires_reviews(self):
         """Test that form requires at least one review to be selected."""
         gene = GeneFactory()
-        source_panel = GenePanelSnapshotFactory()
-        source_entry = GenePanelEntrySnapshotFactory.create(gene_core=gene, panel=source_panel)
+        source_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        source_entry = GenePanelEntrySnapshotFactory.create(
+            gene_core=gene, panel=source_panel
+        )
 
         # Add evaluation
         eval1 = EvaluationFactory(user=self.gel_user)
         source_entry.evaluation.add(eval1)
 
         # Create target panel without gene
-        target_panel = GenePanelSnapshotFactory()
+        target_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
 
         form = CopyGeneForm(
             data={
@@ -97,7 +103,7 @@ class CopyGeneTest(LoginGELUser):
         gene = GeneFactory()
 
         # Create source panel with gene
-        source_panel = GenePanelSnapshotFactory()
+        source_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
         source_entry = GenePanelEntrySnapshotFactory.create(
             gene_core=gene,
             panel=source_panel,
@@ -110,8 +116,8 @@ class CopyGeneTest(LoginGELUser):
         source_entry.evaluation.add(eval1)
 
         # Create target panels without gene
-        target_panel_1 = GenePanelSnapshotFactory()
-        target_panel_2 = GenePanelSnapshotFactory()
+        target_panel_1 = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        target_panel_2 = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
 
         # Submit form
         form = CopyGeneForm(
@@ -146,7 +152,7 @@ class CopyGeneTest(LoginGELUser):
     def test_copy_gene_view_requires_auth(self):
         """Test that copy gene view requires authentication."""
         gene = GeneFactory()
-        panel = GenePanelSnapshotFactory()
+        panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
         GenePanelEntrySnapshotFactory.create(gene_core=gene, panel=panel)
 
         url = reverse_lazy(
@@ -163,7 +169,7 @@ class CopyGeneTest(LoginGELUser):
     def test_copy_gene_view_get(self):
         """Test GET request to copy gene view."""
         gene = GeneFactory()
-        panel = GenePanelSnapshotFactory()
+        panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
         GenePanelEntrySnapshotFactory.create(gene_core=gene, panel=panel)
 
         url = reverse_lazy(
@@ -185,7 +191,7 @@ class CopyGeneTest(LoginGELUser):
         passed to the included entity_evaluation.html template.
         """
         gene = GeneFactory()
-        panel = GenePanelSnapshotFactory()
+        panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
         gene_entry = GenePanelEntrySnapshotFactory.create(gene_core=gene, panel=panel)
 
         # Create an evaluation from the logged-in user with a comment
@@ -212,14 +218,16 @@ class CopyGeneTest(LoginGELUser):
         """Test successful POST to copy gene view."""
         gene = GeneFactory()
 
-        source_panel = GenePanelSnapshotFactory()
-        source_entry = GenePanelEntrySnapshotFactory.create(gene_core=gene, panel=source_panel)
+        source_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        source_entry = GenePanelEntrySnapshotFactory.create(
+            gene_core=gene, panel=source_panel
+        )
 
         # Add evaluation
         eval1 = EvaluationFactory(user=self.gel_user)
         source_entry.evaluation.add(eval1)
 
-        target_panel = GenePanelSnapshotFactory()
+        target_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
 
         url = reverse_lazy(
             "panels:copy_gene_from_panel",
@@ -247,7 +255,7 @@ class CopyGeneTest(LoginGELUser):
         gene = GeneFactory()
 
         # Create source panel with gene and reviews
-        source_panel = GenePanelSnapshotFactory()
+        source_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
         source_entry = GenePanelEntrySnapshotFactory.create(
             gene_core=gene,
             panel=source_panel,
@@ -259,7 +267,7 @@ class CopyGeneTest(LoginGELUser):
         source_entry.evaluation.add(eval1, eval2)
 
         # Create target panel
-        target_panel = GenePanelSnapshotFactory()
+        target_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
 
         # Submit form with selected reviews
         form = CopyGeneForm(
@@ -285,6 +293,217 @@ class CopyGeneTest(LoginGELUser):
         self.assertEqual(copied_gene.evaluation.count(), 1)
         self.assertEqual(copied_gene.evaluation.first().user.pk, eval1.user.pk)
 
+    def test_copy_to_panel_with_gene_no_conflicts(self):
+        """Test copying to panel that already has the gene but no review conflicts."""
+        gene = GeneFactory()
+
+        # Create source panel with gene and review
+        source_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        source_entry = GenePanelEntrySnapshotFactory.create(
+            gene_core=gene,
+            panel=source_panel,
+            moi="MONOALLELIC",
+            phenotypes=["Source phenotype"],
+            evaluation=(None,),
+        )
+        eval1 = EvaluationFactory(user=self.gel_user)
+        source_entry.evaluation.add(eval1)
+
+        # Create target panel with the SAME gene but different metadata and NO reviews
+        target_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        GenePanelEntrySnapshotFactory.create(
+            gene_core=gene,
+            panel=target_panel,
+            moi="BIALLELIC",  # Different MOI
+            phenotypes=["Target phenotype"],  # Different phenotype
+            evaluation=(None,),
+        )
+
+        # Copy gene
+        form = CopyGeneForm(
+            data={
+                "target_panels": [target_panel.pk],
+                "reviews_to_copy": [str(eval1.user.pk)],
+            },
+            gene_symbol=gene.gene_symbol,
+            user=self.gel_user,
+            source_panel_id=source_panel.panel.pk,
+        )
+        self.assertTrue(form.is_valid())
+        form.copy_gene_to_panels()
+
+        # Get updated target panel
+        updated_target = GenePanel.objects.get_panel(
+            pk=str(target_panel.panel.pk)
+        ).active_panel
+        copied_gene = updated_target.get_gene(gene.gene_symbol)
+
+        # Gene metadata should NOT be changed (kept from target)
+        self.assertEqual(copied_gene.moi, "BIALLELIC")
+        self.assertEqual(copied_gene.phenotypes, ["Target phenotype"])
+
+        # Review should be copied
+        self.assertEqual(copied_gene.evaluation.count(), 1)
+        self.assertEqual(copied_gene.evaluation.first().user.pk, eval1.user.pk)
+
+    def test_copy_to_panel_with_gene_some_conflicts(self):
+        """Test copying when some reviewers already reviewed the gene in target."""
+        from accounts.tests.factories import UserFactory
+
+        gene = GeneFactory()
+
+        # Create source panel with gene and two reviews
+        source_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        source_entry = GenePanelEntrySnapshotFactory.create(
+            gene_core=gene, panel=source_panel, evaluation=(None,)
+        )
+
+        user1 = self.gel_user
+        user2 = UserFactory()
+
+        eval1 = EvaluationFactory(user=user1)
+        eval2 = EvaluationFactory(user=user2)
+        source_entry.evaluation.add(eval1, eval2)
+
+        # Create target panel with same gene and one existing review (from user1)
+        target_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        target_entry = GenePanelEntrySnapshotFactory.create(
+            gene_core=gene, panel=target_panel, evaluation=(None,)
+        )
+        existing_eval = EvaluationFactory(user=user1)
+        target_entry.evaluation.add(existing_eval)
+
+        # Try to copy both reviews
+        form = CopyGeneForm(
+            data={
+                "target_panels": [target_panel.pk],
+                "reviews_to_copy": [str(user1.pk), str(user2.pk)],
+            },
+            gene_symbol=gene.gene_symbol,
+            user=self.gel_user,
+            source_panel_id=source_panel.panel.pk,
+        )
+        self.assertTrue(form.is_valid())
+        form.copy_gene_to_panels()
+
+        # Get updated target panel
+        updated_target = GenePanel.objects.get_panel(
+            pk=str(target_panel.panel.pk)
+        ).active_panel
+        copied_gene = updated_target.get_gene(gene.gene_symbol)
+
+        # Should have 2 reviews: existing one + new one from user2 (user1 skipped)
+        self.assertEqual(copied_gene.evaluation.count(), 2)
+        evaluator_ids = set(copied_gene.evaluation.values_list("user_id", flat=True))
+        self.assertIn(user1.pk, evaluator_ids)
+        self.assertIn(user2.pk, evaluator_ids)
+
+    def test_copy_to_panel_with_gene_all_conflicts(self):
+        """Test copying when all reviewers already reviewed the gene in target."""
+        gene = GeneFactory()
+
+        # Create source panel with gene and review
+        source_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        source_entry = GenePanelEntrySnapshotFactory.create(
+            gene_core=gene, panel=source_panel, evaluation=(None,)
+        )
+        eval1 = EvaluationFactory(user=self.gel_user)
+        source_entry.evaluation.add(eval1)
+
+        # Create target panel with same gene and same reviewer
+        target_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        target_entry = GenePanelEntrySnapshotFactory.create(
+            gene_core=gene, panel=target_panel, evaluation=(None,)
+        )
+        existing_eval = EvaluationFactory(user=self.gel_user)
+        target_entry.evaluation.add(existing_eval)
+
+        # Try to copy the review
+        form = CopyGeneForm(
+            data={
+                "target_panels": [target_panel.pk],
+                "reviews_to_copy": [str(self.gel_user.pk)],
+            },
+            gene_symbol=gene.gene_symbol,
+            user=self.gel_user,
+            source_panel_id=source_panel.panel.pk,
+        )
+        self.assertTrue(form.is_valid())
+        form.copy_gene_to_panels()
+
+        # Get updated target panel
+        updated_target = GenePanel.objects.get_panel(
+            pk=str(target_panel.panel.pk)
+        ).active_panel
+        copied_gene = updated_target.get_gene(gene.gene_symbol)
+
+        # Should still have only 1 review (existing one, none added)
+        self.assertEqual(copied_gene.evaluation.count(), 1)
+
+    def test_copy_to_mixed_targets(self):
+        """Test copying to multiple panels where some have gene and some don't."""
+        from accounts.tests.factories import UserFactory
+
+        gene = GeneFactory()
+
+        # Create source panel with gene and reviews
+        source_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        source_entry = GenePanelEntrySnapshotFactory.create(
+            gene_core=gene,
+            panel=source_panel,
+            moi="MONOALLELIC",
+            evaluation=(None,),
+        )
+        user1 = self.gel_user
+        user2 = UserFactory()
+        eval1 = EvaluationFactory(user=user1)
+        eval2 = EvaluationFactory(user=user2)
+        source_entry.evaluation.add(eval1, eval2)
+
+        # Target 1: doesn't have gene
+        target_panel_1 = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+
+        # Target 2: has gene with one existing review
+        target_panel_2 = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        target_entry_2 = GenePanelEntrySnapshotFactory.create(
+            gene_core=gene,
+            panel=target_panel_2,
+            moi="BIALLELIC",
+            evaluation=(None,),
+        )
+        existing_eval = EvaluationFactory(user=user1)
+        target_entry_2.evaluation.add(existing_eval)
+
+        # Copy to both
+        form = CopyGeneForm(
+            data={
+                "target_panels": [target_panel_1.pk, target_panel_2.pk],
+                "reviews_to_copy": [str(user1.pk), str(user2.pk)],
+            },
+            gene_symbol=gene.gene_symbol,
+            user=self.gel_user,
+            source_panel_id=source_panel.panel.pk,
+        )
+        self.assertTrue(form.is_valid())
+        form.copy_gene_to_panels()
+
+        # Target 1: should have new gene with both reviews
+        updated_target_1 = GenePanel.objects.get_panel(
+            pk=str(target_panel_1.panel.pk)
+        ).active_panel
+        self.assertTrue(updated_target_1.has_gene(gene.gene_symbol))
+        gene_1 = updated_target_1.get_gene(gene.gene_symbol)
+        self.assertEqual(gene_1.moi, "MONOALLELIC")  # Copied from source
+        self.assertEqual(gene_1.evaluation.count(), 2)
+
+        # Target 2: should have same metadata, 2 reviews (existing + user2)
+        updated_target_2 = GenePanel.objects.get_panel(
+            pk=str(target_panel_2.panel.pk)
+        ).active_panel
+        gene_2 = updated_target_2.get_gene(gene.gene_symbol)
+        self.assertEqual(gene_2.moi, "BIALLELIC")  # Unchanged from target
+        self.assertEqual(gene_2.evaluation.count(), 2)
+
 
 class CopyGeneReviewerTest(LoginReviewerUser):
     """Test that non-GEL reviewers cannot copy genes."""
@@ -292,7 +511,7 @@ class CopyGeneReviewerTest(LoginReviewerUser):
     def test_reviewer_cannot_access_copy_gene_view(self):
         """Test that non-GEL reviewers cannot access the copy gene view."""
         gene = GeneFactory()
-        panel = GenePanelSnapshotFactory()
+        panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
         GenePanelEntrySnapshotFactory.create(gene_core=gene, panel=panel)
 
         url = reverse_lazy(

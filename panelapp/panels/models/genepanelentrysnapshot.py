@@ -225,30 +225,23 @@ class GenePanelEntrySnapshot(AbstractEntity, TimeStampedModel):
         }
 
     def copy_reviews_to_new_gene(self, source_gene_entry, source_panel_name, user_ids_to_copy):
-        """Copy selected reviews from source gene to this newly created gene entry.
+        """Copy selected reviews from source gene to this gene entry.
 
-        This method is specifically for copying reviews to a gene that was just added
-        to a panel and has no existing reviews.
+        Reviews from evaluators who have already reviewed this gene in the target
+        panel will be skipped (not overwritten).
 
         Args:
             source_gene_entry: GenePanelEntrySnapshot to copy reviews from
             source_panel_name: Name of the source panel (for attribution)
             user_ids_to_copy: Set/list of user IDs whose reviews should be copied
-
-        Raises:
-            ValueError: If this gene already has reviews (not a new gene)
         """
-        # Safety check: ensure this is actually a new gene with no reviews
-        if self.evaluation.exists():
-            raise ValueError(
-                f"Cannot copy reviews to gene {self.name} - it already has existing reviews. "
-                "This method is only for newly added genes."
-            )
+        # Get existing evaluator IDs to avoid duplicates
+        existing_evaluator_ids = set(self.evaluation.values_list('user_id', flat=True))
 
-        # Filter evaluations to the selected users
+        # Filter evaluations to the selected users who haven't already reviewed
         evaluations_to_copy = [
             ev for ev in source_gene_entry.evaluation.all()
-            if ev.user_id in user_ids_to_copy
+            if ev.user_id in user_ids_to_copy and ev.user_id not in existing_evaluator_ids
         ]
 
         if not evaluations_to_copy:
