@@ -98,7 +98,7 @@ jobs:
           sudo apt-get install -y libpq-dev gcc python3-dev
           pip install pip==23.3.2
           pip install .[dev,tests]
-          pip install pytest pytest-runner
+          pip install setuptools==58.1.0
 
       - name: Run tests
         run: pytest
