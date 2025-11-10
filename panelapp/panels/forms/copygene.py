@@ -14,20 +14,16 @@ class CopyGeneForm(forms.Form):
     in a single operation.
     """
 
-    gene_symbol_hidden = forms.CharField(
-        widget=forms.HiddenInput(),
-        required=False,
-    )
-
     target_panels = forms.ModelMultipleChoiceField(
-        queryset=GenePanelSnapshot.objects.none(),
+        queryset=GenePanelSnapshot.objects.get_active_annotated(
+            internal=False, deleted=False
+        ).exclude(is_super_panel=True),
         label="Target panels",
         widget=ModelSelect2Multiple(
-            url="autocomplete-panels-without-gene",
-            forward=["gene_symbol_hidden"],
+            url="autocomplete-simple-panels",
             attrs={"data-minimum-input-length": 1},
         ),
-        help_text="Search and select one or more panels (panels already containing this gene are excluded)",
+        help_text="Gene and selected reviews will be copied to panels without the gene. For panels that already have the gene, only new reviews from selected reviewers will be added.",
     )
 
     reviews_to_copy = forms.MultipleChoiceField(
@@ -43,33 +39,10 @@ class CopyGeneForm(forms.Form):
         source_panel_id = kwargs.pop("source_panel_id")
         super().__init__(*args, **kwargs)
 
-        # Set the hidden field with the gene symbol for forwarding to autocomplete
-        self.fields["gene_symbol_hidden"].initial = self.gene_symbol
-
         # Get the source panel
         self.source_panel = GenePanel.objects.get_panel(
             pk=str(source_panel_id)
         ).active_panel
-
-        # Determine if user has admin access
-        is_admin = self.user.is_authenticated and self.user.reviewer.is_GEL()
-
-        # Get all active panels (for target selection)
-        all_panels = GenePanelSnapshot.objects.get_active(
-            all=is_admin, internal=is_admin
-        )
-
-        # Target panels should NOT already contain this gene
-        # The autocomplete view handles this filtering, but we also set
-        # the queryset here as a fallback for validation
-        panels_with_gene = GenePanelSnapshot.objects.get_shared_panels(
-            self.gene_symbol, all=is_admin, internal=is_admin
-        )
-        panels_without_gene = all_panels.exclude(
-            pk__in=panels_with_gene.values_list("pk", flat=True)
-        )
-
-        self.fields["target_panels"].queryset = panels_without_gene
 
         # Populate review choices from source gene's evaluations
         source_gene_entry = self.source_panel.get_gene(

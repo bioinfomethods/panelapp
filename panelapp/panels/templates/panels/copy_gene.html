@@ -16,7 +16,6 @@
         <div class="col-md-8">
             <form action="{% url 'panels:copy_gene_from_panel' pk=source_panel.pk gene_symbol=gene_symbol %}" method="post">
                 {% csrf_token %}
-                {{ form.gene_symbol_hidden }}
 
                 {% if form.non_field_errors %}
                     <div class="alert alert-danger">
