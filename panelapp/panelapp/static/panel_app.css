@@ -414,7 +414,6 @@ th.sorted-asc .fa-arrow-down {
     max-width: 800px;
     font-size: 18px;
     color: #444;
-    margin-top: 20px;
 }
 
 .copy-container h1,
@@ -424,6 +423,14 @@ th.sorted-asc .fa-arrow-down {
     margin-top: 40px;
     margin-bottom: 20px;
     color: #333;
+}
+
+/* Remove top margin from first heading in copy-container */
+.copy-container h1:first-child,
+.copy-container h2:first-child,
+.copy-container h3:first-child,
+.copy-container h4:first-child {
+    margin-top: 0;
 }
 
 .copy-container h1 {

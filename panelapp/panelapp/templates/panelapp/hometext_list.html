@@ -2,10 +2,54 @@
 {% load staticfiles %}
 {% load markdown_deux_tags %}
 {% block body %}
+<style>
+  /*
+   * Fixed grid layout to prevent Bootstrap columns from stacking at any zoom level.
+   * Uses table display to override Bootstrap's responsive breakpoints.
+   *
+   * Note: These values are hardcoded to match Bootstrap 3's grid:
+   * - col-sm-3 = 25% width (3/12 columns)
+   * - col-sm-9 = 75% width (9/12 columns)
+   * - 15px padding matches Bootstrap's column gutters
+   * - -15px margins + calc(100% + 30px) width matches Bootstrap's row behavior
+   *
+   * A better approach would use Bootstrap's SASS variables directly, but this
+   * works reliably without modifying the build system.
+   */
+  .fixed-grid {
+    display: table;
+    width: calc(100% + 30px);
+    margin-left: -15px;
+    margin-right: -15px;
+    table-layout: fixed;
+  }
+  .fixed-grid .col-sm-3,
+  .fixed-grid .col-sm-9 {
+    display: table-cell;
+    padding-left: 15px;
+    padding-right: 15px;
+  }
+  .fixed-grid .col-sm-3 {
+    width: 25%;
+  }
+  .fixed-grid .col-sm-9 {
+    width: 75%;
+  }
+  .logo-center {
+    text-align: center;
+  }
+</style>
 <div class="splash" style="background-color: #EAF1F1">
   <div class="container">
-    <h1>{% block title %}PanelApp Australia{% endblock %}</h1>
-    <p class="lead">A crowdsourcing tool to allow gene panels to be shared, downloaded, viewed and evaluated by the Scientific Community</p>
+    <div class="row fixed-grid">
+      <div class="col-sm-3 logo-center">
+        <img src="https://panelapp-aus.org/media/images/Auspanel-01.png" alt="PanelApp Australia Logo" style="max-height: 150px; margin-top: 10px;">
+      </div>
+      <div class="col-sm-9">
+        <h1>{% block title %}PanelApp Australia{% endblock %}</h1>
+        <p class="lead">A collaborative platform for evidence-based gene and panel curation that supports best practice in clinical diagnostic genomics</p>
+      </div>
+    </div>
   </div>
 </div>
 
