@@ -3,9 +3,8 @@ name: Main workflow, test and deploy to AWS
 on:
   push:
     branches:
-      - main
-      - roo
       - develop
+      - staging
 
 permissions:
   id-token: write
@@ -24,16 +23,17 @@ jobs:
         run: |
           echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
-          if [ "$CI_ACTION_REF_NAME_SLUG" == "main" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "master" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "roo" ]; then
-            echo "env_name=prod" >> "$GITHUB_OUTPUT"
-            echo "github_actions_environment=prod" >> "$GITHUB_OUTPUT"
-          elif [ "$CI_ACTION_REF_NAME_SLUG" == "develop" ]; then
-            # FIXME: Only temporarily
-            echo "env_name=prod" >> "$GITHUB_OUTPUT"
-            echo "github_actions_environment=mcri-vcgs-prod" >> "$GITHUB_OUTPUT"
-          else
-            echo "env_name=test" >> "$GITHUB_OUTPUT"
-            echo "github_actions_environment=test" >> "$GITHUB_OUTPUT"
+
+          # Branch Selection
+          # if [ "$CI_ACTION_REF_NAME_SLUG" == "develop" ]; then
+          #   # Current prod deploy branch is develop and should be moved to mcri/prod in future
+          #   echo "env_name=prod" >> "$GITHUB_OUTPUT"
+          #   echo "github_actions_environment=mcri-vcgs-prod" >> "$GITHUB_OUTPUT"
+          # elif [ "$CI_ACTION_REF_NAME_SLUG" == "staging" ]; then
+
+          if [ "$CI_ACTION_REF_NAME_SLUG" == "staging" ]; then
+            echo "env_name=staging" >> "$GITHUB_OUTPUT"
+            echo "github_actions_environment=mcri-vcgs-staging" >> "$GITHUB_OUTPUT"
           fi
           echo "env_name=$env_name"
           echo "GITHUB_OUTPUT=$GITHUB_OUTPUT"
@@ -218,6 +218,8 @@ jobs:
       TF_VAR_terraform_infra_state_s3_bucket: ${{ vars.TERRAFORM_INFRA_STATE_S3_BUCKET }}
       TF_VAR_terraform_shared_state_s3_bucket: ${{ vars.TERRAFORM_SHARED_STATE_S3_BUCKET }}
       TF_VAR_cognito_suffix: ${{ vars.COGNITO_SUFFIX }}
+      TF_VAR_panelapp_replica_web: ${{ vars.PANELAPP_REPLICA_WEB }}
+      TF_VAR_panelapp_replica_worker: ${{ vars.PANELAPP_REPLICA_WORKER }}
 
     steps:
       - name: GitHub Environment Variables Action
