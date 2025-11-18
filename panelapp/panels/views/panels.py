@@ -25,6 +25,7 @@ import csv
 from datetime import datetime
 from django.db.models import Q, Count
 from django.contrib import messages
+from django.contrib.auth.models import Group
 from django.http import HttpResponse
 from django.core.exceptions import ValidationError
 from django.views.generic import ListView
@@ -57,6 +58,8 @@ from panels.models import ProcessingRunCode
 from panels.models import Activity
 from panels.models import GenePanel
 from panels.models import GenePanelSnapshot
+from panels.models import GenePanelEntrySnapshot
+from panels.activity_patterns import ActivityPattern
 from .entities import EchoWriter
 
 
@@ -378,6 +381,38 @@ class ActivityListView(ListView):
                 Q(extra_data__entity_name=entity)
                 | Q(entity_name=entity)
                 | Q(text__icontains=entity)
+            )
+
+        # Filter by user type
+        if self.request.GET.get("user_type"):
+            user_type = self.request.GET.get("user_type")
+            qs = qs.filter(user__reviewer__user_type=user_type)
+
+        # Filter by training group membership
+        if self.request.GET.get("training_group"):
+            training_group = Group.objects.get(name="Training")
+            qs = qs.filter(user__groups=training_group)
+
+        # Filter by event type using text pattern matching
+        event_types = self.request.GET.getlist("event_type")
+        if event_types:
+            event_q = Q()
+            if "gene_addition" in event_types:
+                event_q |= ActivityPattern.build_entity_added_filter()
+            if "rating_change" in event_types:
+                event_q |= ActivityPattern.build_rating_changed_filter()
+            qs = qs.filter(event_q)
+
+        # Filter by flagged genes (requires JOIN to current gene state)
+        if self.request.GET.get("flagged_genes"):
+            # Get all currently flagged gene names
+            flagged_genes = GenePanelEntrySnapshot.objects.filter(
+                flagged=True
+            ).values_list("gene_core__gene_symbol", flat=True).distinct()
+            # Filter activities where entity_name matches any flagged gene
+            qs = qs.filter(
+                entity_type="gene",
+                entity_name__in=flagged_genes
             )
 
         return qs.prefetch_related("user", "panel", "user__reviewer")
