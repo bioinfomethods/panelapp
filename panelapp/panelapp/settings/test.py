@@ -27,7 +27,7 @@ import logging
 logging.disable(logging.CRITICAL)
 
 PANEL_APP_EMAIL = "test@localhost"
-DEBUG = False
+DEBUG = True
 TEMPLATE_DEBUG = False
 EMAIL_HOST = "localhost"
 EMAIL_PORT = 25

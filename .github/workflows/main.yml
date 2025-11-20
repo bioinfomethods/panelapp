@@ -34,6 +34,9 @@ jobs:
           if [ "$CI_ACTION_REF_NAME_SLUG" == "staging" ]; then
             echo "env_name=staging" >> "$GITHUB_OUTPUT"
             echo "github_actions_environment=mcri-vcgs-staging" >> "$GITHUB_OUTPUT"
+          elif [ "$CI_ACTION_REF_NAME_SLUG" == "staging-merges" ]; then
+            echo "env_name=staging" >> "$GITHUB_OUTPUT"
+            echo "github_actions_environment=mcri-vcgs-staging" >> "$GITHUB_OUTPUT"
           fi
           echo "env_name=$env_name"
           echo "GITHUB_OUTPUT=$GITHUB_OUTPUT"

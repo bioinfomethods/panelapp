@@ -1,4 +1,15 @@
-FROM python:3.9-bullseye
+##################################################
+# Zscalar
+##################################################
+
+FROM python:3.9-bullseye AS zscalar_python_3_9-bullseye
+ARG BUILD_D=./docker/dev/build.d
+COPY ${BUILD_D}/build.sh /build.d/build.sh
+RUN if command -v bash >/dev/null 2>&1; then bash /build.d/build.sh; else sh /build.d/build.sh; fi
+
+##################################################
+
+FROM zscalar_python_3_9-bullseye
 
 RUN mkdir -p /app/panelapp
 
