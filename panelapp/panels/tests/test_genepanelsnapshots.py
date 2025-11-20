@@ -260,7 +260,17 @@ class GenePanelSnapshotTest(LoginGELUser):
         sources = set([ev.name for ev in gpes.evidence.all()])
         status = gpes.evidence_status(True)
 
-        sources.add("ClinGen")
+        # Factory generates 4 sources from DROPDOWN_SOURCES (6 options),
+        # so find one that wasn't generated
+        new_source = None
+        for source in Evidence.DROPDOWN_SOURCES:
+            if source not in sources:
+                new_source = source
+                break
+
+        assert new_source is not None, "Factory used all DROPDOWN_SOURCES"
+
+        sources.add(new_source)
         gene_data = {
             "gene": gpes.gene_core.pk,
             "gene_name": "Gene name",
@@ -280,7 +290,7 @@ class GenePanelSnapshotTest(LoginGELUser):
             gpes.gene_core.gene_symbol
         )
         assert gene.saved_gel_status == status + 1
-        assert 'ClinGen' in [ev.name for ev in gene.evidence.all()]
+        assert new_source in [ev.name for ev in gene.evidence.all()]
 
     def test_remove_sources(self):
         """Remove sources via edit gene detail section"""
