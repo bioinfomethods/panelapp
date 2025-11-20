@@ -215,6 +215,8 @@ jobs:
       TF_VAR_terraform_infra_state_s3_bucket: ${{ vars.TERRAFORM_INFRA_STATE_S3_BUCKET }}
       TF_VAR_terraform_shared_state_s3_bucket: ${{ vars.TERRAFORM_SHARED_STATE_S3_BUCKET }}
       TF_VAR_cognito_suffix: ${{ vars.COGNITO_SUFFIX }}
+      TF_VAR_panelapp_replica_web: ${{ vars.PANELAPP_REPLICA_WEB }}
+      TF_VAR_panelapp_replica_worker: ${{ vars.PANELAPP_REPLICA_WORKER }}
 
     steps:
       - name: GitHub Environment Variables Action
