@@ -26,9 +26,11 @@ from random import randint
 from django.shortcuts import reverse
 from django.urls import reverse_lazy
 from django.utils import timezone
+from django.contrib.auth.models import Group
 from faker import Factory
 from accounts.tests.setup import LoginReviewerUser
 from accounts.tests.setup import LoginGELUser
+from accounts.models import Reviewer
 from panels.tests.factories import GenePanelEntrySnapshotFactory
 from panels.tests.factories import GenePanelSnapshotFactory
 from panels.tests.factories import GeneFactory
@@ -242,6 +244,163 @@ class TestActivities(LoginReviewerUser):
         )
         res = self.client.get(activities_url)
         self.assertEqual(len(res.context["activities"]), 0)
+
+    def test_filter_by_user_type(self):
+        """Test filtering activities by user type (GEL, REVIEWER, EXTERNAL)"""
+        gps = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        GenePanelEntrySnapshotFactory.create_batch(4, panel=gps)
+        gene = GeneFactory()
+        url = reverse_lazy(
+            "panels:add_entity", kwargs={"pk": gps.panel.pk, "entity_type": "gene"}
+        )
+        gene_data = {
+            "gene": gene.pk,
+            "source": Evidence.OTHER_SOURCES[0],
+            "phenotypes": "{};{};{}".format(*fake.sentences(nb=3)),
+            "rating": Evaluation.RATINGS.AMBER,
+            "moi": [x for x in Evaluation.MODES_OF_INHERITANCE][randint(1, 12)][0],
+            "mode_of_pathogenicity": [x for x in Evaluation.MODES_OF_PATHOGENICITY][
+                randint(1, 2)
+            ][0],
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+        }
+        # Activity created by verified_user (REVIEWER type)
+        self.client.post(url, gene_data)
+
+        # Filter for REVIEWER user type - should find the activity
+        activities_url = reverse("panels:activity") + "?user_type=REVIEWER"
+        res = self.client.get(activities_url)
+        self.assertEqual(len(res.context["activities"]), 1)
+
+        # Filter for GEL user type - should find nothing
+        activities_url = reverse("panels:activity") + "?user_type=GEL"
+        res = self.client.get(activities_url)
+        self.assertEqual(len(res.context["activities"]), 0)
+
+    def test_filter_by_training_group(self):
+        """Test filtering activities by training group membership"""
+        # Ensure Training group exists
+        training_group, _ = Group.objects.get_or_create(name="Training")
+
+        gps = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        GenePanelEntrySnapshotFactory.create_batch(4, panel=gps)
+        gene = GeneFactory()
+        url = reverse_lazy(
+            "panels:add_entity", kwargs={"pk": gps.panel.pk, "entity_type": "gene"}
+        )
+        gene_data = {
+            "gene": gene.pk,
+            "source": Evidence.OTHER_SOURCES[0],
+            "phenotypes": "{};{};{}".format(*fake.sentences(nb=3)),
+            "rating": Evaluation.RATINGS.AMBER,
+            "moi": [x for x in Evaluation.MODES_OF_INHERITANCE][randint(1, 12)][0],
+            "mode_of_pathogenicity": [x for x in Evaluation.MODES_OF_PATHOGENICITY][
+                randint(1, 2)
+            ][0],
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+        }
+        # Activity created by verified_user
+        self.client.post(url, gene_data)
+
+        # Filter for training group - should find nothing (user not in group yet)
+        activities_url = reverse("panels:activity") + "?training_group=on"
+        res = self.client.get(activities_url)
+        self.assertEqual(len(res.context["activities"]), 0)
+
+        # Add verified_user to training group
+        self.verified_user.groups.add(training_group)
+
+        # Filter for training group - should find the activity now
+        # (filter is based on current user group membership)
+        activities_url = reverse("panels:activity") + "?training_group=on"
+        res = self.client.get(activities_url)
+        self.assertEqual(len(res.context["activities"]), 1)
+
+    def test_filter_by_event_type_gene_addition(self):
+        """Test filtering activities by gene addition event type"""
+        gps = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        GenePanelEntrySnapshotFactory.create_batch(4, panel=gps)
+        gene = GeneFactory()
+        url = reverse_lazy(
+            "panels:add_entity", kwargs={"pk": gps.panel.pk, "entity_type": "gene"}
+        )
+        gene_data = {
+            "gene": gene.pk,
+            "source": Evidence.OTHER_SOURCES[0],
+            "phenotypes": "{};{};{}".format(*fake.sentences(nb=3)),
+            "rating": Evaluation.RATINGS.AMBER,
+            "moi": [x for x in Evaluation.MODES_OF_INHERITANCE][randint(1, 12)][0],
+            "mode_of_pathogenicity": [x for x in Evaluation.MODES_OF_PATHOGENICITY][
+                randint(1, 2)
+            ][0],
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+        }
+        # Adding gene creates activity with "was added" text
+        self.client.post(url, gene_data)
+
+        # Filter for gene_addition event type - should find the activity
+        activities_url = reverse("panels:activity") + "?event_type=gene_addition"
+        res = self.client.get(activities_url)
+        self.assertGreater(len(res.context["activities"]), 0)
+
+        # Filter for rating_change event type - should find nothing (we only added a gene)
+        activities_url = reverse("panels:activity") + "?event_type=rating_change"
+        res = self.client.get(activities_url)
+        self.assertEqual(len(res.context["activities"]), 0)
+
+    def test_filter_by_event_type_multiple(self):
+        """Test filtering activities with multiple event types selected"""
+        gps = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        GenePanelEntrySnapshotFactory.create_batch(4, panel=gps)
+        gene = GeneFactory()
+        url = reverse_lazy(
+            "panels:add_entity", kwargs={"pk": gps.panel.pk, "entity_type": "gene"}
+        )
+        gene_data = {
+            "gene": gene.pk,
+            "source": Evidence.OTHER_SOURCES[0],
+            "phenotypes": "{};{};{}".format(*fake.sentences(nb=3)),
+            "rating": Evaluation.RATINGS.AMBER,
+            "moi": [x for x in Evaluation.MODES_OF_INHERITANCE][randint(1, 12)][0],
+            "mode_of_pathogenicity": [x for x in Evaluation.MODES_OF_PATHOGENICITY][
+                randint(1, 2)
+            ][0],
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+        }
+        # Adding gene creates activity with "was added" text
+        self.client.post(url, gene_data)
+
+        # Filter for both gene_addition and rating_change - should find gene addition
+        activities_url = reverse("panels:activity") + "?event_type=gene_addition&event_type=rating_change"
+        res = self.client.get(activities_url)
+        self.assertGreater(len(res.context["activities"]), 0)
+
+    def test_filter_by_flagged_genes(self):
+        """Test filtering activities for flagged genes only"""
+        gps = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        gene = GeneFactory()
+        url = reverse_lazy(
+            "panels:add_entity", kwargs={"pk": gps.panel.pk, "entity_type": "gene"}
+        )
+        gene_data = {
+            "gene": gene.pk,
+            "source": Evidence.OTHER_SOURCES[0],
+            "phenotypes": "{};{};{}".format(*fake.sentences(nb=3)),
+            "rating": Evaluation.RATINGS.AMBER,
+            "moi": [x for x in Evaluation.MODES_OF_INHERITANCE][randint(1, 12)][0],
+            "mode_of_pathogenicity": [x for x in Evaluation.MODES_OF_PATHOGENICITY][
+                randint(1, 2)
+            ][0],
+            "penetrance": GenePanelEntrySnapshot.PENETRANCE.Incomplete,
+        }
+        # Add gene - when added by REVIEWER, it gets flagged=True
+        self.client.post(url, gene_data)
+
+        # Filter for flagged genes - should find the activity
+        activities_url = reverse("panels:activity") + "?flagged_genes=on"
+        res = self.client.get(activities_url)
+        # The gene should be flagged since it was added by a REVIEWER (not GEL)
+        self.assertGreater(len(res.context["activities"]), 0)
 
 
 class TestExportActivities(LoginGELUser):
