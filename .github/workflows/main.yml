@@ -3,9 +3,8 @@ name: Main workflow, test and deploy to AWS
 on:
   push:
     branches:
-      - main
-      - roo
-      - develop
+      - mcri-vcgs-prod
+      - mcri-vcgs-staging
 
 permissions:
   id-token: write
@@ -24,16 +23,14 @@ jobs:
         run: |
           echo "CI_ACTION_REF_NAME_SLUG=$CI_ACTION_REF_NAME_SLUG"
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
-          if [ "$CI_ACTION_REF_NAME_SLUG" == "main" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "master" ] || [ "$CI_ACTION_REF_NAME_SLUG" == "roo" ]; then
-            echo "env_name=prod" >> "$GITHUB_OUTPUT"
-            echo "github_actions_environment=prod" >> "$GITHUB_OUTPUT"
-          elif [ "$CI_ACTION_REF_NAME_SLUG" == "develop" ]; then
-            # FIXME: Only temporarily
+          # Branch Selection
+
+          if [ "$CI_ACTION_REF_NAME_SLUG" == "mcri-vcgs-prod" ]; then
             echo "env_name=prod" >> "$GITHUB_OUTPUT"
             echo "github_actions_environment=mcri-vcgs-prod" >> "$GITHUB_OUTPUT"
-          else
-            echo "env_name=test" >> "$GITHUB_OUTPUT"
-            echo "github_actions_environment=test" >> "$GITHUB_OUTPUT"
+          elif [ "$CI_ACTION_REF_NAME_SLUG" == "mcri-vcgs-staging" ]; then
+            echo "env_name=staging" >> "$GITHUB_OUTPUT"
+            echo "github_actions_environment=mcri-vcgs-staging" >> "$GITHUB_OUTPUT"
           fi
           echo "env_name=$env_name"
           echo "GITHUB_OUTPUT=$GITHUB_OUTPUT"
