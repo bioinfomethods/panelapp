@@ -75,6 +75,12 @@
             <dt>OMIM</dt>
             <dd><a href="http://omim.org/entry/{{ entity.gene.omim_gene.0 }}" target="_blank">{{ entity.gene.omim_gene.0 }}</a></dd>
             {% endif %}
+            {% if entity.gene.gene_symbol %}
+            <dt>ClinGen</dt>
+            <dd><a href="https://search.clinicalgenome.org/kb/genes/{{ entity.gene.gene_symbol }}" target="_blank">{{ entity.gene.gene_symbol }}</a></dd>
+            <dt>DECIPHER</dt>
+            <dd><a href="https://www.deciphergenomics.org/gene/{{ entity.gene.gene_symbol }}/overview/protein-genomic-info" target="_blank">{{ entity.gene.gene_symbol }}</a></dd>
+            {% endif %}
             <dt>Clinvar variants</dt>
             <dd>
                 <a href="http://www.ncbi.nlm.nih.gov/clinvar?term={{ entity.gene.gene_symbol }}%5BGene%20Name%5D" target="_blank"> Variants in {{ entity.gene.gene_symbol }}</a>
