@@ -50,6 +50,32 @@ class ActivityFilterForm(forms.Form):
             }
         ),
     )
+    user_type = forms.ChoiceField(
+        required=False,
+        choices=[
+            ("", "All User Types"),
+            ("GEL", "GEL Curators"),
+            ("REVIEWER", "Reviewers"),
+            ("EXTERNAL", "External Users"),
+        ],
+    )
+    training_group = forms.BooleanField(
+        required=False,
+        label="Training users only",
+    )
+    event_type = forms.MultipleChoiceField(
+        required=False,
+        label="Event Types (select to filter, or leave blank for all)",
+        widget=forms.CheckboxSelectMultiple,
+        choices=[
+            ("gene_addition", "Gene/Entity Additions"),
+            ("rating_change", "Rating/Classification Changes"),
+        ],
+    )
+    flagged_genes = forms.BooleanField(
+        required=False,
+        label="Flagged genes only",
+    )
 
     def __init__(self, *args, **kwargs):
         panels = kwargs.pop("panels")
