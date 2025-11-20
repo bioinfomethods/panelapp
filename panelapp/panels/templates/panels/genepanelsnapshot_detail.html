@@ -79,8 +79,10 @@
                 {% endif %}
             {% endif %}
             {% if entity.gene.omim_gene|length > 0 %}
-              <a href="http://omim.org/entry/{{ entity.gene.omim_gene.0 }}" target="_blank">OMIM: {{ entity.gene.omim_gene.0 }}</a>, <a href="https://www.ebi.ac.uk/gene2phenotype/search?panel=ALL&search_term={{ entity.gene.gene_symbol }}" target="_blank">Gene2Phenotype</a><br />
+              <a href="http://omim.org/entry/{{ entity.gene.omim_gene.0 }}" target="_blank">OMIM: {{ entity.gene.omim_gene.0 }}</a>,
             {% endif %}
+            <a href="https://search.clinicalgenome.org/kb/genes/{{ entity.gene.gene_symbol }}" target="_blank">ClinGen</a>,
+            <a href="https://www.deciphergenomics.org/gene/{{ entity.gene.gene_symbol }}/overview/protein-genomic-info" target="_blank">DECIPHER</a><br />
             {% with shared_panels=sharing_panels %}
                 {{ entity.gene.gene_symbol }} is in <a href="{% url 'panels:entity_detail' entity.gene.gene_symbol %}">{{ shared_panels|length }} panel{{ shared_panels|pluralize }}</a>
             {% endwith %}
