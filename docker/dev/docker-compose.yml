@@ -72,6 +72,7 @@ services:
       - AWS_STATICFILES_LOCATION=static
       - AWS_S3_MEDIAFILES_BUCKET_NAME=media-bucket
       - AWS_MEDIAFILES_LOCATION=media
+      - AWS_S3_REPORTS_BUCKET_NAME=reports-bucket
 #      - STATIC_ROOT=/static
 #      - MEDIA_ROOT=/media
       - USE_SQS=TRUE
@@ -112,6 +113,7 @@ services:
       - USE_S3=TRUE
       - AWS_S3_MEDIAFILES_BUCKET_NAME=media-bucket
       - AWS_MEDIAFILES_LOCATION=media
+      - AWS_S3_REPORTS_BUCKET_NAME=reports-bucket
       - USE_SQS=TRUE
       - CELERY_BROKER_URL=sqs://@localstack:4576
 #      - CELERY_BROKER_URL=amqp://rabbitmq/panelapp

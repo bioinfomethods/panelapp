@@ -378,6 +378,37 @@ class ModifyEntityCommonMixin(EntityMixin):
 class PanelAddEntityView(
     ModifyEntityCommonMixin, VerifiedReviewerRequiredMixin, CreateView
 ):
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+
+        # Check for prefill data from report (pop clears it after use)
+        prefill_data = self.request.session.pop("prefill_data", None)
+        if prefill_data and prefill_data.get("form_type") == "add":
+            initial = kwargs.get("initial", {})
+
+            if prefill_data.get("gene"):
+                initial["gene"] = prefill_data["gene"]
+            if prefill_data.get("gene_name"):
+                initial["gene_name"] = prefill_data["gene_name"]
+            if prefill_data.get("source"):
+                initial["source"] = prefill_data["source"]
+            if prefill_data.get("rating"):
+                initial["rating"] = prefill_data["rating"]
+            if prefill_data.get("moi"):
+                initial["moi"] = prefill_data["moi"]
+            if prefill_data.get("mode_of_pathogenicity"):
+                initial["mode_of_pathogenicity"] = prefill_data["mode_of_pathogenicity"]
+            if prefill_data.get("publications"):
+                initial["publications"] = prefill_data["publications"]
+            if prefill_data.get("phenotypes"):
+                initial["phenotypes"] = prefill_data["phenotypes"]
+            if prefill_data.get("comments"):
+                initial["comments"] = prefill_data["comments"]
+
+            kwargs["initial"] = initial
+
+        return kwargs
+
     def get_template_names(self):
         if self.is_gene():
             return "panels/genepanel_add_gene.html"
@@ -547,13 +578,27 @@ class EntityReviewView(VerifiedReviewerRequiredMixin, EntityMixin, UpdateView):
         elif self.is_region():
             kwargs["region"] = self.object
 
-        if not kwargs["initial"]:
-            kwargs["initial"] = {}
-            if self.request.user.is_authenticated:
-                user_review = self.object.review_by_user(self.request.user)
-                if user_review:
-                    kwargs["initial"] = user_review.dict_tr()
-                    kwargs["initial"]["comments"] = None
+        # Check for prefill data from report (pop clears it after use)
+        prefill_data = self.request.session.pop("prefill_data", None)
+        if prefill_data and prefill_data.get("form_type") == "review":
+            kwargs["initial"] = {
+                "rating": prefill_data.get("rating"),
+                "moi": prefill_data.get("moi"),
+                "mode_of_pathogenicity": prefill_data.get("mode_of_pathogenicity"),
+                "publications": prefill_data.get("publications"),
+                "phenotypes": prefill_data.get("phenotypes"),
+                "current_diagnostic": prefill_data.get("current_diagnostic"),
+                "comments": prefill_data.get("comments"),
+            }
+        else:
+            # Existing logic: prefill from user's previous review
+            user_review = self.object.review_by_user(self.request.user)
+            if user_review:
+                kwargs["initial"] = user_review.dict_tr()
+                kwargs["initial"]["comments"] = None
+            else:
+                kwargs["initial"] = {}
+
         kwargs["instance"] = None
         return kwargs
 
