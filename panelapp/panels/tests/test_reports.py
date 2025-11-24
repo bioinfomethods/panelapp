@@ -37,7 +37,7 @@ class ReportProxyTestCase(TestCase):
         </html>
         """
 
-    @patch("s3_storages.ReportsStorage")
+    @patch("panels.views.reports.ReportsStorage")
     def test_report_proxy_gel_user(self, mock_storage_class):
         """GEL user can access reports."""
         mock_storage = MagicMock()
@@ -54,7 +54,7 @@ class ReportProxyTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn(b"Prefill", response.content)
 
-    @patch("s3_storages.ReportsStorage")
+    @patch("panels.views.reports.ReportsStorage")
     def test_report_proxy_non_gel_user_forbidden(self, mock_storage_class):
         """Non-GEL user cannot access reports."""
         self.client.force_login(self.regular_user)
@@ -74,7 +74,7 @@ class ReportProxyTestCase(TestCase):
         # Should return 403 Forbidden
         self.assertEqual(response.status_code, 403)
 
-    @patch("s3_storages.ReportsStorage")
+    @patch("panels.views.reports.ReportsStorage")
     def test_report_proxy_csrf_injection(self, mock_storage_class):
         """Report proxy injects CSRF token into HTML."""
         mock_storage = MagicMock()
@@ -94,7 +94,7 @@ class ReportProxyTestCase(TestCase):
         # Form should still be present
         self.assertIn(b"csrfmiddlewaretoken", response.content)
 
-    @patch("s3_storages.ReportsStorage")
+    @patch("panels.views.reports.ReportsStorage")
     def test_report_proxy_not_found(self, mock_storage_class):
         """Report proxy returns 404 for missing file."""
         mock_storage = MagicMock()
@@ -108,7 +108,7 @@ class ReportProxyTestCase(TestCase):
 
         self.assertEqual(response.status_code, 404)
 
-    @patch("s3_storages.ReportsStorage")
+    @patch("panels.views.reports.ReportsStorage")
     def test_report_proxy_pdf_no_csrf_injection(self, mock_storage_class):
         """PDF files are proxied without CSRF injection."""
         pdf_content = b"%PDF-1.4 fake pdf content"
