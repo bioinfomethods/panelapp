@@ -1,0 +1,110 @@
+{% extends "default.html" %}
+{% load staticfiles %}
+{% load panel_helpers %}
+
+{% block content %}
+    <ol class="breadcrumb">
+        <li><a href="{% url 'panels:index' %}">Panels</a></li>
+        <li><a href="{{ source_panel.panel.get_absolute_url }}">{{ source_panel.panel.name }}</a></li>
+        <li><a href="{% url 'panels:evaluation' pk=source_panel.pk entity_type='region' entity_name=region_name %}">{{ region_name }}</a></li>
+        <li class="active">Copy to other panels</li>
+    </ol>
+
+    <h1>Copy Region {{ region_name }} to other panels</h1>
+
+    <div class="row">
+        <div class="col-md-8">
+            <form action="{% url 'panels:copy_region_from_panel' pk=source_panel.pk region_name=region_name %}" method="post">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {{ form.non_field_errors }}
+                    </div>
+                {% endif %}
+
+                <div class="form-group">
+                    <p><strong>Source panel:</strong> {{ source_panel.panel.name }} (v{{ source_panel.version }})</p>
+                </div>
+
+                <div class="form-group {% if form.target_panels.errors %}has-error{% endif %}">
+                    <label for="{{ form.target_panels.id_for_label }}">
+                        {{ form.target_panels.label }}
+                    </label>
+                    {{ form.target_panels }}
+                    {% if form.target_panels.help_text %}
+                        <p class="help-block">{{ form.target_panels.help_text }}</p>
+                    {% endif %}
+                    {% if form.target_panels.errors %}
+                        <span class="help-block">{{ form.target_panels.errors }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group {% if form.reviews_to_copy.errors %}has-error{% endif %}">
+                    <label>{{ form.reviews_to_copy.label }}</label>
+                    {% if form.reviews_to_copy.help_text %}
+                        <p class="help-block">{{ form.reviews_to_copy.help_text }}</p>
+                    {% endif %}
+                    {% if source_region_entry.evaluation.all %}
+                        <div style="margin-bottom: 10px;">
+                            <button type="button" class="btn btn-sm btn-default" id="select-all-reviews">Select All</button>
+                            <button type="button" class="btn btn-sm btn-default" id="select-none-reviews">Select None</button>
+                        </div>
+                        {% for ev in source_region_entry.evaluation.all %}
+                            <label style="display: block; margin-bottom: 10px;">
+                                <input type="checkbox" name="reviews_to_copy" value="{{ ev.user.pk }}" checked>
+                                <strong>{{ ev.user.get_reviewer_name }}</strong>
+                                {% if ev.rating %}
+                                    <span class="gel-banner {{ ev|evaluation_rating_class }}">{{ ev|evaluation_rating_name }}</span>
+                                {% endif %}
+                            </label>
+                            <div class="panel panel-default" style="margin-left: 20px; margin-bottom: 15px;">
+                                {% include "panels/entity/entity_evaluation.html" with panel=source_panel entity=source_region_entry entity_type='region' entity_name=region_name %}
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted">No reviews available to copy</p>
+                    {% endif %}
+                    {% if form.reviews_to_copy.errors %}
+                        <span class="help-block">{{ form.reviews_to_copy.errors }}</span>
+                    {% endif %}
+                </div>
+
+                <div class="form-group">
+                    <button type="submit" class="btn btn-lg btn-primary" id="copy-region-btn">
+                        Copy Region
+                    </button>
+                    <a href="{% url 'panels:evaluation' pk=source_panel.pk entity_type='region' entity_name=region_name %}" class="btn btn-lg btn-default">
+                        Cancel
+                    </a>
+                </div>
+
+                <script>
+                    $(function() {
+                        function updateCopyButton() {
+                            var anyChecked = $('input[name="reviews_to_copy"]:checked').length > 0;
+                            $('#copy-region-btn').prop('disabled', !anyChecked);
+                        }
+
+                        // Update button state when checkboxes change
+                        $('input[name="reviews_to_copy"]').change(updateCopyButton);
+
+                        // Select all/none buttons
+                        $('#select-all-reviews').click(function() {
+                            $('input[name="reviews_to_copy"]').prop('checked', true);
+                            updateCopyButton();
+                        });
+                        $('#select-none-reviews').click(function() {
+                            $('input[name="reviews_to_copy"]').prop('checked', false);
+                            updateCopyButton();
+                        });
+
+                        // Initial state check
+                        updateCopyButton();
+                    });
+                </script>
+            </form>
+            {{ form.media }}
+        </div>
+    </div>
+{% endblock %}
