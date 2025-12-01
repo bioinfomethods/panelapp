@@ -37,6 +37,7 @@
         <li><a href="{% url 'panels:entities_list' %}">Genes and Entities</a></li>
         <li><a href="{% url 'panels:activity' %}">Activity</a></li>
         {% if request.user.is_authenticated and request.user.reviewer.is_GEL %}
+        <li><a href="{% url 'panels:report_proxy' path='index.html' %}">Reports</a></li>
         <li><a href="{% url 'panels:create' %}">Add panel</a></li>
         <li><a href="{% url 'panels:admin' %}">Import panel</a></li>
         <li class="dropdown">

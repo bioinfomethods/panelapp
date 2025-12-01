@@ -22,6 +22,7 @@
 ## under the License.
 ##
 from django.conf.urls import url
+from django.urls import path
 
 from django.views.generic import RedirectView
 from .views import AdminView
@@ -77,6 +78,8 @@ from .ajax_views import GetEntityCommentFormAjaxView
 from .ajax_views import DeleteEntityCommentAjaxView
 from .ajax_views import SubmitEntityCommentFormAjaxView
 from .ajax_views import ApproveEntityAjaxView
+from .views.reports import PrefillFormView
+from .views.reports import ReportProxyView
 
 
 app_name = "panels"
@@ -85,6 +88,9 @@ entity_regex = "[\w\-\.\$\~\@\#\ ]+"
 entity_types = "gene|str|region"
 
 urlpatterns = [
+    # Reports
+    path("reports/prefill/", PrefillFormView.as_view(), name="prefill_form"),
+    path("reports/<path:path>", ReportProxyView.as_view(), name="report_proxy"),
     url(r"^$", PanelsIndexView.as_view(), name="index"),
     url(r"^compare/$", ComparePanelsView.as_view(), name="compare_panels_form"),
     url(

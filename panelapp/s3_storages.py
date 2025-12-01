@@ -58,3 +58,14 @@ class MediaStorage(S3Boto3Storage):
     default_acl = settings.AWS_MEDIAFILES_DEFAULT_ACL
     querystring_auth = False # We assume media files are public
     logger.debug("Media Files bucket: {}, Location: {}".format(bucket_name, location))
+
+
+class ReportsStorage(S3Boto3Storage):
+    region_name = settings.AWS_REGION
+    bucket_name = settings.AWS_S3_REPORTS_BUCKET_NAME
+    location = settings.AWS_REPORTS_LOCATION
+    object_parameters = settings.AWS_S3_REPORTS_OBJECT_PARAMETERS
+    custom_domain = settings.AWS_S3_REPORTS_CUSTOM_DOMAIN
+    default_acl = settings.AWS_REPORTS_DEFAULT_ACL
+    querystring_auth = True  # Reports require authentication
+    logger.debug("Reports bucket: {}, Location: {}".format(bucket_name, location))

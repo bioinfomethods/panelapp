@@ -130,6 +130,27 @@ AWS_MEDIAFILES_DEFAULT_ACL = os.getenv('AWS_MEDIAFILES_DEFAULT_ACL', None)
 # Object parameters for media files.
 AWS_S3_MEDIAFILES_OBJECT_PARAMETERS = {}
 
+# Report files
+
+# Name of the S3 bucket for report files (MANDATORY).
+# Override to 'reports' with LocalStack
+AWS_S3_REPORTS_BUCKET_NAME = os.getenv('AWS_S3_REPORTS_BUCKET_NAME')
+
+# Path, within the S3 bucket, to put report files into
+# By default it is empty (no leading or trailing slash)
+AWS_REPORTS_LOCATION = os.getenv('AWS_REPORTS_LOCATION', '')
+
+# Domain serving report files.
+# MANDATORY to override when using a CDN
+# Keep the default (`None`) when directly serving files from the bucket (including with LocalStack)
+AWS_S3_REPORTS_CUSTOM_DOMAIN = os.getenv('AWS_S3_REPORTS_CUSTOM_DOMAIN', None)
+
+# Object parameters for report files.
+AWS_S3_REPORTS_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+
+# Files ACL. By default ('private') for report files.
+AWS_REPORTS_DEFAULT_ACL = os.getenv('AWS_REPORTS_DEFAULT_ACL', 'private')
+
 # Logging (JSON to stdout)
 
 LOGGING = {

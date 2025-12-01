@@ -103,6 +103,18 @@ if USE_S3:  # Static and Media files on S3
 
     AWS_MEDIAFILES_DEFAULT_ACL = 'public-read'  # LocalStack only
 
+    ###############
+    # Report files
+    ###############
+
+    AWS_S3_REPORTS_BUCKET_NAME = os.getenv('AWS_S3_REPORTS_BUCKET_NAME')
+    AWS_REPORTS_LOCATION = os.getenv('AWS_REPORTS_LOCATION', '')
+
+    AWS_S3_REPORTS_CUSTOM_DOMAIN = None
+    AWS_S3_REPORTS_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+
+    AWS_REPORTS_DEFAULT_ACL = 'private'
+
 else:  # Static and Media files on local file system
 
     STATIC_URL = "/static/"
