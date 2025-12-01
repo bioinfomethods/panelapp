@@ -1,0 +1,550 @@
+/**
+ * Literature Assignment Widget
+ *
+ * Manages curator assignment UI for literature review reports.
+ * Reads configuration from embedded JSON blocks and renders:
+ * 1. ToC highlighting: CSS classes on gene links in the Table of Contents
+ * 2. Header widgets: Assignment dropdowns in .assignment-slot elements
+ */
+var LiteratureAssignments = {
+  config: null,
+  completionStatus: null,
+
+  /**
+   * Escape HTML special characters to prevent XSS.
+   */
+  _escapeHtml: function (text) {
+    var div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+  },
+
+  init: function () {
+    // Read configuration from both JSON blocks
+    var reportConfig = this._readJsonBlock("report-config");
+    var assignmentData = this._readJsonBlock("assignment-data");
+
+    // Merge into unified config
+    this.config = {
+      reportId: assignmentData.reportId,
+      reportConfig: reportConfig,
+      currentUserId: assignmentData.currentUserId,
+      curators: assignmentData.curators,
+      assignments: assignmentData.assignments,
+      completions: assignmentData.completions,
+    };
+
+    // Validate required config (fail-fast)
+    if (!this.config.reportId)
+      throw new Error("assignmentData.reportId is required");
+    if (!this.config.reportConfig) throw new Error("reportConfig is required");
+    if (!this.config.curators)
+      throw new Error("assignmentData.curators is required");
+    if (!this.config.assignments)
+      throw new Error("assignmentData.assignments is required");
+    if (!this.config.completions)
+      throw new Error("assignmentData.completions is required");
+    if (this.config.currentUserId === undefined)
+      throw new Error("assignmentData.currentUserId is required");
+
+    this.completionStatus = this._processCompletions(this.config.completions);
+    this.highlightTocLinks();
+    this.renderAllWidgets();
+  },
+
+  _readJsonBlock: function (id) {
+    var el = document.getElementById(id);
+    if (!el) throw new Error("Missing required JSON block: #" + id);
+    try {
+      return JSON.parse(el.textContent);
+    } catch (e) {
+      throw new Error("Invalid JSON in #" + id + ": " + e.message);
+    }
+  },
+
+  /**
+   * Find ToC link for a gene. Handles both novel-gene-X and known-gene-X anchors.
+   */
+  _findTocLink: function (gene) {
+    // Try novel-gene first, then known-gene
+    var link = document.querySelector(
+      '.toc-gene-list a[href="#novel-gene-' + gene + '"]'
+    );
+    if (!link) {
+      link = document.querySelector(
+        '.toc-gene-list a[href="#known-gene-' + gene + '"]'
+      );
+    }
+    return link;
+  },
+
+  /**
+   * Apply CSS classes to ToC links based on assignment/completion status.
+   * Uses same classes as palit/templates/concordance_report_styles.css.
+   */
+  highlightTocLinks: function () {
+    var self = this;
+    var genes = this.config.reportConfig.genes;
+    if (!genes) throw new Error("reportConfig.genes is required");
+
+    Object.keys(genes).forEach(function (gene) {
+      var link = self._findTocLink(gene);
+      if (!link) return; // Gene not in ToC (might be filtered out)
+
+      var assignment = self.config.assignments[gene];
+      var completion = self.completionStatus[gene];
+
+      // Priority: completion > my-task > skipped
+      if (completion && completion.completed) {
+        // Completed: concordant (gold) or discordant (silver)
+        if (completion.concordant) {
+          link.classList.add("concordance-concordant");
+        } else {
+          link.classList.add("concordance-discordant");
+        }
+      } else if (assignment && assignment.status === "skipped") {
+        // Skipped: dimmed
+        link.classList.add("concordance-not_executed");
+      } else if (assignment && assignment.status === "assigned") {
+        if (assignment.assigned_to === self.config.currentUserId) {
+          // My task: coral
+          link.classList.add("my-task");
+        } else {
+          // Someone else's task: teal
+          link.classList.add("assigned-other");
+        }
+      }
+    });
+  },
+
+  _processCompletions: function (completions) {
+    var result = {};
+    var genes = this.config.reportConfig.genes;
+    if (!genes) throw new Error("reportConfig.genes is required");
+
+    Object.keys(completions).forEach(function (gene) {
+      var data = completions[gene];
+      if (data.has_evaluation) {
+        var geneConfig = genes[gene];
+        if (!geneConfig)
+          throw new Error("Gene " + gene + " not found in reportConfig.genes");
+        if (!geneConfig.suggested_rating)
+          throw new Error("Gene " + gene + " missing suggested_rating");
+
+        // Concordant if ANY rating matches the suggestion
+        var concordant = data.ratings.indexOf(geneConfig.suggested_rating) >= 0;
+
+        result[gene] = {
+          completed: true,
+          ratings: data.ratings,
+          suggestedRating: geneConfig.suggested_rating,
+          concordant: concordant,
+        };
+      }
+    });
+
+    return result;
+  },
+
+  renderAllWidgets: function () {
+    var self = this;
+    document.querySelectorAll(".assignment-slot").forEach(function (slot) {
+      var gene = slot.dataset.gene;
+      var assignment = self.config.assignments[gene];
+      var completion = self.completionStatus[gene];
+      slot.innerHTML = self.renderWidget(gene, assignment, completion);
+      self.bindEvents(slot, gene, assignment);
+    });
+  },
+
+  renderWidget: function (gene, assignment, completion) {
+    var status = assignment ? assignment.status : "pending";
+
+    // Completed state: no widget needed (status shown in ToC)
+    if (completion && completion.completed) {
+      return "";
+    }
+
+    // Skipped state: show badge with reason and restore button
+    if (status === "skipped") {
+      var skippedType = assignment.assigned_to ? "Investigated" : "Triaged";
+      var skipTitle = skippedType + ": " + this._escapeHtml(assignment.skipped_reason);
+      return (
+        '<span class="lit-widget lit-skipped-widget">' +
+        '<span class="lit-badge lit-skipped" title="' +
+        skipTitle +
+        '">&mdash;</span>' +
+        '<button class="lit-restore-btn" data-gene="' +
+        gene +
+        '" title="Restore (un-skip)">&#x21ba;</button>' +
+        "</span>"
+      );
+    }
+
+    // Pending or Assigned: show dropdown + skip button
+    var currentAssignee = assignment ? assignment.assigned_to : null;
+    var widgetClass = "";
+    if (status === "assigned" && currentAssignee) {
+      // Differentiate between "my task" (coral) vs "someone else's" (teal)
+      widgetClass = currentAssignee === this.config.currentUserId
+        ? "lit-assigned-mine"
+        : "lit-assigned-other";
+    }
+
+    var html =
+      '<span class="lit-widget ' +
+      widgetClass +
+      '">' +
+      '<select class="lit-assignee-select" data-gene="' +
+      gene +
+      '" data-current="' +
+      (currentAssignee || "") +
+      '">' +
+      '<option value="">\u2014</option>' +
+      this.config.curators
+        .map(function (u) {
+          var selected = u.id === currentAssignee ? " selected" : "";
+          return (
+            '<option value="' +
+            u.id +
+            '"' +
+            selected +
+            ">" +
+            u.initials +
+            "</option>"
+          );
+        })
+        .join("") +
+      "</select>" +
+      '<button class="lit-skip-btn" data-gene="' +
+      gene +
+      '" title="Skip this gene">&times;</button>' +
+      "</span>";
+
+    return html;
+  },
+
+  bindEvents: function (slot, gene, assignment) {
+    var self = this;
+    var select = slot.querySelector(".lit-assignee-select");
+    if (select) {
+      select.addEventListener("change", function (e) {
+        self.handleAssign(e, gene, assignment);
+      });
+    }
+
+    var skipBtn = slot.querySelector(".lit-skip-btn");
+    if (skipBtn) {
+      skipBtn.addEventListener("click", function (e) {
+        self.handleSkip(e, gene, assignment);
+      });
+    }
+
+    var restoreBtn = slot.querySelector(".lit-restore-btn");
+    if (restoreBtn) {
+      restoreBtn.addEventListener("click", function (e) {
+        self.handleRestore(e, gene, assignment);
+      });
+    }
+  },
+
+  handleAssign: function (event, gene, currentAssignment) {
+    var self = this;
+    var select = event.target;
+    var newAssigneeId = select.value ? parseInt(select.value) : null;
+
+    // For optimistic locking: null means we expect record doesn't exist
+    var expectedUpdatedAt = currentAssignment
+      ? currentAssignment.updated_at
+      : null;
+
+    fetch("/api/v1/literature-assignments/assign/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": this.getCsrfToken(),
+      },
+      body: JSON.stringify({
+        report_id: this.config.reportId,
+        gene_symbol: gene,
+        assigned_to: newAssigneeId,
+        expected_updated_at: expectedUpdatedAt,
+      }),
+    })
+      .then(function (resp) {
+        if (resp.status === 409) {
+          return resp.json().then(function (data) {
+            var state = data.current_state;
+            var currentHolder = state.assigned_to_display || "someone else";
+            alert(
+              "This gene was just updated by another user.\n\n" +
+                "Current status: " +
+                state.status +
+                "\n" +
+                "Assigned to: " +
+                currentHolder +
+                "\n\n" +
+                "The dropdown has been refreshed. Please try again."
+            );
+            self.config.assignments[gene] = Object.assign(
+              {},
+              self.config.assignments[gene],
+              state
+            );
+            self.refreshGene(gene);
+          });
+        }
+
+        if (resp.status === 404) {
+          return resp.json().then(function () {
+            alert(
+              "Gene not found: " +
+                gene +
+                "\n\n" +
+                "This gene doesn't exist in the PanelApp database. " +
+                "Please contact an administrator."
+            );
+          });
+        }
+
+        if (!resp.ok) {
+          return resp.json().then(function (data) {
+            alert("Failed to assign: " + (data.message || resp.status));
+            self.refreshGene(gene);
+          });
+        }
+
+        return resp.json().then(function (updated) {
+          self.config.assignments[gene] = updated;
+          delete self.completionStatus[gene];
+          self.refreshGene(gene);
+        });
+      })
+      .catch(function (err) {
+        console.error("Assignment failed:", err);
+        alert(
+          "Network error while updating assignment. Please check your connection and try again."
+        );
+        self.refreshGene(gene);
+      });
+  },
+
+  handleSkip: function (event, gene, currentAssignment) {
+    var self = this;
+    var reason = prompt(
+      "Why are you skipping " +
+        gene +
+        "?\n\n" +
+        "Common reasons:\n" +
+        "- Review already added\n" +
+        "- Out of scope (e.g., cancer gene)\n" +
+        "- Unconvincing evidence / poor quality source\n" +
+        "- Nuanced clinical assessment not captured by LLM"
+    );
+
+    if (!reason || !reason.trim()) {
+      return;
+    }
+
+    // For optimistic locking: null means we expect record doesn't exist
+    var expectedUpdatedAt = currentAssignment
+      ? currentAssignment.updated_at
+      : null;
+
+    fetch("/api/v1/literature-assignments/skip/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": this.getCsrfToken(),
+      },
+      body: JSON.stringify({
+        report_id: this.config.reportId,
+        gene_symbol: gene,
+        reason: reason.trim(),
+        expected_updated_at: expectedUpdatedAt,
+      }),
+    })
+      .then(function (resp) {
+        if (resp.status === 409) {
+          return resp.json().then(function (data) {
+            var state = data.current_state;
+            var currentHolder = state.assigned_to_display || "unassigned";
+            var msg =
+              "This gene was just updated by another user.\n\n" +
+              "Current status: " +
+              state.status +
+              "\n" +
+              "Assigned to: " +
+              currentHolder +
+              "\n";
+            if (state.skipped_reason) {
+              msg += "Skip reason: " + state.skipped_reason + "\n";
+            }
+            msg +=
+              "\nThe widget has been refreshed. Please try again if needed.";
+            alert(msg);
+            self.config.assignments[gene] = Object.assign(
+              {},
+              self.config.assignments[gene],
+              state
+            );
+            self.refreshGene(gene);
+          });
+        }
+
+        if (resp.status === 404) {
+          return resp.json().then(function () {
+            alert(
+              "Gene not found: " +
+                gene +
+                "\n\n" +
+                "This gene doesn't exist in the PanelApp database. " +
+                "Please contact an administrator."
+            );
+          });
+        }
+
+        if (!resp.ok) {
+          return resp.json().then(function (data) {
+            alert("Failed to skip: " + (data.message || resp.status));
+          });
+        }
+
+        return resp.json().then(function (updated) {
+          self.config.assignments[gene] = updated;
+          self.refreshGene(gene);
+        });
+      })
+      .catch(function (err) {
+        console.error("Skip failed:", err);
+        alert(
+          "Network error while skipping. Please check your connection and try again."
+        );
+      });
+  },
+
+  handleRestore: function (event, gene, currentAssignment) {
+    var self = this;
+
+    // Restore by calling assign with null assignee (sets to pending)
+    var expectedUpdatedAt = currentAssignment
+      ? currentAssignment.updated_at
+      : null;
+
+    fetch("/api/v1/literature-assignments/assign/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-CSRFToken": this.getCsrfToken(),
+      },
+      body: JSON.stringify({
+        report_id: this.config.reportId,
+        gene_symbol: gene,
+        assigned_to: null,
+        expected_updated_at: expectedUpdatedAt,
+      }),
+    })
+      .then(function (resp) {
+        if (resp.status === 409) {
+          return resp.json().then(function (data) {
+            var state = data.current_state;
+            alert(
+              "This gene was just updated by another user.\n\n" +
+                "Current status: " +
+                state.status +
+                "\n\n" +
+                "The widget has been refreshed."
+            );
+            self.config.assignments[gene] = Object.assign(
+              {},
+              self.config.assignments[gene],
+              state
+            );
+            self.refreshGene(gene);
+          });
+        }
+
+        if (!resp.ok) {
+          return resp.json().then(function (data) {
+            alert("Failed to restore: " + (data.message || resp.status));
+          });
+        }
+
+        return resp.json().then(function (updated) {
+          self.config.assignments[gene] = updated;
+          self.refreshGene(gene);
+        });
+      })
+      .catch(function (err) {
+        console.error("Restore failed:", err);
+        alert(
+          "Network error while restoring. Please check your connection and try again."
+        );
+      });
+  },
+
+  /**
+   * Refresh both widget and ToC link for a gene after status change.
+   */
+  refreshGene: function (gene) {
+    // Refresh widget
+    var slot = document.querySelector(
+      '.assignment-slot[data-gene="' + gene + '"]'
+    );
+    if (slot) {
+      var assignment = this.config.assignments[gene];
+      var completion = this.completionStatus[gene];
+      slot.innerHTML = this.renderWidget(gene, assignment, completion);
+      this.bindEvents(slot, gene, assignment);
+    }
+
+    // Refresh ToC link
+    var link = this._findTocLink(gene);
+    if (link) {
+      // Remove all status classes
+      link.classList.remove(
+        "my-task",
+        "assigned-other",
+        "concordance-concordant",
+        "concordance-discordant",
+        "concordance-not_executed"
+      );
+
+      // Re-apply based on current state
+      var assignment = this.config.assignments[gene];
+      var completion = this.completionStatus[gene];
+
+      if (completion && completion.completed) {
+        if (completion.concordant) {
+          link.classList.add("concordance-concordant");
+        } else {
+          link.classList.add("concordance-discordant");
+        }
+      } else if (assignment && assignment.status === "skipped") {
+        link.classList.add("concordance-not_executed");
+      } else if (assignment && assignment.status === "assigned") {
+        if (assignment.assigned_to === this.config.currentUserId) {
+          link.classList.add("my-task");
+        } else {
+          link.classList.add("assigned-other");
+        }
+      }
+    }
+  },
+
+  getCsrfToken: function () {
+    var tokenEl = document.querySelector("[name=csrfmiddlewaretoken]");
+    if (tokenEl) return tokenEl.value;
+    var match = document.cookie.match(/csrftoken=([^;]+)/);
+    return match ? match[1] : "";
+  },
+};
+
+// Auto-initialize when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", function () {
+    LiteratureAssignments.init();
+  });
+} else {
+  LiteratureAssignments.init();
+}

@@ -70,4 +70,5 @@ from .import_tools import UploadedReviewsList  # noqa
 from .strs import STR  # noqa
 from .region import Region  # noqa
 from .panel_types import PanelType  # noqa
-from .historical_snapshot import HistoricalSnapshot #noqa
+from .historical_snapshot import HistoricalSnapshot  # noqa
+from .literature_assignment import LiteratureAssignment  # noqa
