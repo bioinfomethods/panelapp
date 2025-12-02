@@ -93,7 +93,7 @@ AWS_S3_STATICFILES_CUSTOM_DOMAIN = os.getenv('AWS_S3_STATICFILES_CUSTOM_DOMAIN',
 # URL of the static files in the S3 bucket. Includes the path defined by AWS_STATICFILES_LOCATION
 # and must end with slash.
 # Override to 'http://localstack:4572/static-bucket/static/' for using LocalStack
-STATIC_URL = os.getenv('STATIC_URL', f'https://{AWS_S3_STATICFILES_CUSTOM_DOMAIN}/{AWS_STATICFILES_LOCATION + ("/" if AWS_STATICFILES_LOCATION else "")}/')
+STATIC_URL = os.getenv('STATIC_URL', f'https://{AWS_S3_STATICFILES_CUSTOM_DOMAIN}/{AWS_STATICFILES_LOCATION}{"/" if AWS_STATICFILES_LOCATION else ""}')
 
 # Files ACL. By default ('None') inherits bucket ACL.
 # Override to 'public-read' when using LocalStack
@@ -122,7 +122,7 @@ AWS_S3_MEDIAFILES_CUSTOM_DOMAIN = os.getenv('AWS_S3_MEDIAFILES_CUSTOM_DOMAIN', N
 # URL the application fetches media file from.
 # Should be `https://<media-bucket-name>.s3.amazonaws.com/uploads/' if AWS_MEDIAFILES_LOCATION is the default 'uploads'.
 # Override to 'http://localstack:4572/media-bucket/uploads/' with LocalStack
-MEDIA_URL = os.getenv('MEDIA_URL', f'https://{AWS_S3_MEDIAFILES_BUCKET_NAME}.s3.amazonaws.com/{AWS_MEDIAFILES_LOCATION + ("/" if AWS_MEDIAFILES_LOCATION else "")}/')
+MEDIA_URL = os.getenv('MEDIA_URL', f'https://{AWS_S3_MEDIAFILES_BUCKET_NAME}.s3.amazonaws.com/{AWS_MEDIAFILES_LOCATION}{"/" if AWS_MEDIAFILES_LOCATION else ""}')
 
 # Files ACL. By default ('None') inherits bucket ACL. Override to 'public-read' for using LocalStack
 AWS_MEDIAFILES_DEFAULT_ACL = os.getenv('AWS_MEDIAFILES_DEFAULT_ACL', None)
