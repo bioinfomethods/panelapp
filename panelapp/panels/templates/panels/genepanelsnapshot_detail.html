@@ -92,6 +92,12 @@
                   <i class="fa fa-copy"></i> Copy to other panels
                 </a>
             {% endif %}
+            {% if request.user.is_authenticated and request.user.reviewer.is_GEL and entity.is_str %}
+                <br />
+                <a href="{% url 'panels:copy_str_from_panel' pk=view.panel.pk str_name=entity.name %}" class="btn btn-primary btn-sm">
+                  <i class="fa fa-copy"></i> Copy to other panels
+                </a>
+            {% endif %}
             {% endif %}
         </div>
 

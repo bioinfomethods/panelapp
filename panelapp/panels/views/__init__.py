@@ -52,4 +52,5 @@ from .entities import EntitiesListView
 from .entities import GeneDetailRedirectView
 from .entities import RedirectGenesToEntities
 from .strs import DownloadAllSTRs
+from .strs import CopySTRView
 from .regions import DownloadAllRegions
