@@ -36,6 +36,7 @@ from .viewsets import RegionEvaluationsViewSet
 from .viewsets import RegionSearchViewSet
 from .viewsets import EntitySearchViewSet
 from .viewsets import SignedOffPanelViewSet
+from .viewsets import LiteratureAssignmentViewSet
 
 router = routers.DefaultRouter()
 
@@ -75,6 +76,11 @@ router.register(r"genes", GeneSearchViewSet, base_name="genes")
 router.register(r"strs", STRSearchViewSet, base_name="strs")
 router.register(r"regions", RegionSearchViewSet, base_name="regions")
 router.register(r"entities", EntitySearchViewSet, base_name="entities")
+router.register(
+    r"literature-assignments",
+    LiteratureAssignmentViewSet,
+    base_name="literature-assignments",
+)
 
 
 app_name = "apiv1"
