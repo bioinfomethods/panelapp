@@ -27,6 +27,47 @@ var LiteratureAssignments = {
     return skippedType + ": " + assignment.skipped_reason;
   },
 
+  /**
+   * Get curator display name (initials) from user ID.
+   */
+  _getCuratorName: function (userId) {
+    if (!userId) return null;
+    for (var i = 0; i < this.config.curators.length; i++) {
+      if (this.config.curators[i].id === userId) {
+        return this.config.curators[i].initials;
+      }
+    }
+    return null;
+  },
+
+  /**
+   * Build tooltip text for an assigned (in-progress) item.
+   */
+  _assignedTooltip: function (assignment) {
+    var name = this._getCuratorName(assignment.assigned_to);
+    return name ? "Assigned to " + name : "Assigned";
+  },
+
+  /**
+   * Build tooltip text for a discordant completion.
+   */
+  _discordantTooltip: function (completion) {
+    var actual = completion.ratings.join(", ");
+    var suggested = completion.suggestedRating;
+    return "Rated " + actual + " (suggested " + suggested + ")";
+  },
+
+  /**
+   * Set instant tooltip on an element using data-title attribute.
+   */
+  _setTooltip: function (element, text) {
+    if (text) {
+      element.setAttribute("data-title", text);
+    } else {
+      element.removeAttribute("data-title");
+    }
+  },
+
   init: function () {
     // Read configuration from both JSON blocks
     var reportConfig = this._readJsonBlock("report-config");
@@ -109,18 +150,20 @@ var LiteratureAssignments = {
           link.classList.add("concordance-concordant");
         } else {
           link.classList.add("concordance-discordant");
+          self._setTooltip(link, self._discordantTooltip(completion));
         }
       } else if (assignment && assignment.status === "skipped") {
         // Skipped: dimmed with reason tooltip
         link.classList.add("concordance-not_executed");
-        link.title = self._skipTooltip(assignment);
+        self._setTooltip(link, self._skipTooltip(assignment));
       } else if (assignment && assignment.status === "assigned") {
         if (assignment.assigned_to === self.config.currentUserId) {
           // My task: coral
           link.classList.add("my-task");
         } else {
-          // Someone else's task: teal
+          // Someone else's task: teal with assignee tooltip
           link.classList.add("assigned-other");
+          self._setTooltip(link, self._assignedTooltip(assignment));
         }
       }
     });
@@ -517,7 +560,7 @@ var LiteratureAssignments = {
         "concordance-discordant",
         "concordance-not_executed"
       );
-      link.removeAttribute("title");
+      this._setTooltip(link, null);
 
       // Re-apply based on current state
       var assignment = this.config.assignments[gene];
@@ -528,15 +571,17 @@ var LiteratureAssignments = {
           link.classList.add("concordance-concordant");
         } else {
           link.classList.add("concordance-discordant");
+          this._setTooltip(link, this._discordantTooltip(completion));
         }
       } else if (assignment && assignment.status === "skipped") {
         link.classList.add("concordance-not_executed");
-        link.title = this._skipTooltip(assignment);
+        this._setTooltip(link, this._skipTooltip(assignment));
       } else if (assignment && assignment.status === "assigned") {
         if (assignment.assigned_to === this.config.currentUserId) {
           link.classList.add("my-task");
         } else {
           link.classList.add("assigned-other");
+          this._setTooltip(link, this._assignedTooltip(assignment));
         }
       }
     }

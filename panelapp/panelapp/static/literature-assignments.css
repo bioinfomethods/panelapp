@@ -283,123 +283,103 @@
    ========================================================================== */
 
 /* My task: assigned to current user, not yet completed */
-/* Warm salmon with text accent - clearly actionable */
+/* Shiny coral - prominently actionable */
 .toc-gene-list a.my-task {
   display: inline-block;
   padding: 3px 6px;
-  border: 2px solid var(--lit-task-border);
+  border: 2px solid #e07050;
   border-radius: 5px;
   font-weight: 600;
-  color: var(--lit-task-text) !important;
+  color: #9a3c2a !important;
   background: linear-gradient(
     135deg,
-    var(--lit-task-light) 0%,
-    hsl(var(--lit-task-hue), 80%, 90%) 100%
+    #fff5f2 0%,
+    #ffe4de 40%,
+    #ffb4a0 70%,
+    #ffd4c8 100%
   );
   box-shadow:
-    0 0 6px var(--lit-task-glow),
-    0 2px 4px rgba(0, 0, 0, 0.08);
+    0 0 10px rgba(240, 128, 96, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   position: relative;
   text-decoration: none !important;
 }
 
-/* Shine effect for my-task */
-.toc-gene-list a.my-task::before {
-  content: "";
-  position: absolute;
-  top: -2px;
-  left: -2px;
-  right: -2px;
-  bottom: -2px;
-  background: linear-gradient(
-    45deg,
-    transparent,
-    rgba(255, 255, 255, 0.5),
-    transparent
-  );
-  border-radius: 5px;
-  opacity: 0.7;
-  pointer-events: none;
-}
-
-/* Completed with concordant rating (matches suggestion) - subtle success indicator */
+/* Completed with concordant rating (matches suggestion) - shiny gold */
 .toc-gene-list a.concordance-concordant {
   display: inline-block;
   padding: 3px 6px;
-  border: 1.5px solid var(--lit-gold-color);
+  border: 1.5px solid #c4a850;
   border-radius: 4px;
   background: linear-gradient(
     135deg,
-    var(--lit-gold-light) 0%,
-    rgba(255, 215, 0, 0.12) 100%
+    #fdfcf5 0%,
+    #f5f0dc 40%,
+    #e8d890 70%,
+    #f5f2e0 100%
   );
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+  box-shadow:
+    0 0 8px rgba(200, 180, 100, 0.4),
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   text-decoration: none !important;
+  position: relative;
 }
 
-/* Completed with discordant rating (differs from suggestion) - silvery shimmer */
+/* Completed with discordant rating (differs from suggestion) - shiny silver */
 .toc-gene-list a.concordance-discordant {
   display: inline-block;
   padding: 3px 6px;
-  border: 1.5px dashed var(--lit-silver-color);
+  border: 1.5px solid #a8b8c0;
   border-radius: 4px;
   background: linear-gradient(
     135deg,
-    var(--lit-silver-light) 0%,
-    rgba(180, 200, 210, 0.22) 100%
+    #f8fafc 0%,
+    #e4eaef 40%,
+    #d0dae2 70%,
+    #e8eef2 100%
   );
-  box-shadow: 0 1px 4px rgba(120, 140, 150, 0.15);
+  box-shadow:
+    0 0 8px rgba(160, 180, 195, 0.5),
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   text-decoration: none !important;
+  position: relative;
 }
 
-/* Assigned to someone else - subtle teal, less urgent than "my task" */
+/* Assigned to someone else - shiny teal */
 .toc-gene-list a.assigned-other {
   display: inline-block;
   padding: 3px 6px;
-  border: 1.5px solid var(--lit-other-border);
+  border: 1.5px solid #4a9a90;
   border-radius: 4px;
   background: linear-gradient(
     135deg,
-    var(--lit-other-light) 0%,
-    hsl(var(--lit-other-hue), 60%, 93%) 100%
+    #f2fbfa 0%,
+    #d0f0ec 40%,
+    #80ccc2 70%,
+    #b8e4e0 100%
   );
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow:
+    0 0 8px rgba(100, 180, 170, 0.45),
+    0 2px 4px rgba(0, 0, 0, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.8);
   text-decoration: none !important;
+  position: relative;
 }
 
-/* Skipped (not executed) - Diagonal strikethrough instead of just dimming */
+/* Skipped (not executed) - Dimmed */
 .toc-gene-list a.concordance-not_executed {
   display: inline-block;
   padding: 3px 6px;
-  color: var(--lit-muted-color) !important;
+  color: #a8b0b8 !important;
   position: relative;
   text-decoration: none !important;
-  background: linear-gradient(
-    135deg,
-    rgba(245, 246, 247, 0.8) 0%,
-    rgba(235, 237, 240, 0.9) 100%
-  );
-  border: 1px solid #d1d5db;
+  background: rgba(245, 246, 247, 0.5);
+  border: 1px solid #e5e7eb;
   border-radius: 4px;
-}
-
-/* Diagonal strikethrough line */
-.toc-gene-list a.concordance-not_executed::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: -2px;
-  right: -2px;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    transparent,
-    var(--lit-muted-strike) 10%,
-    var(--lit-muted-strike) 90%,
-    transparent
-  );
-  transform: rotate(-12deg);
-  pointer-events: none;
+  opacity: 0.7;
 }
 
 /* ==========================================================================
@@ -421,4 +401,56 @@
 .toc-gene-list a.concordance-not_executed:focus {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Instant Tooltips - CSS-based tooltips via data-title attribute
+   Same mechanism as gene_report_styles.css for instant hover display
+   ========================================================================== */
+
+.toc-gene-list a[data-title] {
+  position: relative;
+}
+
+.toc-gene-list a[data-title]::before {
+  content: attr(data-title);
+  position: absolute;
+  top: auto;
+  bottom: 100%;
+  left: 50%;
+  right: auto;
+  height: auto;
+  width: auto;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.8em;
+  font-weight: normal;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0s;
+  z-index: 1000;
+  margin-bottom: 5px;
+}
+
+.toc-gene-list a[data-title]::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #333;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0s;
+  z-index: 1000;
+}
+
+.toc-gene-list a[data-title]:hover::before,
+.toc-gene-list a[data-title]:hover::after {
+  opacity: 1;
 }
