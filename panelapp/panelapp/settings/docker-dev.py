@@ -81,7 +81,7 @@ if USE_S3:  # Static and Media files on S3
 
     # URL static files are served from
 #   STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/{AWS_LOCATION}/'
-    STATIC_URL = f'http://localstack:4566/{AWS_S3_STATICFILES_BUCKET_NAME}/{AWS_STATICFILES_LOCATION + ("/" if AWS_STATICFILES_LOCATION else "")}'  #noqa
+    STATIC_URL = f'http://localstack:4566/{AWS_S3_STATICFILES_BUCKET_NAME}/{AWS_STATICFILES_LOCATION}{"/" if AWS_STATICFILES_LOCATION else ""}'
 
     AWS_S3_STATICFILES_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
 
@@ -98,7 +98,7 @@ if USE_S3:  # Static and Media files on S3
 
     AWS_S3_MEDIAFILES_CUSTOM_DOMAIN = None
     # URL media files are served from
-    MEDIA_URL = f'http://localstack:4566/{AWS_S3_MEDIAFILES_BUCKET_NAME}/{AWS_MEDIAFILES_LOCATION + ("/" if AWS_MEDIAFILES_LOCATION else "")}'  #noqa
+    MEDIA_URL = f'http://localstack:4566/{AWS_S3_MEDIAFILES_BUCKET_NAME}/{AWS_MEDIAFILES_LOCATION}{"/" if AWS_MEDIAFILES_LOCATION else ""}'
     AWS_S3_MEDIAFILES_OBJECT_PARAMETERS = {}
 
     AWS_MEDIAFILES_DEFAULT_ACL = 'public-read'  # LocalStack only
