@@ -19,6 +19,14 @@ var LiteratureAssignments = {
     return div.innerHTML;
   },
 
+  /**
+   * Build tooltip text for a skipped assignment.
+   */
+  _skipTooltip: function (assignment) {
+    var skippedType = assignment.assigned_to ? "Investigated" : "Triaged";
+    return skippedType + ": " + assignment.skipped_reason;
+  },
+
   init: function () {
     // Read configuration from both JSON blocks
     var reportConfig = this._readJsonBlock("report-config");
@@ -103,8 +111,9 @@ var LiteratureAssignments = {
           link.classList.add("concordance-discordant");
         }
       } else if (assignment && assignment.status === "skipped") {
-        // Skipped: dimmed
+        // Skipped: dimmed with reason tooltip
         link.classList.add("concordance-not_executed");
+        link.title = self._skipTooltip(assignment);
       } else if (assignment && assignment.status === "assigned") {
         if (assignment.assigned_to === self.config.currentUserId) {
           // My task: coral
@@ -167,8 +176,7 @@ var LiteratureAssignments = {
 
     // Skipped state: show badge with reason and restore button
     if (status === "skipped") {
-      var skippedType = assignment.assigned_to ? "Investigated" : "Triaged";
-      var skipTitle = skippedType + ": " + this._escapeHtml(assignment.skipped_reason);
+      var skipTitle = this._escapeHtml(this._skipTooltip(assignment));
       return (
         '<span class="lit-widget lit-skipped-widget">' +
         '<span class="lit-badge lit-skipped" title="' +
@@ -501,7 +509,7 @@ var LiteratureAssignments = {
     // Refresh ToC link
     var link = this._findTocLink(gene);
     if (link) {
-      // Remove all status classes
+      // Remove all status classes and tooltip
       link.classList.remove(
         "my-task",
         "assigned-other",
@@ -509,6 +517,7 @@ var LiteratureAssignments = {
         "concordance-discordant",
         "concordance-not_executed"
       );
+      link.removeAttribute("title");
 
       // Re-apply based on current state
       var assignment = this.config.assignments[gene];
@@ -522,6 +531,7 @@ var LiteratureAssignments = {
         }
       } else if (assignment && assignment.status === "skipped") {
         link.classList.add("concordance-not_executed");
+        link.title = this._skipTooltip(assignment);
       } else if (assignment && assignment.status === "assigned") {
         if (assignment.assigned_to === this.config.currentUserId) {
           link.classList.add("my-task");
