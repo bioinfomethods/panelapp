@@ -3,8 +3,7 @@ name: Main workflow, test and deploy to AWS
 on:
   push:
     branches:
-      - mcri-vcgs-prod
-      - mcri-vcgs-staging
+      - undo-staging-upstream-migration
 
 permissions:
   id-token: write
@@ -25,10 +24,7 @@ jobs:
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
           # Branch Selection
 
-          if [ "$CI_ACTION_REF_NAME_SLUG" == "mcri-vcgs-prod" ]; then
-            echo "env_name=prod" >> "$GITHUB_OUTPUT"
-            echo "github_actions_environment=mcri-vcgs-prod" >> "$GITHUB_OUTPUT"
-          elif [ "$CI_ACTION_REF_NAME_SLUG" == "mcri-vcgs-staging" ]; then
+          if [ "$CI_ACTION_REF_NAME_SLUG" == "undo-staging-upstream-migration" ]; then
             echo "env_name=staging" >> "$GITHUB_OUTPUT"
             echo "github_actions_environment=mcri-vcgs-staging" >> "$GITHUB_OUTPUT"
           fi
