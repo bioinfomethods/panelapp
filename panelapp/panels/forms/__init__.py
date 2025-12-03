@@ -41,6 +41,7 @@ from .region_review import RegionReviewForm  # noqa
 from .region_ready import RegionReadyForm  # noqa
 from .copygene import CopyGeneForm  # noqa
 from .copystr import CopySTRForm  # noqa
+from .copyregion import CopyRegionForm  # noqa
 from panels.models import ProcessingRunCode
 from panels.exceptions import UserDoesNotExist
 from panels.exceptions import GeneDoesNotExist
