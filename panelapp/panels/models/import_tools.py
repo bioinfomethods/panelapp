@@ -46,7 +46,7 @@ from .region import Region
 from .genepanelsnapshot import GenePanelSnapshot
 from .Level4Title import Level4Title
 from .codes import ProcessingRunCode
-from django.utils.encoding import force_text
+from django.utils.encoding import force_str
 from .evaluation import Evaluation
 
 
@@ -566,7 +566,7 @@ class UploadedPanelList(TimeStampedModel):
             # When file is stored in S3 we need to read the file returned by FieldFile.open(), then force it into text
             # and split the content into lines
             # TODO is this working when using FileSystemStorage?
-            textfile_content = force_text(file.read(), encoding="utf-8",errors="ignore")
+            textfile_content = force_str(file.read(), encoding="utf-8",errors="ignore")
             reader = csv.reader(textfile_content.splitlines(), delimiter="\t")
             _ = next(reader)  # noqa
 
@@ -729,7 +729,7 @@ class UploadedReviewsList(TimeStampedModel):
         """
         with self.reviews.open(mode="rt") as file:
             # TODO is this working when using FileSystemStorage?
-            textfile_content = force_text(file.read(), encoding="utf-8",errors="ignore")
+            textfile_content = force_str(file.read(), encoding="utf-8",errors="ignore")
             reader = csv.reader(textfile_content.splitlines(), delimiter="\t")
             next(reader)  # skip header
 

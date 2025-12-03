@@ -37,6 +37,8 @@ class Level4Title(models.Model):
     def __str__(self):
         return str(self.name)
 
+    __hash__ = models.Model.__hash__
+
     def __eq__(self, other):
         if other == self.name:
             return True

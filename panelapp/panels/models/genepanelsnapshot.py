@@ -36,7 +36,7 @@ from django.db.models import Subquery
 from django.db.models import CharField, Value as V
 from django.db.models.functions import Concat
 from django.db.models import Q, Value
-from django.contrib.postgres.fields import JSONField
+from django.db.models import JSONField
 from django.urls import reverse
 from django.utils import timezone
 from django.contrib.postgres.fields import ArrayField
