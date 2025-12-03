@@ -140,7 +140,7 @@ USE_SQS = os.getenv('USE_SQS') == 'TRUE'
 
 if USE_SQS:  # Use SQS as message broker
 
-    CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "sqs://@localstack:4576")
+    CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "sqs://@localstack:4566")
     CELERY_BROKER_TRANSPORT_OPTIONS = {
         'region': AWS_REGION,
         'polling_interval': 1,      # seconds
