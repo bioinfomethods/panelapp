@@ -29,7 +29,7 @@ from django.views.generic import View
 from django.views.generic import ListView
 from django.http import JsonResponse
 from django.core import mail
-from celery.task.control import inspect
+from panelapp.celery import app as celery_app
 from kombu import Connection
 from .models import HomeText
 
@@ -113,7 +113,7 @@ class HealthCheckView(View):
             # should be fixed in celery==4.3.0 https://github.com/celery/celery/issues/2689
             # haproxy returns 503 for any request longer than 60 seconds
 
-            insp = inspect()
+            insp = celery_app.control.inspect()
             stats = insp.stats()
             if not stats:
                 status = "Error"

@@ -43,7 +43,7 @@ AWS_DEFAULT_ACL = None  # Actually bypassed by our extended S3 storage, but need
 
 # Celery backend
 
-# Celery backend broker URL. Override to 'sqs://@localstack:4576' for using LocalStack
+# Celery backend broker URL. Override to 'sqs://@localstack:4566' for using LocalStack
 CELERY_BROKER_URL = os.getenv("CELERY_BROKER_URL", "sqs://")
 
 # Name of the SQS queue. It must match the name of the provisioned SQS queue.
@@ -70,7 +70,7 @@ AWS_S3_USE_SSL = os.getenv('AWS_S3_USE_SSL', True)
 # Files ACL. By defualt ('None') inherits bucket ACL. Override to 'public-read' for using LocalStack
 AWS_STATICFILES_DEFAULT_ACL = os.getenv('AWS_DEFAULT_ACL', None)
 
-# S3 endpoint. Override to 'http://localstack:4572/' for using LocalStack
+# S3 endpoint. Override to 'http://localstack:4566/' for using LocalStack
 AWS_S3_ENDPOINT_URL = os.getenv('AWS_S3_ENDPOINT_URL', None)
 
 # Static files
@@ -92,7 +92,7 @@ AWS_S3_STATICFILES_CUSTOM_DOMAIN = os.getenv('AWS_S3_STATICFILES_CUSTOM_DOMAIN',
 
 # URL of the static files in the S3 bucket. Includes the path defined by AWS_STATICFILES_LOCATION
 # and must end with slash.
-# Override to 'http://localstack:4572/static-bucket/static/' for using LocalStack
+# Override to 'http://localstack:4566/static-bucket/static/' for using LocalStack
 STATIC_URL = os.getenv('STATIC_URL', f'https://{AWS_S3_STATICFILES_CUSTOM_DOMAIN}/{AWS_STATICFILES_LOCATION}{"/" if AWS_STATICFILES_LOCATION else ""}')
 
 # Files ACL. By default ('None') inherits bucket ACL.
@@ -121,7 +121,7 @@ AWS_S3_MEDIAFILES_CUSTOM_DOMAIN = os.getenv('AWS_S3_MEDIAFILES_CUSTOM_DOMAIN', N
 
 # URL the application fetches media file from.
 # Should be `https://<media-bucket-name>.s3.amazonaws.com/uploads/' if AWS_MEDIAFILES_LOCATION is the default 'uploads'.
-# Override to 'http://localstack:4572/media-bucket/uploads/' with LocalStack
+# Override to 'http://localstack:4566/media-bucket/uploads/' with LocalStack
 MEDIA_URL = os.getenv('MEDIA_URL', f'https://{AWS_S3_MEDIAFILES_BUCKET_NAME}.s3.amazonaws.com/{AWS_MEDIAFILES_LOCATION}{"/" if AWS_MEDIAFILES_LOCATION else ""}')
 
 # Files ACL. By default ('None') inherits bucket ACL. Override to 'public-read' for using LocalStack

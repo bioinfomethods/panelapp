@@ -1,23 +1,19 @@
 services:
 
   localstack:
-    # Pinned to 0.11.5 (last version with separate ports 4572/4576) for compatibility with
-    # old Python dependencies (Celery 4.4.7, Kombu 4.6.11, boto3 1.9.147 from 2019-2020).
-    # LocalStack 0.12+ uses unified gateway on port 4566 which these old libs don't support.
-    image: localstack/localstack:0.11.5
+    image: localstack/localstack:4.11.1
     ports:
       - "127.0.0.1:4566:4566"            # LocalStack Gateway
       - "127.0.0.1:4510-4559:4510-4559"  # external services port range
     environment:
+      - EXTRA_CORS_ALLOWED_ORIGINS=http://localhost:8080,http://127.0.0.1:8080,http://web:8000
+      - MAIN_CONTAINER_NAME=localstack
       - SERVICES=sqs,s3,ses
-      - DEFAULT_REGION=${AWS_DEFAULT_REGION-eu-west-2}
-      - HOSTNAME_EXTERNAL=localstack
+      - LOCALSTACK_HOST=localstack
       - DEBUG=${DEBUG- }
-      - PORT_WEB_UI=8080
       - DOCKER_HOST=unix:///var/run/docker.sock
       # Make S3 bucket persistent
-      - DATA_DIR=/var/lib/localstack/data
-#      - DATA_DIR=${DATA_DIR- }
+      - PERSISTENCE=1
     volumes:
       - "${TMPDIR:-/tmp/localstack}:/var/lib/localstack"
       - "/var/run/docker.sock:/var/run/docker.sock"
@@ -76,7 +72,7 @@ services:
 #      - STATIC_ROOT=/static
 #      - MEDIA_ROOT=/media
       - USE_SQS=TRUE
-      - CELERY_BROKER_URL=sqs://@localstack:4576
+      - CELERY_BROKER_URL=sqs://@localstack:4566
 #      - CELERY_BROKER_URL=amqp://rabbitmq/panelapp
 
   worker:
@@ -115,7 +111,7 @@ services:
       - AWS_MEDIAFILES_LOCATION=media
       - AWS_S3_REPORTS_BUCKET_NAME=reports-bucket
       - USE_SQS=TRUE
-      - CELERY_BROKER_URL=sqs://@localstack:4576
+      - CELERY_BROKER_URL=sqs://@localstack:4566
 #      - CELERY_BROKER_URL=amqp://rabbitmq/panelapp
 
 #  rabbitmq:
