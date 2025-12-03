@@ -158,8 +158,9 @@ var LiteratureAssignments = {
         self._setTooltip(link, self._skipTooltip(assignment));
       } else if (assignment && assignment.status === "assigned") {
         if (assignment.assigned_to === self.config.currentUserId) {
-          // My task: coral
+          // My task: filled dark chip
           link.classList.add("my-task");
+          self._setTooltip(link, "Assigned to you");
         } else {
           // Someone else's task: teal with assignee tooltip
           link.classList.add("assigned-other");
@@ -222,12 +223,12 @@ var LiteratureAssignments = {
       var skipTitle = this._escapeHtml(this._skipTooltip(assignment));
       return (
         '<span class="lit-widget lit-skipped-widget">' +
-        '<span class="lit-badge lit-skipped" title="' +
+        '<span class="lit-badge lit-skipped" data-title="' +
         skipTitle +
         '">&mdash;</span>' +
         '<button class="lit-restore-btn" data-gene="' +
         gene +
-        '" title="Restore (un-skip)">&#x21ba;</button>' +
+        '" data-title="Restore">&#x21ba;</button>' +
         "</span>"
       );
     }
@@ -269,7 +270,7 @@ var LiteratureAssignments = {
       "</select>" +
       '<button class="lit-skip-btn" data-gene="' +
       gene +
-      '" title="Skip this gene">&times;</button>' +
+      '" data-title="Skip">&times;</button>' +
       "</span>";
 
     return html;
@@ -579,6 +580,7 @@ var LiteratureAssignments = {
       } else if (assignment && assignment.status === "assigned") {
         if (assignment.assigned_to === this.config.currentUserId) {
           link.classList.add("my-task");
+          this._setTooltip(link, "Assigned to you");
         } else {
           link.classList.add("assigned-other");
           this._setTooltip(link, this._assignedTooltip(assignment));
