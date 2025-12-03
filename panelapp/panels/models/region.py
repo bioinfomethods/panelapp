@@ -33,9 +33,8 @@ from django.db.models import Subquery
 from django.db.models import Count
 from django.db.models import Value as V
 from django.core.serializers.json import DjangoJSONEncoder
-from django.contrib.postgres.fields import JSONField
-from django.contrib.postgres.fields import ArrayField
-from django.contrib.postgres.fields import IntegerRangeField
+from django.contrib.postgres.fields import ArrayField, IntegerRangeField
+from django.db.models import JSONField
 from django.core import validators
 from django.urls import reverse
 

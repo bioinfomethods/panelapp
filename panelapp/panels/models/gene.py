@@ -24,7 +24,8 @@
 from datetime import datetime
 from django.core.exceptions import ValidationError
 from django.db import models
-from django.contrib.postgres.fields import JSONField, ArrayField
+from django.contrib.postgres.fields import ArrayField
+from django.db.models import JSONField
 
 
 class Gene(models.Model):

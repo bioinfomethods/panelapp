@@ -21,18 +21,14 @@
 ## specific language governing permissions and limitations
 ## under the License.
 ##
-import pkg_resources
+from importlib.metadata import version, PackageNotFoundError
 
 
 def get_package_version():
-    version = ""
-
     try:
-        version = pkg_resources.get_distribution("panelapp").version
-    except pkg_resources.DistributionNotFound:
-        pass
-
-    return version
+        return version("panelapp")
+    except PackageNotFoundError:
+        return ""
 
 
 __version__ = get_package_version()
