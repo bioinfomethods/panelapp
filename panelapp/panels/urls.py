@@ -53,6 +53,7 @@ from .views import DownloadAllPanels
 from .views import ActivityListView
 from .views import CopyGeneView
 from .views import CopySTRView
+from .views import CopyRegionView
 from .views import DownloadAllSTRs
 from .views import DownloadAllRegions
 from .views import GeneDetailRedirectView
@@ -155,6 +156,11 @@ urlpatterns = [
         r"^(?P<pk>[0-9]+)/str/(?P<str_name>{})/copy$".format(entity_regex),
         CopySTRView.as_view(),
         name="copy_str_from_panel",
+    ),
+    url(
+        r"^(?P<pk>[0-9]+)/region/(?P<region_name>{})/copy$".format(entity_regex),
+        CopyRegionView.as_view(),
+        name="copy_region_from_panel",
     ),
     url(
         r"^(?P<pk>[0-9]+)/(?P<entity_type>({types}))/(?P<entity_name>{regex})/edit$".format(

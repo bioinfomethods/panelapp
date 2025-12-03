@@ -23,9 +23,15 @@
 ##
 import csv
 from datetime import datetime
+from django.contrib import messages
 from django.http import StreamingHttpResponse
+from django.template.defaultfilters import pluralize
+from django.urls import reverse_lazy
 from django.views import View
-from panels.models import GenePanelSnapshot
+from django.views.generic import FormView
+from django.shortcuts import redirect
+from panels.forms import CopyRegionForm
+from panels.models import GenePanelSnapshot, GenePanel
 from .entities import EchoWriter
 from panelapp.mixins import GELReviewerRequiredMixin
 
@@ -152,3 +158,43 @@ class DownloadAllRegions(GELReviewerRequiredMixin, View):
         )
         response["Content-Disposition"] = attachment
         return response
+
+
+class CopyRegionView(GELReviewerRequiredMixin, FormView):
+    template_name = "panels/copy_region.html"
+    form_class = CopyRegionForm
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        kwargs["region_name"] = self.kwargs["region_name"]
+        kwargs["user"] = self.request.user
+        kwargs["source_panel_id"] = self.kwargs["pk"]
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        ctx = super().get_context_data(**kwargs)
+        ctx["region_name"] = self.kwargs["region_name"]
+        ctx["source_panel"] = source_panel = GenePanel.objects.get_panel(
+            pk=str(self.kwargs["pk"])
+        ).active_panel
+        ctx["source_region_entry"] = source_panel.get_region(
+            self.kwargs["region_name"], prefetch_extra=True
+        )
+        ctx["entity_type"] = "region"
+        return ctx
+
+    def form_valid(self, form):
+        form.copy_region_to_panels()
+        panel_count = len(form.cleaned_data["target_panels"])
+        msg = "Region copy initiated for {} panel{}. The operation is processing in the background.".format(
+            panel_count,
+            pluralize(panel_count),
+        )
+        messages.success(self.request, msg)
+
+        return redirect(self.get_success_url())
+
+    def get_success_url(self):
+        return reverse_lazy(
+            "panels:entity_detail", kwargs={"slug": self.kwargs["region_name"]}
+        )
