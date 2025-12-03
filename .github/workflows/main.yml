@@ -276,3 +276,15 @@ jobs:
           python3 infra/run-ecs-task.py -tasks panelapp-migrate-panelapp-${{needs.init.outputs.env_name}} -panelapp
           sleep 30
           python3 infra/run-ecs-task.py -tasks panelapp-collectstatic-panelapp-${{needs.init.outputs.env_name}} -panelapp
+
+      - name: Invalidate CloudFront cache
+        if: ${{ vars.CDN_ALIAS != '' }}
+        run: |
+          DISTRIBUTION_ID=$(aws cloudfront list-distributions \
+            --query "DistributionList.Items[?Aliases.Items[?@=='${{ vars.CDN_ALIAS }}']].Id | [0]" \
+            --output text)
+          if [ "$DISTRIBUTION_ID" != "None" ] && [ -n "$DISTRIBUTION_ID" ]; then
+            aws cloudfront create-invalidation \
+              --distribution-id "$DISTRIBUTION_ID" \
+              --paths "/static/*"
+          fi
