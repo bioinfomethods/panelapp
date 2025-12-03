@@ -9,6 +9,7 @@
 var LiteratureAssignments = {
   config: null,
   completionStatus: null,
+  _tocLinkMap: null,
 
   /**
    * Escape HTML special characters to prevent XSS.
@@ -97,6 +98,7 @@ var LiteratureAssignments = {
       throw new Error("assignmentData.currentUserId is required");
 
     this.completionStatus = this._processCompletions(this.config.completions);
+    this._buildTocLinkMap();
     this.highlightTocLinks();
     this.renderAllWidgets();
   },
@@ -112,19 +114,28 @@ var LiteratureAssignments = {
   },
 
   /**
-   * Find ToC link for a gene. Handles both novel-gene-X and known-gene-X anchors.
+   * Build a lookup map of ToC links by gene symbol (called once at init).
+   * This avoids repeated querySelector calls in highlightTocLinks.
+   */
+  _buildTocLinkMap: function () {
+    this._tocLinkMap = {};
+    var links = document.querySelectorAll(
+      '.toc-gene-list a[href^="#novel-gene-"], .toc-gene-list a[href^="#known-gene-"]'
+    );
+    for (var i = 0; i < links.length; i++) {
+      var href = links[i].getAttribute("href");
+      var match = href.match(/#(?:novel|known)-gene-(.+)$/);
+      if (match) {
+        this._tocLinkMap[match[1]] = links[i];
+      }
+    }
+  },
+
+  /**
+   * Find ToC link for a gene using the pre-built lookup map.
    */
   _findTocLink: function (gene) {
-    // Try novel-gene first, then known-gene
-    var link = document.querySelector(
-      '.toc-gene-list a[href="#novel-gene-' + gene + '"]'
-    );
-    if (!link) {
-      link = document.querySelector(
-        '.toc-gene-list a[href="#known-gene-' + gene + '"]'
-      );
-    }
-    return link;
+    return this._tocLinkMap[gene] || null;
   },
 
   /**
@@ -247,7 +258,9 @@ var LiteratureAssignments = {
       '<span class="lit-widget ' +
       widgetClass +
       '">' +
-      '<select class="lit-assignee-select" data-gene="' +
+      '<select class="lit-assignee-select" autocomplete="off" name="assignee-' +
+      gene +
+      '" data-gene="' +
       gene +
       '" data-current="' +
       (currentAssignee || "") +
@@ -597,11 +610,82 @@ var LiteratureAssignments = {
   },
 };
 
+/**
+ * Handle prefill button clicks by dynamically creating and submitting a form.
+ * This avoids embedding thousands of hidden inputs in the HTML, which slows
+ * down page load due to browser autofill scanning.
+ */
+function handlePrefillClick(event) {
+  var button = event.currentTarget;
+  var prefillData = JSON.parse(button.dataset.prefill);
+
+  // Create form dynamically
+  var form = document.createElement("form");
+  form.method = "POST";
+  form.action = "/panels/reports/prefill/";
+  form.target = "_blank";
+
+  // Add CSRF token
+  var csrfToken =
+    document.querySelector("[name=csrfmiddlewaretoken]")?.value ||
+    document.cookie.match(/csrftoken=([^;]+)/)?.[1] ||
+    "";
+  var csrfInput = document.createElement("input");
+  csrfInput.type = "hidden";
+  csrfInput.name = "csrfmiddlewaretoken";
+  csrfInput.value = csrfToken;
+  form.appendChild(csrfInput);
+
+  // Map prefill data to form fields
+  var fields = {
+    form_type: prefillData.form_type,
+    panel_id: prefillData.panel_id,
+    gene_symbol: prefillData.gene_symbol,
+    gene_name: prefillData.gene_symbol,
+    source: "Literature",
+    rating: prefillData.rating,
+    moi: prefillData.moi,
+    publications: prefillData.publications,
+    phenotypes: prefillData.phenotypes,
+    comments: prefillData.comments,
+  };
+
+  // Add mode_of_pathogenicity only if present
+  if (prefillData.mode_of_pathogenicity) {
+    fields.mode_of_pathogenicity = prefillData.mode_of_pathogenicity;
+  }
+
+  // Create hidden inputs for all fields
+  Object.keys(fields).forEach(function (name) {
+    var input = document.createElement("input");
+    input.type = "hidden";
+    input.name = name;
+    input.value = fields[name];
+    form.appendChild(input);
+  });
+
+  // Submit and clean up
+  document.body.appendChild(form);
+  form.submit();
+  document.body.removeChild(form);
+}
+
+/**
+ * Bind click handlers to all prefill buttons.
+ */
+function initPrefillButtons() {
+  document.querySelectorAll(".prefill-button[data-prefill]").forEach(function (button) {
+    button.addEventListener("click", handlePrefillClick);
+  });
+}
+
 // Auto-initialize when DOM is ready
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", function () {
     LiteratureAssignments.init();
+    initPrefillButtons();
   });
 } else {
   LiteratureAssignments.init();
+  initPrefillButtons();
 }

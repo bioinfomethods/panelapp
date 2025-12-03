@@ -28,6 +28,8 @@ Author: Oleg Gerasimenko
 (c) 2018 Genomics England
 """
 
+from copy import deepcopy
+
 from django.db.models import Manager
 from django.db.models import Count
 from django.db.models import Subquery
@@ -761,4 +763,93 @@ class AbstractEntity:
     def entity_color_name(self):
         return get_gene_list_data(
             None, GeneDataType.COLOR.value, self.saved_gel_status, flagged=self.flagged
+        )
+
+    def copy_reviews_from(self, source_entity, source_panel_name, user_ids_to_copy):
+        """Copy selected reviews from a source entity to this entity.
+
+        Reviews from evaluators who have already reviewed this entity in the target
+        panel will be skipped (not overwritten).
+
+        Args:
+            source_entity: Entity (Gene/STR/Region) to copy reviews from
+            source_panel_name: Name of the source panel (for attribution)
+            user_ids_to_copy: Set/list of user IDs whose reviews should be copied
+        """
+        # Get existing evaluator IDs to avoid duplicates
+        existing_evaluator_ids = set(self.evaluation.values_list("user_id", flat=True))
+
+        # Filter evaluations to the selected users who haven't already reviewed
+        evaluations_to_copy = [
+            ev
+            for ev in source_entity.evaluation.all()
+            if ev.user_id in user_ids_to_copy and ev.user_id not in existing_evaluator_ids
+        ]
+
+        if not evaluations_to_copy:
+            return
+
+        # Filter evidences from the selected reviewers
+        filtered_user_ids = {ev.user_id for ev in evaluations_to_copy}
+        evidences_to_copy = [
+            ev
+            for ev in source_entity.evidence.all()
+            if ev.reviewer and ev.reviewer.user_id in filtered_user_ids
+        ]
+
+        new_evaluations = {}
+
+        for evaluation in evaluations_to_copy:
+            version = evaluation.version if evaluation.version else "0"
+            evaluation.version = "Imported from {} panel version {}".format(
+                source_panel_name, version
+            )
+
+            comments = deepcopy(list(evaluation.comments.all()))
+            evaluation.pk = None
+            evaluation.create_comments = []
+
+            for comment in comments:
+                comment.pk = None
+                evaluation.create_comments.append(comment)
+
+            new_evaluations[evaluation.user_id] = {
+                "evaluation": evaluation,
+                "evidences": [],
+            }
+
+        for evidence in evidences_to_copy:
+            evidence.pk = None
+            if new_evaluations.get(evidence.reviewer.user_id):
+                new_evaluations[evidence.reviewer.user_id]["evidences"].append(evidence)
+
+        Evaluation.objects.bulk_create(
+            [new_evaluations[key]["evaluation"] for key in new_evaluations]
+        )
+
+        Evidence.objects.bulk_create(
+            [
+                ev
+                for key in new_evaluations
+                for ev in new_evaluations[key]["evidences"]
+            ]
+        )
+
+        Comment.objects.bulk_create(
+            [
+                c
+                for key in new_evaluations
+                for c in new_evaluations[key]["evaluation"].create_comments
+            ]
+        )
+
+        for user_id in new_evaluations:
+            evaluation = new_evaluations[user_id]["evaluation"]
+            evaluation.comments.set(evaluation.create_comments)
+
+        self.evaluation.add(
+            *[new_evaluations[key]["evaluation"] for key in new_evaluations]
+        )
+        self.evidence.add(
+            *[ev for key in new_evaluations for ev in new_evaluations[key]["evidences"]]
         )

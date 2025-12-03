@@ -299,8 +299,8 @@ def background_copy_gene(user_pk, gene_symbol, source_panel_pk, target_panel_pks
                     activity_msg = f"Copied gene {gene_symbol} from panel {source_panel.panel.name}"
 
                 # Copy selected reviews, skipping existing evaluators
-                gene_entry.copy_reviews_to_new_gene(
-                    source_gene_entry=source_gene_entry,
+                gene_entry.copy_reviews_from(
+                    source_entity=source_gene_entry,
                     source_panel_name=source_panel.panel.name,
                     user_ids_to_copy=user_ids_as_ints,
                 )
@@ -399,8 +399,8 @@ def background_copy_str(user_pk, str_name, source_panel_pk, target_panel_pks, se
                     activity_msg = f"Copied STR {str_name} from panel {source_panel.panel.name}"
 
                 # Copy selected reviews, skipping existing evaluators
-                str_entry.copy_reviews_to_new_str(
-                    source_str=source_str_entry,
+                str_entry.copy_reviews_from(
+                    source_entity=source_str_entry,
                     source_panel_name=source_panel.panel.name,
                     user_ids_to_copy=user_ids_as_ints,
                 )
@@ -416,6 +416,108 @@ def background_copy_str(user_pk, str_name, source_panel_pk, target_panel_pks, se
     except Exception as e:
         logging.error(
             f"Error copying STR {str_name} in background: {e}",
+            exc_info=True
+        )
+        raise
+
+
+@shared_task
+def background_copy_region(user_pk, region_name, source_panel_pk, target_panel_pks, selected_review_user_ids):
+    """Copy a Region from source panel to multiple target panels in the background.
+
+    This task performs the Region copying operation asynchronously to avoid
+    timeouts when copying to many panels. Unlike other background tasks,
+    this uses optimistic UI - no email notification is sent on completion.
+
+    All operations are atomic - either all panels are updated or none are.
+
+    Args:
+        user_pk: Primary key of the user performing the copy
+        region_name: Name of the Region to copy
+        source_panel_pk: Primary key of the source panel
+        target_panel_pks: List of primary keys of target panels
+        selected_review_user_ids: List of user IDs whose reviews should be copied
+    """
+    from accounts.models import User
+    from panels.models import GenePanelSnapshot, GenePanel
+
+    try:
+        user = User.objects.get(pk=user_pk)
+
+        # Get source panel
+        source_panel = GenePanelSnapshot.objects.get(pk=source_panel_pk)
+
+        # Get the Region entry from source panel with all metadata
+        source_region_entry = source_panel.get_region(region_name, prefetch_extra=True)
+
+        # Build region_data dict with all metadata from source
+        region_data = {
+            "verbose_name": source_region_entry.verbose_name,
+            "chromosome": source_region_entry.chromosome,
+            "position_37": source_region_entry.position_37,
+            "position_38": source_region_entry.position_38,
+            "haploinsufficiency_score": source_region_entry.haploinsufficiency_score,
+            "triplosensitivity_score": source_region_entry.triplosensitivity_score,
+            "required_overlap_percentage": source_region_entry.required_overlap_percentage,
+            "type_of_variants": source_region_entry.type_of_variants,
+            "moi": source_region_entry.moi,
+            "penetrance": source_region_entry.penetrance,
+            "publications": source_region_entry.publications,
+            "phenotypes": source_region_entry.phenotypes,
+            "mode_of_pathogenicity": source_region_entry.mode_of_pathogenicity,
+            "sources": [ev.name for ev in source_region_entry.evidence.all()],
+            "tags": [tag.pk for tag in source_region_entry.tags.all()],
+            "gene": source_region_entry.gene_core,
+        }
+
+        # Convert review user IDs to integers
+        user_ids_as_ints = [int(uid) for uid in selected_review_user_ids]
+
+        # Wrap entire operation in atomic transaction - all or nothing
+        with transaction.atomic():
+            # Copy to each target panel
+            for target_panel_pk in target_panel_pks:
+                # Get the fresh active panel
+                target_panel_snapshot = GenePanelSnapshot.objects.get(pk=target_panel_pk)
+                target_panel = GenePanel.objects.get_panel(
+                    pk=str(target_panel_snapshot.panel.pk)
+                ).active_panel
+
+                # Check if Region already exists
+                if target_panel.has_region(region_name):
+                    # Region exists - increment version and get Region from new version
+                    target_panel = target_panel.increment_version()
+                    region_entry = target_panel.get_region(region_name)
+                    activity_msg = f"Added reviews for Region {region_name} from panel {source_panel.panel.name}"
+                else:
+                    # Add the Region with all metadata (increments version internally)
+                    region_entry = target_panel.add_region(
+                        user=user,
+                        region_name=region_name,
+                        region_data=region_data,
+                        increment_version=True,
+                    )
+                    # Note: target_panel still refers to old version, but region_entry.panel is the new one
+                    activity_msg = f"Copied Region {region_name} from panel {source_panel.panel.name}"
+
+                # Copy selected reviews, skipping existing evaluators
+                region_entry.copy_reviews_from(
+                    source_entity=source_region_entry,
+                    source_panel_name=source_panel.panel.name,
+                    user_ids_to_copy=user_ids_as_ints,
+                )
+
+                # Add activity log (use region_entry.panel to get the correct version)
+                region_entry.panel.add_activity(user, activity_msg)
+
+        logging.info(
+            f"Successfully copied Region {region_name} to {len(target_panel_pks)} panel(s) "
+            f"(user: {user.username})"
+        )
+
+    except Exception as e:
+        logging.error(
+            f"Error copying Region {region_name} in background: {e}",
             exc_info=True
         )
         raise
