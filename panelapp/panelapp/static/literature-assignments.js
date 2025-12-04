@@ -139,6 +139,35 @@ var LiteratureAssignments = {
   },
 
   /**
+   * Apply status class and tooltip to a ToC link based on assignment/completion.
+   * Priority: completion > assigned > skipped.
+   */
+  _applyTocLinkStatus: function (link, gene) {
+    var assignment = this.config.assignments[gene];
+    var completion = this.completionStatus[gene];
+
+    if (completion && completion.completed) {
+      if (completion.concordant) {
+        link.classList.add("concordance-concordant");
+      } else {
+        link.classList.add("concordance-discordant");
+        this._setTooltip(link, this._discordantTooltip(completion));
+      }
+    } else if (assignment && assignment.status === "skipped") {
+      link.classList.add("concordance-not_executed");
+      this._setTooltip(link, this._skipTooltip(assignment));
+    } else if (assignment && assignment.status === "assigned") {
+      if (assignment.assigned_to === this.config.currentUserId) {
+        link.classList.add("my-task");
+        this._setTooltip(link, "Assigned to you");
+      } else {
+        link.classList.add("assigned-other");
+        this._setTooltip(link, this._assignedTooltip(assignment));
+      }
+    }
+  },
+
+  /**
    * Apply CSS classes to ToC links based on assignment/completion status.
    * Uses same classes as palit/templates/concordance_report_styles.css.
    */
@@ -150,34 +179,7 @@ var LiteratureAssignments = {
     Object.keys(genes).forEach(function (gene) {
       var link = self._findTocLink(gene);
       if (!link) return; // Gene not in ToC (might be filtered out)
-
-      var assignment = self.config.assignments[gene];
-      var completion = self.completionStatus[gene];
-
-      // Priority: completion > my-task > skipped
-      if (completion && completion.completed) {
-        // Completed: concordant (gold) or discordant (silver)
-        if (completion.concordant) {
-          link.classList.add("concordance-concordant");
-        } else {
-          link.classList.add("concordance-discordant");
-          self._setTooltip(link, self._discordantTooltip(completion));
-        }
-      } else if (assignment && assignment.status === "skipped") {
-        // Skipped: dimmed with reason tooltip
-        link.classList.add("concordance-not_executed");
-        self._setTooltip(link, self._skipTooltip(assignment));
-      } else if (assignment && assignment.status === "assigned") {
-        if (assignment.assigned_to === self.config.currentUserId) {
-          // My task: filled dark chip
-          link.classList.add("my-task");
-          self._setTooltip(link, "Assigned to you");
-        } else {
-          // Someone else's task: teal with assignee tooltip
-          link.classList.add("assigned-other");
-          self._setTooltip(link, self._assignedTooltip(assignment));
-        }
-      }
+      self._applyTocLinkStatus(link, gene);
     });
   },
 
@@ -566,7 +568,7 @@ var LiteratureAssignments = {
     // Refresh ToC link
     var link = this._findTocLink(gene);
     if (link) {
-      // Remove all status classes and tooltip
+      // Remove all status classes and tooltip, then re-apply
       link.classList.remove(
         "my-task",
         "assigned-other",
@@ -575,30 +577,7 @@ var LiteratureAssignments = {
         "concordance-not_executed"
       );
       this._setTooltip(link, null);
-
-      // Re-apply based on current state
-      var assignment = this.config.assignments[gene];
-      var completion = this.completionStatus[gene];
-
-      if (completion && completion.completed) {
-        if (completion.concordant) {
-          link.classList.add("concordance-concordant");
-        } else {
-          link.classList.add("concordance-discordant");
-          this._setTooltip(link, this._discordantTooltip(completion));
-        }
-      } else if (assignment && assignment.status === "skipped") {
-        link.classList.add("concordance-not_executed");
-        this._setTooltip(link, this._skipTooltip(assignment));
-      } else if (assignment && assignment.status === "assigned") {
-        if (assignment.assigned_to === this.config.currentUserId) {
-          link.classList.add("my-task");
-          this._setTooltip(link, "Assigned to you");
-        } else {
-          link.classList.add("assigned-other");
-          this._setTooltip(link, this._assignedTooltip(assignment));
-        }
-      }
+      this._applyTocLinkStatus(link, gene);
     }
   },
 
