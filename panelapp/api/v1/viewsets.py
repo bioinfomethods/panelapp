@@ -127,7 +127,7 @@ class PanelsViewSet(ReadOnlyListViewset):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     lookup_value_regex = "[^/]+"
     serializer_class = PanelSerializer
-    filter_class = PanelsFilter
+    filterset_class = PanelsFilter
 
     def get_serializer(self, *args, **kwargs):
         if (
@@ -369,7 +369,7 @@ class EntityViewSet(viewsets.mixins.ListModelMixin, viewsets.GenericViewSet):
 class GeneViewSet(EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = GeneSerializer
-    filter_class = EntityFilter
+    filterset_class = EntityFilter
     lookup_collection = "genes"
 
     def get_queryset(self):
@@ -428,7 +428,7 @@ class GeneEvaluationsViewSet(EvaluationCommentsMixin, EntityViewSet):
 class STRViewSet(EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = STRSerializer
-    filter_class = EntityFilter
+    filterset_class = EntityFilter
     lookup_collection = "strs"
 
     def get_queryset(self):
@@ -457,7 +457,7 @@ class RegionViewSet(EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     filter_backends = (filters.DjangoFilterBackend,)
     serializer_class = RegionSerializer
-    filter_class = EntityFilter
+    filterset_class = EntityFilter
     lookup_collection = "regions"
 
     def get_queryset(self):
@@ -497,7 +497,7 @@ class EntitySearch(ReadOnlyListViewset):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     lookup_field = "entity_name"
     lookup_url_kwarg = "entity_name"
-    filter_class = EntitySearchFilter
+    filterset_class = EntitySearchFilter
 
     @property
     def active_snapshot_ids(self):
@@ -589,7 +589,7 @@ class EntitySearchViewSet(EntitySearch):
 
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = EntitySerializer
-    filter_class = EntitySearchFilter
+    filterset_class = EntitySearchFilter
 
     @cached_property
     def snapshot_ids(self):
