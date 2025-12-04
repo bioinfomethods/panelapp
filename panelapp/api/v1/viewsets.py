@@ -67,24 +67,20 @@ class ReadOnlyListViewset(
     pass
 
 
-CONFIDENCE_CHOICES = ((3, "Green"), (2, "Amber"), (1, "Red"), (0, "No List"))
+CONFIDENCE_CHOICES = (("3", "Green"), ("2", "Amber"), ("1", "Red"), ("0", "No List"))
 
 
 class Http400(Exception):
     pass
 
 
-class NumberChoices(filters.ChoiceFilter, filters.NumberFilter):
-    pass
-
-
 class EntityFilter(filters.FilterSet):
     entity_name = filters.BaseInFilter(field_name="entity_name", lookup_expr="in")
-    confidence_level = NumberChoices(
+    confidence_level = filters.ChoiceFilter(
         method="filter_confidence_level",
         choices=CONFIDENCE_CHOICES,
         help_text="Filter by confidence level: 0, 1, 2, 3",
-    )  # FIXME should be custom
+    )
     version = filters.CharFilter(method="version_lookup", help_text="Panel version")
     tags = filters.BaseInFilter(field_name="tags__name", lookup_expr="in")
 
@@ -641,7 +637,7 @@ class EntitySearchViewSet(EntitySearch):
         )
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.get_queryset()
 
         page = self.paginate_queryset(queryset)
 
