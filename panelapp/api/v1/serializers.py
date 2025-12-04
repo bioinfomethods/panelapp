@@ -27,6 +27,7 @@ from panels.models import GenePanelEntrySnapshot
 from panels.models import STR
 from panels.models import Region
 from panels.models import Activity
+from panels.models import Comment
 from panels.models import Evaluation
 from panels.models import PanelType
 from panels.models import HistoricalSnapshot
@@ -305,7 +306,34 @@ class ActivitySerializer(serializers.ModelSerializer):
         )
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    """Serializer for curator review comments."""
+
+    user_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Comment
+        fields = (
+            "created",
+            "comment",
+            "user_name",
+        )
+
+    def get_user_name(self, obj):
+        if obj.user:
+            return obj.user.get_full_name()
+        return None
+
+
 class EvaluationSerializer(serializers.ModelSerializer):
+    """Serializer for gene/STR/region evaluations.
+
+    Supports optional inclusion of comments via serializer context:
+        context={'include_comments': True}
+    """
+
+    comments = CommentSerializer(many=True, read_only=True)
+
     class Meta:
         model = Evaluation
         fields = (
@@ -317,7 +345,14 @@ class EvaluationSerializer(serializers.ModelSerializer):
             "moi",
             "current_diagnostic",
             "clinically_relevant",
+            "comments",
         )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        include_comments = self.context.get("include_comments", False)
+        if not include_comments:
+            self.fields.pop("comments", None)
 
 
 class EntitiesListSerializer(serializers.ListSerializer):

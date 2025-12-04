@@ -26,6 +26,9 @@ from math import ceil
 from django.contrib.auth.models import Group
 from django.db import transaction
 from django.utils import timezone
+from django.utils.decorators import method_decorator
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -40,7 +43,6 @@ from panels.models import HistoricalSnapshot
 from panels.models import STR
 from panels.models import Region
 from panels.models import Activity
-from django import forms
 from django.db.models import Q
 from django.db.models import ObjectDoesNotExist
 from django.utils.functional import cached_property
@@ -370,7 +372,42 @@ class GeneViewSet(EntityViewSet):
         return self.get_panel().get_all_genes.prefetch_related("evidence", "tags")
 
 
-class GeneEvaluationsViewSet(EntityViewSet):
+class EvaluationCommentsMixin:
+    """Mixin for evaluation viewsets to support optional comment inclusion.
+
+    Query Parameters:
+        include_comments (bool): If 'true', include comments in response.
+    """
+
+    def _should_include_comments(self):
+        return self.request.query_params.get("include_comments", "").lower() == "true"
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["include_comments"] = self._should_include_comments()
+        return context
+
+    def apply_comment_prefetch(self, queryset):
+        """Apply prefetch_related for comments if requested."""
+        if self._should_include_comments():
+            queryset = queryset.prefetch_related("comments", "comments__user")
+        return queryset
+
+
+include_comments_param = openapi.Parameter(
+    "include_comments",
+    openapi.IN_QUERY,
+    description="Include curator comments in the response. Default: false",
+    type=openapi.TYPE_BOOLEAN,
+    default=False,
+)
+
+
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(manual_parameters=[include_comments_param]),
+)
+class GeneEvaluationsViewSet(EvaluationCommentsMixin, EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = EvaluationSerializer
     recent_version_only = True
@@ -379,7 +416,7 @@ class GeneEvaluationsViewSet(EntityViewSet):
         panel = self.get_panel()
         try:
             gene = panel.get_gene(self.kwargs["gene_entity_name"])
-            return gene.evaluation.all()
+            return self.apply_comment_prefetch(gene.evaluation.all())
         except ObjectDoesNotExist:
             raise Http404
 
@@ -394,7 +431,11 @@ class STRViewSet(EntityViewSet):
         return self.get_panel().get_all_strs.prefetch_related("evidence", "tags")
 
 
-class STREvaluationsViewSet(EntityViewSet):
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(manual_parameters=[include_comments_param]),
+)
+class STREvaluationsViewSet(EvaluationCommentsMixin, EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = EvaluationSerializer
     recent_version_only = True
@@ -403,7 +444,7 @@ class STREvaluationsViewSet(EntityViewSet):
         panel = self.get_panel()
         try:
             str_item = panel.get_str(self.kwargs["str_entity_name"])
-            return str_item.evaluation.all()
+            return self.apply_comment_prefetch(str_item.evaluation.all())
         except ObjectDoesNotExist:
             raise Http404
 
@@ -419,7 +460,11 @@ class RegionViewSet(EntityViewSet):
         return self.get_panel().get_all_regions.prefetch_related("evidence", "tags")
 
 
-class RegionEvaluationsViewSet(EntityViewSet):
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(manual_parameters=[include_comments_param]),
+)
+class RegionEvaluationsViewSet(EvaluationCommentsMixin, EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = EvaluationSerializer
     recent_version_only = True
@@ -428,7 +473,7 @@ class RegionEvaluationsViewSet(EntityViewSet):
         panel = self.get_panel()
         try:
             region = panel.get_region(self.kwargs["region_entity_name"])
-            return region.evaluation.all()
+            return self.apply_comment_prefetch(region.evaluation.all())
         except ObjectDoesNotExist:
             raise Http404
 
