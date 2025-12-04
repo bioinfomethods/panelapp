@@ -504,6 +504,75 @@ class CopyGeneTest(LoginGELUser):
         self.assertEqual(gene_2.moi, "BIALLELIC")  # Unchanged from target
         self.assertEqual(gene_2.evaluation.count(), 2)
 
+    def test_gel_user_can_copy_to_internal_panel(self):
+        """Test that GEL users can copy genes to internal panels."""
+        gene = GeneFactory()
+
+        # Create source panel (public) with gene
+        source_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        source_entry = GenePanelEntrySnapshotFactory.create(
+            gene_core=gene,
+            panel=source_panel,
+            moi="MONOALLELIC",
+        )
+
+        # Add evaluation
+        eval1 = EvaluationFactory(user=self.gel_user)
+        source_entry.evaluation.add(eval1)
+
+        # Create INTERNAL target panel
+        target_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.internal)
+
+        # Submit form - should succeed for GEL user
+        form = CopyGeneForm(
+            data={
+                "target_panels": [target_panel.pk],
+                "reviews_to_copy": [str(eval1.user.pk)],
+            },
+            gene_symbol=gene.gene_symbol,
+            user=self.gel_user,
+            source_panel_id=source_panel.panel.pk,
+        )
+
+        self.assertTrue(form.is_valid())
+        form.copy_gene_to_panels()
+
+        # Verify gene was copied to internal panel
+        updated_target = GenePanel.objects.get_panel(
+            pk=str(target_panel.panel.pk)
+        ).active_panel
+        self.assertTrue(updated_target.has_gene(gene.gene_symbol))
+
+    def test_form_queryset_includes_internal_for_gel(self):
+        """Test that form queryset includes internal panels for GEL users."""
+        gene = GeneFactory()
+        source_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        source_entry = GenePanelEntrySnapshotFactory.create(
+            gene_core=gene, panel=source_panel
+        )
+        eval1 = EvaluationFactory(user=self.gel_user)
+        source_entry.evaluation.add(eval1)
+
+        # Create both public and internal panels
+        public_panel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        internal_panel = GenePanelSnapshotFactory(
+            panel__status=GenePanel.STATUS.internal
+        )
+
+        form = CopyGeneForm(
+            data={},
+            gene_symbol=gene.gene_symbol,
+            user=self.gel_user,
+            source_panel_id=source_panel.panel.pk,
+        )
+
+        queryset = form.fields["target_panels"].queryset
+        queryset_pks = list(queryset.values_list("pk", flat=True))
+
+        # GEL user should see both public and internal panels
+        self.assertIn(public_panel.pk, queryset_pks)
+        self.assertIn(internal_panel.pk, queryset_pks)
+
 
 class CopyGeneReviewerTest(LoginReviewerUser):
     """Test that non-GEL reviewers cannot copy genes."""
