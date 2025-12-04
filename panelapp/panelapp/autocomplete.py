@@ -62,8 +62,15 @@ class TagsAutocomplete(Select2QuerySetView):
 
 class SimplePanelsAutocomplete(Select2QuerySetView):
     def get_queryset(self):
+        # GEL users can see internal panels
+        is_gel = (
+            self.request.user.is_authenticated
+            and hasattr(self.request.user, "reviewer")
+            and self.request.user.reviewer.is_GEL()
+        )
+
         qs = GenePanelSnapshot.objects.get_active_annotated(
-            internal=False, deleted=False
+            all=is_gel, internal=is_gel, deleted=False
         ).exclude(is_super_panel=True)
 
         if self.q:

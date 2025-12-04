@@ -39,6 +39,14 @@ class CopySTRForm(forms.Form):
         source_panel_id = kwargs.pop("source_panel_id")
         super().__init__(*args, **kwargs)
 
+        # Update queryset to include internal panels for GEL users
+        is_gel = hasattr(self.user, "reviewer") and self.user.reviewer.is_GEL()
+        self.fields[
+            "target_panels"
+        ].queryset = GenePanelSnapshot.objects.get_active_annotated(
+            all=is_gel, internal=is_gel, deleted=False
+        ).exclude(is_super_panel=True)
+
         # Get the source panel
         self.source_panel = GenePanel.objects.get_panel(
             pk=str(source_panel_id)
