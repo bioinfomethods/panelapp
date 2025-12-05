@@ -23,17 +23,26 @@
 ##
 from math import ceil
 
+from django.contrib.auth.models import Group
+from django.db import transaction
+from django.utils import timezone
+from django.utils.decorators import method_decorator
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import permissions
+
+from api.permissions import IsGELReviewer
+from panels.models import Gene
 from panels.models import GenePanelSnapshot
+from panels.models import LiteratureAssignment
 from panels.models import GenePanelEntrySnapshot
 from panels.models import HistoricalSnapshot
 from panels.models import STR
 from panels.models import Region
 from panels.models import Activity
-from django import forms
 from django.db.models import Q
 from django.db.models import ObjectDoesNotExist
 from django.utils.functional import cached_property
@@ -367,7 +376,42 @@ class GeneViewSet(EntityViewSet):
         return self.get_panel().get_all_genes.prefetch_related("evidence", "tags")
 
 
-class GeneEvaluationsViewSet(EntityViewSet):
+class EvaluationCommentsMixin:
+    """Mixin for evaluation viewsets to support optional comment inclusion.
+
+    Query Parameters:
+        include_comments (bool): If 'true', include comments in response.
+    """
+
+    def _should_include_comments(self):
+        return self.request.query_params.get("include_comments", "").lower() == "true"
+
+    def get_serializer_context(self):
+        context = super().get_serializer_context()
+        context["include_comments"] = self._should_include_comments()
+        return context
+
+    def apply_comment_prefetch(self, queryset):
+        """Apply prefetch_related for comments if requested."""
+        if self._should_include_comments():
+            queryset = queryset.prefetch_related("comments", "comments__user")
+        return queryset
+
+
+include_comments_param = openapi.Parameter(
+    "include_comments",
+    openapi.IN_QUERY,
+    description="Include curator comments in the response. Default: false",
+    type=openapi.TYPE_BOOLEAN,
+    default=False,
+)
+
+
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(manual_parameters=[include_comments_param]),
+)
+class GeneEvaluationsViewSet(EvaluationCommentsMixin, EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = EvaluationSerializer
     recent_version_only = True
@@ -376,7 +420,7 @@ class GeneEvaluationsViewSet(EntityViewSet):
         panel = self.get_panel()
         try:
             gene = panel.get_gene(self.kwargs["gene_entity_name"])
-            return gene.evaluation.all()
+            return self.apply_comment_prefetch(gene.evaluation.all())
         except ObjectDoesNotExist:
             raise Http404
 
@@ -391,7 +435,11 @@ class STRViewSet(EntityViewSet):
         return self.get_panel().get_all_strs.prefetch_related("evidence", "tags")
 
 
-class STREvaluationsViewSet(EntityViewSet):
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(manual_parameters=[include_comments_param]),
+)
+class STREvaluationsViewSet(EvaluationCommentsMixin, EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = EvaluationSerializer
     recent_version_only = True
@@ -400,7 +448,7 @@ class STREvaluationsViewSet(EntityViewSet):
         panel = self.get_panel()
         try:
             str_item = panel.get_str(self.kwargs["str_entity_name"])
-            return str_item.evaluation.all()
+            return self.apply_comment_prefetch(str_item.evaluation.all())
         except ObjectDoesNotExist:
             raise Http404
 
@@ -416,7 +464,11 @@ class RegionViewSet(EntityViewSet):
         return self.get_panel().get_all_regions.prefetch_related("evidence", "tags")
 
 
-class RegionEvaluationsViewSet(EntityViewSet):
+@method_decorator(
+    name="list",
+    decorator=swagger_auto_schema(manual_parameters=[include_comments_param]),
+)
+class RegionEvaluationsViewSet(EvaluationCommentsMixin, EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = EvaluationSerializer
     recent_version_only = True
@@ -425,7 +477,7 @@ class RegionEvaluationsViewSet(EntityViewSet):
         panel = self.get_panel()
         try:
             region = panel.get_region(self.kwargs["region_entity_name"])
-            return region.evaluation.all()
+            return self.apply_comment_prefetch(region.evaluation.all())
         except ObjectDoesNotExist:
             raise Http404
 
@@ -627,3 +679,219 @@ class SignedOffPanelViewSet(ReadOnlyListViewset):
             return Response(json)
         else:
             raise Http404
+
+
+class LiteratureAssignmentViewSet(viewsets.ViewSet):
+    """
+    Action-based viewset for literature assignments.
+    Only two endpoints: assign and skip.
+    All read operations are handled by the proxy injecting data server-side.
+    """
+
+    permission_classes = [IsGELReviewer]
+
+    @action(detail=False, methods=["post"])
+    def assign(self, request):
+        """Create-or-get assignment and assign in one call with optimistic locking."""
+        report_id = request.data.get("report_id")
+        gene_symbol = request.data.get("gene_symbol")
+        assigned_to_id = request.data.get("assigned_to")
+        expected_updated_at = request.data.get("expected_updated_at")
+
+        # Validate required fields (fail-fast)
+        if not report_id:
+            return Response(
+                {"error": "missing_field", "message": "report_id is required"},
+                status=400,
+            )
+        if not gene_symbol:
+            return Response(
+                {"error": "missing_field", "message": "gene_symbol is required"},
+                status=400,
+            )
+
+        # Look up gene by symbol
+        try:
+            gene = Gene.objects.get(gene_symbol=gene_symbol)
+        except Gene.DoesNotExist:
+            return Response(
+                {"error": "gene_not_found", "message": f"Gene not found: {gene_symbol}"},
+                status=404,
+            )
+
+        # Validate assignee is a Curator (when assigning, not when unassigning)
+        if assigned_to_id:
+            curator_group = Group.objects.get(name="Curators")
+            if not curator_group.user_set.filter(pk=assigned_to_id).exists():
+                return Response(
+                    {
+                        "error": "invalid_assignee",
+                        "message": "Assignee must be a member of the Curators group",
+                    },
+                    status=400,
+                )
+
+        with transaction.atomic():
+            assignment, created = LiteratureAssignment.objects.select_for_update().get_or_create(
+                report_id=report_id,
+                gene=gene,
+                defaults={"status": LiteratureAssignment.STATUS.pending},
+            )
+
+            # Optimistic locking check
+            conflict = self._check_conflict(created, assignment, expected_updated_at)
+            if conflict:
+                return conflict
+
+            # Perform assignment
+            if assigned_to_id:
+                assignment.assigned_to_id = assigned_to_id
+                assignment.status = LiteratureAssignment.STATUS.assigned
+                assignment.assigned_at = timezone.now()
+            else:
+                assignment.assigned_to = None
+                assignment.status = LiteratureAssignment.STATUS.pending
+                assignment.assigned_at = None
+
+            # Clear skip fields (handles unskip case)
+            assignment.skipped_by = None
+            assignment.skipped_at = None
+            assignment.skipped_reason = ""
+            assignment.save()
+
+        return Response(self._serialize(assignment))
+
+    @action(detail=False, methods=["post"])
+    def skip(self, request):
+        """Create-or-get assignment and skip in one call. Requires reason."""
+        report_id = request.data.get("report_id")
+        gene_symbol = request.data.get("gene_symbol")
+        reason = request.data.get("reason", "").strip()
+        expected_updated_at = request.data.get("expected_updated_at")
+
+        # Validate required fields (fail-fast)
+        if not report_id:
+            return Response(
+                {"error": "missing_field", "message": "report_id is required"},
+                status=400,
+            )
+        if not gene_symbol:
+            return Response(
+                {"error": "missing_field", "message": "gene_symbol is required"},
+                status=400,
+            )
+        if not reason:
+            return Response(
+                {"error": "reason_required", "message": "A reason is required when skipping"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Look up gene by symbol
+        try:
+            gene = Gene.objects.get(gene_symbol=gene_symbol)
+        except Gene.DoesNotExist:
+            return Response(
+                {"error": "gene_not_found", "message": f"Gene not found: {gene_symbol}"},
+                status=404,
+            )
+
+        with transaction.atomic():
+            assignment, created = LiteratureAssignment.objects.select_for_update().get_or_create(
+                report_id=report_id,
+                gene=gene,
+                defaults={"status": LiteratureAssignment.STATUS.pending},
+            )
+
+            # Optimistic locking check
+            conflict = self._check_conflict(created, assignment, expected_updated_at)
+            if conflict:
+                return conflict
+
+            # Mark as skipped (preserve assigned_to for history)
+            assignment.status = LiteratureAssignment.STATUS.skipped
+            assignment.skipped_by = request.user
+            assignment.skipped_at = timezone.now()
+            assignment.skipped_reason = reason
+            assignment.save()
+
+        return Response(self._serialize(assignment))
+
+    def _check_conflict(self, created, assignment, expected_updated_at):
+        """
+        Check for optimistic locking conflict.
+        Returns a Response if conflict detected, None otherwise.
+        """
+        if expected_updated_at is None:
+            # Client expects record to NOT exist
+            if not created:
+                return Response(
+                    {
+                        "error": "conflict",
+                        "message": "Assignment was modified by another user",
+                        "current_state": self._serialize_state(assignment),
+                    },
+                    status=409,
+                )
+        else:
+            # Client expects record to exist with specific updated_at
+            if created:
+                # Record was just created but client expected it to exist - weird edge case
+                # This shouldn't happen in normal operation, but handle it as conflict
+                return Response(
+                    {
+                        "error": "conflict",
+                        "message": "Assignment was modified by another user",
+                        "current_state": self._serialize_state(assignment),
+                    },
+                    status=409,
+                )
+
+            # Compare timestamps (handle both string and datetime)
+            current_updated_at = assignment.updated_at.isoformat()
+            if current_updated_at != expected_updated_at:
+                return Response(
+                    {
+                        "error": "conflict",
+                        "message": "Assignment was modified by another user",
+                        "current_state": self._serialize_state(assignment),
+                    },
+                    status=409,
+                )
+
+        return None
+
+    def _serialize_state(self, assignment):
+        """Serialize current state for conflict responses."""
+        return {
+            "status": assignment.status,
+            "assigned_to": assignment.assigned_to_id,
+            "assigned_to_display": (
+                assignment.assigned_to.get_full_name() if assignment.assigned_to else None
+            ),
+            "skipped_reason": assignment.skipped_reason,
+            "updated_at": assignment.updated_at.isoformat(),
+        }
+
+    def _serialize(self, assignment):
+        """Serialize a LiteratureAssignment instance."""
+        return {
+            "report_id": assignment.report_id,
+            "gene_symbol": assignment.gene.gene_symbol,
+            "status": assignment.status,
+            "assigned_to": assignment.assigned_to_id,
+            "assigned_to_display": (
+                assignment.assigned_to.get_full_name() if assignment.assigned_to else None
+            ),
+            "assigned_at": (
+                assignment.assigned_at.isoformat() if assignment.assigned_at else None
+            ),
+            "skipped_by": assignment.skipped_by_id,
+            "skipped_by_display": (
+                assignment.skipped_by.get_full_name() if assignment.skipped_by else None
+            ),
+            "skipped_at": (
+                assignment.skipped_at.isoformat() if assignment.skipped_at else None
+            ),
+            "skipped_reason": assignment.skipped_reason,
+            "updated_at": assignment.updated_at.isoformat(),
+        }

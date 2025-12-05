@@ -29,3 +29,14 @@ class ReadOnlyPermissions(permissions.BasePermission):
 
     def has_permission(self, request, view):
         return request.method in permissions.SAFE_METHODS
+
+
+class IsGELReviewer(permissions.BasePermission):
+    """Requires user to be an authenticated GEL reviewer."""
+
+    def has_permission(self, request, view):
+        return (
+            request.user.is_authenticated
+            and hasattr(request.user, "reviewer")
+            and request.user.reviewer.is_GEL()
+        )
