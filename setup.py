@@ -84,6 +84,7 @@ setup(
         "pycurl==7.45.3",
         "simple-json-log-formatter==0.5.5",
         "python-jose[cryptography]==3.0.1",
-         "jsonschema<4.0",
+        "jsonschema<4.0",
+        "zstandard==0.25.0",
     ],
 )
