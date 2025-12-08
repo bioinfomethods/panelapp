@@ -3,7 +3,7 @@ name: Main workflow, test and deploy to AWS
 on:
   push:
     branches:
-      - main
+      - '*'
       - mcri-vcgs-prod
       - mcri-vcgs-staging
 
@@ -34,9 +34,9 @@ jobs:
             echo "env_name=staging" >> "$GITHUB_OUTPUT"
             echo "github_actions_environment=mcri-vcgs-staging" >> "$GITHUB_OUTPUT"
             echo "should_deploy=true" >> "$GITHUB_OUTPUT"
-          elif [ "$CI_ACTION_REF_NAME_SLUG" == "main" ]; then
-            echo "github_actions_environment=main" >> "$GITHUB_OUTPUT"
+          else
             echo "should_deploy=false" >> "$GITHUB_OUTPUT"
+            echo "env_name=testing-only" >> "$GITHUB_OUTPUT"
           fi
           echo "env_name=$env_name"
           echo "GITHUB_OUTPUT=$GITHUB_OUTPUT"
