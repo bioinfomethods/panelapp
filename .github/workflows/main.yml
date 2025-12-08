@@ -35,7 +35,6 @@ jobs:
             echo "github_actions_environment=mcri-vcgs-staging" >> "$GITHUB_OUTPUT"
             echo "should_deploy=true" >> "$GITHUB_OUTPUT"
           elif [ "$CI_ACTION_REF_NAME_SLUG" == "main" ]; then
-            echo "env_name=dev" >> "$GITHUB_OUTPUT"
             echo "github_actions_environment=main" >> "$GITHUB_OUTPUT"
             echo "should_deploy=false" >> "$GITHUB_OUTPUT"
           fi
