@@ -100,7 +100,9 @@ urlpatterns = [
         name="compare",
     ),
     re_path(
-        r"^compare/(?P<panel_1_id>[0-9]+)/(?P<panel_2_id>[0-9]+)/(?P<gene_symbol>[\w\-]+)$",
+        r"^compare/(?P<panel_1_id>[0-9]+)/(?P<panel_2_id>[0-9]+)/(?P<gene_symbol>{})$".format(
+            entity_regex
+        ),
         CompareGeneView.as_view(),
         name="compare_genes",
     ),
@@ -147,7 +149,7 @@ urlpatterns = [
         name="evaluation",
     ),
     re_path(
-        r"^(?P<pk>[0-9]+)/gene/(?P<gene_symbol>[\w\-]+)/copy$",
+        r"^(?P<pk>[0-9]+)/gene/(?P<gene_symbol>{})/copy$".format(entity_regex),
         CopyGeneView.as_view(),
         name="copy_gene_from_panel",
     ),
