@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - '*'
-      - mcri-vcgs-prod
-      - mcri-vcgs-staging
 
 permissions:
   id-token: write
