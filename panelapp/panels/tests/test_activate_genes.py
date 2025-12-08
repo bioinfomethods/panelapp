@@ -23,7 +23,7 @@
 ##
 from django.core.management import call_command
 from django.test import TestCase
-from django.utils.six import StringIO
+from io import StringIO
 from panels.tests.factories import GeneFactory
 from panels.models import Gene
 

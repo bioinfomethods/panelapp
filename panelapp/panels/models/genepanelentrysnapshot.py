@@ -27,8 +27,8 @@ from django.db.models import Value as V
 from django.urls import reverse
 
 from django.core.serializers.json import DjangoJSONEncoder
-from django.contrib.postgres.fields import JSONField
 from django.contrib.postgres.fields import ArrayField
+from django.db.models import JSONField
 
 from model_utils.models import TimeStampedModel
 

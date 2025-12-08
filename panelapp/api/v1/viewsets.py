@@ -67,24 +67,20 @@ class ReadOnlyListViewset(
     pass
 
 
-CONFIDENCE_CHOICES = ((3, "Green"), (2, "Amber"), (1, "Red"), (0, "No List"))
+CONFIDENCE_CHOICES = (("3", "Green"), ("2", "Amber"), ("1", "Red"), ("0", "No List"))
 
 
 class Http400(Exception):
     pass
 
 
-class NumberChoices(filters.ChoiceFilter, filters.NumberFilter):
-    pass
-
-
 class EntityFilter(filters.FilterSet):
     entity_name = filters.BaseInFilter(field_name="entity_name", lookup_expr="in")
-    confidence_level = NumberChoices(
+    confidence_level = filters.ChoiceFilter(
         method="filter_confidence_level",
         choices=CONFIDENCE_CHOICES,
         help_text="Filter by confidence level: 0, 1, 2, 3",
-    )  # FIXME should be custom
+    )
     version = filters.CharFilter(method="version_lookup", help_text="Panel version")
     tags = filters.BaseInFilter(field_name="tags__name", lookup_expr="in")
 
@@ -127,7 +123,7 @@ class PanelsViewSet(ReadOnlyListViewset):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     lookup_value_regex = "[^/]+"
     serializer_class = PanelSerializer
-    filter_class = PanelsFilter
+    filterset_class = PanelsFilter
 
     def get_serializer(self, *args, **kwargs):
         if (
@@ -369,7 +365,7 @@ class EntityViewSet(viewsets.mixins.ListModelMixin, viewsets.GenericViewSet):
 class GeneViewSet(EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = GeneSerializer
-    filter_class = EntityFilter
+    filterset_class = EntityFilter
     lookup_collection = "genes"
 
     def get_queryset(self):
@@ -428,7 +424,7 @@ class GeneEvaluationsViewSet(EvaluationCommentsMixin, EntityViewSet):
 class STRViewSet(EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = STRSerializer
-    filter_class = EntityFilter
+    filterset_class = EntityFilter
     lookup_collection = "strs"
 
     def get_queryset(self):
@@ -457,7 +453,7 @@ class RegionViewSet(EntityViewSet):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     filter_backends = (filters.DjangoFilterBackend,)
     serializer_class = RegionSerializer
-    filter_class = EntityFilter
+    filterset_class = EntityFilter
     lookup_collection = "regions"
 
     def get_queryset(self):
@@ -497,7 +493,7 @@ class EntitySearch(ReadOnlyListViewset):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     lookup_field = "entity_name"
     lookup_url_kwarg = "entity_name"
-    filter_class = EntitySearchFilter
+    filterset_class = EntitySearchFilter
 
     @property
     def active_snapshot_ids(self):
@@ -589,7 +585,7 @@ class EntitySearchViewSet(EntitySearch):
 
     permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     serializer_class = EntitySerializer
-    filter_class = EntitySearchFilter
+    filterset_class = EntitySearchFilter
 
     @cached_property
     def snapshot_ids(self):
@@ -641,7 +637,7 @@ class EntitySearchViewSet(EntitySearch):
         )
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.get_queryset()
 
         page = self.paginate_queryset(queryset)
 

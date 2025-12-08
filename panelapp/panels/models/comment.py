@@ -42,6 +42,8 @@ class Comment(TimeStampedModel):
     def __str__(self):
         return "{}: {}".format(self.user.get_full_name(), self.comment[:30])
 
+    __hash__ = models.Model.__hash__
+
     def __eq__(self, other):
         if self.comment == other.comment:
             return True
