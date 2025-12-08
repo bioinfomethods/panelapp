@@ -3,6 +3,7 @@ name: Main workflow, test and deploy to AWS
 on:
   push:
     branches:
+      - main
       - mcri-vcgs-prod
       - mcri-vcgs-staging
 
@@ -28,9 +29,15 @@ jobs:
           if [ "$CI_ACTION_REF_NAME_SLUG" == "mcri-vcgs-prod" ]; then
             echo "env_name=prod" >> "$GITHUB_OUTPUT"
             echo "github_actions_environment=mcri-vcgs-prod" >> "$GITHUB_OUTPUT"
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
           elif [ "$CI_ACTION_REF_NAME_SLUG" == "mcri-vcgs-staging" ]; then
             echo "env_name=staging" >> "$GITHUB_OUTPUT"
             echo "github_actions_environment=mcri-vcgs-staging" >> "$GITHUB_OUTPUT"
+            echo "should_deploy=true" >> "$GITHUB_OUTPUT"
+          elif [ "$CI_ACTION_REF_NAME_SLUG" == "main" ]; then
+            echo "env_name=dev" >> "$GITHUB_OUTPUT"
+            echo "github_actions_environment=main" >> "$GITHUB_OUTPUT"
+            echo "should_deploy=false" >> "$GITHUB_OUTPUT"
           fi
           echo "env_name=$env_name"
           echo "GITHUB_OUTPUT=$GITHUB_OUTPUT"
@@ -41,14 +48,15 @@ jobs:
           echo "CI_SHA_SHORT=$CI_SHA_SHORT"
           echo "env_name=${{ steps.init_env.outputs.env_name }}"
           echo "github_actions_environment=${{ steps.init_env.outputs.github_actions_environment }}"
+          echo "should_deploy=${{ steps.init_env.outputs.should_deploy }}"
 
     outputs:
       env_name: ${{ steps.init_env.outputs.env_name }}
       github_actions_environment: ${{ steps.init_env.outputs.github_actions_environment }}
+      should_deploy: ${{ steps.init_env.outputs.should_deploy }}
 
   tests:
     needs: init
-    environment: ${{ needs.init.outputs.github_actions_environment }}
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -102,6 +110,7 @@ jobs:
 
   build:
     needs: init
+    if: needs.init.outputs.should_deploy == 'true'
     environment: ${{ needs.init.outputs.github_actions_environment }}
     runs-on: ubuntu-latest
 
@@ -195,6 +204,7 @@ jobs:
 
   deploy:
     needs: [init, tests, build]
+    if: needs.init.outputs.should_deploy == 'true'
     environment: ${{ needs.init.outputs.github_actions_environment }}
     runs-on: ubuntu-latest
     env:
