@@ -1,14 +1,19 @@
+from datetime import timedelta
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
+from django.contrib.auth.models import Group
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from accounts.models import Reviewer
 from accounts.tests.factories import ReviewerFactory
 from accounts.tests.factories import UserFactory
+from panels.models import Evaluation, LiteratureAssignment
 from panels.tests.factories import GeneFactory
 from panels.tests.factories import GenePanelSnapshotFactory
+from panels.views.reports import ReportProxyView
 
 
 class ReportProxyTestCase(TestCase):
@@ -354,3 +359,118 @@ class FormViewPrefillTestCase(TestCase):
 
         # Form should not have prefill data
         self.assertEqual(response.status_code, 200)
+
+
+class CheckCompletionsTestCase(TestCase):
+    """Test _check_completions logic in ReportProxyView."""
+
+    def setUp(self):
+        self.curator_group, _ = Group.objects.get_or_create(name="Curators")
+
+        # Create user
+        self.user = UserFactory(reviewer=None)
+        ReviewerFactory(user=self.user, user_type=Reviewer.TYPES.GEL)
+        self.curator_group.user_set.add(self.user)
+
+        # Create panel and gene
+        self.panel = GenePanelSnapshotFactory()
+        self.gene = GeneFactory(gene_symbol="TEST1")
+
+    def test_completion_detected_when_evaluation_modified_after_assignment(self):
+        """
+        An evaluation that existed before assignment but was modified after
+        should be detected as a completion.
+
+        This tests the fix for using `modified` instead of `created`.
+        """
+        # Add gene to panel
+        self.panel.add_gene(
+            self.user,
+            self.gene.gene_symbol,
+            {"sources": ["Literature"], "moi": "Unknown"},
+        )
+        gene_entry = self.panel.get_gene(self.gene.gene_symbol)
+
+        # Create evaluation BEFORE assignment time
+        evaluation = Evaluation.objects.create(
+            user=self.user,
+            rating=Evaluation.RATINGS.AMBER,
+            version=self.panel.version,
+        )
+        gene_entry.evaluation.add(evaluation)
+
+        # Backdate the evaluation's created and modified times
+        past_time = timezone.now() - timedelta(days=7)
+        Evaluation.objects.filter(pk=evaluation.pk).update(
+            created=past_time, modified=past_time
+        )
+
+        # Create assignment NOW (after evaluation was created)
+        assignment = LiteratureAssignment.objects.create(
+            report_id="test_report",
+            gene=self.gene,
+            assigned_to=self.user,
+            status=LiteratureAssignment.STATUS.assigned,
+            assigned_at=timezone.now() - timedelta(hours=1),
+        )
+
+        # Simulate user updating their evaluation (rating change)
+        evaluation.refresh_from_db()
+        evaluation.rating = Evaluation.RATINGS.GREEN
+        evaluation.save()  # This updates `modified` to now
+
+        # Check completions
+        view = ReportProxyView()
+        completions = view._check_completions([assignment], [self.panel.panel.pk])
+
+        # Should detect as completed because modified > assigned_at
+        self.assertIn(self.gene.gene_symbol, completions)
+        self.assertTrue(completions[self.gene.gene_symbol]["has_evaluation"])
+        self.assertIn("GREEN", completions[self.gene.gene_symbol]["ratings"])
+
+    def test_completion_not_detected_when_evaluation_not_modified_after_assignment(
+        self,
+    ):
+        """
+        An evaluation that was created and last modified BEFORE assignment
+        should NOT be detected as a completion.
+        """
+        # Add gene to panel
+        self.panel.add_gene(
+            self.user,
+            self.gene.gene_symbol,
+            {"sources": ["Literature"], "moi": "Unknown"},
+        )
+        gene_entry = self.panel.get_gene(self.gene.gene_symbol)
+
+        # Create evaluation
+        evaluation = Evaluation.objects.create(
+            user=self.user,
+            rating=Evaluation.RATINGS.AMBER,
+            version=self.panel.version,
+        )
+        gene_entry.evaluation.add(evaluation)
+
+        # Backdate the evaluation to BEFORE assignment
+        past_time = timezone.now() - timedelta(days=7)
+        Evaluation.objects.filter(pk=evaluation.pk).update(
+            created=past_time, modified=past_time
+        )
+
+        # Create assignment NOW (after evaluation)
+        assignment = LiteratureAssignment.objects.create(
+            report_id="test_report",
+            gene=self.gene,
+            assigned_to=self.user,
+            status=LiteratureAssignment.STATUS.assigned,
+            assigned_at=timezone.now() - timedelta(hours=1),
+        )
+
+        # DON'T modify the evaluation - leave it in the past
+
+        # Check completions
+        view = ReportProxyView()
+        completions = view._check_completions([assignment], [self.panel.panel.pk])
+
+        # Should NOT be detected because modified < assigned_at
+        self.assertNotIn(self.gene.gene_symbol, completions)

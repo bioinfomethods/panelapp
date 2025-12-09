@@ -189,7 +189,7 @@ class ReportProxyView(GELReviewerRequiredMixin, View):
             )
             .filter(
                 assignment_date__isnull=False,  # User is assigned to this gene
-                created__gte=F("assignment_date"),  # Evaluation after assignment
+                modified__gte=F("assignment_date"),  # Evaluation updated after assignment
             )
             .values("gene_symbol", "rating")
             .distinct()
