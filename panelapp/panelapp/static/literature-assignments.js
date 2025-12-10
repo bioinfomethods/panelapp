@@ -25,6 +25,10 @@ var LiteratureAssignments = {
    */
   _skipTooltip: function (assignment) {
     var skippedType = assignment.assigned_to ? "Investigated" : "Triaged";
+    var skippedBy = this._getSkippedByName(assignment);
+    if (skippedBy) {
+      return skippedType + " by " + skippedBy + ": " + assignment.skipped_reason;
+    }
     return skippedType + ": " + assignment.skipped_reason;
   },
 
@@ -42,6 +46,19 @@ var LiteratureAssignments = {
   },
 
   /**
+   * Get skipped_by display name (initials) from assignment.
+   */
+  _getSkippedByName: function (assignment) {
+    if (!assignment || !assignment.skipped_by) return null;
+    for (var i = 0; i < this.config.curators.length; i++) {
+      if (this.config.curators[i].id === assignment.skipped_by) {
+        return this.config.curators[i].initials;
+      }
+    }
+    return null;
+  },
+
+  /**
    * Build tooltip text for an assigned (in-progress) item.
    */
   _assignedTooltip: function (assignment) {
@@ -50,11 +67,23 @@ var LiteratureAssignments = {
   },
 
   /**
+   * Build tooltip text for a concordant completion.
+   */
+  _concordantTooltip: function (assignment) {
+    var name = this._getCuratorName(assignment ? assignment.assigned_to : null);
+    return name ? "Completed by " + name : null;
+  },
+
+  /**
    * Build tooltip text for a discordant completion.
    */
-  _discordantTooltip: function (completion) {
+  _discordantTooltip: function (completion, assignment) {
     var actual = completion.ratings.join(", ");
     var suggested = completion.suggestedRating;
+    var name = this._getCuratorName(assignment ? assignment.assigned_to : null);
+    if (name) {
+      return "Rated " + actual + " by " + name + " (suggested " + suggested + ")";
+    }
     return "Rated " + actual + " (suggested " + suggested + ")";
   },
 
@@ -149,9 +178,10 @@ var LiteratureAssignments = {
     if (completion && completion.completed) {
       if (completion.concordant) {
         link.classList.add("concordance-concordant");
+        this._setTooltip(link, this._concordantTooltip(assignment));
       } else {
         link.classList.add("concordance-discordant");
-        this._setTooltip(link, this._discordantTooltip(completion));
+        this._setTooltip(link, this._discordantTooltip(completion, assignment));
       }
     } else if (assignment && assignment.status === "skipped") {
       link.classList.add("concordance-not_executed");
