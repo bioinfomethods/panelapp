@@ -662,6 +662,7 @@ class AbstractEntity:
                 )
 
             evaluation.version = self.panel.version
+            evaluation.last_updated = timezone.now()
 
             activity_text = None
 
