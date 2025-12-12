@@ -101,6 +101,7 @@ class ReportProxyView(GELReviewerRequiredMixin, View):
                     a.assigned_to.get_full_name() if a.assigned_to else None
                 ),
                 "assigned_at": a.assigned_at.isoformat() if a.assigned_at else None,
+                "skipped_by": a.skipped_by_id,
                 "skipped_reason": a.skipped_reason,
                 "updated_at": a.updated_at.isoformat(),
             }
@@ -189,7 +190,9 @@ class ReportProxyView(GELReviewerRequiredMixin, View):
             )
             .filter(
                 assignment_date__isnull=False,  # User is assigned to this gene
-                modified__gte=F("assignment_date"),  # Evaluation updated after assignment
+                modified__gte=F(
+                    "assignment_date"
+                ),  # Evaluation updated after assignment
             )
             .values("gene_symbol", "rating")
             .distinct()
