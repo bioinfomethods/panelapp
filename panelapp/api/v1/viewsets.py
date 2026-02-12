@@ -725,11 +725,37 @@ class LiteratureAssignmentViewSet(viewsets.ViewSet):
 
     permission_classes = [IsGELReviewer]
 
+    def _resolve_gene(self, data):
+        """Resolve Gene from request data. Accepts hgnc_id or gene_symbol."""
+        hgnc_id = data.get("hgnc_id")
+        if hgnc_id:
+            try:
+                return Gene.objects.get(hgnc_id=hgnc_id), None
+            except Gene.DoesNotExist:
+                return None, Response(
+                    {"error": "gene_not_found", "message": f"Gene not found: {hgnc_id}"},
+                    status=404,
+                )
+
+        gene_symbol = data.get("gene_symbol")
+        if gene_symbol:
+            try:
+                return Gene.objects.get(gene_symbol=gene_symbol), None
+            except Gene.DoesNotExist:
+                return None, Response(
+                    {"error": "gene_not_found", "message": f"Gene not found: {gene_symbol}"},
+                    status=404,
+                )
+
+        return None, Response(
+            {"error": "missing_field", "message": "hgnc_id or gene_symbol is required"},
+            status=400,
+        )
+
     @action(detail=False, methods=["post"])
     def assign(self, request):
         """Create-or-get assignment and assign in one call with optimistic locking."""
         report_id = request.data.get("report_id")
-        gene_symbol = request.data.get("gene_symbol")
         assigned_to_id = request.data.get("assigned_to")
         expected_updated_at = request.data.get("expected_updated_at")
 
@@ -739,20 +765,10 @@ class LiteratureAssignmentViewSet(viewsets.ViewSet):
                 {"error": "missing_field", "message": "report_id is required"},
                 status=400,
             )
-        if not gene_symbol:
-            return Response(
-                {"error": "missing_field", "message": "gene_symbol is required"},
-                status=400,
-            )
 
-        # Look up gene by symbol
-        try:
-            gene = Gene.objects.get(gene_symbol=gene_symbol)
-        except Gene.DoesNotExist:
-            return Response(
-                {"error": "gene_not_found", "message": f"Gene not found: {gene_symbol}"},
-                status=404,
-            )
+        gene, error_response = self._resolve_gene(request.data)
+        if error_response:
+            return error_response
 
         # Validate assignee is a Curator (when assigning, not when unassigning)
         if assigned_to_id:
@@ -800,7 +816,6 @@ class LiteratureAssignmentViewSet(viewsets.ViewSet):
     def skip(self, request):
         """Create-or-get assignment and skip in one call. Requires reason."""
         report_id = request.data.get("report_id")
-        gene_symbol = request.data.get("gene_symbol")
         reason = request.data.get("reason", "").strip()
         expected_updated_at = request.data.get("expected_updated_at")
 
@@ -810,24 +825,15 @@ class LiteratureAssignmentViewSet(viewsets.ViewSet):
                 {"error": "missing_field", "message": "report_id is required"},
                 status=400,
             )
-        if not gene_symbol:
-            return Response(
-                {"error": "missing_field", "message": "gene_symbol is required"},
-                status=400,
-            )
+
+        gene, error_response = self._resolve_gene(request.data)
+        if error_response:
+            return error_response
+
         if not reason:
             return Response(
                 {"error": "reason_required", "message": "A reason is required when skipping"},
                 status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Look up gene by symbol
-        try:
-            gene = Gene.objects.get(gene_symbol=gene_symbol)
-        except Gene.DoesNotExist:
-            return Response(
-                {"error": "gene_not_found", "message": f"Gene not found: {gene_symbol}"},
-                status=404,
             )
 
         with transaction.atomic():
@@ -912,6 +918,7 @@ class LiteratureAssignmentViewSet(viewsets.ViewSet):
         return {
             "report_id": assignment.report_id,
             "gene_symbol": assignment.gene.gene_symbol,
+            "hgnc_id": assignment.gene.hgnc_id,
             "status": assignment.status,
             "assigned_to": assignment.assigned_to_id,
             "assigned_to_display": (

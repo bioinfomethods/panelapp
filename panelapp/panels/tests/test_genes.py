@@ -291,3 +291,22 @@ class GeneTest(LoginGELUser):
         url = reverse_lazy("panels:entity_detail", kwargs={"slug": gene.gene_symbol})
         res = self.client.get(url)
         self.assertEqual(len(res.context_data["entries"]), 2)
+
+    def test_entity_detail_by_hgnc_id(self):
+        gene = GeneFactory(gene_symbol="PRKN", hgnc_id="HGNC:8607")
+        gps = GenePanelSnapshotFactory()
+        GenePanelEntrySnapshotFactory.create(gene_core=gene, panel=gps)
+
+        url = reverse_lazy(
+            "panels:entity_detail_by_hgnc_id", kwargs={"hgnc_id": "8607"}
+        )
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 302)
+        self.assertIn(f"/panels/entities/{gene.gene_symbol}", res.url)
+
+    def test_entity_detail_by_hgnc_id_unknown(self):
+        url = reverse_lazy(
+            "panels:entity_detail_by_hgnc_id", kwargs={"hgnc_id": "99999"}
+        )
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 404)

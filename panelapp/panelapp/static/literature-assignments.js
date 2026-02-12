@@ -1,5 +1,9 @@
 /**
- * Literature Assignment Widget
+ * Literature Assignment Widget (v1, gene-symbol keyed)
+ *
+ * DEPRECATED: This file only serves existing reports that reference it as an
+ * external script. New reports bundle the v2 JS (HGNC-ID keyed) inline. Once
+ * all old reports have been patched to embed their JS inline, delete this file.
  *
  * Manages curator assignment UI for literature review reports.
  * Reads configuration from embedded JSON blocks and renders:

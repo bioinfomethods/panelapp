@@ -38,7 +38,7 @@ class Gene(models.Model):
     hgnc_symbol = models.CharField(max_length=255, null=True)
     hgnc_date_symbol_changed = models.DateField(null=True)
     hgnc_release = models.DateField(null=True)
-    hgnc_id = models.CharField(max_length=255, null=True)
+    hgnc_id = models.CharField(max_length=255, null=True, db_index=True)
     active = models.BooleanField(default=True, db_index=True)
 
     class Meta:

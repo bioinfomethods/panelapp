@@ -91,10 +91,20 @@ class ReportProxyView(GELReviewerRequiredMixin, View):
             )
         )
 
-        # Build assignments dict keyed by gene symbol
+        # Match genes against report-config keys (gene_symbol or hgnc_id)
+        report_gene_keys = set(report_config["genes"].keys())
+
         assignments_dict = {}
+        gene_pk_to_key = {}
         for a in assignments:
-            assignments_dict[a.gene.gene_symbol] = {
+            if a.gene.gene_symbol in report_gene_keys:
+                key = a.gene.gene_symbol
+            elif a.gene.hgnc_id and a.gene.hgnc_id in report_gene_keys:
+                key = a.gene.hgnc_id
+            else:
+                continue
+            gene_pk_to_key[a.gene_id] = key
+            assignments_dict[key] = {
                 "status": a.status,
                 "assigned_to": a.assigned_to_id,
                 "assigned_to_display": (
@@ -116,7 +126,7 @@ class ReportProxyView(GELReviewerRequiredMixin, View):
 
         if assigned:
             completions = self._check_completions(
-                assigned, report_config["target_panel_ids"]
+                assigned, report_config["target_panel_ids"], gene_pk_to_key
             )
 
         data = {
@@ -153,27 +163,24 @@ class ReportProxyView(GELReviewerRequiredMixin, View):
             for u in curator_group.user_set.all()
         ]
 
-    def _check_completions(self, assigned, panel_ids):
+    def _check_completions(self, assigned, panel_ids, gene_pk_to_key):
         """
         Check completions for assigned genes using a single optimized query.
 
-        Uses a subquery to look up the assigned_at date for each evaluation
-        based on its (gene, user) pair, then filters in the DB to only include
-        evaluations created after that date by the assigned user.
+        Uses Gene FK for all DB queries (version-agnostic), then maps results
+        to report-config keys via gene_pk_to_key at the output layer.
         """
         if not assigned:
             return {}
 
         report_id = assigned[0].report_id
-        gene_symbols = [a.gene.gene_symbol for a in assigned]
+        gene_pks = [a.gene_id for a in assigned if a.gene_id in gene_pk_to_key]
 
         # Subquery: for each evaluation, find the matching LiteratureAssignment
         # (same report, same gene, user is the assignee) and get assigned_at
         assigned_at_sq = LiteratureAssignment.objects.filter(
             report_id=report_id,
-            gene__gene_symbol=OuterRef(
-                "genepanelentrysnapshot__gene_core__gene_symbol"
-            ),
+            gene_id=OuterRef("genepanelentrysnapshot__gene_core_id"),
             assigned_to_id=OuterRef("user_id"),
         ).values("assigned_at")[:1]
 
@@ -182,11 +189,11 @@ class ReportProxyView(GELReviewerRequiredMixin, View):
         evaluations = (
             Evaluation.objects.filter(
                 genepanelentrysnapshot__panel__panel__pk__in=panel_ids,
-                genepanelentrysnapshot__gene_core__gene_symbol__in=gene_symbols,
+                genepanelentrysnapshot__gene_core_id__in=gene_pks,
             )
             .annotate(
                 assignment_date=Subquery(assigned_at_sq),
-                gene_symbol=F("genepanelentrysnapshot__gene_core__gene_symbol"),
+                gene_pk=F("genepanelentrysnapshot__gene_core_id"),
             )
             .filter(
                 assignment_date__isnull=False,  # User is assigned to this gene
@@ -194,24 +201,26 @@ class ReportProxyView(GELReviewerRequiredMixin, View):
                     "assignment_date"
                 ),  # Evaluation updated after assignment
             )
-            .values("gene_symbol", "rating")
+            .values("gene_pk", "rating")
             .distinct()
         )
 
-        # Aggregate ratings per gene
+        # Aggregate ratings per gene, keyed by report-config key
         results = {}
         for ev in evaluations:
-            gene_symbol = ev["gene_symbol"]
-            if gene_symbol not in results:
-                results[gene_symbol] = {"ratings": set()}
-            results[gene_symbol]["ratings"].add(ev["rating"])
+            key = gene_pk_to_key.get(ev["gene_pk"])
+            if not key:
+                continue
+            if key not in results:
+                results[key] = {"ratings": set()}
+            results[key]["ratings"].add(ev["rating"])
 
         return {
-            gene_symbol: {
+            key: {
                 "has_evaluation": True,
                 "ratings": list(data["ratings"]),
             }
-            for gene_symbol, data in results.items()
+            for key, data in results.items()
         }
 
 
@@ -228,23 +237,30 @@ class PrefillFormView(GELReviewerRequiredMixin, View):
         else:
             raise Http404(f"Unknown form type: {form_type}")
 
+    def _resolve_gene_from_post(self, request):
+        """Resolve Gene from POST data. Accepts hgnc_id or gene_symbol."""
+        hgnc_id = request.POST.get("hgnc_id", "").strip()
+        if hgnc_id:
+            return Gene.objects.get(hgnc_id=hgnc_id)
+
+        gene_symbol = request.POST.get("gene_symbol", "").strip()
+        if gene_symbol:
+            return Gene.objects.get(gene_symbol=gene_symbol)
+
+        raise ValueError("Either hgnc_id or gene_symbol is required")
+
     def _handle_add_prefill(self, request):
         """Handle prefill for adding a new gene."""
-        gene_symbol = request.POST.get("gene_symbol", "").strip()
-
-        # Look up gene by symbol to get PK
-        gene_pk = None
-        if gene_symbol:
-            try:
-                gene = Gene.objects.get(gene_symbol=gene_symbol)
-                gene_pk = gene.pk
-            except Gene.DoesNotExist:
-                logger.warning(f"Gene not found for symbol: {gene_symbol}")
+        gene = None
+        try:
+            gene = self._resolve_gene_from_post(request)
+        except (Gene.DoesNotExist, ValueError) as e:
+            logger.warning(f"Gene resolution failed for prefill: {e}")
 
         prefill_data = {
             "form_type": "add",
-            "gene": gene_pk,
-            "gene_name": request.POST.get("gene_name", gene_symbol),
+            "gene": gene.pk if gene else None,
+            "gene_name": gene.gene_symbol if gene else "",
             "source": request.POST.getlist("source") or ["Literature"],
             "rating": request.POST.get("rating"),
             "moi": request.POST.get("moi"),
@@ -275,10 +291,11 @@ class PrefillFormView(GELReviewerRequiredMixin, View):
         request.session["prefill_data"] = prefill_data
 
         panel_id = request.POST.get("panel_id")
-        gene_name = request.POST.get("gene_name")
+        gene = self._resolve_gene_from_post(request)
+
         return redirect(
             "panels:review_entity",
             pk=panel_id,
             entity_type="gene",
-            entity_name=gene_name,
+            entity_name=gene.gene_symbol,
         )

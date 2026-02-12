@@ -32,6 +32,7 @@ from .views import AdminUploadReviewsView
 from .views import EntitiesListView
 from .views import CreatePanelView
 from .views import EntityDetailView
+from .views import EntityDetailByHgncIdView
 from .views import GenePanelView
 from .views import PanelsIndexView
 from .views import UpdatePanelView
@@ -333,6 +334,11 @@ urlpatterns = [
     url(r"^create/", CreatePanelView.as_view(), name="create"),
     url(r"^entities/$", EntitiesListView.as_view(), name="entities_list"),
     url(r"^genes/$", RedirectView.as_view(url="/panels/entities"), name="genes_list"),
+    url(
+        r"^entities/HGNC:(?P<hgnc_id>\d+)$",
+        EntityDetailByHgncIdView.as_view(),
+        name="entity_detail_by_hgnc_id",
+    ),
     url(
         r"^entities/(?P<slug>{regex})$".format(types=entity_types, regex=entity_regex),
         EntityDetailView.as_view(),
