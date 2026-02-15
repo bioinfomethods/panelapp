@@ -40,6 +40,7 @@ from .models import UploadedPanelList
 from .models import UploadedReviewsList
 from .models import PanelType
 from .models import HistoricalSnapshot
+from .models import LiteratureAssignment
 
 class TagAdmin(admin.ModelAdmin):
     list_display = ("name",)
@@ -284,3 +285,15 @@ admin.site.register(STR, STRAdmin)
 admin.site.register(UploadedGeneList, UploadedGeneListAdmin)
 admin.site.register(UploadedPanelList, UploadedPanelListAdmin)
 admin.site.register(UploadedReviewsList, UploadedReviewsListAdmin)
+
+
+class LiteratureAssignmentAdmin(admin.ModelAdmin):
+    list_display = ("gene", "report_id", "status", "assigned_to", "skipped_by", "updated_at")
+    list_display_links = ("gene",)
+    list_filter = ("report_id", "status")
+    search_fields = ("gene__gene_symbol", "report_id")
+    list_editable = ("report_id",)
+    autocomplete_fields = ("gene", "assigned_to", "skipped_by")
+
+
+admin.site.register(LiteratureAssignment, LiteratureAssignmentAdmin)
