@@ -758,6 +758,22 @@ class EntityDetailByHgncIdView(RedirectView):
         return reverse("panels:entity_detail", kwargs={"slug": gene.gene_symbol})
 
 
+class PanelGeneByHgncIdRedirectView(RedirectView):
+    """Redirect /panels/{pk}/gene/HGNC:{id}/... to the canonical symbol URL.
+
+    Resolves the HGNC ID to a gene symbol and redirects, preserving the
+    trailing path suffix (e.g. /edit, /review, /copy).
+    """
+
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        hgnc_id = "HGNC:{}".format(kwargs["hgnc_id"])
+        gene = get_object_or_404(Gene, hgnc_id=hgnc_id)
+        suffix = kwargs.get("suffix", "")
+        return "/panels/{}/gene/{}/{}".format(kwargs["pk"], gene.gene_symbol, suffix)
+
+
 class EntitiesListView(ListView):
     model = Gene
     context_object_name = "entities"

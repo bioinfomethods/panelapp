@@ -49,6 +49,7 @@ from .entities import MarkEntityReadyView
 from .entities import MarkGeneNotReadyView
 from .entities import EntityDetailView
 from .entities import EntityDetailByHgncIdView
+from .entities import PanelGeneByHgncIdRedirectView
 from .entities import EntitiesListView
 from .entities import GeneDetailRedirectView
 from .entities import RedirectGenesToEntities

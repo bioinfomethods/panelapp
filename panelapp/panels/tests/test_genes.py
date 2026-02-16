@@ -304,9 +304,41 @@ class GeneTest(LoginGELUser):
         self.assertEqual(res.status_code, 302)
         self.assertIn(f"/panels/entities/{gene.gene_symbol}", res.url)
 
+    def test_entity_detail_by_hgnc_id_trailing_slash(self):
+        gene = GeneFactory(gene_symbol="PRKN", hgnc_id="HGNC:8607")
+        gps = GenePanelSnapshotFactory()
+        GenePanelEntrySnapshotFactory.create(gene_core=gene, panel=gps)
+
+        res = self.client.get("/panels/entities/HGNC:8607/")
+        self.assertEqual(res.status_code, 302)
+        self.assertIn(f"/panels/entities/{gene.gene_symbol}", res.url)
+
     def test_entity_detail_by_hgnc_id_unknown(self):
         url = reverse_lazy(
             "panels:entity_detail_by_hgnc_id", kwargs={"hgnc_id": "99999"}
         )
         res = self.client.get(url)
+        self.assertEqual(res.status_code, 404)
+
+    def test_panel_gene_by_hgnc_id(self):
+        gene = GeneFactory(gene_symbol="ABO", hgnc_id="HGNC:79")
+        gps = GenePanelSnapshotFactory()
+        GenePanelEntrySnapshotFactory.create(gene_core=gene, panel=gps)
+
+        res = self.client.get(f"/panels/{gps.panel.pk}/gene/HGNC:79/")
+        self.assertEqual(res.status_code, 302)
+        self.assertIn(f"/panels/{gps.panel.pk}/gene/{gene.gene_symbol}/", res.url)
+
+    def test_panel_gene_by_hgnc_id_with_suffix(self):
+        gene = GeneFactory(gene_symbol="ABO", hgnc_id="HGNC:79")
+        gps = GenePanelSnapshotFactory()
+        GenePanelEntrySnapshotFactory.create(gene_core=gene, panel=gps)
+
+        res = self.client.get(f"/panels/{gps.panel.pk}/gene/HGNC:79/copy")
+        self.assertEqual(res.status_code, 302)
+        self.assertIn(f"/panels/{gps.panel.pk}/gene/{gene.gene_symbol}/copy", res.url)
+
+    def test_panel_gene_by_hgnc_id_unknown(self):
+        gps = GenePanelSnapshotFactory()
+        res = self.client.get(f"/panels/{gps.panel.pk}/gene/HGNC:99999/")
         self.assertEqual(res.status_code, 404)
