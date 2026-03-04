@@ -360,6 +360,17 @@ class DownloadPanelVersionTSVView(DownloadPanelTSVMixin):
             return self.process()
 
 
+def _genes_by_symbol(panel):
+    """Map gene symbol to its highest-rated entry across child panels."""
+    # get_all_genes_extra is ordered by -saved_gel_status (highest first),
+    # so iterating in reverse lets the highest-rated entry overwrite
+    # lower-rated ones in the dict.
+    return {
+        e.gene.get("gene_symbol"): e
+        for e in reversed(panel.get_all_genes_extra)
+    }
+
+
 class ComparePanelsView(FormView):
     template_name = "panels/compare/compare_panels.html"
     form_class = ComparePanelsForm
@@ -396,12 +407,8 @@ class ComparePanelsView(FormView):
                 pk=self.kwargs["panel_2_id"]
             ).active_panel
 
-            panel_1_items = {
-                e.gene.get("gene_symbol"): e for e in panel_1.get_all_genes_extra
-            }
-            panel_2_items = {
-                e.gene.get("gene_symbol"): e for e in panel_2.get_all_genes_extra
-            }
+            panel_1_items = _genes_by_symbol(panel_1)
+            panel_2_items = _genes_by_symbol(panel_2)
 
             all = list(set(panel_1_items.keys()) | set(panel_2_items.keys()))
             all.sort()
@@ -526,12 +533,8 @@ class CopyReviewsView(GELReviewerRequiredMixin, FormView):
             pk=self.kwargs["panel_2_id"]
         ).active_panel
 
-        panel_1_items = {
-            e.gene.get("gene_symbol"): e for e in panel_1.get_all_genes_extra
-        }
-        panel_2_items = {
-            e.gene.get("gene_symbol"): e for e in panel_2.get_all_genes_extra
-        }
+        panel_1_items = _genes_by_symbol(panel_1)
+        panel_2_items = _genes_by_symbol(panel_2)
 
         intersection = list(set(panel_1_items.keys() & set(panel_2_items.keys())))
         intersection.sort()

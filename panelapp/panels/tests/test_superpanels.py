@@ -374,3 +374,38 @@ class SuperPanelsTest(LoginGELUser):
         del parent2.panel.active_panel
         parent2 = parent2.panel.active_panel
         self.assertEqual(parent2.version, "0.3")
+
+    def test_compare_superpanel_picks_highest_rating(self):
+        """Compare panels should show the highest-rated entry when a gene
+        appears in multiple child panels with different ratings."""
+        gene = GeneFactory()
+        child1 = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        child2 = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+
+        # Same gene on two child panels: RED on child1, GREEN on child2.
+        GenePanelEntrySnapshotFactory(
+            gene_core=gene, panel=child1, saved_gel_status=1
+        )
+        GenePanelEntrySnapshotFactory(
+            gene_core=gene, panel=child2, saved_gel_status=3
+        )
+
+        superpanel = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        superpanel.child_panels.set([child1, child2])
+        superpanel._update_saved_stats()
+        del superpanel.is_super_panel
+
+        # Compare the superpanel against an unrelated panel.
+        other = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+
+        url = reverse_lazy(
+            "panels:compare", args=(superpanel.panel.pk, other.panel.pk)
+        )
+        res = self.client.get(url)
+        self.assertEqual(res.status_code, 200)
+
+        comparison = res.context["comparison"]
+        symbol = gene.gene_symbol
+        entry = next(row for row in comparison if row[0] == symbol)
+        # entry[1] is the superpanel side; must be the GREEN (3) entry.
+        self.assertEqual(entry[1].saved_gel_status, 3)
