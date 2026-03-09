@@ -33,6 +33,8 @@ from django.views.generic import UpdateView
 from django.urls import reverse_lazy
 from django.shortcuts import redirect
 from django.shortcuts import get_list_or_404
+from django.shortcuts import get_object_or_404
+from django.urls import reverse
 from django.db.models import Q
 from django.contrib.postgres.aggregates import ArrayAgg
 from panelapp.mixins import GELReviewerRequiredMixin
@@ -739,6 +741,37 @@ class EntityDetailView(DetailView):
         )
 
         return ctx
+
+
+class EntityDetailByHgncIdView(RedirectView):
+    """Redirect /panels/entities/HGNC:<hgnc_id> to the entity detail page.
+
+    Looks up the Gene by its hgnc_id field and redirects to the canonical
+    entity detail URL using the gene's current symbol.
+    """
+
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        hgnc_id = "HGNC:{}".format(kwargs["hgnc_id"])
+        gene = get_object_or_404(Gene, hgnc_id=hgnc_id)
+        return reverse("panels:entity_detail", kwargs={"slug": gene.gene_symbol})
+
+
+class PanelGeneByHgncIdRedirectView(RedirectView):
+    """Redirect /panels/{pk}/gene/HGNC:{id}/... to the canonical symbol URL.
+
+    Resolves the HGNC ID to a gene symbol and redirects, preserving the
+    trailing path suffix (e.g. /edit, /review, /copy).
+    """
+
+    permanent = False
+
+    def get_redirect_url(self, *args, **kwargs):
+        hgnc_id = "HGNC:{}".format(kwargs["hgnc_id"])
+        gene = get_object_or_404(Gene, hgnc_id=hgnc_id)
+        suffix = kwargs.get("suffix", "")
+        return "/panels/{}/gene/{}/{}".format(kwargs["pk"], gene.gene_symbol, suffix)
 
 
 class EntitiesListView(ListView):

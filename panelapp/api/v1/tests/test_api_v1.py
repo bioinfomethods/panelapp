@@ -647,6 +647,86 @@ class TestAPIV1(LoginExternalUser):
         assert res.status_code == 200
         assert date.strftime("%Y-%m-%d") in res.json()["signed_off"]
 
+class TestHgncIdQueries(LoginExternalUser):
+    """Test that API endpoints accept 'HGNC:{id}' wherever they accept gene symbols."""
+
+    def setUp(self):
+        super().setUp()
+        self.gps = GenePanelSnapshotFactory(panel__status=GenePanel.STATUS.public)
+        self.gpes = GenePanelEntrySnapshotFactory(panel=self.gps)
+        self.hgnc_id = self.gpes.gene_core.hgnc_id
+        self.gene_symbol = self.gpes.gene_core.gene_symbol
+
+    def test_evaluations_by_hgnc_id(self):
+        r = self.client.get(
+            reverse_lazy(
+                "api:v1:genes-evaluations-list",
+                args=(self.gps.panel.pk, self.hgnc_id),
+            )
+        )
+        self.assertEqual(r.status_code, 200)
+        r_symbol = self.client.get(
+            reverse_lazy(
+                "api:v1:genes-evaluations-list",
+                args=(self.gps.panel.pk, self.gene_symbol),
+            )
+        )
+        self.assertEqual(r.json()["results"], r_symbol.json()["results"])
+
+    def test_evaluations_unknown_hgnc_id(self):
+        r = self.client.get(
+            reverse_lazy(
+                "api:v1:genes-evaluations-list",
+                args=(self.gps.panel.pk, "HGNC:9999999"),
+            )
+        )
+        self.assertEqual(r.status_code, 404)
+
+    def test_gene_search_by_hgnc_id(self):
+        r = self.client.get(
+            reverse_lazy("api:v1:genes-detail", args=(self.hgnc_id,))
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(r.json()["results"]), 1)
+        self.assertEqual(
+            r.json()["results"][0]["entity_name"], self.gene_symbol
+        )
+
+    def test_gene_search_query_param_hgnc_id(self):
+        r = self.client.get(
+            reverse_lazy("api:v1:genes-list") + f"?entity_name={self.hgnc_id}"
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(r.json()["results"]), 1)
+
+    def test_panel_genes_filter_by_hgnc_id(self):
+        r = self.client.get(
+            reverse_lazy(
+                "api:v1:panels_genes-list", args=(self.gps.panel.pk,)
+            )
+            + f"?entity_name={self.hgnc_id}"
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(r.json()["results"]), 1)
+        self.assertEqual(
+            r.json()["results"][0]["entity_name"], self.gene_symbol
+        )
+
+    def test_entity_search_by_hgnc_id(self):
+        r = self.client.get(
+            reverse_lazy("api:v1:entities-detail", args=(self.hgnc_id,))
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(r.json()["results"]), 1)
+
+    def test_gene_search_unknown_hgnc_id(self):
+        r = self.client.get(
+            reverse_lazy("api:v1:genes-detail", args=("HGNC:9999999",))
+        )
+        self.assertEqual(r.status_code, 200)
+        self.assertEqual(len(r.json()["results"]), 0)
+
+
 class NonAuthAPIv1Request(TestCase):
     def setUp(self):
         super().setUp()

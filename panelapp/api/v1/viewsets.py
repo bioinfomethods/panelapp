@@ -59,6 +59,23 @@ from django.http import Http404
 from rest_framework.exceptions import APIException
 from panelapp.settings.base import REST_FRAMEWORK
 
+
+def resolve_gene_identifiers(identifiers):
+    """Resolve any 'HGNC:*' identifiers to gene symbols. Others pass through."""
+    hgnc_ids = [i for i in identifiers if i.startswith("HGNC:")]
+    if not hgnc_ids:
+        return identifiers
+    hgnc_to_symbol = dict(
+        Gene.objects.filter(hgnc_id__in=hgnc_ids).values_list(
+            "hgnc_id", "gene_symbol"
+        )
+    )
+    return [
+        hgnc_to_symbol.get(i, i) if i.startswith("HGNC:") else i
+        for i in identifiers
+    ]
+
+
 class ReadOnlyListViewset(
     viewsets.mixins.RetrieveModelMixin,
     viewsets.mixins.ListModelMixin,
@@ -79,7 +96,7 @@ class NumberChoices(filters.ChoiceFilter, filters.NumberFilter):
 
 
 class EntityFilter(filters.FilterSet):
-    entity_name = filters.BaseInFilter(field_name="entity_name", lookup_expr="in")
+    entity_name = filters.BaseInFilter(method="filter_entity_name")
     confidence_level = NumberChoices(
         method="filter_confidence_level",
         choices=CONFIDENCE_CHOICES,
@@ -90,6 +107,11 @@ class EntityFilter(filters.FilterSet):
 
     class Meta:
         fields = ["entity_name", "confidence_level", "tags"]
+
+    def filter_entity_name(self, queryset, name, value):
+        return queryset.filter(
+            entity_name__in=resolve_gene_identifiers(value)
+        )
 
     def filter_confidence_level(self, queryset, name, value):
         field = "saved_gel_status"
@@ -244,7 +266,8 @@ class EntityViewSet(viewsets.mixins.ListModelMixin, viewsets.GenericViewSet):
 
         list_filters = []
         if entity_name:
-            list_filters.append(obj["entity_name"] in entity_name.split(","))
+            resolved = resolve_gene_identifiers(entity_name.split(","))
+            list_filters.append(obj["entity_name"] in resolved)
         if confidence_level:
             list_filters.append(obj["confidence_level"] == confidence_level)
         if tags:
@@ -418,8 +441,11 @@ class GeneEvaluationsViewSet(EvaluationCommentsMixin, EntityViewSet):
 
     def get_queryset(self):
         panel = self.get_panel()
+        gene_name = resolve_gene_identifiers(
+            [self.kwargs["gene_entity_name"]]
+        )[0]
         try:
-            gene = panel.get_gene(self.kwargs["gene_entity_name"])
+            gene = panel.get_gene(gene_name)
             return self.apply_comment_prefetch(gene.evaluation.all())
         except ObjectDoesNotExist:
             raise Http404
@@ -487,10 +513,15 @@ class EntitySearchFilter(filters.FilterSet):
         field_name="panel__panel__types__slug", lookup_expr="in"
     )
     tags = filters.BaseInFilter(field_name="tags__name", lookup_expr="in")
-    entity_name = filters.BaseInFilter(field_name="entity_name", lookup_expr="in")
+    entity_name = filters.BaseInFilter(method="filter_entity_name")
 
     class Meta:
         fields = ["type", "tags", "entity_name"]
+
+    def filter_entity_name(self, queryset, name, value):
+        return queryset.filter(
+            entity_name__in=resolve_gene_identifiers(value)
+        )
 
 
 class EntitySearch(ReadOnlyListViewset):
@@ -520,10 +551,12 @@ class EntitySearch(ReadOnlyListViewset):
         filters = {}
 
         if self.kwargs.get("entity_name"):
-            filters["entity_name__in"] = self.kwargs["entity_name"].split(",")
+            filters["entity_name__in"] = resolve_gene_identifiers(
+                self.kwargs["entity_name"].split(",")
+            )
         elif self.request.query_params.get("entity_name"):
-            filters["entity_name__in"] = self.request.query_params["entity_name"].split(
-                ","
+            filters["entity_name__in"] = resolve_gene_identifiers(
+                self.request.query_params["entity_name"].split(",")
             )
 
         if self.request.query_params.get("type"):
@@ -611,10 +644,12 @@ class EntitySearchViewSet(EntitySearch):
         filters = {}
 
         if self.kwargs.get("entity_name"):
-            filters["entity_name__in"] = self.kwargs["entity_name"].split(",")
+            filters["entity_name__in"] = resolve_gene_identifiers(
+                self.kwargs["entity_name"].split(",")
+            )
         elif self.request.query_params.get("entity_name"):
-            filters["entity_name__in"] = self.request.query_params["entity_name"].split(
-                ","
+            filters["entity_name__in"] = resolve_gene_identifiers(
+                self.request.query_params["entity_name"].split(",")
             )
 
         if self.request.query_params.get("type"):
@@ -690,11 +725,37 @@ class LiteratureAssignmentViewSet(viewsets.ViewSet):
 
     permission_classes = [IsGELReviewer]
 
+    def _resolve_gene(self, data):
+        """Resolve Gene from request data. Accepts hgnc_id or gene_symbol."""
+        hgnc_id = data.get("hgnc_id")
+        if hgnc_id:
+            try:
+                return Gene.objects.get(hgnc_id=hgnc_id), None
+            except Gene.DoesNotExist:
+                return None, Response(
+                    {"error": "gene_not_found", "message": f"Gene not found: {hgnc_id}"},
+                    status=404,
+                )
+
+        gene_symbol = data.get("gene_symbol")
+        if gene_symbol:
+            try:
+                return Gene.objects.get(gene_symbol=gene_symbol), None
+            except Gene.DoesNotExist:
+                return None, Response(
+                    {"error": "gene_not_found", "message": f"Gene not found: {gene_symbol}"},
+                    status=404,
+                )
+
+        return None, Response(
+            {"error": "missing_field", "message": "hgnc_id or gene_symbol is required"},
+            status=400,
+        )
+
     @action(detail=False, methods=["post"])
     def assign(self, request):
         """Create-or-get assignment and assign in one call with optimistic locking."""
         report_id = request.data.get("report_id")
-        gene_symbol = request.data.get("gene_symbol")
         assigned_to_id = request.data.get("assigned_to")
         expected_updated_at = request.data.get("expected_updated_at")
 
@@ -704,20 +765,10 @@ class LiteratureAssignmentViewSet(viewsets.ViewSet):
                 {"error": "missing_field", "message": "report_id is required"},
                 status=400,
             )
-        if not gene_symbol:
-            return Response(
-                {"error": "missing_field", "message": "gene_symbol is required"},
-                status=400,
-            )
 
-        # Look up gene by symbol
-        try:
-            gene = Gene.objects.get(gene_symbol=gene_symbol)
-        except Gene.DoesNotExist:
-            return Response(
-                {"error": "gene_not_found", "message": f"Gene not found: {gene_symbol}"},
-                status=404,
-            )
+        gene, error_response = self._resolve_gene(request.data)
+        if error_response:
+            return error_response
 
         # Validate assignee is a Curator (when assigning, not when unassigning)
         if assigned_to_id:
@@ -765,7 +816,6 @@ class LiteratureAssignmentViewSet(viewsets.ViewSet):
     def skip(self, request):
         """Create-or-get assignment and skip in one call. Requires reason."""
         report_id = request.data.get("report_id")
-        gene_symbol = request.data.get("gene_symbol")
         reason = request.data.get("reason", "").strip()
         expected_updated_at = request.data.get("expected_updated_at")
 
@@ -775,24 +825,15 @@ class LiteratureAssignmentViewSet(viewsets.ViewSet):
                 {"error": "missing_field", "message": "report_id is required"},
                 status=400,
             )
-        if not gene_symbol:
-            return Response(
-                {"error": "missing_field", "message": "gene_symbol is required"},
-                status=400,
-            )
+
+        gene, error_response = self._resolve_gene(request.data)
+        if error_response:
+            return error_response
+
         if not reason:
             return Response(
                 {"error": "reason_required", "message": "A reason is required when skipping"},
                 status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Look up gene by symbol
-        try:
-            gene = Gene.objects.get(gene_symbol=gene_symbol)
-        except Gene.DoesNotExist:
-            return Response(
-                {"error": "gene_not_found", "message": f"Gene not found: {gene_symbol}"},
-                status=404,
             )
 
         with transaction.atomic():
@@ -877,6 +918,7 @@ class LiteratureAssignmentViewSet(viewsets.ViewSet):
         return {
             "report_id": assignment.report_id,
             "gene_symbol": assignment.gene.gene_symbol,
+            "hgnc_id": assignment.gene.hgnc_id,
             "status": assignment.status,
             "assigned_to": assignment.assigned_to_id,
             "assigned_to_display": (
