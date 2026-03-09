@@ -37,7 +37,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             "/api/v1/literature-assignments/assign/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": self.gene.gene_symbol,
+                "hgnc_id": self.gene.hgnc_id,
                 "assigned_to": self.gel_user.id,
                 "expected_updated_at": None,
             },
@@ -48,6 +48,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
         data = response.json()
         self.assertEqual(data["status"], "assigned")
         self.assertEqual(data["assigned_to"], self.gel_user.id)
+        self.assertEqual(data["hgnc_id"], self.gene.hgnc_id)
         self.assertIn("updated_at", data)
 
         # Verify database record
@@ -62,6 +63,37 @@ class LiteratureAssignmentAPITests(LoginGELUser):
         response = self.client.post(
             "/api/v1/literature-assignments/assign/",
             {
+                "hgnc_id": self.gene.hgnc_id,
+                "assigned_to": self.gel_user.id,
+                "expected_updated_at": None,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["error"], "missing_field")
+
+    def test_assign_requires_gene_identifier(self):
+        """Assign endpoint requires hgnc_id or gene_symbol."""
+        response = self.client.post(
+            "/api/v1/literature-assignments/assign/",
+            {
+                "report_id": "report_2025-01-15",
+                "assigned_to": self.gel_user.id,
+                "expected_updated_at": None,
+            },
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertEqual(response.json()["error"], "missing_field")
+
+    def test_assign_by_gene_symbol(self):
+        """Assign endpoint accepts gene_symbol."""
+        response = self.client.post(
+            "/api/v1/literature-assignments/assign/",
+            {
+                "report_id": "report_2025-01-15",
                 "gene_symbol": self.gene.gene_symbol,
                 "assigned_to": self.gel_user.id,
                 "expected_updated_at": None,
@@ -69,31 +101,34 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             format="json",
         )
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()["error"], "missing_field")
+        self.assertEqual(response.status_code, 200)
+        data = response.json()
+        self.assertEqual(data["gene_symbol"], self.gene.gene_symbol)
+        self.assertEqual(data["hgnc_id"], self.gene.hgnc_id)
 
-    def test_assign_requires_gene_symbol(self):
-        """Assign endpoint requires gene_symbol."""
+    def test_skip_by_gene_symbol(self):
+        """Skip endpoint accepts gene_symbol."""
         response = self.client.post(
-            "/api/v1/literature-assignments/assign/",
+            "/api/v1/literature-assignments/skip/",
             {
                 "report_id": "report_2025-01-15",
-                "assigned_to": self.gel_user.id,
+                "gene_symbol": self.gene.gene_symbol,
+                "reason": "Out of scope",
                 "expected_updated_at": None,
             },
             format="json",
         )
 
-        self.assertEqual(response.status_code, 400)
-        self.assertEqual(response.json()["error"], "missing_field")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json()["status"], "skipped")
 
     def test_assign_gene_not_found(self):
-        """Assign returns 404 for non-existent gene."""
+        """Assign returns 404 for non-existent HGNC ID."""
         response = self.client.post(
             "/api/v1/literature-assignments/assign/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": "NONEXISTENT",
+                "hgnc_id": "HGNC:99999",
                 "assigned_to": self.gel_user.id,
                 "expected_updated_at": None,
             },
@@ -112,7 +147,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             "/api/v1/literature-assignments/assign/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": self.gene.gene_symbol,
+                "hgnc_id": self.gene.hgnc_id,
                 "assigned_to": non_curator.id,
                 "expected_updated_at": None,
             },
@@ -138,7 +173,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             "/api/v1/literature-assignments/assign/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": self.gene.gene_symbol,
+                "hgnc_id": self.gene.hgnc_id,
                 "assigned_to": self.curator2.id,
                 "expected_updated_at": None,
             },
@@ -169,7 +204,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             "/api/v1/literature-assignments/assign/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": self.gene.gene_symbol,
+                "hgnc_id": self.gene.hgnc_id,
                 "assigned_to": self.curator2.id,
                 "expected_updated_at": stale_updated_at,
             },
@@ -194,7 +229,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             "/api/v1/literature-assignments/assign/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": self.gene.gene_symbol,
+                "hgnc_id": self.gene.hgnc_id,
                 "assigned_to": self.curator2.id,
                 "expected_updated_at": current_updated_at,
             },
@@ -219,7 +254,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             "/api/v1/literature-assignments/assign/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": self.gene.gene_symbol,
+                "hgnc_id": self.gene.hgnc_id,
                 "assigned_to": None,
                 "expected_updated_at": current_updated_at,
             },
@@ -236,7 +271,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             "/api/v1/literature-assignments/skip/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": self.gene.gene_symbol,
+                "hgnc_id": self.gene.hgnc_id,
                 "expected_updated_at": None,
             },
             format="json",
@@ -251,7 +286,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             "/api/v1/literature-assignments/skip/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": self.gene.gene_symbol,
+                "hgnc_id": self.gene.hgnc_id,
                 "reason": "Out of scope (cancer gene)",
                 "expected_updated_at": None,
             },
@@ -285,7 +320,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             "/api/v1/literature-assignments/skip/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": self.gene.gene_symbol,
+                "hgnc_id": self.gene.hgnc_id,
                 "reason": "Not relevant",
                 "expected_updated_at": None,
             },
@@ -311,7 +346,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             "/api/v1/literature-assignments/assign/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": self.gene.gene_symbol,
+                "hgnc_id": self.gene.hgnc_id,
                 "assigned_to": self.curator2.id,
                 "expected_updated_at": current_updated_at,
             },
@@ -338,7 +373,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             "/api/v1/literature-assignments/skip/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": self.gene.gene_symbol,
+                "hgnc_id": self.gene.hgnc_id,
                 "reason": "Investigated, no action needed",
                 "expected_updated_at": current_updated_at,
             },
@@ -362,7 +397,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             "/api/v1/literature-assignments/assign/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": self.gene.gene_symbol,
+                "hgnc_id": self.gene.hgnc_id,
                 "assigned_to": non_gel_user.id,
                 "expected_updated_at": None,
             },
@@ -379,7 +414,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             "/api/v1/literature-assignments/assign/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": self.gene.gene_symbol,
+                "hgnc_id": self.gene.hgnc_id,
                 "assigned_to": self.gel_user.id,
                 "expected_updated_at": None,
             },
@@ -404,7 +439,7 @@ class LiteratureAssignmentAPITests(LoginGELUser):
             "/api/v1/literature-assignments/assign/",
             {
                 "report_id": "report_2025-01-15",
-                "gene_symbol": self.gene.gene_symbol,
+                "hgnc_id": self.gene.hgnc_id,
                 "assigned_to": None,
                 "expected_updated_at": current_updated_at,
             },
