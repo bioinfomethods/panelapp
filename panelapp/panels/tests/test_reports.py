@@ -142,7 +142,7 @@ class PrefillFormTestCase(TestCase):
         ReviewerFactory(user=self.gel_user, user_type=Reviewer.TYPES.GEL)
 
         # Create test gene
-        self.gene = GeneFactory(gene_symbol="CFTR")
+        self.gene = GeneFactory(gene_symbol="CFTR", hgnc_id="HGNC:1884")
 
         # Create test panel
         self.panel = GenePanelSnapshotFactory()
@@ -156,8 +156,7 @@ class PrefillFormTestCase(TestCase):
             {
                 "form_type": "add",
                 "panel_id": "137",
-                "gene_symbol": "CFTR",
-                "gene_name": "CFTR",
+                "hgnc_id": "HGNC:1884",
                 "source": "Literature",
                 "rating": "3",
                 "moi": "BIALLELIC",
@@ -177,6 +176,7 @@ class PrefillFormTestCase(TestCase):
         self.assertIsNotNone(prefill_data)
         self.assertEqual(prefill_data["form_type"], "add")
         self.assertEqual(prefill_data["gene"], self.gene.pk)
+        self.assertEqual(prefill_data["gene_name"], "CFTR")
         self.assertEqual(prefill_data["rating"], "3")
         self.assertEqual(prefill_data["publications"], "12345;67890")
 
@@ -189,7 +189,7 @@ class PrefillFormTestCase(TestCase):
             {
                 "form_type": "review",
                 "panel_id": str(self.panel.panel.pk),
-                "gene_name": "CFTR",
+                "hgnc_id": "HGNC:1884",
                 "rating": "3",
                 "moi": "BIALLELIC",
                 "publications": "12345",
@@ -209,8 +209,8 @@ class PrefillFormTestCase(TestCase):
         self.assertEqual(prefill_data["form_type"], "review")
         self.assertEqual(prefill_data["comments"], "Review comment")
 
-    def test_prefill_unknown_gene_symbol(self):
-        """Prefill handles unknown gene symbol gracefully."""
+    def test_prefill_add_by_gene_symbol(self):
+        """Prefill add endpoint accepts gene_symbol."""
         self.client.force_login(self.gel_user)
 
         response = self.client.post(
@@ -218,7 +218,44 @@ class PrefillFormTestCase(TestCase):
             {
                 "form_type": "add",
                 "panel_id": "137",
-                "gene_symbol": "UNKNOWN_GENE",
+                "gene_symbol": "CFTR",
+                "rating": "3",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        session = self.client.session
+        prefill_data = session.get("prefill_data")
+        self.assertEqual(prefill_data["gene"], self.gene.pk)
+        self.assertEqual(prefill_data["gene_name"], "CFTR")
+
+    def test_prefill_review_by_gene_symbol(self):
+        """Prefill review endpoint accepts gene_symbol."""
+        self.client.force_login(self.gel_user)
+
+        response = self.client.post(
+            reverse("panels:prefill_form"),
+            {
+                "form_type": "review",
+                "panel_id": str(self.panel.panel.pk),
+                "gene_symbol": "CFTR",
+                "rating": "3",
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn("/gene/CFTR/review", response.url)
+
+    def test_prefill_add_unknown_hgnc_id(self):
+        """Prefill add handles unknown HGNC ID gracefully."""
+        self.client.force_login(self.gel_user)
+
+        response = self.client.post(
+            reverse("panels:prefill_form"),
+            {
+                "form_type": "add",
+                "panel_id": "137",
+                "hgnc_id": "HGNC:99999",
                 "rating": "3",
             },
         )
@@ -230,6 +267,23 @@ class PrefillFormTestCase(TestCase):
         session = self.client.session
         prefill_data = session.get("prefill_data")
         self.assertIsNone(prefill_data["gene"])
+
+    def test_prefill_review_unknown_hgnc_id_raises(self):
+        """Review prefill with unknown HGNC ID raises DoesNotExist."""
+        from panels.models import Gene
+
+        self.client.force_login(self.gel_user)
+
+        with self.assertRaises(Gene.DoesNotExist):
+            self.client.post(
+                reverse("panels:prefill_form"),
+                {
+                    "form_type": "review",
+                    "panel_id": str(self.panel.panel.pk),
+                    "hgnc_id": "HGNC:99999",
+                    "rating": "3",
+                },
+            )
 
 
 class FormViewPrefillTestCase(TestCase):
@@ -374,7 +428,7 @@ class CheckCompletionsTestCase(TestCase):
 
         # Create panel and gene
         self.panel = GenePanelSnapshotFactory()
-        self.gene = GeneFactory(gene_symbol="TEST1")
+        self.gene = GeneFactory(gene_symbol="TEST1", hgnc_id="HGNC:99901")
 
     def test_completion_detected_when_evaluation_modified_after_assignment(self):
         """
@@ -419,14 +473,17 @@ class CheckCompletionsTestCase(TestCase):
         evaluation.rating = Evaluation.RATINGS.GREEN
         evaluation.save()  # This updates `modified` to now
 
-        # Check completions
+        # Check completions (keyed by hgnc_id)
+        gene_pk_to_key = {self.gene.gene_symbol: self.gene.hgnc_id}
         view = ReportProxyView()
-        completions = view._check_completions([assignment], [self.panel.panel.pk])
+        completions = view._check_completions(
+            [assignment], [self.panel.panel.pk], gene_pk_to_key
+        )
 
         # Should detect as completed because modified > assigned_at
-        self.assertIn(self.gene.gene_symbol, completions)
-        self.assertTrue(completions[self.gene.gene_symbol]["has_evaluation"])
-        self.assertIn("GREEN", completions[self.gene.gene_symbol]["ratings"])
+        self.assertIn(self.gene.hgnc_id, completions)
+        self.assertTrue(completions[self.gene.hgnc_id]["has_evaluation"])
+        self.assertIn("GREEN", completions[self.gene.hgnc_id]["ratings"])
 
     def test_completion_not_detected_when_evaluation_not_modified_after_assignment(
         self,
@@ -468,9 +525,47 @@ class CheckCompletionsTestCase(TestCase):
 
         # DON'T modify the evaluation - leave it in the past
 
-        # Check completions
+        # Check completions (keyed by hgnc_id)
+        gene_pk_to_key = {self.gene.gene_symbol: self.gene.hgnc_id}
         view = ReportProxyView()
-        completions = view._check_completions([assignment], [self.panel.panel.pk])
+        completions = view._check_completions(
+            [assignment], [self.panel.panel.pk], gene_pk_to_key
+        )
 
         # Should NOT be detected because modified < assigned_at
-        self.assertNotIn(self.gene.gene_symbol, completions)
+        self.assertNotIn(self.gene.hgnc_id, completions)
+
+    def test_completion_keyed_by_gene_symbol(self):
+        """Completions can be keyed by gene_symbol (v1 report format)."""
+        self.panel.add_gene(
+            self.user,
+            self.gene.gene_symbol,
+            {"sources": ["Literature"], "moi": "Unknown"},
+        )
+        gene_entry = self.panel.get_gene(self.gene.gene_symbol)
+
+        assignment = LiteratureAssignment.objects.create(
+            report_id="test_report",
+            gene=self.gene,
+            assigned_to=self.user,
+            status=LiteratureAssignment.STATUS.assigned,
+            assigned_at=timezone.now() - timedelta(hours=1),
+        )
+
+        evaluation = Evaluation.objects.create(
+            user=self.user,
+            rating=Evaluation.RATINGS.GREEN,
+            version=self.panel.version,
+        )
+        gene_entry.evaluation.add(evaluation)
+
+        # Key by gene_symbol (v1 format)
+        gene_pk_to_key = {self.gene.gene_symbol: self.gene.gene_symbol}
+        view = ReportProxyView()
+        completions = view._check_completions(
+            [assignment], [self.panel.panel.pk], gene_pk_to_key
+        )
+
+        self.assertIn(self.gene.gene_symbol, completions)
+        self.assertNotIn(self.gene.hgnc_id, completions)
+        self.assertTrue(completions[self.gene.gene_symbol]["has_evaluation"])

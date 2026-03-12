@@ -773,3 +773,49 @@ class GeneReviewTest(LoginGELUser):
 
         ap = GenePanel.objects.get(name="Panel One").active_panel
         assert ap.get_gene(gene.gene_symbol).evaluation.count() == 0
+
+    def test_evaluation_last_updated_set_on_update(self):
+        """
+        When updating an existing evaluation (e.g., changing rating),
+        evaluation.last_updated should be updated.
+
+        This tests the fix for missing last_updated update in update_evaluation.
+        """
+        gpes = GenePanelEntrySnapshotFactory()
+        gpes.evaluation.all().delete()
+
+        url = reverse_lazy(
+            "panels:review_entity",
+            kwargs={
+                "pk": gpes.panel.panel.pk,
+                "entity_type": "gene",
+                "entity_name": gpes.gene.get("gene_symbol"),
+            },
+        )
+
+        # First, add an initial evaluation with AMBER rating
+        initial_data = {
+            "rating": Evaluation.RATINGS.AMBER,
+            "comments": "Initial review",
+        }
+        self.client.post(url, initial_data)
+
+        # Get the evaluation and record its last_updated
+        gene = GenePanel.objects.get(pk=gpes.panel.panel.pk).active_panel.get_gene(
+            gpes.gene.get("gene_symbol")
+        )
+        evaluation = gene.evaluation.first()
+        initial_last_updated = evaluation.last_updated
+        assert initial_last_updated is not None
+
+        # Now update the evaluation with a different rating
+        updated_data = {
+            "rating": Evaluation.RATINGS.GREEN,
+            "comments": "Updated review - now GREEN",
+        }
+        self.client.post(url, updated_data)
+
+        # Refresh and check last_updated was updated
+        evaluation.refresh_from_db()
+        assert evaluation.last_updated is not None
+        assert evaluation.last_updated > initial_last_updated

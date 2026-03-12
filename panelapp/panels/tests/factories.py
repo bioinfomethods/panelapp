@@ -106,6 +106,7 @@ class GeneFactory(factory.django.DjangoModelFactory):
     gene_symbol = factory.LazyAttribute(
         lambda g: factory.Faker("md5").evaluate(0, 0, 0)[:7]
     )
+    hgnc_id = factory.Sequence(lambda n: f"HGNC:{n + 1}")
     ensembl_genes = {}
 
 
